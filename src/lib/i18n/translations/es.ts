@@ -104,6 +104,16 @@ const es: Translations = {
         backToMainMenu: "Volver al Menú Principal",
 
         gameHistory: "Historial de Partida",
+
+        // Washerwoman
+        narratorSetup: "Configuración del Narrador",
+        selectTwoPlayers: "Selecciona 2 jugadores para mostrar",
+        selectWhichRoleToShow: "Selecciona qué rol de Aldeano revelar",
+        mustIncludeTownsfolk: "Al menos uno de los jugadores seleccionados debe ser un Aldeano",
+        showToPlayer: "Mostrar al Jugador",
+        washerwomanInfo: "Tu Información",
+        oneOfTheseIsTheTownsfolk: "Uno de estos jugadores es un Aldeano. ¡Recuerda quiénes son!",
+        oneOfThemIsThe: "Uno de ellos es el/la...",
     },
 
     teams: {
@@ -133,6 +143,16 @@ const es: Translations = {
         imp: {
             name: "Imp",
             description: "Cada noche*, elige un jugador: muere. Si te matas a ti mismo, un Secuaz se convierte en el Imp.",
+            history: {
+                choseToKill: "{player} eligió matar a {target}",
+            },
+        },
+        washerwoman: {
+            name: "Lavandera",
+            description: "Empiezas sabiendo que 1 de 2 jugadores es un Aldeano en particular.",
+            history: {
+                discoveredTownsfolk: "{player} descubrió que {player1} o {player2} es el/la {role}",
+            },
         },
     },
 
@@ -156,18 +176,21 @@ const es: Translations = {
         gameStarted: "Partida iniciada",
         nightBegins: "Noche {round} comienza",
         sunRises: "El sol sale...",
-        diedInNight: " ha muerto en la noche",
+        diedInNight: "{player} ha muerto en la noche",
         dayBegins: "Día {round} comienza",
-        learnedRole: " descubrió que es el/la ",
-        noActionTonight: " no tiene acción esta noche",
-        nominates: " nomina a ",
-        voteResult: ": {for} a favor, {against} en contra",
+        learnedRole: "{player} descubrió que es el/la {role}",
+        noActionTonight: "{role} no tiene acción esta noche",
+        nominates: "{nominator} nomina a {nominee}",
+        voteResult: "{player}: {for} a favor, {against} en contra. ",
         votePassed: "¡La votación pasa!",
         voteFailed: "La votación falla.",
-        executed: " ha sido ejecutado/a",
-        choseToKill: " eligió matar a ",
+        executed: "{player} ha sido ejecutado/a",
         goodWins: "¡El Bien gana! El Demonio ha sido derrotado.",
         evilWins: "¡El Mal gana! El pueblo ha caído.",
+    },
+
+    scripts: {
+        "trouble-brewing": "Problemas en el Pueblo",
     },
 };
 
