@@ -222,7 +222,22 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const handleNominate = (nominatorId: string, nomineeId: string) => {
         const newGame = nominate(game, nominatorId, nomineeId);
         updateGame(newGame);
-        setScreen({ type: "voting", nomineeId });
+
+        // Check resulting state - Virgin ability might have prevented voting
+        const newState = getCurrentState(newGame);
+        if (newState.phase === "voting") {
+            setScreen({ type: "voting", nomineeId });
+        } else {
+            // Virgin triggered - check for win condition and stay on day
+            const winner = checkWinCondition(newState);
+            if (winner) {
+                const finalGame = endGame(newGame, winner);
+                updateGame(finalGame);
+                setScreen({ type: "game_over" });
+            } else {
+                setScreen({ type: "day" });
+            }
+        }
     };
 
     const handleVoteComplete = (votesFor: string[], votesAgainst: string[]) => {
