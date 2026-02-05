@@ -68,6 +68,8 @@ export type EventType =
     | "nomination"
     | "vote"
     | "execution"
+    | "virgin_execution"
+    | "virgin_spent"
     | "effect_added"
     | "effect_removed"
     | "game_ended";

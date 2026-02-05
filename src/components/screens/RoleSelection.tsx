@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ROLES, SCRIPTS, ScriptId } from "../../lib/roles";
-import { RoleDefinition, RoleId } from "../../lib/roles/types";
+import { RoleDefinition } from "../../lib/roles/types";
 import { getTeam, TeamId } from "../../lib/teams";
 import { useI18n, interpolate } from "../../lib/i18n";
 import { Button, Icon, Badge } from "../atoms";

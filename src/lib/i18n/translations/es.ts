@@ -283,6 +283,15 @@ const es: Translations = {
                 sawRole: "{player} eligió ver el rol de {target}: {role}",
             },
         },
+        virgin: {
+            name: "Virgen",
+            description:
+                "La primera vez que eres nominado, si el nominador es un Aldeano, es ejecutado inmediatamente.",
+            history: {
+                townsfolkExecuted: "¡{nominator} nominó a la Virgen y fue ejecutado!",
+                lostPurity: "{nominator} nominó a la Virgen — el poder de la Virgen se ha agotado",
+            },
+        },
     },
 
     effects: {
@@ -302,6 +311,11 @@ const es: Translations = {
             name: "Pista Falsa",
             description:
                 "Este jugador se registra como un Demonio para un Adivino específico.",
+        },
+        pure: {
+            name: "Pura",
+            description:
+                "Si un Aldeano nomina a este jugador, ese Aldeano es ejecutado en su lugar.",
         },
     },
 

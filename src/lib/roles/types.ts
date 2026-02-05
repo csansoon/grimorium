@@ -47,7 +47,7 @@ export type RoleRevealProps = {
 // ROLE DEFINITION
 // ============================================================================
 
-export type RoleId = "villager" | "imp" | "washerwoman" | "librarian" | "investigator" | "chef" | "empath" | "fortune_teller" | "undertaker" | "monk" | "ravenkeeper" | "soldier";
+export type RoleId = "villager" | "imp" | "washerwoman" | "librarian" | "investigator" | "chef" | "empath" | "fortune_teller" | "undertaker" | "monk" | "ravenkeeper" | "soldier" | "virgin";
 
 export type RoleDefinition = {
     id: RoleId;
@@ -61,6 +61,9 @@ export type RoleDefinition = {
     // Used for: first night only, skips first night, conditional abilities, etc.
     // If not provided, the role always wakes when it's their turn
     shouldWake?: (game: Game, player: PlayerState) => boolean;
+
+    // Effects that are applied to this player at game start
+    initialEffects?: EffectToAdd[];
 
     // Component to show when revealing role to player
     RoleReveal: React.FC<RoleRevealProps>;
