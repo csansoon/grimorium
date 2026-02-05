@@ -80,6 +80,26 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                     action: "night_action",
                 });
                 break;
+            case "night_action_skip": {
+                // Role's shouldWake returned false - auto-skip (no visible history entry)
+                const skippedGame = applyNightAction(currentGame, {
+                    entries: [
+                        {
+                            type: "night_skipped",
+                            message: [], // Empty message = hidden from history UI
+                            data: {
+                                roleId: step.roleId,
+                                playerId: step.playerId,
+                                reason: "should_wake_false",
+                            },
+                        },
+                    ],
+                });
+                updateGame(skippedGame);
+                // Recursively advance to next step
+                advanceToNextStep(skippedGame);
+                break;
+            }
             case "night_waiting":
                 setScreen({ type: "night_waiting" });
                 break;
@@ -302,6 +322,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
                 return (
                     <role.NightAction
+                        game={game}
                         state={state}
                         player={player}
                         onComplete={handleNightActionComplete}
@@ -477,6 +498,10 @@ function getInitialScreen(game: Game): Screen {
                 playerId: step.playerId,
                 action: "night_action",
             };
+        case "night_action_skip":
+            // This shouldn't happen on initial load, but handle it gracefully
+            // The component will handle this via advanceToNextStep after mount
+            return { type: "night_waiting" };
         case "night_waiting":
             return { type: "night_waiting" };
         case "day":

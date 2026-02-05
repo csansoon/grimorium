@@ -11,8 +11,8 @@ const definition: RoleDefinition = {
     id: "imp",
     team: "demon",
     icon: "skull",
-    nightOrder: 50,
-    skipsFirstNight: true,
+    nightOrder: 30, // Demon kills before death-triggered abilities like Ravenkeeper
+    shouldWake: (game, player) => isAlive(player) && (game.history.at(-1)?.stateAfter.round ?? 0) > 1,
 
     RoleReveal: ({ player, onContinue }) => (
         <RoleCard player={player} onContinue={onContinue} />

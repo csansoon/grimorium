@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { RoleDefinition } from "../../types";
+import { isAlive } from "../../../types";
 import { getRole } from "../../index";
 import { useI18n } from "../../../i18n";
 import { RoleCard } from "../../../../components/items/RoleCard";
@@ -21,7 +22,7 @@ const definition: RoleDefinition = {
     team: "townsfolk",
     icon: "shirt",
     nightOrder: 10,
-    firstNightOnly: true,
+    shouldWake: (game, player) => isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
 
     RoleReveal: ({ player, onContinue }) => (
         <RoleCard player={player} onContinue={onContinue} />

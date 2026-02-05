@@ -172,6 +172,16 @@ const en: Translations = {
         yesOneIsDemon: "YES — One of them is a Demon!",
         noNeitherIsDemon: "NO — Neither is a Demon.",
 
+        // Undertaker specific
+        undertakerInfo: "The Executed Role",
+        executedPlayerRole: "The player executed today was...",
+        noExecutionToday: "No one was executed today.",
+
+        // Ravenkeeper specific
+        ravenkeeperInfo: "Choose a Player",
+        selectPlayerToSeeRole: "You have died! Select a player to learn their role.",
+        playerRoleIs: "Their role is...",
+
         // Handback screen
         handbackToNarrator: "Hand back to Narrator",
         handbackDescription:
@@ -281,6 +291,23 @@ const en: Translations = {
                 sawDemon: "{player} checked {player1} and {player2} — YES, one is a Demon (or Red Herring)",
                 sawNoDemon: "{player} checked {player1} and {player2} — NO, neither is a Demon",
                 redHerringAssigned: "{redHerring} was assigned as the Red Herring for {player}",
+            },
+        },
+        undertaker: {
+            name: "Undertaker",
+            description:
+                "Each night*, you learn which character died by execution today.",
+            history: {
+                sawExecutedRole: "{player} learned that the executed player was the {role}",
+                noExecution: "{player} learned there was no execution today",
+            },
+        },
+        ravenkeeper: {
+            name: "Ravenkeeper",
+            description:
+                "If you die at night, you are woken to choose a player: you learn their character.",
+            history: {
+                sawRole: "{player} chose to see {target}'s role: {role}",
             },
         },
     },

@@ -59,9 +59,11 @@ export function HistoryView({ game, onClose }: Props) {
             {/* Event List - Simple, no cards */}
             <div className="max-w-lg mx-auto px-4 py-4">
                 <div className="space-y-0">
-                    {game.history.map((entry, index) => {
+                    {game.history
+                        .filter((entry) => entry.message.length > 0) // Hide entries with no message
+                        .map((entry, index, filteredHistory) => {
                         const iconConfig = eventIcons[entry.type];
-                        const isLast = index === game.history.length - 1;
+                        const isLast = index === filteredHistory.length - 1;
                         
                         return (
                             <div key={entry.id} className="relative">

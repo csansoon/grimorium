@@ -1,4 +1,4 @@
-import { GameState, PlayerState, HistoryEntry } from "../types";
+import { GameState, PlayerState, HistoryEntry, Game } from "../types";
 import { IconName } from "../../components/atoms/icon";
 import { TeamId } from "../teams";
 
@@ -17,6 +17,7 @@ export type EffectToAdd = {
 // ============================================================================
 
 export type NightActionProps = {
+    game: Game;
     state: GameState;
     player: PlayerState;
     onComplete: (result: NightActionResult) => void;
@@ -46,7 +47,7 @@ export type RoleRevealProps = {
 // ROLE DEFINITION
 // ============================================================================
 
-export type RoleId = "villager" | "imp" | "washerwoman" | "librarian" | "investigator" | "chef" | "empath" | "monk" | "soldier" | "fortune_teller";
+export type RoleId = "villager" | "imp" | "washerwoman" | "librarian" | "investigator" | "chef" | "empath" | "fortune_teller" | "undertaker" | "monk" | "ravenkeeper" | "soldier";
 
 export type RoleDefinition = {
     id: RoleId;
@@ -56,11 +57,10 @@ export type RoleDefinition = {
     // Night order - lower numbers wake first, null means doesn't wake at night
     nightOrder: number | null;
 
-    // Whether this role wakes on the first night only
-    firstNightOnly?: boolean;
-
-    // Whether this role skips the first night (like Imp - doesn't kill night 1)
-    skipsFirstNight?: boolean;
+    // Optional function to check if this role should wake this night
+    // Used for: first night only, skips first night, conditional abilities, etc.
+    // If not provided, the role always wakes when it's their turn
+    shouldWake?: (game: Game, player: PlayerState) => boolean;
 
     // Component to show when revealing role to player
     RoleReveal: React.FC<RoleRevealProps>;

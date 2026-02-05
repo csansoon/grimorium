@@ -55,7 +55,7 @@ const definition: RoleDefinition = {
     team: "townsfolk",
     icon: "chefHat",
     nightOrder: 13,
-    firstNightOnly: true,
+    shouldWake: (game, player) => isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
 
     RoleReveal: ({ player, onContinue }) => (
         <RoleCard player={player} onContinue={onContinue} />
