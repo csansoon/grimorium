@@ -97,6 +97,13 @@ const es: Translations = {
         confirmVotes: "Confirmar Votos",
         cancelNomination: "Cancelar Nominación",
 
+        // Slayer
+        slayerAction: "Disparo del Matador",
+        slayerActionDescription: "Proclama ser el Matador y dispara a un jugador",
+        selectSlayer: "Seleccionar Matador",
+        selectTarget: "Seleccionar Objetivo",
+        confirmSlayerShot: "Confirmar Disparo",
+
         goodWins: "¡Gana el Bien!",
         evilWins: "¡Gana el Mal!",
         townVanquishedDemon: "¡El pueblo ha vencido al Demonio!",
@@ -293,6 +300,15 @@ const es: Translations = {
                 lostPurity: "{nominator} nominó a la Virgen — el poder de la Virgen se ha agotado",
             },
         },
+        slayer: {
+            name: "Matador",
+            description:
+                "Una vez por partida, durante el día, elige públicamente a un jugador: si es el Demonio, muere.",
+            history: {
+                killedDemon: "¡{slayer} disparó a {target} — era el Demonio!",
+                missed: "{slayer} disparó a {target} — no pasó nada",
+            },
+        },
     },
 
     effects: {
@@ -317,6 +333,11 @@ const es: Translations = {
             name: "Pura",
             description:
                 "Si un Aldeano nomina a este jugador, ese Aldeano es ejecutado en su lugar.",
+        },
+        slayer_bullet: {
+            name: "Disparo del Matador",
+            description:
+                "Este jugador puede usar su habilidad de Matador para disparar a un jugador.",
         },
     },
 

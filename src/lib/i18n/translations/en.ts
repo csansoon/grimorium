@@ -101,6 +101,13 @@ const en: Translations = {
         confirmVotes: "Confirm Votes",
         cancelNomination: "Cancel Nomination",
 
+        // Slayer
+        slayerAction: "Slayer Shot",
+        slayerActionDescription: "Claim to be the Slayer and shoot a player",
+        selectSlayer: "Select Slayer",
+        selectTarget: "Select Target",
+        confirmSlayerShot: "Confirm Shot",
+
         goodWins: "Good Wins!",
         evilWins: "Evil Wins!",
         townVanquishedDemon: "The town has vanquished the Demon!",
@@ -320,6 +327,15 @@ const en: Translations = {
                 lostPurity: "{nominator} nominated the Virgin — the Virgin's power is spent",
             },
         },
+        slayer: {
+            name: "Slayer",
+            description:
+                "Once per game, during the day, publicly choose a player: if they are the Demon, they die.",
+            history: {
+                killedDemon: "{slayer} shot {target} — they were the Demon!",
+                missed: "{slayer} shot {target} — nothing happened",
+            },
+        },
     },
 
     effects: {
@@ -347,6 +363,11 @@ const en: Translations = {
             name: "Pure",
             description:
                 "If a Townsfolk nominates this player, that Townsfolk is executed instead.",
+        },
+        slayer_bullet: {
+            name: "Slayer Shot",
+            description:
+                "This player can use their Slayer ability to shoot a player.",
         },
     },
 

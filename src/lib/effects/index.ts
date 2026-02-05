@@ -4,6 +4,7 @@ import UsedDeadVote from "./definition/UsedDeadVote";
 import Safe from "./definition/Safe";
 import RedHerring from "./definition/RedHerring";
 import Pure from "./definition/pure";
+import SlayerBullet from "./definition/slayer-bullet";
 
 export const EFFECTS: Record<EffectId, EffectDefinition> = {
     dead: Dead,
@@ -11,6 +12,7 @@ export const EFFECTS: Record<EffectId, EffectDefinition> = {
     safe: Safe,
     red_herring: RedHerring,
     pure: Pure,
+    slayer_bullet: SlayerBullet,
 };
 
 export function getEffect(effectId: string): EffectDefinition | undefined {

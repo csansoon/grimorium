@@ -106,6 +106,13 @@ export type Translations = {
         confirmVotes: string;
         cancelNomination: string;
 
+        // Slayer
+        slayerAction: string;
+        slayerActionDescription: string;
+        selectSlayer: string;
+        selectTarget: string;
+        confirmSlayerShot: string;
+
         // Game Over
         goodWins: string;
         evilWins: string;
@@ -300,6 +307,14 @@ export type Translations = {
                 lostPurity: string;
             };
         };
+        slayer: {
+            name: string;
+            description: string;
+            history: {
+                killedDemon: string;
+                missed: string;
+            };
+        };
     };
 
     // Effects
@@ -321,6 +336,10 @@ export type Translations = {
             description: string;
         };
         pure: {
+            name: string;
+            description: string;
+        };
+        slayer_bullet: {
             name: string;
             description: string;
         };

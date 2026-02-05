@@ -14,6 +14,8 @@ import {
     endGame,
     checkWinCondition,
     hasExecutionToday,
+    hasSlayerWithBullet,
+    slayerShoot,
 } from "../../lib/game";
 import { saveGame } from "../../lib/storage";
 import { useI18n, interpolate } from "../../lib/i18n";
@@ -24,6 +26,7 @@ import { VotingPhase } from "./VotingPhase";
 import { GameOver } from "./GameOver";
 import { HistoryView } from "./HistoryView";
 import { HandbackScreen } from "./HandbackScreen";
+import { SlayerActionScreen } from "./SlayerActionScreen";
 import { GrimoireModal } from "../items/GrimoireModal";
 import { MysticDivider } from "../items";
 import { Button, Icon, LanguageToggle } from "../atoms";
@@ -42,6 +45,7 @@ type Screen =
     | { type: "night_waiting" }
     | { type: "day" }
     | { type: "nomination" }
+    | { type: "slayer_action" }
     | { type: "voting"; nomineeId: string }
     | { type: "game_over" }
     | { type: "grimoire_role_card"; playerId: string; returnTo: Screen };
@@ -240,6 +244,29 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         }
     };
 
+    const handleOpenSlayerAction = () => {
+        setScreen({ type: "slayer_action" });
+    };
+
+    const handleSlayerShoot = (slayerId: string, targetId: string) => {
+        const newGame = slayerShoot(game, slayerId, targetId);
+        updateGame(newGame);
+
+        // Check win condition after slayer shot
+        const winner = checkWinCondition(getCurrentState(newGame));
+        if (winner) {
+            const finalGame = endGame(newGame, winner);
+            updateGame(finalGame);
+            setScreen({ type: "game_over" });
+        } else {
+            setScreen({ type: "day" });
+        }
+    };
+
+    const handleBackFromSlayerAction = () => {
+        setScreen({ type: "day" });
+    };
+
     const handleVoteComplete = (votesFor: string[], votesAgainst: string[]) => {
         if (screen.type !== "voting") return;
 
@@ -402,10 +429,21 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                     <DayPhase
                         state={state}
                         canNominate={!hasExecutionToday(game)}
+                        hasSlayerAction={hasSlayerWithBullet(game)}
                         onNominate={handleOpenNomination}
+                        onSlayerAction={handleOpenSlayerAction}
                         onEndDay={handleEndDay}
                         onMainMenu={onMainMenu}
                         onShowRoleCard={handleShowRoleCard}
+                    />
+                );
+
+            case "slayer_action":
+                return (
+                    <SlayerActionScreen
+                        state={state}
+                        onShoot={handleSlayerShoot}
+                        onBack={handleBackFromSlayerAction}
                     />
                 );
 
