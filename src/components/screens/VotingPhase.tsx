@@ -53,7 +53,7 @@ export function VotingPhase({ state, nomineeId, onVoteComplete, onCancel }: Prop
     if (!nominee) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-red-950 via-grimoire-blood to-grimoire-darker flex flex-col">
+        <div className="min-h-app bg-gradient-to-b from-red-950 via-grimoire-blood to-grimoire-darker flex flex-col">
             {/* Header */}
             <div className="bg-gradient-to-b from-red-900/50 to-transparent px-4 py-6 text-center">
                 <div className="flex justify-center mb-2">

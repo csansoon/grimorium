@@ -5,6 +5,22 @@
 @tailwind utilities;
 
 @layer base {
+  /* Use dynamic viewport height for proper mobile support */
+  :root {
+    --app-height: 100vh;
+  }
+
+  @supports (height: 100dvh) {
+    :root {
+      --app-height: 100dvh;
+    }
+  }
+
+  html, body, #root {
+    height: var(--app-height);
+    min-height: var(--app-height);
+  }
+
   body {
     @apply font-body bg-grimoire-dark text-white;
     -webkit-font-smoothing: antialiased;
@@ -68,6 +84,15 @@
 @layer utilities {
   .tracking-widest-xl {
     letter-spacing: 0.2em;
+  }
+
+  /* Dynamic viewport height utilities */
+  .min-h-app {
+    min-height: var(--app-height);
+  }
+
+  .h-app {
+    height: var(--app-height);
   }
 }
 

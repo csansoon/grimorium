@@ -314,7 +314,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
             case "night_waiting":
                 return (
-                    <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex items-center justify-center p-4">
+                    <div className="min-h-app bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex items-center justify-center p-4">
                         <div className="max-w-sm w-full text-center">
                             {/* Moon icon */}
                             <div className="mb-8">

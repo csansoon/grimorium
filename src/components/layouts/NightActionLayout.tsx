@@ -28,7 +28,7 @@ export function NightActionLayout({ player, title, description, children }: Prop
     return (
         <div
             className={cn(
-                "min-h-screen flex flex-col bg-gradient-to-b",
+                "min-h-app flex flex-col bg-gradient-to-b",
                 isEvil
                     ? "from-red-950 via-grimoire-blood to-grimoire-darker"
                     : "from-indigo-950 via-grimoire-purple to-grimoire-darker"

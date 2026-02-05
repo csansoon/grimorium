@@ -31,7 +31,7 @@ export function MainMenu({ onNewGame, onContinue, onLoadGame }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col p-4">
+        <div className="min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col p-4">
             {/* Space for floating language toggle */}
             <div className="h-8 mb-4" />
 

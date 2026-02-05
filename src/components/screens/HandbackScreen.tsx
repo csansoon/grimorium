@@ -9,7 +9,7 @@ export function HandbackScreen({ onContinue }: Props) {
     const { t } = useI18n();
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col items-center justify-center p-6">
+        <div className="min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col items-center justify-center p-6">
             <div className="text-center max-w-sm">
                 {/* Icon */}
                 <div className="mb-8">
