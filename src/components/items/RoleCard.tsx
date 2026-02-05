@@ -29,10 +29,10 @@ export function RoleCard({ player, onContinue }: Props) {
     const roleTranslation = t.roles[roleId];
     const teamTranslation = t.teams[teamId];
 
-    const roleName = roleTranslation?.name ?? role.name;
-    const roleDescription = roleTranslation?.description ?? role.description;
-    const teamName = teamTranslation?.name ?? team.name;
-    const winCondition = role.winCondition ?? teamTranslation?.winCondition ?? team.winCondition;
+    const roleName = roleTranslation?.name ?? roleId;
+    const roleDescription = roleTranslation?.description ?? "";
+    const teamName = teamTranslation?.name ?? teamId;
+    const winCondition = teamTranslation?.winCondition ?? "";
 
     const isEvil = team.isEvil;
 

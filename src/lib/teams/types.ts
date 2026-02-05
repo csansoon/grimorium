@@ -4,9 +4,7 @@ export type TeamId = "townsfolk" | "outsider" | "minion" | "demon";
 
 export type TeamDefinition = {
     id: TeamId;
-    name: string;
     icon: IconName;
-    winCondition: string;
     isEvil: boolean;
     colors: {
         // For tarot card backgrounds

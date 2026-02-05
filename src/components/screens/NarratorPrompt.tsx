@@ -13,7 +13,7 @@ export function NarratorPrompt({ player, action, onProceed }: Props) {
     const { t } = useI18n();
     const role = getRole(player.roleId);
     const roleId = role?.id as keyof typeof t.roles | undefined;
-    const roleName = (roleId && t.roles[roleId]?.name) ?? role?.name ?? "Unknown";
+    const roleName = (roleId && t.roles[roleId]?.name) ?? roleId ?? "Unknown";
 
     const isRoleReveal = action === "role_reveal";
 

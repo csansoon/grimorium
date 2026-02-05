@@ -9,9 +9,6 @@ import { cn } from "../../utils";
 
 const definition: RoleDefinition = {
     id: "imp",
-    name: "Imp",
-    description:
-        "Each night*, choose a player: they die. If you kill yourself, a Minion becomes the Imp.",
     team: "demon",
     icon: "skull",
     nightOrder: 50,
@@ -43,7 +40,8 @@ const definition: RoleDefinition = {
                             { type: "player", playerId: player.id },
                             { type: "text", content: " (" },
                             { type: "role", roleId: "imp" },
-                            { type: "text", content: ") chose to kill " },
+                            { type: "text", content: ")" },
+                            { type: "i18n", key: "history.choseToKill" },
                             { type: "player", playerId: target.id },
                         ],
                         data: {

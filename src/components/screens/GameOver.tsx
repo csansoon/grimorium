@@ -15,10 +15,8 @@ export function GameOver({ state, onMainMenu }: Props) {
     const isGoodWin = winner === "townsfolk";
 
     const getRoleName = (roleId: string) => {
-        const role = getRole(roleId);
-        if (!role) return roleId;
         const translationKey = roleId as keyof typeof t.roles;
-        return t.roles[translationKey]?.name ?? role.name;
+        return t.roles[translationKey]?.name ?? roleId;
     };
 
     return (

@@ -50,7 +50,7 @@ export function createGame(
                 id: generateId(),
                 timestamp: Date.now(),
                 type: "game_created",
-                message: [{ type: "text", content: "Game started" }],
+                message: [{ type: "i18n", key: "history.gameStarted" }],
                 data: { players: playerStates.map((p) => ({ id: p.id, name: p.name, roleId: p.roleId })) },
                 stateAfter: initialState,
             },
@@ -242,7 +242,7 @@ export function startNight(game: Game): Game {
         {
             type: "night_started",
             message: [
-                { type: "text", content: `Night ${newRound} begins` },
+                { type: "i18n", key: "history.nightBegins", params: { round: newRound } },
             ],
             data: { round: newRound },
         },
@@ -256,7 +256,7 @@ export function startDay(game: Game): Game {
         game,
         {
             type: "night_resolved",
-            message: [{ type: "text", content: "The sun rises..." }],
+            message: [{ type: "i18n", key: "history.sunRises" }],
             data: {},
         }
     );
@@ -281,7 +281,7 @@ export function startDay(game: Game): Game {
                 type: "effect_added",
                 message: [
                     { type: "player", playerId: player.id },
-                    { type: "text", content: " has died in the night" },
+                    { type: "i18n", key: "history.diedInNight" },
                 ],
                 data: { playerId: player.id, effectType: "dead" },
             });
@@ -294,7 +294,7 @@ export function startDay(game: Game): Game {
         {
             type: "day_started",
             message: [
-                { type: "text", content: `Day ${currentState.round} begins` },
+                { type: "i18n", key: "history.dayBegins", params: { round: currentState.round } },
             ],
             data: { round: currentState.round },
         },
@@ -311,7 +311,7 @@ export function markRoleRevealed(game: Game, playerId: string): Game {
         type: "role_revealed",
         message: [
             { type: "player", playerId },
-            { type: "text", content: " learned they are the " },
+            { type: "i18n", key: "history.learnedRole" },
             { type: "role", roleId: player.roleId },
         ],
         data: { playerId, roleId: player.roleId },
@@ -344,7 +344,7 @@ export function skipNightAction(game: Game, roleId: string, playerId: string): G
         type: "night_skipped",
         message: [
             { type: "role", roleId },
-            { type: "text", content: " has no action tonight" },
+            { type: "i18n", key: "history.noActionTonight" },
         ],
         data: { roleId, playerId },
     });
@@ -371,9 +371,8 @@ export function nominate(
             type: "nomination",
             message: [
                 { type: "player", playerId: nominatorId },
-                { type: "text", content: " nominates " },
+                { type: "i18n", key: "history.nominates" },
                 { type: "player", playerId: nomineeId },
-                { type: "text", content: " for execution" },
             ],
             data: { nominatorId, nomineeId },
         },
@@ -409,10 +408,13 @@ export function resolveVote(
         {
             type: "vote",
             message: [
-                { type: "text", content: `Vote on ` },
                 { type: "player", playerId: nomineeId },
-                { type: "text", content: `: ${votesFor.length} for, ${votesAgainst.length} against. ` },
-                { type: "text", content: passed ? "The vote passes!" : "The vote fails." },
+                { type: "i18n", key: "history.voteResult", params: { 
+                    for: votesFor.length, 
+                    against: votesAgainst.length,
+                }},
+                { type: "text", content: " " },
+                { type: "i18n", key: passed ? "history.votePassed" : "history.voteFailed" },
             ],
             data: { nomineeId, votesFor, votesAgainst, passed, majority },
         },
@@ -428,7 +430,7 @@ export function resolveVote(
                 type: "execution",
                 message: [
                     { type: "player", playerId: nomineeId },
-                    { type: "text", content: " has been executed" },
+                    { type: "i18n", key: "history.executed" },
                 ],
                 data: { playerId: nomineeId },
             },
@@ -471,11 +473,8 @@ export function endGame(game: Game, winner: "townsfolk" | "demon"): Game {
             type: "game_ended",
             message: [
                 {
-                    type: "text",
-                    content:
-                        winner === "townsfolk"
-                            ? "Good wins! The Demon has been slain."
-                            : "Evil wins! The Demon has conquered the town.",
+                    type: "i18n",
+                    key: winner === "townsfolk" ? "history.goodWins" : "history.evilWins",
                 },
             ],
             data: { winner },

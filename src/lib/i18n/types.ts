@@ -151,13 +151,38 @@ export type Translations = {
 
     // Effects
     effects: {
-        dead: string;
-        usedDeadVote: string;
+        dead: {
+            name: string;
+            description: string;
+        };
+        used_dead_vote: {
+            name: string;
+            description: string;
+        };
     };
 
     // UI
     ui: {
         effects: string;
         seeRoleCard: string;
+    };
+
+    // History messages
+    history: {
+        gameStarted: string;
+        nightBegins: string;
+        sunRises: string;
+        diedInNight: string;
+        dayBegins: string;
+        learnedRole: string;
+        noActionTonight: string;
+        nominates: string;
+        voteResult: string;
+        votePassed: string;
+        voteFailed: string;
+        executed: string;
+        choseToKill: string;
+        goodWins: string;
+        evilWins: string;
     };
 };

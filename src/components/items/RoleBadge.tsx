@@ -30,7 +30,7 @@ export function RoleBadge({
 
     const getRoleName = () => {
         const key = roleId as keyof typeof t.roles;
-        return t.roles[key]?.name ?? role.name;
+        return t.roles[key]?.name ?? roleId;
     };
 
     return (

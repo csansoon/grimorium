@@ -3,9 +3,7 @@ import { hasEffect } from "../../types";
 
 const definition: EffectDefinition = {
     id: "dead",
-    name: "Dead",
-    description: "This player is dead and cannot vote or nominate (except for one final dead vote).",
-    icon: "💀",
+    icon: "skull",
 
     preventsNightWake: true,
     preventsVoting: true,
