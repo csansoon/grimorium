@@ -310,6 +310,15 @@ const en: Translations = {
                 sawRole: "{player} chose to see {target}'s role: {role}",
             },
         },
+        virgin: {
+            name: "Virgin",
+            description:
+                "The 1st time you are nominated, if the nominator is a Townsfolk, they are executed immediately.",
+            history: {
+                townsfolkExecuted: "{nominator} nominated the Virgin and was executed!",
+                lostPurity: "{nominator} nominated the Virgin — the Virgin's power is spent",
+            },
+        },
     },
 
     effects: {
@@ -332,6 +341,11 @@ const en: Translations = {
             name: "Red Herring",
             description:
                 "This player registers as a Demon to a specific Fortune Teller.",
+        },
+        pure: {
+            name: "Pure",
+            description:
+                "If a Townsfolk nominates this player, that Townsfolk is executed instead.",
         },
     },
 

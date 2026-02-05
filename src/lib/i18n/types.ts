@@ -291,6 +291,14 @@ export type Translations = {
                 sawRole: string;
             };
         };
+        virgin: {
+            name: string;
+            description: string;
+            history: {
+                townsfolkExecuted: string;
+                lostPurity: string;
+            };
+        };
     };
 
     // Effects
@@ -308,6 +316,10 @@ export type Translations = {
             description: string;
         };
         red_herring: {
+            name: string;
+            description: string;
+        };
+        pure: {
             name: string;
             description: string;
         };

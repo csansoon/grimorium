@@ -2,20 +2,19 @@ import { RoleDefinition } from "../../types";
 import { RoleCard } from "../../../../components/items/RoleCard";
 
 const definition: RoleDefinition = {
-    id: "soldier",
+    id: "virgin",
     team: "townsfolk",
-    icon: "shield",
-    nightOrder: null, // Soldier doesn't wake at night - passive ability
+    icon: "flower",
+    nightOrder: null, // Doesn't wake at night - passive ability
 
-    // Soldier gets permanent Safe effect at game start
+    // Virgin gets Pure effect at game start (used once when nominated)
     initialEffects: [
-        { type: "safe", data: { source: "soldier" }, expiresAt: "never" },
+        { type: "pure", expiresAt: "never" },
     ],
 
     RoleReveal: ({ player, onContinue }) => (
         <RoleCard player={player} onContinue={onContinue} />
     ),
-
     NightAction: null,
 };
 

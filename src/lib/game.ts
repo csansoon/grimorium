@@ -27,16 +27,19 @@ export function createGame(
     const gameId = generateId();
 
     const playerStates: PlayerState[] = players.map((p) => {
+        const role = getRole(p.roleId);
         const effects: PlayerState["effects"] = [];
 
-        // Soldier gets permanent Safe effect at game start
-        if (p.roleId === "soldier") {
-            effects.push({
-                id: generateId(),
-                type: "safe",
-                data: { source: "soldier", permanent: true },
-                expiresAt: "never",
-            });
+        // Apply initial effects defined by the role
+        if (role?.initialEffects) {
+            for (const effect of role.initialEffects) {
+                effects.push({
+                    id: generateId(),
+                    type: effect.type,
+                    data: effect.data ?? {},
+                    expiresAt: effect.expiresAt ?? "never",
+                });
+            }
         }
 
         return {
@@ -378,6 +381,57 @@ export function nominate(
     const nominee = state.players.find((p) => p.id === nomineeId);
 
     if (!nominator || !nominee) return game;
+
+    // Check for Virgin with Pure effect
+    if (hasEffect(nominee, "pure")) {
+        const nominatorRole = getRole(nominator.roleId);
+        const isTownsfolk = nominatorRole?.team === "townsfolk";
+
+        if (isTownsfolk) {
+            // Townsfolk nominates Virgin → Nominator is executed immediately!
+            return addHistoryEntry(
+                game,
+                {
+                    type: "virgin_execution",
+                    message: [
+                        { type: "i18n", key: "roles.virgin.history.townsfolkExecuted", params: { nominator: nominatorId } },
+                    ],
+                    data: { nominatorId, nomineeId, virginTriggered: true },
+                },
+                { phase: "day" },
+                { [nominatorId]: [{ type: "dead", expiresAt: "never" }] },
+                { [nomineeId]: ["pure"] }
+            );
+        } else {
+            // Non-townsfolk nominates Virgin → Virgin loses power, nomination continues
+            let updatedGame = addHistoryEntry(
+                game,
+                {
+                    type: "virgin_spent",
+                    message: [
+                        { type: "i18n", key: "roles.virgin.history.lostPurity", params: { nominator: nominatorId } },
+                    ],
+                    data: { nominatorId, nomineeId, virginTriggered: false },
+                },
+                undefined,
+                undefined,
+                { [nomineeId]: ["pure"] }
+            );
+            
+            // Then proceed with normal nomination
+            return addHistoryEntry(
+                updatedGame,
+                {
+                    type: "nomination",
+                    message: [
+                        { type: "i18n", key: "history.nominates", params: { nominator: nominatorId, nominee: nomineeId } },
+                    ],
+                    data: { nominatorId, nomineeId },
+                },
+                { phase: "voting" }
+            );
+        }
+    }
 
     return addHistoryEntry(
         game,

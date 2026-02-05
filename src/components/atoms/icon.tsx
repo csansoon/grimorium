@@ -15,6 +15,7 @@ import {
     Gamepad2Icon,
     GlobeIcon,
     HandHeartIcon,
+    HeartIcon,
     MinusIcon,
     MoonIcon,
     PlayIcon,
@@ -43,6 +44,7 @@ import {
     XIcon,
     ZapOffIcon,
     BirdhouseIcon,
+    FlowerIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -61,9 +63,11 @@ const Icons = {
     dices: DicesIcon,
     eye: EyeIcon,
     fish: FishIcon,
+    flower: FlowerIcon,
     gamepad: Gamepad2Icon,
     globe: GlobeIcon,
     handHeart: HandHeartIcon,
+    heart: HeartIcon,
     minus: MinusIcon,
     moon: MoonIcon,
     play: PlayIcon,
