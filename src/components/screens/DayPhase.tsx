@@ -7,23 +7,40 @@ type Props = {
     state: GameState;
     onNominate: () => void;
     onEndDay: () => void;
+    onMainMenu: () => void;
     onShowRoleCard?: (player: PlayerState) => void;
 };
 
-export function DayPhase({ state, onNominate, onEndDay, onShowRoleCard }: Props) {
+export function DayPhase({ state, onNominate, onEndDay, onMainMenu, onShowRoleCard }: Props) {
     const { t } = useI18n();
 
     return (
         <div className="min-h-app bg-gradient-to-b from-orange-950 via-amber-950 to-grimoire-dark flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-b from-amber-900/50 to-transparent px-4 py-6 text-center">
-                <div className="flex justify-center mb-2">
-                    <Icon name="sun" size="3xl" className="text-amber-400 text-glow-gold" />
+            <div className="bg-gradient-to-b from-amber-900/50 to-transparent px-4 py-4">
+                <div className="max-w-lg mx-auto">
+                    {/* Back button row */}
+                    <div className="flex items-center mb-4">
+                        <button
+                            onClick={onMainMenu}
+                            className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
+                        >
+                            <Icon name="arrowLeft" size="md" />
+                        </button>
+                        <span className="text-parchment-500 text-xs ml-1">{t.common.mainMenu}</span>
+                    </div>
+                    
+                    {/* Title section */}
+                    <div className="text-center">
+                        <div className="flex justify-center mb-2">
+                            <Icon name="sun" size="3xl" className="text-amber-400 text-glow-gold" />
+                        </div>
+                        <h1 className="font-tarot text-2xl text-parchment-100 tracking-widest-xl uppercase">
+                            {t.game.day} {state.round}
+                        </h1>
+                        <p className="text-parchment-400 text-sm">{t.game.discussionAndNominations}</p>
+                    </div>
                 </div>
-                <h1 className="font-tarot text-2xl text-parchment-100 tracking-widest-xl uppercase">
-                    {t.game.day} {state.round}
-                </h1>
-                <p className="text-parchment-400 text-sm">{t.game.discussionAndNominations}</p>
             </div>
 
             {/* Content */}

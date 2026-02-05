@@ -7,9 +7,10 @@ type Props = {
     player: PlayerState;
     action: "role_reveal" | "night_action";
     onProceed: () => void;
+    onMainMenu: () => void;
 };
 
-export function NarratorPrompt({ player, action, onProceed }: Props) {
+export function NarratorPrompt({ player, action, onProceed, onMainMenu }: Props) {
     const { t } = useI18n();
     const role = getRole(player.roleId);
     const roleId = role?.id as keyof typeof t.roles | undefined;
@@ -18,8 +19,20 @@ export function NarratorPrompt({ player, action, onProceed }: Props) {
     const isRoleReveal = action === "role_reveal";
 
     return (
-        <div className="min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex items-center justify-center p-4">
-            <div className="max-w-sm w-full text-center">
+        <div className="min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col">
+            {/* Back button */}
+            <div className="px-4 py-4">
+                <button
+                    onClick={onMainMenu}
+                    className="flex items-center gap-1 p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
+                >
+                    <Icon name="arrowLeft" size="md" />
+                    <span className="text-xs">{t.common.mainMenu}</span>
+                </button>
+            </div>
+            
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div className="max-w-sm w-full text-center">
                 {/* Icon */}
                 <div className="mb-8">
                     <div className="w-24 h-24 mx-auto rounded-full bg-mystic-gold/10 border border-mystic-gold/30 flex items-center justify-center">
@@ -57,6 +70,7 @@ export function NarratorPrompt({ player, action, onProceed }: Props) {
                 >
                     {t.game.readyShowToPlayer}
                 </Button>
+                </div>
             </div>
         </div>
     );

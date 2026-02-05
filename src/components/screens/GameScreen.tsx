@@ -269,6 +269,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                         player={player}
                         action={screen.action}
                         onProceed={handleNarratorProceed}
+                        onMainMenu={onMainMenu}
                     />
                 );
             }
@@ -314,35 +315,48 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
             case "night_waiting":
                 return (
-                    <div className="min-h-app bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex items-center justify-center p-4">
-                        <div className="max-w-sm w-full text-center">
-                            {/* Moon icon */}
-                            <div className="mb-8">
-                                <div className="w-24 h-24 mx-auto rounded-full bg-indigo-500/10 border border-indigo-400/30 flex items-center justify-center">
-                                    <Icon name="moon" size="3xl" className="text-indigo-400" />
-                                </div>
-                            </div>
-
-                            <h1 className="font-tarot text-2xl text-parchment-100 tracking-wider uppercase mb-2">
-                                {interpolate(t.game.nightComplete, { round: state.round })}
-                            </h1>
-                            <p className="text-parchment-400 text-sm mb-8">
-                                {t.game.nightActionsResolved}
-                            </p>
-
-                            <div className="divider-mystic mb-8">
-                                <Icon name="sparkles" size="sm" className="text-indigo-400/40" />
-                            </div>
-
-                            <Button
-                                onClick={handleStartDay}
-                                fullWidth
-                                size="lg"
-                                className="bg-gradient-to-r from-amber-500 to-orange-600 text-grimoire-dark font-tarot uppercase tracking-wider"
+                    <div className="min-h-app bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex flex-col">
+                        {/* Back button */}
+                        <div className="px-4 py-4">
+                            <button
+                                onClick={onMainMenu}
+                                className="flex items-center gap-1 p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
                             >
-                                <Icon name="sun" size="md" className="mr-2" />
-                                {t.game.startDay}
-                            </Button>
+                                <Icon name="arrowLeft" size="md" />
+                                <span className="text-xs">{t.common.mainMenu}</span>
+                            </button>
+                        </div>
+                        
+                        <div className="flex-1 flex items-center justify-center p-4">
+                            <div className="max-w-sm w-full text-center">
+                                {/* Moon icon */}
+                                <div className="mb-8">
+                                    <div className="w-24 h-24 mx-auto rounded-full bg-indigo-500/10 border border-indigo-400/30 flex items-center justify-center">
+                                        <Icon name="moon" size="3xl" className="text-indigo-400" />
+                                    </div>
+                                </div>
+
+                                <h1 className="font-tarot text-2xl text-parchment-100 tracking-wider uppercase mb-2">
+                                    {interpolate(t.game.nightComplete, { round: state.round })}
+                                </h1>
+                                <p className="text-parchment-400 text-sm mb-8">
+                                    {t.game.nightActionsResolved}
+                                </p>
+
+                                <div className="divider-mystic mb-8">
+                                    <Icon name="sparkles" size="sm" className="text-indigo-400/40" />
+                                </div>
+
+                                <Button
+                                    onClick={handleStartDay}
+                                    fullWidth
+                                    size="lg"
+                                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-grimoire-dark font-tarot uppercase tracking-wider"
+                                >
+                                    <Icon name="sun" size="md" className="mr-2" />
+                                    {t.game.startDay}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 );
@@ -353,6 +367,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                         state={state}
                         onNominate={handleOpenNomination}
                         onEndDay={handleEndDay}
+                        onMainMenu={onMainMenu}
                         onShowRoleCard={handleShowRoleCard}
                     />
                 );
