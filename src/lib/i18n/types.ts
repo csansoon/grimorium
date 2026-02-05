@@ -116,15 +116,25 @@ export type Translations = {
         // History
         gameHistory: string;
 
-        // Washerwoman
+        // Washerwoman / Librarian shared
         narratorSetup: string;
         selectTwoPlayers: string;
         selectWhichRoleToShow: string;
-        mustIncludeTownsfolk: string;
         showToPlayer: string;
+        oneOfThemIsThe: string;
+
+        // Washerwoman specific
+        mustIncludeTownsfolk: string;
         washerwomanInfo: string;
         oneOfTheseIsTheTownsfolk: string;
-        oneOfThemIsThe: string;
+
+        // Librarian specific
+        mustIncludeOutsider: string;
+        librarianInfo: string;
+        oneOfTheseIsTheOutsider: string;
+        noOutsidersInGame: string;
+        noOutsidersMessage: string;
+        confirmNoOutsiders: string;
 
         // Handback screen
         handbackToNarrator: string;
@@ -170,6 +180,14 @@ export type Translations = {
             description: string;
             history: {
                 discoveredTownsfolk: string;
+            };
+        };
+        librarian: {
+            name: string;
+            description: string;
+            history: {
+                discoveredOutsider: string;
+                noOutsiders: string;
             };
         };
     };
