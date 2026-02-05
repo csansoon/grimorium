@@ -49,12 +49,14 @@ const en: Translations = {
 
         step3Title: "New Game",
         step3Subtitle: "Step 3: Assign roles (optional)",
-        assignmentInfo: "Optionally assign specific roles to players. Unassigned players get random roles from the pool.",
+        assignmentInfo:
+            "Optionally assign specific roles to players. Unassigned players get random roles from the pool.",
         resetToRandom: "Reset all to random",
         playerAssignments: "Player Assignments",
         randomPool: "Random Pool",
         rolesForPlayers: "{roles} roles for {players} players",
-        impNotAssignedWarning: "The Imp won't be assigned! Make sure at least one player gets the Imp or leave some players random.",
+        impNotAssignedWarning:
+            "The Imp won't be assigned! Make sure at least one player gets the Imp or leave some players random.",
     },
 
     game: {
@@ -63,7 +65,8 @@ const en: Translations = {
         readyShowToPlayer: "Ready - Show to Player",
 
         nightComplete: "Night {round} Complete",
-        nightActionsResolved: "All night actions have been resolved. Ready to start the day?",
+        nightActionsResolved:
+            "All night actions have been resolved. Ready to start the day?",
         startDay: "Start Day",
         choosePlayerToKill: "Choose a player to kill",
         selectVictim: "Select your victim for tonight.",
@@ -90,7 +93,8 @@ const en: Translations = {
         votesAgainst: "Against",
         abstain: "Abstain",
         willBeExecuted: "{player} will be EXECUTED ({votes}/{majority} votes)",
-        willNotBeExecuted: "{player} will NOT be executed ({votes}/{majority} needed)",
+        willNotBeExecuted:
+            "{player} will NOT be executed ({votes}/{majority} needed)",
         votes: "votes",
         needed: "needed",
         confirmVotes: "Confirm Votes",
@@ -109,15 +113,18 @@ const en: Translations = {
         narratorSetup: "Narrator Setup",
         selectTwoPlayers: "Select 2 players to show",
         selectWhichRoleToShow: "Select which Townsfolk's role to reveal",
-        mustIncludeTownsfolk: "At least one selected player must be a Townsfolk",
+        mustIncludeTownsfolk:
+            "At least one selected player must be a Townsfolk",
         showToPlayer: "Show to Player",
         washerwomanInfo: "Your Information",
-        oneOfTheseIsTheTownsfolk: "One of these players is a Townsfolk. Remember who they are!",
+        oneOfTheseIsTheTownsfolk:
+            "One of these players is a Townsfolk. Remember who they are!",
         oneOfThemIsThe: "One of them is the...",
 
         // Handback screen
         handbackToNarrator: "Hand back to Narrator",
-        handbackDescription: "Please return the device to the Narrator before continuing.",
+        handbackDescription:
+            "Please return the device to the Narrator before continuing.",
         narratorReady: "Narrator Ready",
     },
 
@@ -128,35 +135,42 @@ const en: Translations = {
         },
         outsider: {
             name: "Outsider",
-            winCondition: "Execute the Demon to win! But beware, your ability may hinder the town.",
+            winCondition:
+                "Execute the Demon to win! But beware, your ability may hinder the town.",
         },
         minion: {
             name: "Minion",
-            winCondition: "Help your Demon survive! Evil wins when evil players equal or outnumber the good.",
+            winCondition:
+                "Help your Demon survive! Evil wins when evil players equal or outnumber the good.",
         },
         demon: {
             name: "Demon",
-            winCondition: "Evil wins when evil players equal or outnumber the good. Stay hidden and eliminate the town!",
+            winCondition:
+                "Evil wins when evil players equal or outnumber the good. Stay hidden and eliminate the town!",
         },
     },
 
     roles: {
         villager: {
             name: "Villager",
-            description: "You have no ability. But you are still a good person! Help your town find the Demon.",
+            description:
+                "You have no ability. But you are still a good person! Help your town find the Demon.",
         },
         imp: {
             name: "Imp",
-            description: "Each night*, choose a player: they die. If you kill yourself, a Minion becomes the Imp.",
+            description:
+                "Each night*, choose a player: they die. If you kill yourself, a Minion becomes the Imp.",
             history: {
                 choseToKill: "{player} chose to kill {target}",
             },
         },
         washerwoman: {
             name: "Washerwoman",
-            description: "You start knowing that 1 of 2 players is a particular Townsfolk.",
+            description:
+                "You start knowing that 1 of 2 players is a particular Townsfolk.",
             history: {
-                discoveredTownsfolk: "{player} discovered that either {player1} or {player2} is the {role}",
+                discoveredTownsfolk:
+                    "{player} discovered that either {player1} or {player2} is the {role}",
             },
         },
     },
@@ -164,11 +178,13 @@ const en: Translations = {
     effects: {
         dead: {
             name: "Dead",
-            description: "This player is dead and cannot vote or nominate (except for one final dead vote).",
+            description:
+                "This player is dead and cannot vote or nominate (except for one final dead vote).",
         },
         used_dead_vote: {
             name: "Used Dead Vote",
-            description: "This dead player has used their one dead vote and cannot vote again.",
+            description:
+                "This dead player has used their one dead vote and cannot vote again.",
         },
     },
 

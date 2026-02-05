@@ -14,7 +14,7 @@ export function DayPhase({ state, onNominate, onEndDay, onShowRoleCard }: Props)
     const { t } = useI18n();
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-orange-950 via-amber-950 to-grimoire-dark flex flex-col">
+        <div className="min-h-app bg-gradient-to-b from-orange-950 via-amber-950 to-grimoire-dark flex flex-col">
             {/* Header */}
             <div className="bg-gradient-to-b from-amber-900/50 to-transparent px-4 py-6 text-center">
                 <div className="flex justify-center mb-2">

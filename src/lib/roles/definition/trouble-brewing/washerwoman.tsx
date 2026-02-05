@@ -113,7 +113,7 @@ const definition: RoleDefinition = {
         // Narrator Setup Phase
         if (phase === "narrator_setup") {
             return (
-                <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex flex-col">
+                <div className="min-h-app bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex flex-col">
                     {/* Header */}
                     <div className="bg-gradient-to-b from-blue-900/50 to-transparent px-4 py-6 text-center">
                         <div className="flex justify-center mb-3">

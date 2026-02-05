@@ -37,7 +37,7 @@ export function HistoryView({ game, onClose }: Props) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker">
+        <div className="min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker">
             {/* Header */}
             <div className="sticky top-0 z-10 bg-grimoire-dark/95 backdrop-blur-sm border-b border-mystic-gold/20 px-4 py-3">
                 <div className="flex items-center justify-between max-w-lg mx-auto">

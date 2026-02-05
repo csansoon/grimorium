@@ -16,7 +16,7 @@ export function RoleCard({ player, onContinue }: Props) {
 
     if (!role) {
         return (
-            <div className="min-h-screen bg-grimoire-dark flex items-center justify-center p-4">
+            <div className="min-h-app bg-grimoire-dark flex items-center justify-center p-4">
                 <p className="text-red-400 font-tarot">Unknown role: {player.roleId}</p>
             </div>
         );
@@ -39,7 +39,7 @@ export function RoleCard({ player, onContinue }: Props) {
     return (
         <div
             className={cn(
-                "min-h-screen flex items-center justify-center p-4 bg-gradient-to-br",
+                "min-h-app flex items-center justify-center p-4 bg-gradient-to-br",
                 team.colors.gradient
             )}
         >

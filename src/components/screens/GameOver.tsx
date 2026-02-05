@@ -23,7 +23,7 @@ export function GameOver({ state, onMainMenu, onShowHistory }: Props) {
     return (
         <div
             className={cn(
-                "min-h-screen flex flex-col bg-gradient-to-b",
+                "min-h-app flex flex-col bg-gradient-to-b",
                 isGoodWin
                     ? "from-indigo-950 via-blue-950 to-grimoire-dark"
                     : "from-red-950 via-grimoire-blood to-grimoire-darker"

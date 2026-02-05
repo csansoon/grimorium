@@ -18,7 +18,7 @@ export function NarratorPrompt({ player, action, onProceed }: Props) {
     const isRoleReveal = action === "role_reveal";
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex items-center justify-center p-4">
+        <div className="min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex items-center justify-center p-4">
             <div className="max-w-sm w-full text-center">
                 {/* Icon */}
                 <div className="mb-8">
