@@ -105,15 +105,25 @@ const es: Translations = {
 
         gameHistory: "Historial de Partida",
 
-        // Washerwoman
+        // Washerwoman / Librarian shared
         narratorSetup: "Configuración del Narrador",
         selectTwoPlayers: "Selecciona 2 jugadores para mostrar",
-        selectWhichRoleToShow: "Selecciona qué rol de Aldeano revelar",
-        mustIncludeTownsfolk: "Al menos uno de los jugadores seleccionados debe ser un Aldeano",
+        selectWhichRoleToShow: "Selecciona qué rol revelar",
         showToPlayer: "Mostrar al Jugador",
+        oneOfThemIsThe: "Uno de ellos es el/la...",
+
+        // Washerwoman specific
+        mustIncludeTownsfolk: "Al menos uno de los jugadores seleccionados debe ser un Aldeano",
         washerwomanInfo: "Tu Información",
         oneOfTheseIsTheTownsfolk: "Uno de estos jugadores es un Aldeano. ¡Recuerda quiénes son!",
-        oneOfThemIsThe: "Uno de ellos es el/la...",
+
+        // Librarian specific
+        mustIncludeOutsider: "Al menos uno de los jugadores seleccionados debe ser un Forastero",
+        librarianInfo: "Tu Información",
+        oneOfTheseIsTheOutsider: "Uno de estos jugadores es un Forastero. ¡Recuerda quiénes son!",
+        noOutsidersInGame: "Sin Forasteros",
+        noOutsidersMessage: "No hay Forasteros en esta partida. ¡Esta es información valiosa!",
+        confirmNoOutsiders: "Mostrar al Jugador",
 
         // Handback screen
         handbackToNarrator: "Devolver al Narrador",
@@ -157,6 +167,14 @@ const es: Translations = {
             description: "Empiezas sabiendo que 1 de 2 jugadores es un Aldeano en particular.",
             history: {
                 discoveredTownsfolk: "{player} descubrió que {player1} o {player2} es el/la {role}",
+            },
+        },
+        librarian: {
+            name: "Bibliotecario",
+            description: "Empiezas sabiendo que 1 de 2 jugadores es un Forastero en particular. (O que no hay ninguno en juego.)",
+            history: {
+                discoveredOutsider: "{player} descubrió que {player1} o {player2} es el/la {role}",
+                noOutsiders: "{player} descubrió que no hay Forasteros en esta partida",
             },
         },
     },

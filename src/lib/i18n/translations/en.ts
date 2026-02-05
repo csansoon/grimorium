@@ -109,17 +109,30 @@ const en: Translations = {
 
         gameHistory: "Game History",
 
-        // Washerwoman
+        // Washerwoman / Librarian shared
         narratorSetup: "Narrator Setup",
         selectTwoPlayers: "Select 2 players to show",
-        selectWhichRoleToShow: "Select which Townsfolk's role to reveal",
+        selectWhichRoleToShow: "Select which role to reveal",
+        showToPlayer: "Show to Player",
+        oneOfThemIsThe: "One of them is the...",
+
+        // Washerwoman specific
         mustIncludeTownsfolk:
             "At least one selected player must be a Townsfolk",
-        showToPlayer: "Show to Player",
         washerwomanInfo: "Your Information",
         oneOfTheseIsTheTownsfolk:
             "One of these players is a Townsfolk. Remember who they are!",
-        oneOfThemIsThe: "One of them is the...",
+
+        // Librarian specific
+        mustIncludeOutsider:
+            "At least one selected player must be an Outsider",
+        librarianInfo: "Your Information",
+        oneOfTheseIsTheOutsider:
+            "One of these players is an Outsider. Remember who they are!",
+        noOutsidersInGame: "No Outsiders",
+        noOutsidersMessage:
+            "There are no Outsiders in this game. This is valuable information!",
+        confirmNoOutsiders: "Show to Player",
 
         // Handback screen
         handbackToNarrator: "Hand back to Narrator",
@@ -171,6 +184,16 @@ const en: Translations = {
             history: {
                 discoveredTownsfolk:
                     "{player} discovered that either {player1} or {player2} is the {role}",
+            },
+        },
+        librarian: {
+            name: "Librarian",
+            description:
+                "You start knowing that 1 of 2 players is a particular Outsider. (Or that zero are in play.)",
+            history: {
+                discoveredOutsider:
+                    "{player} discovered that either {player1} or {player2} is the {role}",
+                noOutsiders: "{player} learned there are no Outsiders in this game",
             },
         },
     },
