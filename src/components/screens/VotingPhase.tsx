@@ -55,16 +55,32 @@ export function VotingPhase({ state, nomineeId, onVoteComplete, onCancel }: Prop
     return (
         <div className="min-h-app bg-gradient-to-b from-red-950 via-grimoire-blood to-grimoire-darker flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-b from-red-900/50 to-transparent px-4 py-6 text-center">
-                <div className="flex justify-center mb-2">
-                    <Icon name="scale" size="3xl" className="text-red-400" />
+            <div className="bg-gradient-to-b from-red-900/50 to-transparent px-4 py-4">
+                <div className="max-w-lg mx-auto">
+                    {/* Back button row */}
+                    <div className="flex items-center mb-4">
+                        <button
+                            onClick={onCancel}
+                            className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
+                        >
+                            <Icon name="arrowLeft" size="md" />
+                        </button>
+                        <span className="text-parchment-500 text-xs ml-1">{t.game.cancelNomination}</span>
+                    </div>
+                    
+                    {/* Title section */}
+                    <div className="text-center">
+                        <div className="flex justify-center mb-2">
+                            <Icon name="scale" size="3xl" className="text-red-400" />
+                        </div>
+                        <h1 className="font-tarot text-xl text-parchment-100 tracking-wider uppercase">
+                            {interpolate(t.game.executePlayer, { player: nominee.name })}
+                        </h1>
+                        <p className="text-parchment-400 text-sm">
+                            {interpolate(t.game.majorityNeeded, { count: majority })}
+                        </p>
+                    </div>
                 </div>
-                <h1 className="font-tarot text-xl text-parchment-100 tracking-wider uppercase">
-                    {interpolate(t.game.executePlayer, { player: nominee.name })}
-                </h1>
-                <p className="text-parchment-400 text-sm">
-                    {interpolate(t.game.majorityNeeded, { count: majority })}
-                </p>
             </div>
 
             {/* Vote Tally */}
