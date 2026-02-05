@@ -2,9 +2,7 @@ import { TeamDefinition } from "../types";
 
 const definition: TeamDefinition = {
     id: "minion",
-    name: "Minion",
     icon: "swords",
-    winCondition: "Help your Demon survive! Evil wins when evil players equal or outnumber the good.",
     isEvil: true,
     colors: {
         cardBg: "bg-gradient-to-b from-grimoire-dark to-grimoire-blood",

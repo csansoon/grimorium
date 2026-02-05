@@ -1,10 +1,11 @@
+import { IconName } from "../../components/atoms/icon";
 import { GameState, PlayerState } from "../types";
 
+export type EffectId = "dead" | "used_dead_vote";
+
 export type EffectDefinition = {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
+    id: EffectId;
+    icon: IconName;
 
     // Behavior modifiers
     preventsNightWake?: boolean;

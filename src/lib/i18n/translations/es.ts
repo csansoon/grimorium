@@ -137,13 +137,37 @@ const es: Translations = {
     },
 
     effects: {
-        dead: "Muerto",
-        usedDeadVote: "Voto de muerto usado",
+        dead: {
+            name: "Muerto",
+            description: "Este jugador está muerto y no puede votar ni nominar (excepto por un voto final de muerto).",
+        },
+        used_dead_vote: {
+            name: "Voto de Muerto Usado",
+            description: "Este jugador muerto ha usado su único voto de muerto y no puede votar de nuevo.",
+        },
     },
 
     ui: {
         effects: "Efectos",
         seeRoleCard: "Ver Carta de Rol",
+    },
+
+    history: {
+        gameStarted: "Partida iniciada",
+        nightBegins: "Noche {round} comienza",
+        sunRises: "El sol sale...",
+        diedInNight: " ha muerto en la noche",
+        dayBegins: "Día {round} comienza",
+        learnedRole: " descubrió que es el/la ",
+        noActionTonight: " no tiene acción esta noche",
+        nominates: " nomina a ",
+        voteResult: ": {for} a favor, {against} en contra",
+        votePassed: "¡La votación pasa!",
+        voteFailed: "La votación falla.",
+        executed: " ha sido ejecutado/a",
+        choseToKill: " eligió matar a ",
+        goodWins: "¡El Bien gana! El Demonio ha sido derrotado.",
+        evilWins: "¡El Mal gana! El pueblo ha caído.",
     },
 };
 

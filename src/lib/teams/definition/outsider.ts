@@ -2,9 +2,7 @@ import { TeamDefinition } from "../types";
 
 const definition: TeamDefinition = {
     id: "outsider",
-    name: "Outsider",
     icon: "userX",
-    winCondition: "Execute the Demon to win! But beware, your ability may hinder the town.",
     isEvil: false,
     colors: {
         cardBg: "bg-gradient-to-b from-parchment-100 to-parchment-300",

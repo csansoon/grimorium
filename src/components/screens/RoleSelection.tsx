@@ -58,12 +58,12 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
 
     const getRoleName = (role: RoleDefinition) => {
         const roleId = role.id as keyof typeof t.roles;
-        return t.roles[roleId]?.name ?? role.name;
+        return t.roles[roleId]?.name ?? role.id;
     };
 
     const getRoleDescription = (role: RoleDefinition) => {
         const roleId = role.id as keyof typeof t.roles;
-        return t.roles[roleId]?.description ?? role.description;
+        return t.roles[roleId]?.description ?? "";
     };
 
     const getTeamName = (teamId: string) => {

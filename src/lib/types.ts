@@ -46,6 +46,7 @@ export type GameState = {
 
 export type MessagePart =
     | { type: "text"; content: string }
+    | { type: "i18n"; key: string; params?: Record<string, string | number> }
     | { type: "player"; playerId: string }
     | { type: "role"; roleId: string }
     | { type: "effect"; effectType: string };

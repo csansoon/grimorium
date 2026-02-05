@@ -1,8 +1,8 @@
-import { RoleDefinition } from "./types";
+import { RoleDefinition, RoleId } from "./types";
 import Imp from "./definition/imp";
 import Villager from "./definition/villager";
 
-export const ROLES: Record<string, RoleDefinition> = {
+export const ROLES: Record<RoleId, RoleDefinition> = {
     imp: Imp,
     villager: Villager,
 };
@@ -15,7 +15,7 @@ export function getNightOrderRoles(): RoleDefinition[] {
 }
 
 export function getRole(roleId: string): RoleDefinition | undefined {
-    return ROLES[roleId];
+    return ROLES[roleId as RoleId];
 }
 
 export function getAllRoles(): RoleDefinition[] {

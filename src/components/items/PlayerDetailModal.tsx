@@ -1,7 +1,7 @@
 import { PlayerState, hasEffect } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { getTeam, TeamId } from "../../lib/teams";
-import { getEffect } from "../../lib/effects";
+import { getEffect, EffectId } from "../../lib/effects";
 import { useI18n } from "../../lib/i18n";
 import {
     Dialog,
@@ -34,12 +34,22 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard }: Pro
     const roleId = role?.id as keyof typeof t.roles | undefined;
     const teamId = role?.team as TeamId | undefined;
 
-    const roleName = (roleId && t.roles[roleId]?.name) ?? role?.name ?? "Unknown";
-    const roleDescription = (roleId && t.roles[roleId]?.description) ?? role?.description ?? "";
-    const teamName = (teamId && t.teams[teamId]?.name) ?? team?.name ?? "";
-    const winCondition = role?.winCondition ?? (teamId && t.teams[teamId]?.winCondition) ?? team?.winCondition ?? "";
+    const roleName = (roleId && t.roles[roleId]?.name) ?? roleId ?? "Unknown";
+    const roleDescription = (roleId && t.roles[roleId]?.description) ?? "";
+    const teamName = teamId ? t.teams[teamId]?.name : "";
+    const winCondition = teamId ? t.teams[teamId]?.winCondition : "";
 
     const isEvil = team?.isEvil ?? false;
+
+    const getEffectName = (effectType: string) => {
+        const effectKey = effectType as EffectId;
+        return t.effects[effectKey]?.name ?? effectType;
+    };
+
+    const getEffectDescription = (effectType: string) => {
+        const effectKey = effectType as EffectId;
+        return t.effects[effectKey]?.description;
+    };
 
     return (
         <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -79,7 +89,7 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard }: Pro
                         {isDead && (
                             <Badge variant="dead">
                                 <Icon name="skull" size="xs" className="mr-1" />
-                                {t.effects.dead}
+                                {t.effects.dead.name}
                             </Badge>
                         )}
                         {role && (
@@ -122,8 +132,8 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard }: Pro
                             <div className="space-y-2">
                                 {player.effects.map((effectInstance, index) => {
                                     const effect = getEffect(effectInstance.type);
-                                    const effectKey = effectInstance.type as keyof typeof t.effects;
-                                    const effectName = t.effects[effectKey] ?? effect?.name ?? effectInstance.type;
+                                    const effectName = getEffectName(effectInstance.type);
+                                    const effectDescription = getEffectDescription(effectInstance.type);
 
                                     return (
                                         <div
@@ -131,11 +141,12 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard }: Pro
                                             className="bg-white/5 rounded-lg p-3 border border-white/10"
                                         >
                                             <div className="flex items-center gap-2">
+                                                {effect && <Icon name={effect.icon} size="xs" />}
                                                 <Badge variant="effect">{effectName}</Badge>
                                             </div>
-                                            {effect?.description && (
+                                            {effectDescription && (
                                                 <p className="text-parchment-400 text-xs mt-2">
-                                                    {effect.description}
+                                                    {effectDescription}
                                                 </p>
                                             )}
                                         </div>

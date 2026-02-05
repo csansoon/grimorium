@@ -18,10 +18,8 @@ export function Grimoire({ state, compact = false, onShowRoleCard }: Props) {
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerState | null>(null);
 
     const getRoleName = (roleId: string) => {
-        const role = getRole(roleId);
-        if (!role) return roleId;
         const key = roleId as keyof typeof t.roles;
-        return t.roles[key]?.name ?? role.name;
+        return t.roles[key]?.name ?? roleId;
     };
 
     return (

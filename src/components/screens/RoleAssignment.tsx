@@ -96,10 +96,8 @@ export function RoleAssignment({ players, selectedRoles, onStart, onBack }: Prop
     };
 
     const getRoleName = (roleId: string) => {
-        const role = getRole(roleId);
-        if (!role) return roleId;
         const translationKey = roleId as keyof typeof t.roles;
-        return t.roles[translationKey]?.name ?? role.name;
+        return t.roles[translationKey]?.name ?? roleId;
     };
 
     const manuallyAssignedCount = Object.values(assignments).filter((r) => r !== null).length;

@@ -2,9 +2,7 @@ import { TeamDefinition } from "../types";
 
 const definition: TeamDefinition = {
     id: "demon",
-    name: "Demon",
     icon: "skull",
-    winCondition: "Evil wins when evil players equal or outnumber the good. Stay hidden and eliminate the town!",
     isEvil: true,
     colors: {
         cardBg: "bg-gradient-to-b from-grimoire-darker to-grimoire-blood",

@@ -137,13 +137,37 @@ const en: Translations = {
     },
 
     effects: {
-        dead: "Dead",
-        usedDeadVote: "Used dead vote",
+        dead: {
+            name: "Dead",
+            description: "This player is dead and cannot vote or nominate (except for one final dead vote).",
+        },
+        used_dead_vote: {
+            name: "Used Dead Vote",
+            description: "This dead player has used their one dead vote and cannot vote again.",
+        },
     },
 
     ui: {
         effects: "Effects",
         seeRoleCard: "See Role Card",
+    },
+
+    history: {
+        gameStarted: "Game started",
+        nightBegins: "Night {round} begins",
+        sunRises: "The sun rises...",
+        diedInNight: " has died in the night",
+        dayBegins: "Day {round} begins",
+        learnedRole: " learned they are the ",
+        noActionTonight: " has no action tonight",
+        nominates: " nominates ",
+        voteResult: ": {for} for, {against} against",
+        votePassed: "The vote passes!",
+        voteFailed: "The vote fails.",
+        executed: " has been executed",
+        choseToKill: " chose to kill ",
+        goodWins: "Good wins! The Demon has been defeated.",
+        evilWins: "Evil wins! The town has fallen.",
     },
 };
 

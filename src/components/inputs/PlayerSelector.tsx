@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PlayerState, hasEffect } from "../../lib/types";
 import { getRole } from "../../lib/roles";
+import { useI18n } from "../../lib/i18n";
 import { Button, Icon, Card, CardContent, CardHeader, CardTitle, CardDescription } from "../atoms";
 import { cn } from "../../lib/utils";
 
@@ -29,7 +30,13 @@ export function PlayerSelector({
     confirmLabel = "Confirm",
     icon,
 }: Props) {
+    const { t } = useI18n();
     const [selected, setSelected] = useState<string | null>(selectedId);
+
+    const getRoleName = (roleId: string) => {
+        const key = roleId as keyof typeof t.roles;
+        return t.roles[key]?.name ?? roleId;
+    };
 
     const visiblePlayers = showDeadPlayers
         ? players
@@ -86,7 +93,7 @@ export function PlayerSelector({
                                         </div>
                                         {showRoles && role && (
                                             <div className="text-sm text-white/50 flex items-center gap-1">
-                                                <Icon name={role.icon} size="xs" /> {role.name}
+                                                <Icon name={role.icon} size="xs" /> {getRoleName(role.id)}
                                             </div>
                                         )}
                                     </div>

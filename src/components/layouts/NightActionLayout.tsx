@@ -20,7 +20,7 @@ export function NightActionLayout({ player, title, description, children }: Prop
     const getRoleName = () => {
         if (!role) return null;
         const roleId = role.id as keyof typeof t.roles;
-        return t.roles[roleId]?.name ?? role.name;
+        return t.roles[roleId]?.name ?? role.id;
     };
 
     const isEvil = team?.isEvil ?? false;
