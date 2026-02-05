@@ -70,6 +70,7 @@ export type EventType =
     | "execution"
     | "virgin_execution"
     | "virgin_spent"
+    | "slayer_shot"
     | "effect_added"
     | "effect_removed"
     | "game_ended";

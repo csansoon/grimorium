@@ -463,6 +463,66 @@ export function nominate(
     );
 }
 
+/**
+ * Check if any player has the slayer_bullet effect (can use slayer ability)
+ */
+export function hasSlayerWithBullet(game: Game): boolean {
+    const state = getCurrentState(game);
+    return state.players.some((p) => hasEffect(p, "slayer_bullet") && !hasEffect(p, "dead"));
+}
+
+/**
+ * Perform the Slayer's ability - shoot a target
+ * Removes the slayer_bullet effect, kills target if they are the Demon
+ */
+export function slayerShoot(
+    game: Game,
+    slayerId: string,
+    targetId: string
+): Game {
+    const state = getCurrentState(game);
+    const slayer = state.players.find((p) => p.id === slayerId);
+    const target = state.players.find((p) => p.id === targetId);
+
+    if (!slayer || !target) return game;
+    if (!hasEffect(slayer, "slayer_bullet")) return game;
+
+    const targetRole = getRole(target.roleId);
+    const isDemon = targetRole?.team === "demon";
+
+    if (isDemon) {
+        // Hit! Target dies
+        return addHistoryEntry(
+            game,
+            {
+                type: "slayer_shot",
+                message: [
+                    { type: "i18n", key: "roles.slayer.history.killedDemon", params: { slayer: slayerId, target: targetId } },
+                ],
+                data: { slayerId, targetId, hit: true },
+            },
+            undefined,
+            { [targetId]: [{ type: "dead", expiresAt: "never" }] },
+            { [slayerId]: ["slayer_bullet"] }
+        );
+    } else {
+        // Miss! Nothing happens (except losing the bullet)
+        return addHistoryEntry(
+            game,
+            {
+                type: "slayer_shot",
+                message: [
+                    { type: "i18n", key: "roles.slayer.history.missed", params: { slayer: slayerId, target: targetId } },
+                ],
+                data: { slayerId, targetId, hit: false },
+            },
+            undefined,
+            undefined,
+            { [slayerId]: ["slayer_bullet"] }
+        );
+    }
+}
+
 export function resolveVote(
     game: Game,
     nomineeId: string,

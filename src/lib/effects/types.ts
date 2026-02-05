@@ -1,7 +1,7 @@
 import { IconName } from "../../components/atoms/icon";
 import { GameState, PlayerState } from "../types";
 
-export type EffectId = "dead" | "used_dead_vote" | "safe" | "red_herring" | "pure";
+export type EffectId = "dead" | "used_dead_vote" | "safe" | "red_herring" | "pure" | "slayer_bullet";
 
 export type EffectDefinition = {
     id: EffectId;

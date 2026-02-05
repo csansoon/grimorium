@@ -7,13 +7,15 @@ import { MysticDivider } from "../items";
 type Props = {
     state: GameState;
     canNominate: boolean;
+    hasSlayerAction: boolean;
     onNominate: () => void;
+    onSlayerAction: () => void;
     onEndDay: () => void;
     onMainMenu: () => void;
     onShowRoleCard?: (player: PlayerState) => void;
 };
 
-export function DayPhase({ state, canNominate, onNominate, onEndDay, onMainMenu, onShowRoleCard }: Props) {
+export function DayPhase({ state, canNominate, hasSlayerAction, onNominate, onSlayerAction, onEndDay, onMainMenu, onShowRoleCard }: Props) {
     const { t } = useI18n();
 
     return (
@@ -102,7 +104,26 @@ export function DayPhase({ state, canNominate, onNominate, onEndDay, onMainMenu,
                             )}
                         </button>
 
-                        {/* More actions can be added here in the future */}
+                        {/* Slayer Action Button */}
+                        {hasSlayerAction && (
+                            <button
+                                onClick={onSlayerAction}
+                                className="w-full flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-amber-900/30 to-orange-800/20 border border-amber-500/30 hover:border-amber-500/50 transition-colors group"
+                            >
+                                <div className="w-12 h-12 rounded-full bg-amber-900/40 border border-amber-500/40 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                    <Icon name="crosshair" size="lg" className="text-amber-400" />
+                                </div>
+                                <div className="flex-1 text-left">
+                                    <div className="font-tarot text-parchment-100 tracking-wider uppercase">
+                                        {t.game.slayerAction}
+                                    </div>
+                                    <p className="text-parchment-500 text-xs mt-0.5">
+                                        {t.game.slayerActionDescription}
+                                    </p>
+                                </div>
+                                <Icon name="arrowRight" size="md" className="text-parchment-500 group-hover:text-parchment-300 transition-colors" />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
