@@ -170,6 +170,16 @@ export type Translations = {
         yesOneIsDemon: string;
         noNeitherIsDemon: string;
 
+        // Undertaker specific
+        undertakerInfo: string;
+        executedPlayerRole: string;
+        noExecutionToday: string;
+
+        // Ravenkeeper specific
+        ravenkeeperInfo: string;
+        selectPlayerToSeeRole: string;
+        playerRoleIs: string;
+
         // Handback screen
         handbackToNarrator: string;
         handbackDescription: string;
@@ -264,6 +274,21 @@ export type Translations = {
                 sawDemon: string;
                 sawNoDemon: string;
                 redHerringAssigned: string;
+            };
+        };
+        undertaker: {
+            name: string;
+            description: string;
+            history: {
+                sawExecutedRole: string;
+                noExecution: string;
+            };
+        };
+        ravenkeeper: {
+            name: string;
+            description: string;
+            history: {
+                sawRole: string;
             };
         };
     };

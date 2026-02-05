@@ -5,14 +5,14 @@ import { RoleCard } from "../../../../components/items/RoleCard";
 import { NightActionLayout } from "../../../../components/layouts";
 import { RoleRevealBadge } from "../../../../components/items";
 import { Button, Icon } from "../../../../components/atoms";
-import { getAliveNeighbors } from "../../../types";
+import { getAliveNeighbors, isAlive } from "../../../types";
 
 const definition: RoleDefinition = {
     id: "empath",
     team: "townsfolk",
     icon: "handHeart",
     nightOrder: 14,
-    firstNightOnly: false, // Empath wakes every night
+    shouldWake: (_game, player) => isAlive(player),
 
     RoleReveal: ({ player, onContinue }) => (
         <RoleCard player={player} onContinue={onContinue} />

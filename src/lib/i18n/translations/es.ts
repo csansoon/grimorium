@@ -161,6 +161,16 @@ const es: Translations = {
         yesOneIsDemon: "SÍ — ¡Uno de ellos es un Demonio!",
         noNeitherIsDemon: "NO — Ninguno es un Demonio.",
 
+        // Undertaker specific
+        undertakerInfo: "El Rol del Ejecutado",
+        executedPlayerRole: "El jugador ejecutado hoy era...",
+        noExecutionToday: "Nadie fue ejecutado hoy.",
+
+        // Ravenkeeper specific
+        ravenkeeperInfo: "Elige un Jugador",
+        selectPlayerToSeeRole: "¡Has muerto! Selecciona un jugador para conocer su rol.",
+        playerRoleIs: "Su rol es...",
+
         // Handback screen
         handbackToNarrator: "Devolver al Narrador",
         handbackDescription: "Por favor, devuelve el dispositivo al Narrador antes de continuar.",
@@ -254,6 +264,23 @@ const es: Translations = {
                 sawDemon: "{player} revisó a {player1} y {player2} — SÍ, uno es un Demonio (o Pista Falsa)",
                 sawNoDemon: "{player} revisó a {player1} y {player2} — NO, ninguno es un Demonio",
                 redHerringAssigned: "{redHerring} fue asignado como la Pista Falsa para {player}",
+            },
+        },
+        undertaker: {
+            name: "Enterrador",
+            description:
+                "Cada noche*, descubres qué personaje murió por ejecución hoy.",
+            history: {
+                sawExecutedRole: "{player} descubrió que el jugador ejecutado era el/la {role}",
+                noExecution: "{player} descubrió que no hubo ejecución hoy",
+            },
+        },
+        ravenkeeper: {
+            name: "Guardacuervos",
+            description:
+                "Si mueres de noche, te despiertan para elegir un jugador: descubres su personaje.",
+            history: {
+                sawRole: "{player} eligió ver el rol de {target}: {role}",
             },
         },
     },

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RoleDefinition, EffectToAdd, NightActionResult } from "../../types";
 import { getRole } from "../../index";
+import { isAlive } from "../../../types";
 import { useI18n } from "../../../i18n";
 import { RoleCard } from "../../../../components/items/RoleCard";
 import { NightActionLayout, NarratorSetupLayout } from "../../../../components/layouts";
@@ -18,7 +19,7 @@ const definition: RoleDefinition = {
     team: "townsfolk",
     icon: "eye",
     nightOrder: 15, // After info roles like Washerwoman, before protection roles like Monk
-    firstNightOnly: false,
+    shouldWake: (_game, player) => isAlive(player),
 
     RoleReveal: ({ player, onContinue }) => (
         <RoleCard player={player} onContinue={onContinue} />

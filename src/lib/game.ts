@@ -5,7 +5,6 @@ import {
     PlayerState,
     generateId,
     getCurrentState,
-    isAlive,
     hasEffect,
     getAlivePlayers,
 } from "./types";
@@ -157,6 +156,7 @@ export function addHistoryEntry(
 export type GameStep =
     | { type: "role_reveal"; playerId: string }
     | { type: "night_action"; playerId: string; roleId: string }
+    | { type: "night_action_skip"; playerId: string; roleId: string } // Role's shouldWake returned false
     | { type: "night_waiting" } // Waiting for narrator to start day
     | { type: "day" }
     | { type: "voting"; nomineeId: string }
@@ -197,17 +197,24 @@ export function getNextStep(game: Game): GameStep {
             .filter((e) => e.type === "night_action" || e.type === "night_skipped")
             .map((e) => e.data.roleId as string);
 
-        // Get roles that should act tonight
-        const nightRoles = getNightRolesForRound(state, game);
+        // Get all roles with night actions in order
+        const nightRoles = getNightOrderRoles();
 
         // Find next role that hasn't acted
         for (const role of nightRoles) {
             if (!actedRoles.includes(role.id)) {
-                // Find the player with this role who is alive
-                const player = state.players.find(
-                    (p) => p.roleId === role.id && isAlive(p)
-                );
+                // Find the player with this role
+                const player = state.players.find((p) => p.roleId === role.id);
                 if (player) {
+                    // shouldWake handles ALL filtering: alive check, round check, conditions
+                    if (role.shouldWake && !role.shouldWake(game, player)) {
+                        // Role should not wake - mark as skipped
+                        return {
+                            type: "night_action_skip",
+                            playerId: player.id,
+                            roleId: role.id,
+                        };
+                    }
                     return {
                         type: "night_action",
                         playerId: player.id,
@@ -226,28 +233,6 @@ export function getNextStep(game: Game): GameStep {
     }
 
     return { type: "day" };
-}
-
-function getNightRolesForRound(state: GameState, _game: Game) {
-    const isFirstNight = state.round === 1;
-    const nightRoles = getNightOrderRoles();
-
-    // _game is available for future use (e.g., checking history)
-    void _game;
-
-    return nightRoles.filter((role) => {
-        // Check if any alive player has this role
-        const hasAlivePlayer = state.players.some(
-            (p) => p.roleId === role.id && isAlive(p)
-        );
-        if (!hasAlivePlayer) return false;
-
-        // First night restrictions
-        if (isFirstNight && role.skipsFirstNight) return false;
-        if (!isFirstNight && role.firstNightOnly) return false;
-
-        return true;
-    });
 }
 
 function findLastEventIndex(game: Game, eventType: string): number {

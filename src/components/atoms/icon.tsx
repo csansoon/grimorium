@@ -24,6 +24,7 @@ import {
     SearchIcon,
     ShieldIcon,
     ShirtIcon,
+    ShovelIcon,
     ShuffleIcon,
     SkullIcon,
     SparklesIcon,
@@ -41,6 +42,7 @@ import {
     VoteIcon,
     XIcon,
     ZapOffIcon,
+    BirdhouseIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -48,6 +50,7 @@ const Icons = {
     alertTriangle: AlertTriangleIcon,
     arrowLeft: ArrowLeftIcon,
     arrowRight: ArrowRightIcon,
+    birdHouse: BirdhouseIcon,
     bookMarked: BookMarkedIcon,
     check: CheckIcon,
     checkCircle: CheckCircleIcon,
@@ -70,6 +73,7 @@ const Icons = {
     search: SearchIcon,
     shield: ShieldIcon,
     shirt: ShirtIcon,
+    shovel: ShovelIcon,
     shuffle: ShuffleIcon,
     skull: SkullIcon,
     sparkles: SparklesIcon,

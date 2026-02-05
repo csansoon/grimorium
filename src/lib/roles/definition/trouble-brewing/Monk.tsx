@@ -12,7 +12,7 @@ const definition: RoleDefinition = {
     team: "townsfolk",
     icon: "church",
     nightOrder: 20, // Monk wakes before the Demon
-    skipsFirstNight: true, // Cannot protect on the first night
+    shouldWake: (game, player) => isAlive(player) && (game.history.at(-1)?.stateAfter.round ?? 0) > 1,
 
     RoleReveal: ({ player, onContinue }) => (
         <RoleCard player={player} onContinue={onContinue} />

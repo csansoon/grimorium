@@ -10,6 +10,8 @@ import Empath from "./definition/trouble-brewing/Empath";
 import Monk from "./definition/trouble-brewing/Monk";
 import Soldier from "./definition/trouble-brewing/Soldier";
 import FortuneTeller from "./definition/trouble-brewing/FortuneTeller";
+import Undertaker from "./definition/trouble-brewing/Undertaker";
+import Ravenkeeper from "./definition/trouble-brewing/Ravenkeeper";
 
 export const ROLES: Record<RoleId, RoleDefinition> = {
     imp: Imp,
@@ -19,9 +21,11 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
     investigator: Investigator,
     chef: Chef,
     empath: Empath,
-    monk: Monk,
-    soldier: Soldier,
     fortune_teller: FortuneTeller,
+    undertaker: Undertaker,
+    monk: Monk,
+    ravenkeeper: Ravenkeeper,
+    soldier: Soldier,
 };
 
 // Scripts define which roles are in each edition
@@ -37,7 +41,9 @@ export const SCRIPTS: Record<ScriptId, { name: string; roles: RoleId[] }> = {
             "chef",
             "empath",
             "fortune_teller",
+            "undertaker",
             "monk",
+            "ravenkeeper",
             "soldier",
             "villager",
             "imp",

@@ -10,7 +10,6 @@ const definition: RoleDefinition = {
     team: "townsfolk",
     icon: "shield",
     nightOrder: null, // Soldier doesn't wake at night - passive ability
-    firstNightOnly: false,
 
     RoleReveal: ({ player, onContinue }) => {
         const { t } = useI18n();
