@@ -1,15 +1,25 @@
 import { RoleDefinition } from "./types";
-
 import Imp from "./definition/imp";
 import Villager from "./definition/villager";
 
-export enum Role {
-    Imp,
-    Villager,
+export const ROLES: Record<string, RoleDefinition> = {
+    imp: Imp,
+    villager: Villager,
+};
+
+// Get all roles sorted by night order (roles that wake at night)
+export function getNightOrderRoles(): RoleDefinition[] {
+    return Object.values(ROLES)
+        .filter((role) => role.nightOrder !== null)
+        .sort((a, b) => (a.nightOrder ?? 0) - (b.nightOrder ?? 0));
 }
 
-// Note: this enum defines the role order in the game!
-export const ROLES: Record<Role, RoleDefinition> = {
-    [Role.Imp]: Imp,
-    [Role.Villager]: Villager,
-};
+export function getRole(roleId: string): RoleDefinition | undefined {
+    return ROLES[roleId];
+}
+
+export function getAllRoles(): RoleDefinition[] {
+    return Object.values(ROLES);
+}
+
+export * from "./types";

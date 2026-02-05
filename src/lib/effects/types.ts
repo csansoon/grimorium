@@ -1,11 +1,20 @@
-import { GameState } from "../game";
-
-export type EffectScript = (gameState: GameState) => void;
-export type IconGenerator = (gameState: GameState) => string;
+import { GameState, PlayerState } from "../types";
 
 export type EffectDefinition = {
+    id: string;
     name: string;
     description: string;
-    script: EffectScript;
-    icon: IconGenerator;
+    icon: string;
+
+    // Behavior modifiers
+    preventsNightWake?: boolean;
+    poisonsAbility?: boolean;
+    preventsVoting?: boolean;
+    preventsNomination?: boolean;
+
+    // Check if a player can vote given this effect
+    canVote?: (player: PlayerState, state: GameState) => boolean;
+
+    // Check if a player can nominate given this effect
+    canNominate?: (player: PlayerState, state: GameState) => boolean;
 };
