@@ -1,5 +1,5 @@
 import { getGameSummaries, getCurrentGameId, GameSummary } from "../../lib/storage";
-import { useI18n, Language } from "../../lib/i18n";
+import { useI18n } from "../../lib/i18n";
 import { Icon } from "../atoms";
 
 type Props = {
@@ -8,13 +8,8 @@ type Props = {
     onLoadGame: (gameId: string) => void;
 };
 
-const LANGUAGE_LABELS: Record<Language, string> = {
-    en: "EN",
-    es: "ES",
-};
-
 export function MainMenu({ onNewGame, onContinue, onLoadGame }: Props) {
-    const { language, setLanguage, t } = useI18n();
+    const { language, t } = useI18n();
     const games = getGameSummaries();
     const currentGameId = getCurrentGameId();
     const currentGame = games.find((g) => g.id === currentGameId);
@@ -35,22 +30,10 @@ export function MainMenu({ onNewGame, onContinue, onLoadGame }: Props) {
         return `${t.mainMenu.round} ${game.round} - ${game.phase}`;
     };
 
-    const toggleLanguage = () => {
-        setLanguage(language === "en" ? "es" : "en");
-    };
-
     return (
         <div className="min-h-screen bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col p-4">
-            {/* Language Selector - Top Right */}
-            <div className="flex justify-end mb-4">
-                <button
-                    onClick={toggleLanguage}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-mystic-gold/30 text-mystic-gold/70 hover:text-mystic-gold hover:border-mystic-gold/50 transition-colors text-sm"
-                >
-                    <Icon name="globe" size="sm" />
-                    {LANGUAGE_LABELS[language]}
-                </button>
-            </div>
+            {/* Space for floating language toggle */}
+            <div className="h-8 mb-4" />
 
             <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full">
                 {/* Logo Section */}

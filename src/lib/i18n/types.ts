@@ -125,6 +125,11 @@ export type Translations = {
         washerwomanInfo: string;
         oneOfTheseIsTheTownsfolk: string;
         oneOfThemIsThe: string;
+
+        // Handback screen
+        handbackToNarrator: string;
+        handbackDescription: string;
+        narratorReady: string;
     };
 
     // Teams
