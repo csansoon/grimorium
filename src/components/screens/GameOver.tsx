@@ -7,9 +7,10 @@ import { cn } from "../../lib/utils";
 type Props = {
     state: GameState;
     onMainMenu: () => void;
+    onShowHistory: () => void;
 };
 
-export function GameOver({ state, onMainMenu }: Props) {
+export function GameOver({ state, onMainMenu, onShowHistory }: Props) {
     const { t } = useI18n();
     const winner = state.winner;
     const isGoodWin = winner === "townsfolk";
@@ -109,7 +110,17 @@ export function GameOver({ state, onMainMenu }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="px-4 pb-8 max-w-lg mx-auto w-full">
+            <div className="px-4 pb-8 max-w-lg mx-auto w-full space-y-3">
+                <Button
+                    onClick={onShowHistory}
+                    fullWidth
+                    size="lg"
+                    variant="secondary"
+                    className="font-tarot uppercase tracking-wider"
+                >
+                    <Icon name="scrollText" size="md" className="mr-2" />
+                    {t.common.history}
+                </Button>
                 <Button
                     onClick={onMainMenu}
                     fullWidth

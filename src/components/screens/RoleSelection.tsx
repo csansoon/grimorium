@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { getAllRoles } from "../../lib/roles";
-import { RoleDefinition } from "../../lib/roles/types";
-import { getTeam } from "../../lib/teams";
+import { ROLES, SCRIPTS, ScriptId } from "../../lib/roles";
+import { RoleDefinition, RoleId } from "../../lib/roles/types";
+import { getTeam, TeamId } from "../../lib/teams";
 import { useI18n, interpolate } from "../../lib/i18n";
 import { Button, Icon, Badge } from "../atoms";
 import { cn } from "../../lib/utils";
@@ -14,7 +14,6 @@ type Props = {
 
 export function RoleSelection({ players, onNext, onBack }: Props) {
     const { t } = useI18n();
-    const allRoles = getAllRoles();
     const [roleCounts, setRoleCounts] = useState<Record<string, number>>(() => {
         return { villager: players.length };
     });
@@ -49,11 +48,21 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
 
     const canProceed = totalRoles >= players.length && impCount >= 1;
 
-    const rolesByTeam: Record<string, RoleDefinition[]> = {
-        townsfolk: allRoles.filter((r) => r.team === "townsfolk"),
-        outsider: allRoles.filter((r) => r.team === "outsider"),
-        minion: allRoles.filter((r) => r.team === "minion"),
-        demon: allRoles.filter((r) => r.team === "demon"),
+    // Get roles by script and team
+    const getScriptRolesByTeam = (scriptId: ScriptId) => {
+        const script = SCRIPTS[scriptId];
+        const scriptRoles = script.roles.map((id) => ROLES[id]);
+        const teams: TeamId[] = ["townsfolk", "outsider", "minion", "demon"];
+        const result: Record<TeamId, RoleDefinition[]> = {
+            townsfolk: [],
+            outsider: [],
+            minion: [],
+            demon: [],
+        };
+        for (const team of teams) {
+            result[team] = scriptRoles.filter((r) => r.team === team);
+        }
+        return result;
     };
 
     const getRoleName = (role: RoleDefinition) => {
@@ -69,6 +78,11 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
     const getTeamName = (teamId: string) => {
         const key = teamId as keyof typeof t.teams;
         return t.teams[key]?.name ?? teamId;
+    };
+
+    const getScriptName = (scriptId: ScriptId) => {
+        const key = scriptId as keyof typeof t.scripts;
+        return t.scripts[key] ?? scriptId;
     };
 
     return (
@@ -119,71 +133,89 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
 
             {/* Content */}
             <div className="flex-1 px-4 py-4 max-w-lg mx-auto w-full overflow-y-auto">
-                {Object.entries(rolesByTeam).map(([teamId, roles]) => {
-                    if (roles.length === 0) return null;
-                    const team = getTeam(teamId as "townsfolk" | "outsider" | "minion" | "demon");
+                {(Object.keys(SCRIPTS) as ScriptId[]).map((scriptId) => {
+                    const rolesByTeam = getScriptRolesByTeam(scriptId);
+                    const teamOrder: TeamId[] = ["townsfolk", "outsider", "minion", "demon"];
                     
                     return (
-                        <div key={teamId} className="mb-6">
-                            {/* Team Header */}
-                            <div className="flex items-center gap-2 mb-3">
-                                <Icon name={team.icon} size="sm" className={team.colors.text} />
-                                <span className={cn("text-sm font-tarot tracking-wider uppercase", team.colors.text)}>
-                                    {getTeamName(teamId)}
+                        <div key={scriptId} className="mb-8">
+                            {/* Script Header */}
+                            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-mystic-gold/30">
+                                <Icon name="scrollText" size="md" className="text-mystic-gold" />
+                                <span className="text-base font-tarot tracking-wider uppercase text-mystic-gold">
+                                    {getScriptName(scriptId)}
                                 </span>
                             </div>
 
-                            {/* Role List */}
-                            <div className="space-y-2">
-                                {roles.map((role) => {
-                                    const count = roleCounts[role.id] ?? 0;
-                                    const desc = getRoleDescription(role);
-                                    
-                                    return (
-                                        <div
-                                            key={role.id}
-                                            className={cn(
-                                                "rounded-lg p-3 border transition-colors",
-                                                count > 0
-                                                    ? "bg-white/5 border-white/20"
-                                                    : "bg-transparent border-white/10"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <Icon name={role.icon} size="lg" className={team.colors.text} />
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-parchment-100 font-medium text-sm">
-                                                        {getRoleName(role)}
-                                                    </div>
-                                                    <div className="text-parchment-500 text-xs truncate">
-                                                        {desc.length > 50 ? desc.slice(0, 50) + "..." : desc}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <button
-                                                        onClick={() => decrementRole(role.id)}
-                                                        className="w-8 h-8 flex items-center justify-center text-parchment-400 hover:text-parchment-100 hover:bg-white/10 rounded-lg transition-colors"
-                                                    >
-                                                        <Icon name="minus" size="sm" />
-                                                    </button>
-                                                    <Badge
-                                                        variant={count > 0 ? role.team : "default"}
-                                                        className="w-8 justify-center"
-                                                    >
-                                                        {count}
-                                                    </Badge>
-                                                    <button
-                                                        onClick={() => incrementRole(role.id)}
-                                                        className="w-8 h-8 flex items-center justify-center text-parchment-400 hover:text-parchment-100 hover:bg-white/10 rounded-lg transition-colors"
-                                                    >
-                                                        <Icon name="plus" size="sm" />
-                                                    </button>
-                                                </div>
-                                            </div>
+                            {teamOrder.map((teamId) => {
+                                const roles = rolesByTeam[teamId];
+                                if (roles.length === 0) return null;
+                                const team = getTeam(teamId);
+                                
+                                return (
+                                    <div key={teamId} className="mb-4">
+                                        {/* Team Header */}
+                                        <div className="flex items-center gap-2 mb-2 ml-1">
+                                            <Icon name={team.icon} size="sm" className={team.colors.text} />
+                                            <span className={cn("text-xs font-tarot tracking-wider uppercase", team.colors.text)}>
+                                                {getTeamName(teamId)}
+                                            </span>
                                         </div>
-                                    );
-                                })}
-                            </div>
+
+                                        {/* Role List */}
+                                        <div className="space-y-2">
+                                            {roles.map((role) => {
+                                                const count = roleCounts[role.id] ?? 0;
+                                                const desc = getRoleDescription(role);
+                                                
+                                                return (
+                                                    <div
+                                                        key={role.id}
+                                                        className={cn(
+                                                            "rounded-lg p-3 border transition-colors",
+                                                            count > 0
+                                                                ? "bg-white/5 border-white/20"
+                                                                : "bg-transparent border-white/10"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <Icon name={role.icon} size="lg" className={team.colors.text} />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-parchment-100 font-medium text-sm">
+                                                                    {getRoleName(role)}
+                                                                </div>
+                                                                <div className="text-parchment-500 text-xs truncate">
+                                                                    {desc.length > 50 ? desc.slice(0, 50) + "..." : desc}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <button
+                                                                    onClick={() => decrementRole(role.id)}
+                                                                    className="w-8 h-8 flex items-center justify-center text-parchment-400 hover:text-parchment-100 hover:bg-white/10 rounded-lg transition-colors"
+                                                                >
+                                                                    <Icon name="minus" size="sm" />
+                                                                </button>
+                                                                <Badge
+                                                                    variant={count > 0 ? role.team : "default"}
+                                                                    className="w-8 justify-center"
+                                                                >
+                                                                    {count}
+                                                                </Badge>
+                                                                <button
+                                                                    onClick={() => incrementRole(role.id)}
+                                                                    className="w-8 h-8 flex items-center justify-center text-parchment-400 hover:text-parchment-100 hover:bg-white/10 rounded-lg transition-colors"
+                                                                >
+                                                                    <Icon name="plus" size="sm" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     );
                 })}

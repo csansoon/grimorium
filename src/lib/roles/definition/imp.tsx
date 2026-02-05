@@ -37,12 +37,14 @@ const definition: RoleDefinition = {
                     {
                         type: "night_action",
                         message: [
-                            { type: "player", playerId: player.id },
-                            { type: "text", content: " (" },
-                            { type: "role", roleId: "imp" },
-                            { type: "text", content: ")" },
-                            { type: "i18n", key: "history.choseToKill" },
-                            { type: "player", playerId: target.id },
+                            {
+                                type: "i18n",
+                                key: "roles.imp.history.choseToKill",
+                                params: {
+                                    player: player.id,
+                                    target: target.id,
+                                },
+                            },
                         ],
                         data: {
                             roleId: "imp",

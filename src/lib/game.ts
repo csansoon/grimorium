@@ -280,8 +280,7 @@ export function startDay(game: Game): Game {
             updatedGame = addHistoryEntry(updatedGame, {
                 type: "effect_added",
                 message: [
-                    { type: "player", playerId: player.id },
-                    { type: "i18n", key: "history.diedInNight" },
+                    { type: "i18n", key: "history.diedInNight", params: { player: player.id } },
                 ],
                 data: { playerId: player.id, effectType: "dead" },
             });
@@ -310,9 +309,7 @@ export function markRoleRevealed(game: Game, playerId: string): Game {
     return addHistoryEntry(game, {
         type: "role_revealed",
         message: [
-            { type: "player", playerId },
-            { type: "i18n", key: "history.learnedRole" },
-            { type: "role", roleId: player.roleId },
+            { type: "i18n", key: "history.learnedRole", params: { player: playerId, role: player.roleId } },
         ],
         data: { playerId, roleId: player.roleId },
     });
@@ -343,8 +340,7 @@ export function skipNightAction(game: Game, roleId: string, playerId: string): G
     return addHistoryEntry(game, {
         type: "night_skipped",
         message: [
-            { type: "role", roleId },
-            { type: "i18n", key: "history.noActionTonight" },
+            { type: "i18n", key: "history.noActionTonight", params: { role: roleId } },
         ],
         data: { roleId, playerId },
     });
@@ -370,9 +366,7 @@ export function nominate(
         {
             type: "nomination",
             message: [
-                { type: "player", playerId: nominatorId },
-                { type: "i18n", key: "history.nominates" },
-                { type: "player", playerId: nomineeId },
+                { type: "i18n", key: "history.nominates", params: { nominator: nominatorId, nominee: nomineeId } },
             ],
             data: { nominatorId, nomineeId },
         },
@@ -408,12 +402,11 @@ export function resolveVote(
         {
             type: "vote",
             message: [
-                { type: "player", playerId: nomineeId },
                 { type: "i18n", key: "history.voteResult", params: { 
+                    player: nomineeId,
                     for: votesFor.length, 
                     against: votesAgainst.length,
                 }},
-                { type: "text", content: " " },
                 { type: "i18n", key: passed ? "history.votePassed" : "history.voteFailed" },
             ],
             data: { nomineeId, votesFor, votesAgainst, passed, majority },
@@ -429,8 +422,7 @@ export function resolveVote(
             {
                 type: "execution",
                 message: [
-                    { type: "player", playerId: nomineeId },
-                    { type: "i18n", key: "history.executed" },
+                    { type: "i18n", key: "history.executed", params: { player: nomineeId } },
                 ],
                 data: { playerId: nomineeId },
             },

@@ -36,12 +36,10 @@ export type RoleRevealProps = {
 // ROLE DEFINITION
 // ============================================================================
 
+export type RoleId = "villager" | "imp" | "washerwoman";
+
 export type RoleDefinition = {
-    id: string;
-    name: string;
-    description: string;
-    /** Optional role-specific win condition. Falls back to team's win condition if not provided. */
-    winCondition?: string;
+    id: RoleId;
     team: TeamId;
     icon: IconName;
 

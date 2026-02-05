@@ -346,7 +346,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                 );
 
             case "game_over":
-                return <GameOver state={state} onMainMenu={onMainMenu} />;
+                return <GameOver state={state} onMainMenu={onMainMenu} onShowHistory={() => setShowHistory(true)} />;
 
             default:
                 return null;

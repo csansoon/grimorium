@@ -104,6 +104,16 @@ const en: Translations = {
         backToMainMenu: "Back to Main Menu",
 
         gameHistory: "Game History",
+
+        // Washerwoman
+        narratorSetup: "Narrator Setup",
+        selectTwoPlayers: "Select 2 players to show",
+        selectWhichRoleToShow: "Select which Townsfolk's role to reveal",
+        mustIncludeTownsfolk: "At least one selected player must be a Townsfolk",
+        showToPlayer: "Show to Player",
+        washerwomanInfo: "Your Information",
+        oneOfTheseIsTheTownsfolk: "One of these players is a Townsfolk. Remember who they are!",
+        oneOfThemIsThe: "One of them is the...",
     },
 
     teams: {
@@ -133,6 +143,16 @@ const en: Translations = {
         imp: {
             name: "Imp",
             description: "Each night*, choose a player: they die. If you kill yourself, a Minion becomes the Imp.",
+            history: {
+                choseToKill: "{player} chose to kill {target}",
+            },
+        },
+        washerwoman: {
+            name: "Washerwoman",
+            description: "You start knowing that 1 of 2 players is a particular Townsfolk.",
+            history: {
+                discoveredTownsfolk: "{player} discovered that either {player1} or {player2} is the {role}",
+            },
         },
     },
 
@@ -156,18 +176,21 @@ const en: Translations = {
         gameStarted: "Game started",
         nightBegins: "Night {round} begins",
         sunRises: "The sun rises...",
-        diedInNight: " has died in the night",
+        diedInNight: "{player} has died in the night",
         dayBegins: "Day {round} begins",
-        learnedRole: " learned they are the ",
-        noActionTonight: " has no action tonight",
-        nominates: " nominates ",
-        voteResult: ": {for} for, {against} against",
+        learnedRole: "{player} learned they are the {role}",
+        noActionTonight: "{role} has no action tonight",
+        nominates: "{nominator} nominates {nominee}",
+        voteResult: "{player}: {for} for, {against} against. ",
         votePassed: "The vote passes!",
         voteFailed: "The vote fails.",
-        executed: " has been executed",
-        choseToKill: " chose to kill ",
+        executed: "{player} has been executed",
         goodWins: "Good wins! The Demon has been defeated.",
         evilWins: "Evil wins! The town has fallen.",
+    },
+
+    scripts: {
+        "trouble-brewing": "Trouble Brewing",
     },
 };
 

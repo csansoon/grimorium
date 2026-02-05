@@ -1,8 +1,9 @@
 import { RichMessage as RichMessageType, GameState, getPlayer } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { EffectId } from "../../lib/effects";
-import { useI18n, interpolate, Translations } from "../../lib/i18n";
+import { useI18n, Translations } from "../../lib/i18n";
 import { Badge, Icon } from "../atoms";
+import { ReactNode } from "react";
 
 type Props = {
     message: RichMessageType;
@@ -24,6 +25,11 @@ function getTranslation(t: Translations, key: string): string | undefined {
     return typeof value === "string" ? value : undefined;
 }
 
+// Param keys that represent player IDs
+const PLAYER_PARAM_KEYS = ["player", "player1", "player2", "target", "nominator", "nominee"];
+// Param keys that represent role IDs
+const ROLE_PARAM_KEYS = ["role"];
+
 export function RichMessage({ message, state }: Props) {
     const { t } = useI18n();
 
@@ -37,6 +43,85 @@ export function RichMessage({ message, state }: Props) {
         return t.effects[key]?.name ?? effectType;
     };
 
+    // Render a player badge with their role icon
+    const renderPlayerBadge = (playerId: string, key: string | number) => {
+        const player = getPlayer(state, playerId);
+        if (!player) return <span key={key}>[Unknown Player]</span>;
+        const role = getRole(player.roleId);
+        return (
+            <Badge key={key} variant="player" className="inline-flex items-center gap-1">
+                {role && <Icon name={role.icon} size="xs" />}
+                {player.name}
+            </Badge>
+        );
+    };
+
+    // Render a role badge
+    const renderRoleBadge = (roleId: string, key: string | number) => {
+        const role = getRole(roleId);
+        if (!role) return <span key={key}>[Unknown Role]</span>;
+        const teamVariant = role.team as "townsfolk" | "outsider" | "minion" | "demon";
+        return (
+            <Badge key={key} variant={teamVariant} className="inline-flex items-center gap-1">
+                <Icon name={role.icon} size="xs" /> {getRoleName(roleId)}
+            </Badge>
+        );
+    };
+
+    // Parse a template with params and render with badges
+    const renderI18nWithParams = (
+        template: string,
+        params: Record<string, string | number>,
+        baseKey: string
+    ): ReactNode[] => {
+        const result: ReactNode[] = [];
+        // Match {paramName} placeholders
+        const regex = /\{(\w+)\}/g;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = regex.exec(template)) !== null) {
+            // Add text before the placeholder
+            if (match.index > lastIndex) {
+                result.push(
+                    <span key={`${baseKey}-text-${lastIndex}`}>
+                        {template.slice(lastIndex, match.index)}
+                    </span>
+                );
+            }
+
+            const paramKey = match[1];
+            const paramValue = params[paramKey];
+
+            if (paramValue !== undefined) {
+                if (PLAYER_PARAM_KEYS.includes(paramKey)) {
+                    // Render as player badge
+                    result.push(renderPlayerBadge(String(paramValue), `${baseKey}-player-${paramKey}`));
+                } else if (ROLE_PARAM_KEYS.includes(paramKey)) {
+                    // Render as role badge
+                    result.push(renderRoleBadge(String(paramValue), `${baseKey}-role-${paramKey}`));
+                } else {
+                    // Render as plain text
+                    result.push(<span key={`${baseKey}-param-${paramKey}`}>{paramValue}</span>);
+                }
+            } else {
+                // Placeholder not found in params, keep as is
+                result.push(<span key={`${baseKey}-missing-${paramKey}`}>{match[0]}</span>);
+            }
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        // Add remaining text after last placeholder
+        if (lastIndex < template.length) {
+            result.push(
+                <span key={`${baseKey}-text-end`}>{template.slice(lastIndex)}</span>
+            );
+        }
+
+        return result;
+    };
+
     return (
         <span className="inline-flex flex-wrap items-center gap-1">
             {message.map((part, index) => {
@@ -47,31 +132,28 @@ export function RichMessage({ message, state }: Props) {
                     case "i18n": {
                         const template = getTranslation(t, part.key);
                         if (!template) return <span key={index}>[{part.key}]</span>;
-                        const translated = part.params 
-                            ? interpolate(template, part.params as Record<string, string | number>)
-                            : template;
-                        return <span key={index}>{translated}</span>;
+                        
+                        if (part.params && Object.keys(part.params).length > 0) {
+                            // Render with badges for player/role params
+                            return (
+                                <span key={index} className="inline-flex flex-wrap items-center gap-1">
+                                    {renderI18nWithParams(
+                                        template,
+                                        part.params as Record<string, string | number>,
+                                        `i18n-${index}`
+                                    )}
+                                </span>
+                            );
+                        }
+                        return <span key={index}>{template}</span>;
                     }
 
                     case "player": {
-                        const player = getPlayer(state, part.playerId);
-                        if (!player) return <span key={index}>[Unknown Player]</span>;
-                        return (
-                            <Badge key={index} variant="player">
-                                {player.name}
-                            </Badge>
-                        );
+                        return renderPlayerBadge(part.playerId, index);
                     }
 
                     case "role": {
-                        const role = getRole(part.roleId);
-                        if (!role) return <span key={index}>[Unknown Role]</span>;
-                        const teamVariant = role.team as "townsfolk" | "outsider" | "minion" | "demon";
-                        return (
-                            <Badge key={index} variant={teamVariant} className="inline-flex items-center gap-1">
-                                <Icon name={role.icon} size="xs" /> {getRoleName(part.roleId)}
-                            </Badge>
-                        );
+                        return renderRoleBadge(part.roleId, index);
                     }
 
                     case "effect": {

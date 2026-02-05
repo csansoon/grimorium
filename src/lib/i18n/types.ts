@@ -115,6 +115,16 @@ export type Translations = {
 
         // History
         gameHistory: string;
+
+        // Washerwoman
+        narratorSetup: string;
+        selectTwoPlayers: string;
+        selectWhichRoleToShow: string;
+        mustIncludeTownsfolk: string;
+        showToPlayer: string;
+        washerwomanInfo: string;
+        oneOfTheseIsTheTownsfolk: string;
+        oneOfThemIsThe: string;
     };
 
     // Teams
@@ -146,6 +156,16 @@ export type Translations = {
         imp: {
             name: string;
             description: string;
+            history: {
+                choseToKill: string;
+            };
+        };
+        washerwoman: {
+            name: string;
+            description: string;
+            history: {
+                discoveredTownsfolk: string;
+            };
         };
     };
 
@@ -181,8 +201,12 @@ export type Translations = {
         votePassed: string;
         voteFailed: string;
         executed: string;
-        choseToKill: string;
         goodWins: string;
         evilWins: string;
+    };
+
+    // Scripts
+    scripts: {
+        "trouble-brewing": string;
     };
 };
