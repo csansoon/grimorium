@@ -114,6 +114,11 @@ const en: Translations = {
         washerwomanInfo: "Your Information",
         oneOfTheseIsTheTownsfolk: "One of these players is a Townsfolk. Remember who they are!",
         oneOfThemIsThe: "One of them is the...",
+
+        // Handback screen
+        handbackToNarrator: "Hand back to Narrator",
+        handbackDescription: "Please return the device to the Narrator before continuing.",
+        narratorReady: "Narrator Ready",
     },
 
     teams: {

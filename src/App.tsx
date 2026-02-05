@@ -14,6 +14,7 @@ import {
     RoleAssignment,
     GameScreen,
 } from "./components/screens";
+import { LanguageToggle } from "./components/atoms";
 
 type Screen =
     | { type: "main_menu" }
@@ -79,49 +80,66 @@ function App() {
         setScreen({ type: "main_menu" });
     };
 
-    switch (screen.type) {
-        case "main_menu":
-            return (
-                <MainMenu
-                    onNewGame={handleNewGame}
-                    onContinue={handleContinueGame}
-                    onLoadGame={handleLoadGame}
-                />
-            );
+    const renderScreen = () => {
+        switch (screen.type) {
+            case "main_menu":
+                return (
+                    <MainMenu
+                        onNewGame={handleNewGame}
+                        onContinue={handleContinueGame}
+                        onLoadGame={handleLoadGame}
+                    />
+                );
 
-        case "new_game_players":
-            return <PlayerEntry onNext={handlePlayersNext} onBack={handleBack} />;
+            case "new_game_players":
+                return <PlayerEntry onNext={handlePlayersNext} onBack={handleBack} />;
 
-        case "new_game_roles":
-            return (
-                <RoleSelection
-                    players={screen.players}
-                    onNext={(selectedRoles) => handleRolesNext(screen.players, selectedRoles)}
-                    onBack={() => setScreen({ type: "new_game_players" })}
-                />
-            );
+            case "new_game_roles":
+                return (
+                    <RoleSelection
+                        players={screen.players}
+                        onNext={(selectedRoles) => handleRolesNext(screen.players, selectedRoles)}
+                        onBack={() => setScreen({ type: "new_game_players" })}
+                    />
+                );
 
-        case "new_game_assign":
-            return (
-                <RoleAssignment
-                    players={screen.players}
-                    selectedRoles={screen.selectedRoles}
-                    onStart={handleStartGame}
-                    onBack={() => setScreen({ type: "new_game_roles", players: screen.players })}
-                />
-            );
+            case "new_game_assign":
+                return (
+                    <RoleAssignment
+                        players={screen.players}
+                        selectedRoles={screen.selectedRoles}
+                        onStart={handleStartGame}
+                        onBack={() => setScreen({ type: "new_game_roles", players: screen.players })}
+                    />
+                );
 
-        case "game":
-            return (
-                <GameScreen
-                    initialGame={screen.game}
-                    onMainMenu={handleMainMenu}
-                />
-            );
+            case "game":
+                return (
+                    <GameScreen
+                        initialGame={screen.game}
+                        onMainMenu={handleMainMenu}
+                    />
+                );
 
-        default:
-            return null;
+            default:
+                return null;
+        }
+    };
+
+    // For game screen, it handles its own language toggle
+    if (screen.type === "game") {
+        return renderScreen();
     }
+
+    // For all other screens, wrap with floating language toggle
+    return (
+        <div className="relative">
+            {renderScreen()}
+            <div className="fixed top-4 right-4 z-50">
+                <LanguageToggle variant="floating" />
+            </div>
+        </div>
+    );
 }
 
 export default App;

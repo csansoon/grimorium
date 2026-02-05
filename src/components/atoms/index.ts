@@ -21,3 +21,4 @@ export {
     DialogDescription,
     DialogBody,
 } from "./dialog";
+export { LanguageToggle } from "./LanguageToggle";

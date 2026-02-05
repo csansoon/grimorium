@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Game, getCurrentState, getPlayer, PlayerState } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { RoleCard } from "../items/RoleCard";
@@ -22,8 +22,10 @@ import { NominationScreen } from "./NominationScreen";
 import { VotingPhase } from "./VotingPhase";
 import { GameOver } from "./GameOver";
 import { HistoryView } from "./HistoryView";
+import { HandbackScreen } from "./HandbackScreen";
 import { GrimoireModal } from "../items/GrimoireModal";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, LanguageToggle } from "../atoms";
+import { NightActionResult } from "../../lib/roles/types";
 
 type Props = {
     initialGame: Game;
@@ -34,6 +36,7 @@ type Screen =
     | { type: "narrator_prompt"; playerId: string; action: "role_reveal" | "night_action" }
     | { type: "role_reveal"; playerId: string }
     | { type: "night_action"; playerId: string; roleId: string }
+    | { type: "handback"; afterAction: "role_reveal" | "night_action"; playerId: string }
     | { type: "night_waiting" }
     | { type: "day" }
     | { type: "nomination" }
@@ -47,6 +50,9 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const [screen, setScreen] = useState<Screen>(() => getInitialScreen(initialGame));
     const [showHistory, setShowHistory] = useState(false);
     const [showGrimoire, setShowGrimoire] = useState(false);
+    
+    // Store pending night action result to apply after handback
+    const pendingNightActionResult = useRef<NightActionResult | null>(null);
 
     const state = getCurrentState(game);
 
@@ -110,34 +116,58 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const handleRoleRevealComplete = () => {
         if (screen.type !== "role_reveal") return;
 
-        const newGame = markRoleRevealed(game, screen.playerId);
-        updateGame(newGame);
-
-        const revealedCount = newGame.history.filter(
-            (e) => e.type === "role_revealed"
-        ).length;
-        const totalPlayers = state.players.length;
-
-        if (revealedCount >= totalPlayers) {
-            const nightGame = startNight(newGame);
-            updateGame(nightGame);
-            advanceToNextStep(nightGame);
-        } else {
-            advanceToNextStep(newGame);
-        }
+        // Go to handback screen before processing
+        setScreen({ type: "handback", afterAction: "role_reveal", playerId: screen.playerId });
     };
 
-    const handleNightActionComplete = (result: Parameters<typeof applyNightAction>[1]) => {
-        const newGame = applyNightAction(game, result);
-        updateGame(newGame);
+    const handleNightActionComplete = (result: NightActionResult) => {
+        if (screen.type !== "night_action") return;
 
-        const winner = checkWinCondition(getCurrentState(newGame));
-        if (winner) {
-            const finalGame = endGame(newGame, winner);
-            updateGame(finalGame);
-            setScreen({ type: "game_over" });
-        } else {
-            advanceToNextStep(newGame);
+        // Store result and go to handback screen
+        pendingNightActionResult.current = result;
+        setScreen({ type: "handback", afterAction: "night_action", playerId: screen.playerId });
+    };
+
+    const handleHandbackComplete = () => {
+        if (screen.type !== "handback") return;
+
+        if (screen.afterAction === "role_reveal") {
+            // Process role reveal
+            const newGame = markRoleRevealed(game, screen.playerId);
+            updateGame(newGame);
+
+            const revealedCount = newGame.history.filter(
+                (e) => e.type === "role_revealed"
+            ).length;
+            const totalPlayers = state.players.length;
+
+            if (revealedCount >= totalPlayers) {
+                const nightGame = startNight(newGame);
+                updateGame(nightGame);
+                advanceToNextStep(nightGame);
+            } else {
+                advanceToNextStep(newGame);
+            }
+        } else if (screen.afterAction === "night_action") {
+            // Process night action
+            const result = pendingNightActionResult.current;
+            if (!result) {
+                advanceToNextStep(game);
+                return;
+            }
+
+            const newGame = applyNightAction(game, result);
+            updateGame(newGame);
+            pendingNightActionResult.current = null;
+
+            const winner = checkWinCondition(getCurrentState(newGame));
+            if (winner) {
+                const finalGame = endGame(newGame, winner);
+                updateGame(finalGame);
+                setScreen({ type: "game_over" });
+            } else {
+                advanceToNextStep(newGame);
+            }
         }
     };
 
@@ -219,7 +249,14 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     };
 
     if (showHistory) {
-        return <HistoryView game={game} onClose={() => setShowHistory(false)} />;
+        return (
+            <div className="relative">
+                <HistoryView game={game} onClose={() => setShowHistory(false)} />
+                <div className="fixed top-4 right-4 z-50">
+                    <LanguageToggle variant="floating" />
+                </div>
+            </div>
+        );
     }
 
     const renderScreen = () => {
@@ -269,6 +306,11 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                     />
                 );
             }
+
+            case "handback":
+                return (
+                    <HandbackScreen onContinue={handleHandbackComplete} />
+                );
 
             case "night_waiting":
                 return (
@@ -357,13 +399,19 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const isPlayerFacingScreen = 
         screen.type === "role_reveal" || 
         screen.type === "night_action" ||
-        screen.type === "grimoire_role_card";
+        screen.type === "grimoire_role_card" ||
+        screen.type === "handback";
     
     const showFloatingButtons = !isPlayerFacingScreen && screen.type !== "game_over";
 
     return (
         <div className="relative">
             {renderScreen()}
+
+            {/* Floating Language Toggle - always available */}
+            <div className="fixed top-4 right-4 z-50">
+                <LanguageToggle variant="floating" />
+            </div>
 
             {/* Floating Action Buttons */}
             {showFloatingButtons && (
