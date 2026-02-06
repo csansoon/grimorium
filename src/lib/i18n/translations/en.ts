@@ -229,9 +229,13 @@ const en: Translations = {
             name: "Imp",
             description:
                 "Each night*, choose a player: they die. If you kill yourself, a Minion becomes the Imp.",
+            bounceTitle: "Kill Redirected!",
+            bounceDescription: "The Demon targeted {target}, but their kill bounced. Choose who dies instead.",
+            bounceOriginalLabel: "original target",
             history: {
                 choseToKill: "{player} chose to kill {target}",
                 failedToKill: "{player} tried to kill {target}, but they were protected",
+                bounceRedirected: "{player} targeted {target}, but the kill was redirected to {redirect}",
             },
         },
         washerwoman: {
@@ -336,6 +340,11 @@ const en: Translations = {
                 missed: "{slayer} shot {target} — nothing happened",
             },
         },
+        mayor: {
+            name: "Mayor",
+            description:
+                "If only 3 players live & no execution occurs, your team wins. If you die at night, another player might die instead.",
+        },
     },
 
     effects: {
@@ -368,6 +377,11 @@ const en: Translations = {
             name: "Slayer Shot",
             description:
                 "This player can use their Slayer ability to shoot a player.",
+        },
+        bounce: {
+            name: "Bounce",
+            description:
+                "If this player is targeted by the Demon at night, the Storyteller may redirect the kill to another player.",
         },
     },
 

@@ -47,7 +47,7 @@ export type RoleRevealProps = {
 // ROLE DEFINITION
 // ============================================================================
 
-export type RoleId = "villager" | "imp" | "washerwoman" | "librarian" | "investigator" | "chef" | "empath" | "fortune_teller" | "undertaker" | "monk" | "ravenkeeper" | "soldier" | "virgin" | "slayer";
+export type RoleId = "villager" | "imp" | "washerwoman" | "librarian" | "investigator" | "chef" | "empath" | "fortune_teller" | "undertaker" | "monk" | "ravenkeeper" | "soldier" | "virgin" | "slayer" | "mayor";
 
 export type RoleDefinition = {
     id: RoleId;

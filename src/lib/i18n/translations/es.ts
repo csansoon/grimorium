@@ -212,9 +212,13 @@ const es: Translations = {
         imp: {
             name: "Imp",
             description: "Cada noche*, elige un jugador: muere. Si te matas a ti mismo, un Secuaz se convierte en el Imp.",
+            bounceTitle: "¡Asesinato Redirigido!",
+            bounceDescription: "El Demonio eligió a {target}, pero su asesinato rebotó. Elige quién muere en su lugar.",
+            bounceOriginalLabel: "objetivo original",
             history: {
                 choseToKill: "{player} eligió matar a {target}",
                 failedToKill: "{player} intentó matar a {target}, pero estaba protegido/a",
+                bounceRedirected: "{player} eligió a {target}, pero el asesinato fue redirigido a {redirect}",
             },
         },
         washerwoman: {
@@ -309,6 +313,11 @@ const es: Translations = {
                 missed: "{slayer} disparó a {target} — no pasó nada",
             },
         },
+        mayor: {
+            name: "Alcalde",
+            description:
+                "Si solo quedan 3 jugadores vivos y no hay ejecución, tu equipo gana. Si mueres de noche, otro jugador podría morir en tu lugar.",
+        },
     },
 
     effects: {
@@ -338,6 +347,11 @@ const es: Translations = {
             name: "Disparo del Matador",
             description:
                 "Este jugador puede usar su habilidad de Matador para disparar a un jugador.",
+        },
+        bounce: {
+            name: "Rebote",
+            description:
+                "Si este jugador es objetivo del Demonio de noche, el Narrador puede redirigir la muerte a otro jugador.",
         },
     },
 

@@ -3,9 +3,9 @@ import { RoleDefinition } from "../../types";
 import { useI18n } from "../../../i18n";
 import { RoleCard } from "../../../../components/items/RoleCard";
 import { NightActionLayout } from "../../../../components/layouts";
+import { PlayerSelector } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { isAlive } from "../../../types";
-import { cn } from "../../../utils";
 
 const definition: RoleDefinition = {
     id: "monk",
@@ -73,31 +73,14 @@ const definition: RoleDefinition = {
                 title={t.game.monkInfo}
                 description={t.game.selectPlayerToProtect}
             >
-                <div className="space-y-2 mb-6">
-                    {otherAlivePlayers.map((p) => (
-                        <button
-                            key={p.id}
-                            onClick={() => setSelectedTarget(p.id)}
-                            className={cn(
-                                "w-full p-4 rounded-lg text-left transition-all duration-200 flex items-center justify-between border",
-                                selectedTarget === p.id
-                                    ? "bg-blue-900/50 border-blue-500/60"
-                                    : "bg-white/5 border-white/10 hover:bg-white/10"
-                            )}
-                        >
-                            <div className="flex items-center gap-3">
-                                <Icon
-                                    name="user"
-                                    size="md"
-                                    className={selectedTarget === p.id ? "text-blue-300" : "text-parchment-400"}
-                                />
-                                <span className="text-parchment-100 font-medium">{p.name}</span>
-                            </div>
-                            {selectedTarget === p.id && (
-                                <Icon name="shield" size="md" className="text-blue-300" />
-                            )}
-                        </button>
-                    ))}
+                <div className="mb-6">
+                    <PlayerSelector
+                        players={otherAlivePlayers}
+                        selected={selectedTarget}
+                        onSelect={setSelectedTarget}
+                        selectedIcon="shield"
+                        variant="blue"
+                    />
                 </div>
 
                 <Button
