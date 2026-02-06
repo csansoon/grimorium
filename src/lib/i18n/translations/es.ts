@@ -38,14 +38,16 @@ const es: Translations = {
         step1Subtitle: "Paso 1: Añadir jugadores",
         addPlayer: "Añadir Jugador",
         playerPlaceholder: "Jugador",
-        minPlayersWarning: "Añade al menos 2 jugadores para continuar",
+        minPlayersWarning: "Añade al menos 5 jugadores para continuar",
         nextSelectRoles: "Siguiente: Seleccionar Roles",
+        loadedFromLastGame: "De la última partida",
 
         step2Title: "Nueva Partida",
         step2Subtitle: "Paso 2: Seleccionar roles en juego",
         needAtLeastRoles: "Se necesitan al menos {count} roles",
         needAtLeastImp: "Se necesita al menos 1 Imp",
         nextAssignRoles: "Siguiente: Asignar Roles",
+        suggested: "Sugerido",
 
         step3Title: "Nueva Partida",
         step3Subtitle: "Paso 3: Asignar roles (opcional)",
@@ -55,6 +57,9 @@ const es: Translations = {
         randomPool: "Pool Aleatorio",
         rolesForPlayers: "{roles} roles para {players} jugadores",
         impNotAssignedWarning: "¡El Imp no será asignado! Asegúrate de que al menos un jugador reciba el Imp o deja algunos jugadores en aleatorio.",
+        rolesRandomlyAssigned: "Los roles se asignarán aleatoriamente",
+        customizeAssignments: "Personalizar Asignaciones",
+        tapToAssign: "Toca un jugador para asignar un rol específico",
     },
 
     game: {

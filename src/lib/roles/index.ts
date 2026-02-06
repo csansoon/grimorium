@@ -75,4 +75,44 @@ export function getAllRoles(): RoleDefinition[] {
     return Object.values(ROLES);
 }
 
+// ============================================================================
+// ROLE DISTRIBUTION RECOMMENDATION
+// ============================================================================
+
+export type RoleDistribution = {
+    townsfolk: number;
+    outsider: number;
+    minion: number;
+    demon: number;
+};
+
+/**
+ * Returns the official BotC recommended role distribution for a given player count.
+ * Based on the standard distribution table:
+ * 5: 3/0/1/1, 6: 3/1/1/1, 7: 5/0/1/1, 8: 5/1/1/1, 9: 5/2/1/1,
+ * 10: 7/0/2/1, 11: 7/1/2/1, 12: 7/2/2/1, 13: 9/0/3/1, etc.
+ */
+export function getRecommendedDistribution(
+    playerCount: number
+): RoleDistribution | null {
+    if (playerCount < 5) return null;
+
+    const demon = 1;
+    let minion: number;
+    let outsider: number;
+
+    if (playerCount <= 6) {
+        minion = 1;
+        outsider = playerCount - 5;
+    } else {
+        const k = Math.floor((playerCount - 7) / 3);
+        minion = 1 + k;
+        outsider = (playerCount - 7) % 3;
+    }
+
+    const townsfolk = playerCount - demon - minion - outsider;
+
+    return { townsfolk, outsider, minion, demon };
+}
+
 export * from "./types";

@@ -81,6 +81,18 @@ export type GameSummary = {
     round: number;
 };
 
+export function getLastGamePlayers(): string[] {
+    const games = getAllGames();
+    if (games.length === 0) return [];
+
+    const sorted = [...games].sort((a, b) => b.createdAt - a.createdAt);
+    const lastGame = sorted[0];
+    const lastEntry = lastGame.history.at(-1);
+    if (!lastEntry?.stateAfter?.players) return [];
+
+    return lastEntry.stateAfter.players.map((p) => p.name);
+}
+
 export function getGameSummaries(): GameSummary[] {
     const games = getAllGames();
 
