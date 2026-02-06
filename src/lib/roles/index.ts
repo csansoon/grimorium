@@ -14,6 +14,7 @@ import Undertaker from "./definition/trouble-brewing/Undertaker";
 import Ravenkeeper from "./definition/trouble-brewing/Ravenkeeper";
 import Virgin from "./definition/trouble-brewing/Virgin";
 import Slayer from "./definition/trouble-brewing/Slayer";
+import Mayor from "./definition/trouble-brewing/Mayor";
 
 export const ROLES: Record<RoleId, RoleDefinition> = {
     imp: Imp,
@@ -30,6 +31,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
     soldier: Soldier,
     virgin: Virgin,
     slayer: Slayer,
+    mayor: Mayor,
 };
 
 // Scripts define which roles are in each edition
@@ -51,6 +53,7 @@ export const SCRIPTS: Record<ScriptId, { name: string; roles: RoleId[] }> = {
             "soldier",
             "virgin",
             "slayer",
+            "mayor",
             "villager",
             "imp",
         ],

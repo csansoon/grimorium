@@ -223,9 +223,13 @@ export type Translations = {
         imp: {
             name: string;
             description: string;
+            bounceTitle: string;
+            bounceDescription: string;
+            bounceOriginalLabel: string;
             history: {
                 choseToKill: string;
                 failedToKill: string;
+                bounceRedirected: string;
             };
         };
         washerwoman: {
@@ -315,6 +319,10 @@ export type Translations = {
                 missed: string;
             };
         };
+        mayor: {
+            name: string;
+            description: string;
+        };
     };
 
     // Effects
@@ -340,6 +348,10 @@ export type Translations = {
             description: string;
         };
         slayer_bullet: {
+            name: string;
+            description: string;
+        };
+        bounce: {
             name: string;
             description: string;
         };

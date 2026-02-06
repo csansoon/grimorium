@@ -607,6 +607,23 @@ export function checkWinCondition(state: GameState): "townsfolk" | "demon" | nul
     return null;
 }
 
+/**
+ * Check if the Mayor's peaceful victory condition is met:
+ * Exactly 3 alive players, no execution today, and at least one alive Mayor.
+ */
+export function checkMayorVictory(game: Game): boolean {
+    const state = getCurrentState(game);
+    if (state.phase !== "day") return false;
+
+    const alivePlayers = getAlivePlayers(state);
+    if (alivePlayers.length !== 3) return false;
+    if (hasExecutionToday(game)) return false;
+
+    // Check if any alive player is the Mayor
+    const hasAliveMayor = alivePlayers.some((p) => p.roleId === "mayor");
+    return hasAliveMayor;
+}
+
 export function endGame(game: Game, winner: "townsfolk" | "demon"): Game {
     return addHistoryEntry(
         game,

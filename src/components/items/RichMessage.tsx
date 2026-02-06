@@ -26,7 +26,7 @@ function getTranslation(t: Translations, key: string): string | undefined {
 }
 
 // Param keys that represent player IDs
-const PLAYER_PARAM_KEYS = ["player", "player1", "player2", "target", "nominator", "nominee", "slayer"];
+const PLAYER_PARAM_KEYS = ["player", "player1", "player2", "target", "nominator", "nominee", "slayer", "redirect"];
 // Param keys that represent role IDs
 const ROLE_PARAM_KEYS = ["role"];
 // Param keys that represent effect IDs

@@ -13,6 +13,7 @@ import {
     resolveVote,
     endGame,
     checkWinCondition,
+    checkMayorVictory,
     hasExecutionToday,
     hasSlayerWithBullet,
     slayerShoot,
@@ -314,6 +315,14 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     };
 
     const handleEndDay = () => {
+        // Check Mayor's peaceful victory before transitioning to night
+        if (checkMayorVictory(game)) {
+            const finalGame = endGame(game, "townsfolk");
+            updateGame(finalGame);
+            setScreen({ type: "game_over" });
+            return;
+        }
+
         const newGame = startNight(game);
         updateGame(newGame);
         advanceToNextStep(newGame);
