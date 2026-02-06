@@ -1,4 +1,5 @@
 import {
+    Icon as IconRootComponent,
     AlertTriangleIcon,
     ArrowLeftIcon,
     ArrowRightIcon,
@@ -50,6 +51,7 @@ import {
     ZapOffIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { flowerLotus } from "@lucide/lab";
 
 const Icons = {
     alertTriangle: AlertTriangleIcon,
@@ -103,7 +105,11 @@ const Icons = {
     zapOff: ZapOffIcon,
 };
 
-export type IconName = keyof typeof Icons;
+const LabIcons = {
+    flowerLotus: flowerLotus,
+}
+
+export type IconName = keyof typeof Icons | keyof typeof LabIcons;
 
 export type IconProps = {
     name: IconName;
@@ -139,7 +145,17 @@ export function Icon({
     strokeWidth = 2,
     className,
 }: IconProps) {
-    const IconComponent = Icons[name];
+    if (name in LabIcons) {
+        return (
+            <IconRootComponent
+                iconNode={LabIcons[name as keyof typeof LabIcons]}
+                className={cn(sizeClasses[size], className)}
+                strokeWidth={strokeWidth}
+            />
+        )
+    }
+
+    const IconComponent = Icons[name as keyof typeof Icons];
     return (
         <IconComponent
             className={cn(sizeClasses[size], className)}
