@@ -2,7 +2,7 @@ import { EffectDefinition } from "../types";
 
 const definition: EffectDefinition = {
     id: "pure",
-    icon: "sparkles",
+    icon: "flowerLotus",
 };
 
 export default definition;
