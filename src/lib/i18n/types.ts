@@ -43,12 +43,14 @@ export type Translations = {
         playerPlaceholder: string;
         minPlayersWarning: string;
         nextSelectRoles: string;
+        loadedFromLastGame: string;
 
         step2Title: string;
         step2Subtitle: string;
         needAtLeastRoles: string;
         needAtLeastImp: string;
         nextAssignRoles: string;
+        suggested: string;
 
         step3Title: string;
         step3Subtitle: string;
@@ -58,6 +60,9 @@ export type Translations = {
         randomPool: string;
         rolesForPlayers: string;
         impNotAssignedWarning: string;
+        rolesRandomlyAssigned: string;
+        customizeAssignments: string;
+        tapToAssign: string;
     };
 
     // Game Phases

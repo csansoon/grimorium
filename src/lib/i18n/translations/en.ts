@@ -38,14 +38,16 @@ const en: Translations = {
         step1Subtitle: "Step 1: Add players",
         addPlayer: "Add Player",
         playerPlaceholder: "Player",
-        minPlayersWarning: "Add at least 2 players to continue",
+        minPlayersWarning: "Add at least 5 players to continue",
         nextSelectRoles: "Next: Select Roles",
+        loadedFromLastGame: "From last game",
 
         step2Title: "New Game",
         step2Subtitle: "Step 2: Select roles in play",
         needAtLeastRoles: "Need at least {count} roles",
         needAtLeastImp: "Need at least 1 Imp",
         nextAssignRoles: "Next: Assign Roles",
+        suggested: "Suggested",
 
         step3Title: "New Game",
         step3Subtitle: "Step 3: Assign roles (optional)",
@@ -57,6 +59,9 @@ const en: Translations = {
         rolesForPlayers: "{roles} roles for {players} players",
         impNotAssignedWarning:
             "The Imp won't be assigned! Make sure at least one player gets the Imp or leave some players random.",
+        rolesRandomlyAssigned: "Roles will be randomly assigned to players",
+        customizeAssignments: "Customize Assignments",
+        tapToAssign: "Tap a player to assign a specific role",
     },
 
     game: {
