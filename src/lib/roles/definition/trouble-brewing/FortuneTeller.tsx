@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RoleDefinition, EffectToAdd, NightActionResult } from "../../types";
+import { RoleDefinition, NightActionResult } from "../../types";
 import { getRole } from "../../index";
 import { isAlive } from "../../../types";
 import { useI18n } from "../../../i18n";
@@ -45,7 +45,6 @@ const definition: RoleDefinition = {
         );
         const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(null);
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
-        const [pendingEffects, setPendingEffects] = useState<Record<string, EffectToAdd[]>>({});
 
         // Get good players for Red Herring selection (not the Fortune Teller themselves)
         const goodPlayers = state.players.filter((p) => {
@@ -65,18 +64,6 @@ const definition: RoleDefinition = {
 
         const handleConfirmRedHerring = () => {
             if (!selectedRedHerring) return;
-            
-            // Store the effect to be added later with the main action
-            setPendingEffects({
-                [selectedRedHerring]: [
-                    {
-                        type: "red_herring",
-                        data: { fortuneTellerId: player.id },
-                        expiresAt: "never",
-                    },
-                ],
-            });
-            
             setPhase("narrator_setup");
         };
 
@@ -103,29 +90,22 @@ const definition: RoleDefinition = {
             const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
             if (!player1 || !player2) return;
 
-            // Check if either selected player registers as a Demon OR is this Fortune Teller's Red Herring
-            const isDemonOrRedHerring = (p: typeof player1) => {
-                // Use perception to check if they register as demon (handles Recluse/Spy)
+            // Check if either selected player registers as a Demon
+            // Perception handles: actual demons, Red Herring (via perception modifier), Recluse/Spy
+            const registersDemon = (p: typeof player1) => {
                 const perception = perceive(p, player, "role", state);
                 if (perception.team === "demon") return true;
-                // Check if this player is the Red Herring for THIS Fortune Teller
-                return p.effects.some(
-                    (e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id
-                );
+                // First night: pending red herring not yet applied to player state
+                if (selectedRedHerring === p.id) return true;
+                return false;
             };
 
-            // Also check the pending red herring (just assigned this turn)
-            const isPendingRedHerring = (p: typeof player1) => {
-                return pendingEffects[p.id]?.some(e => e.type === "red_herring");
-            };
-
-            const sawDemon = isDemonOrRedHerring(player1) || isDemonOrRedHerring(player2) ||
-                            isPendingRedHerring(player1) || isPendingRedHerring(player2);
+            const sawDemon = registersDemon(player1) || registersDemon(player2);
 
             const entries: NightActionResult["entries"] = [];
 
             // If we just assigned a Red Herring, log it first
-            if (selectedRedHerring && Object.keys(pendingEffects).length > 0) {
+            if (needsRedHerringSetup && selectedRedHerring) {
                 const redHerringPlayer = state.players.find((p) => p.id === selectedRedHerring);
                 if (redHerringPlayer) {
                     entries.push({
@@ -177,7 +157,13 @@ const definition: RoleDefinition = {
 
             onComplete({
                 entries,
-                addEffects: Object.keys(pendingEffects).length > 0 ? pendingEffects : undefined,
+                addEffects: needsRedHerringSetup && selectedRedHerring ? {
+                    [selectedRedHerring]: [{
+                        type: "red_herring",
+                        data: { fortuneTellerId: player.id },
+                        expiresAt: "never",
+                    }],
+                } : undefined,
             });
         };
 
@@ -265,11 +251,10 @@ const definition: RoleDefinition = {
                         {otherPlayers.map((p) => {
                             const role = getRole(p.roleId);
                             const isSelected = selectedPlayers.includes(p.id);
-                            const pPerception = perceive(p, player, "role", state);
-                            const isEvil = pPerception.team === "demon" || pPerception.team === "minion";
-                            const isRedHerring = p.effects.some(
-                                (e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id
-                            ) || (pendingEffects[p.id]?.some(e => e.type === "red_herring"));
+                            const isActuallyEvil = role ? (role.team === "demon" || role.team === "minion") : false;
+                            // Red herring: pending first-night assignment, or has the effect (subsequent nights)
+                            const isRedHerring = selectedRedHerring === p.id ||
+                                p.effects.some((e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id);
 
                             return (
                                 <SelectablePlayerItem
@@ -279,7 +264,7 @@ const definition: RoleDefinition = {
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
                                     isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={isEvil ? "demon" : isRedHerring ? "minion" : undefined}
+                                    highlightTeam={isActuallyEvil ? "demon" : isRedHerring ? "minion" : undefined}
                                     teamLabel={isRedHerring ? t.effects.red_herring.name : undefined}
                                     onClick={() => handlePlayerToggle(p.id)}
                                 />
@@ -294,22 +279,17 @@ const definition: RoleDefinition = {
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 
-        // Calculate result for display (uses perception for demon check)
-        const isDemonOrRedHerring = (p: typeof player1) => {
+        // Calculate result for display — perception handles demons, Red Herring, Recluse/Spy
+        const registersDemon = (p: typeof player1) => {
             if (!p) return false;
             const perception = perceive(p, player, "role", state);
             if (perception.team === "demon") return true;
-            return p.effects.some(
-                (e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id
-            );
-        };
-        const isPendingRedHerring = (p: typeof player1) => {
-            if (!p) return false;
-            return pendingEffects[p.id]?.some(e => e.type === "red_herring");
+            // First night: pending red herring not yet applied to player state
+            if (selectedRedHerring === p.id) return true;
+            return false;
         };
 
-        const sawDemon = isDemonOrRedHerring(player1) || isDemonOrRedHerring(player2) ||
-                        isPendingRedHerring(player1) || isPendingRedHerring(player2);
+        const sawDemon = registersDemon(player1) || registersDemon(player2);
 
         return (
             <NightActionLayout

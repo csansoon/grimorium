@@ -126,24 +126,11 @@ describe("FortuneTeller", () => {
     });
 
     // ================================================================
-    // RED HERRING
+    // RED HERRING (via perception — see RedHerring.test.ts for full tests)
     // ================================================================
 
-    describe("red herring", () => {
-        it("red_herring effect is identified by data.fortuneTellerId", () => {
-            const redHerringPlayer = addEffectTo(
-                makePlayer({ id: "p2", roleId: "villager" }),
-                "red_herring",
-                { fortuneTellerId: "p1" }
-            );
-
-            const isRedHerring = redHerringPlayer.effects.some(
-                (e) => e.type === "red_herring" && e.data?.fortuneTellerId === "p1"
-            );
-            expect(isRedHerring).toBe(true);
-        });
-
-        it("red_herring does NOT alter perception (it is checked separately)", () => {
+    describe("red herring via perception", () => {
+        it("red herring registers as demon to the Fortune Teller via perception", () => {
             const ft = makePlayer({ id: "p1", roleId: "fortune_teller" });
             const herring = addEffectTo(
                 makePlayer({ id: "p2", roleId: "villager" }),
@@ -153,9 +140,7 @@ describe("FortuneTeller", () => {
             const state = makeState({ players: [ft, herring] });
 
             const perception = perceive(herring, ft, "role", state);
-            // Still shows actual role — red_herring is a marker, not a perception modifier
-            expect(perception.team).toBe("townsfolk");
-            expect(perception.roleId).toBe("villager");
+            expect(perception.team).toBe("demon");
         });
     });
 });
