@@ -171,6 +171,7 @@ export function addHistoryEntry(
 
 export type GameStep =
     | { type: "role_reveal"; playerId: string }
+    | { type: "role_change_reveal"; playerId: string }
     | { type: "night_action"; playerId: string; roleId: string }
     | { type: "night_action_skip"; playerId: string; roleId: string }
     | { type: "night_waiting" }
@@ -205,6 +206,23 @@ export function getNextStep(game: Game): GameStep {
     }
 
     if (state.phase === "night") {
+        // Check for unrevealed role changes before night actions
+        // (e.g., Scarlet Woman became the Demon during execution/kill)
+        const roleChangedPlayers = game.history
+            .filter((e) => e.type === "role_changed")
+            .map((e) => e.data.playerId as string);
+        const roleChangeRevealedPlayers = new Set(
+            game.history
+                .filter((e) => e.type === "role_change_revealed")
+                .map((e) => e.data.playerId as string)
+        );
+        const unrevealedChange = roleChangedPlayers.find(
+            (pid) => !roleChangeRevealedPlayers.has(pid)
+        );
+        if (unrevealedChange) {
+            return { type: "role_change_reveal", playerId: unrevealedChange };
+        }
+
         // Find which roles have acted this night
         const nightStartIndex = findLastEventIndex(game, "night_started");
         const actedRoles = game.history
@@ -355,6 +373,20 @@ export function markRoleRevealed(game: Game, playerId: string): Game {
         type: "role_revealed",
         message: [
             { type: "i18n", key: "history.learnedRole", params: { player: playerId, role: player.roleId } },
+        ],
+        data: { playerId, roleId: player.roleId },
+    });
+}
+
+export function markRoleChangeRevealed(game: Game, playerId: string): Game {
+    const state = getCurrentState(game);
+    const player = state.players.find((p) => p.id === playerId);
+    if (!player) return game;
+
+    return addHistoryEntry(game, {
+        type: "role_change_revealed",
+        message: [
+            { type: "i18n", key: "history.roleChanged", params: { player: playerId, role: player.roleId } },
         ],
         data: { playerId, roleId: player.roleId },
     });

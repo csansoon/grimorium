@@ -67,7 +67,9 @@ const en: Translations = {
     game: {
         narratorGiveDevice: "Give the device to {player} to see their role.",
         narratorWakePlayer: "Wake {player} ({role}) for their night action.",
+        narratorRoleChanged: "Give the device to {player} — their role has changed.",
         readyShowToPlayer: "Ready - Show to Player",
+        yourRoleHasChanged: "Your role has changed!",
 
         nightComplete: "Night {round} Complete",
         nightActionsResolved:
