@@ -11,6 +11,7 @@ import {
 } from "../../../../components/items";
 import { SelectablePlayerItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
+import { perceive } from "../../../pipeline";
 
 type Phase = "red_herring_setup" | "narrator_setup" | "player_view";
 
@@ -102,10 +103,11 @@ const definition: RoleDefinition = {
             const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
             if (!player1 || !player2) return;
 
-            // Check if either selected player is a Demon OR is this Fortune Teller's Red Herring
+            // Check if either selected player registers as a Demon OR is this Fortune Teller's Red Herring
             const isDemonOrRedHerring = (p: typeof player1) => {
-                const role = getRole(p.roleId);
-                if (role?.team === "demon") return true;
+                // Use perception to check if they register as demon (handles Recluse/Spy)
+                const perception = perceive(p, player, "role", state);
+                if (perception.team === "demon") return true;
                 // Check if this player is the Red Herring for THIS Fortune Teller
                 return p.effects.some(
                     (e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id
@@ -263,7 +265,8 @@ const definition: RoleDefinition = {
                         {otherPlayers.map((p) => {
                             const role = getRole(p.roleId);
                             const isSelected = selectedPlayers.includes(p.id);
-                            const isEvil = role?.team === "demon" || role?.team === "minion";
+                            const pPerception = perceive(p, player, "role", state);
+                            const isEvil = pPerception.team === "demon" || pPerception.team === "minion";
                             const isRedHerring = p.effects.some(
                                 (e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id
                             ) || (pendingEffects[p.id]?.some(e => e.type === "red_herring"));
@@ -291,11 +294,11 @@ const definition: RoleDefinition = {
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 
-        // Calculate result for display
+        // Calculate result for display (uses perception for demon check)
         const isDemonOrRedHerring = (p: typeof player1) => {
             if (!p) return false;
-            const role = getRole(p.roleId);
-            if (role?.team === "demon") return true;
+            const perception = perceive(p, player, "role", state);
+            if (perception.team === "demon") return true;
             return p.effects.some(
                 (e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id
             );

@@ -4,6 +4,7 @@ import {
     IntentHandler,
     DayActionDefinition,
     WinConditionCheck,
+    PerceptionModifier,
 } from "../pipeline/types";
 
 export type EffectId =
@@ -40,4 +41,8 @@ export type EffectDefinition = {
 
     // Win conditions this effect contributes
     winConditions?: WinConditionCheck[];
+
+    // Perception modifiers — alter how the player carrying this effect
+    // is perceived by information roles (e.g., Recluse, Spy)
+    perceptionModifiers?: PerceptionModifier[];
 };

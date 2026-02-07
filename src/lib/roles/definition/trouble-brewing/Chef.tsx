@@ -1,17 +1,18 @@
 import { RoleDefinition } from "../../types";
-import { getRole } from "../../index";
 import { useI18n } from "../../../i18n";
 import { RoleCard } from "../../../../components/items/RoleCard";
 import { NightActionLayout } from "../../../../components/layouts";
 import { RoleRevealBadge } from "../../../../components/items";
 import { Button, Icon } from "../../../../components/atoms";
-import { GameState, isAlive } from "../../../types";
+import { GameState, PlayerState, isAlive } from "../../../types";
+import { perceive } from "../../../pipeline";
 
 /**
  * Calculate the number of pairs of evil players sitting next to each other.
  * Dead players are skipped when determining neighbors.
+ * Uses the perception system so roles like Recluse/Spy are properly handled.
  */
-function countEvilPairs(state: GameState): number {
+function countEvilPairs(state: GameState, observer: PlayerState): number {
     const alivePlayers = state.players.filter(isAlive);
     if (alivePlayers.length < 2) return 0;
 
@@ -30,22 +31,15 @@ function countEvilPairs(state: GameState): number {
         const currentPlayer = state.players[currentIdx];
         const nextPlayer = state.players[nextIdx];
 
-        const currentRole = getRole(currentPlayer.roleId);
-        const nextRole = getRole(nextPlayer.roleId);
-
-        const currentIsEvil = currentRole?.team === "minion" || currentRole?.team === "demon";
-        const nextIsEvil = nextRole?.team === "minion" || nextRole?.team === "demon";
+        const currentIsEvil =
+            perceive(currentPlayer, observer, "alignment", state).alignment === "evil";
+        const nextIsEvil =
+            perceive(nextPlayer, observer, "alignment", state).alignment === "evil";
 
         if (currentIsEvil && nextIsEvil) {
             evilPairs++;
         }
     }
-
-    // If we counted in a circle, we might have double-counted
-    // Actually no - each pair is only counted once since we go i -> i+1
-    // But if there are only 2 evil players sitting together, we count once
-    // If there are 3 evil in a row: A-B, B-C = 2 pairs
-    // This is correct behavior for Chef
 
     return evilPairs;
 }
@@ -64,8 +58,8 @@ const definition: RoleDefinition = {
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
 
-        // Calculate evil pairs
-        const evilPairs = countEvilPairs(state);
+        // Calculate evil pairs (using perception so modifiers like Recluse apply)
+        const evilPairs = countEvilPairs(state, player);
 
         const handleComplete = () => {
             onComplete({

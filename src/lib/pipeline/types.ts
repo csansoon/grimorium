@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { GameState, PlayerState, HistoryEntry, Game } from "../types";
 import { EffectToAdd } from "../roles/types";
 import { IconName } from "../../components/atoms/icon";
+import { TeamId } from "../teams/types";
 
 // ============================================================================
 // INTENTS
@@ -145,4 +146,60 @@ export type WinConditionTrigger =
 export type WinConditionCheck = {
     trigger: WinConditionTrigger;
     check: (state: GameState, game: Game) => "townsfolk" | "demon" | null;
+};
+
+// ============================================================================
+// PERCEPTION
+// ============================================================================
+
+/**
+ * What aspect of a player is being queried by an information role.
+ *
+ * - "alignment": Is this player good or evil? (Chef, Empath)
+ * - "team":      What team does this player belong to? (Washerwoman, Librarian, Investigator)
+ * - "role":      What specific role is this player? (Undertaker, Fortune Teller)
+ */
+export type PerceptionContext = "alignment" | "team" | "role";
+
+/**
+ * The result of perceiving a player — what an information role "sees".
+ * This may differ from the player's actual role/team/alignment due to
+ * perception modifiers (e.g., Recluse registering as evil, Spy registering as good).
+ */
+export type Perception = {
+    roleId: string;
+    team: TeamId;
+    alignment: "good" | "evil";
+};
+
+/**
+ * A modifier declared on an EffectDefinition that can alter how the
+ * player carrying this effect is perceived by information roles.
+ *
+ * Examples:
+ * - Recluse: registers as evil/minion/demon to info abilities
+ * - Spy: registers as good/townsfolk/outsider to info abilities
+ */
+export type PerceptionModifier = {
+    /** Which perception contexts this modifier applies to. */
+    context: PerceptionContext | PerceptionContext[];
+
+    /**
+     * Optional: restrict this modifier to specific observer roles.
+     * If omitted, applies to all information roles.
+     */
+    observerRoles?: string[];
+
+    /**
+     * Transform the perception. Receives the current perception (which may
+     * already be modified by earlier modifiers), the target player, the
+     * observer player, the game state, and the effect instance data.
+     */
+    modify: (
+        perception: Perception,
+        targetPlayer: PlayerState,
+        observerPlayer: PlayerState,
+        state: GameState,
+        effectData?: Record<string, unknown>
+    ) => Perception;
 };

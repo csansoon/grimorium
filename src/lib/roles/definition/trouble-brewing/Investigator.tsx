@@ -14,6 +14,7 @@ import {
 } from "../../../../components/items";
 import { SelectablePlayerItem, SelectableRoleItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
+import { perceive } from "../../../pipeline";
 
 type Phase = "narrator_setup" | "player_view";
 
@@ -39,8 +40,8 @@ const definition: RoleDefinition = {
         const minionsInSelection = selectedPlayers.filter((playerId) => {
             const p = state.players.find((pl) => pl.id === playerId);
             if (!p) return false;
-            const role = getRole(p.roleId);
-            return role?.team === "minion";
+            const perception = perceive(p, player, "team", state);
+            return perception.team === "minion";
         });
 
         const canProceedToPlayer =
@@ -70,12 +71,15 @@ const definition: RoleDefinition = {
         const handleComplete = () => {
             if (!selectedMinion) return;
 
-            const minionPlayer = state.players.find((p) => p.id === selectedMinion);
-            if (!minionPlayer) return;
+            const minionP = state.players.find((p) => p.id === selectedMinion);
+            if (!minionP) return;
 
             const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
             const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
             if (!player1 || !player2) return;
+
+            // Log the perceived role (what was actually shown to the player)
+            const shownPerception = perceive(minionP, player, "role", state);
 
             onComplete({
                 entries: [
@@ -89,7 +93,7 @@ const definition: RoleDefinition = {
                                     player: player.id,
                                     player1: player1.id,
                                     player2: player2.id,
-                                    role: minionPlayer.roleId,
+                                    role: shownPerception.roleId,
                                 },
                             },
                         ],
@@ -99,7 +103,7 @@ const definition: RoleDefinition = {
                             action: "see_minion",
                             shownPlayers: selectedPlayers,
                             minionId: selectedMinion,
-                            minionRoleId: minionPlayer.roleId,
+                            shownRoleId: shownPerception.roleId,
                         },
                     },
                 ],
@@ -132,8 +136,9 @@ const definition: RoleDefinition = {
                     >
                         {otherPlayers.map((p) => {
                             const role = getRole(p.roleId);
+                            const perception = perceive(p, player, "team", state);
                             const isSelected = selectedPlayers.includes(p.id);
-                            const isMinion = role?.team === "minion";
+                            const registersMinion = perception.team === "minion";
 
                             return (
                                 <SelectablePlayerItem
@@ -143,8 +148,8 @@ const definition: RoleDefinition = {
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
                                     isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={isMinion ? "minion" : undefined}
-                                    teamLabel={isMinion ? t.teams.minion.name : undefined}
+                                    highlightTeam={registersMinion ? "minion" : undefined}
+                                    teamLabel={registersMinion ? t.teams.minion.name : undefined}
                                     onClick={() => handlePlayerToggle(p.id)}
                                 />
                             );
@@ -156,14 +161,15 @@ const definition: RoleDefinition = {
                             {minionsInSelection.map((playerId) => {
                                 const p = state.players.find((pl) => pl.id === playerId);
                                 if (!p) return null;
-                                const role = getRole(p.roleId);
+                                const pPerception = perceive(p, player, "role", state);
+                                const perceivedRole = getRole(pPerception.roleId);
 
                                 return (
                                     <SelectableRoleItem
                                         key={playerId}
                                         playerName={p.name}
-                                        roleName={getRoleName(p.roleId)}
-                                        roleIcon={role?.icon ?? "user"}
+                                        roleName={getRoleName(pPerception.roleId)}
+                                        roleIcon={perceivedRole?.icon ?? "user"}
                                         isSelected={selectedMinion === playerId}
                                         onClick={() => setSelectedMinion(playerId)}
                                     />
@@ -179,9 +185,14 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Player View Phase
+        // Player View Phase — use perceived role for display
         const minionPlayer = state.players.find((p) => p.id === selectedMinion);
-        const minionRole = minionPlayer ? getRole(minionPlayer.roleId) : null;
+        const minionPerception = minionPlayer
+            ? perceive(minionPlayer, player, "role", state)
+            : null;
+        const minionRole = minionPerception
+            ? getRole(minionPerception.roleId)
+            : null;
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 

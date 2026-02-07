@@ -455,4 +455,5 @@ export function checkDynamicWinConditions(
     return null;
 }
 
+export { perceive } from "./perception";
 export * from "./types";
