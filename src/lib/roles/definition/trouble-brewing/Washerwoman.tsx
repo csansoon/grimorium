@@ -36,16 +36,17 @@ const definition: RoleDefinition = {
 
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
-        const townsfolkInSelection = selectedPlayers.filter((playerId) => {
+        // Count townsfolk AND Recluses in selection (Recluse can register as Townsfolk)
+        const townsfolkOrRecluseInSelection = selectedPlayers.filter((playerId) => {
             const p = state.players.find((pl) => pl.id === playerId);
             if (!p) return false;
             const role = getRole(p.roleId);
-            return role?.team === "townsfolk";
+            return role?.team === "townsfolk" || p.roleId === "recluse";
         });
 
         const canProceedToPlayer =
             selectedPlayers.length === 2 &&
-            townsfolkInSelection.length >= 1 &&
+            townsfolkOrRecluseInSelection.length >= 1 &&
             selectedTownsfolk !== null;
 
         const handlePlayerToggle = (playerId: string) => {
@@ -100,6 +101,7 @@ const definition: RoleDefinition = {
                             shownPlayers: selectedPlayers,
                             townsfolkId: selectedTownsfolk,
                             townsfolkRoleId: townsfolkPlayer.roleId,
+                            recluseAsTownsfolk: townsfolkPlayer.roleId === "recluse" || undefined,
                         },
                     },
                 ],
@@ -134,6 +136,7 @@ const definition: RoleDefinition = {
                             const role = getRole(p.roleId);
                             const isSelected = selectedPlayers.includes(p.id);
                             const isTownsfolk = role?.team === "townsfolk";
+                            const isRecluse = p.roleId === "recluse";
 
                             return (
                                 <SelectablePlayerItem
@@ -143,17 +146,17 @@ const definition: RoleDefinition = {
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
                                     isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={isTownsfolk ? "townsfolk" : undefined}
-                                    teamLabel={isTownsfolk ? t.teams.townsfolk.name : undefined}
+                                    highlightTeam={isTownsfolk ? "townsfolk" : isRecluse ? "outsider" : undefined}
+                                    teamLabel={isTownsfolk ? t.teams.townsfolk.name : isRecluse ? getRoleName("recluse") : undefined}
                                     onClick={() => handlePlayerToggle(p.id)}
                                 />
                             );
                         })}
                     </StepSection>
 
-                    {selectedPlayers.length === 2 && townsfolkInSelection.length > 0 && (
+                    {selectedPlayers.length === 2 && townsfolkOrRecluseInSelection.length > 0 && (
                         <StepSection step={2} label={t.game.selectWhichRoleToShow}>
-                            {townsfolkInSelection.map((playerId) => {
+                            {townsfolkOrRecluseInSelection.map((playerId) => {
                                 const p = state.players.find((pl) => pl.id === playerId);
                                 if (!p) return null;
                                 const role = getRole(p.roleId);
@@ -172,7 +175,7 @@ const definition: RoleDefinition = {
                         </StepSection>
                     )}
 
-                    {selectedPlayers.length === 2 && townsfolkInSelection.length === 0 && (
+                    {selectedPlayers.length === 2 && townsfolkOrRecluseInSelection.length === 0 && (
                         <AlertBox message={t.game.mustIncludeTownsfolk} />
                     )}
                 </NarratorSetupLayout>

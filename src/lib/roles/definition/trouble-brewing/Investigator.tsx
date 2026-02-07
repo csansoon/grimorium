@@ -36,16 +36,17 @@ const definition: RoleDefinition = {
 
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
-        const minionsInSelection = selectedPlayers.filter((playerId) => {
+        // Count minions AND Recluses in selection (Recluse can register as Minion)
+        const minionsOrRecluseInSelection = selectedPlayers.filter((playerId) => {
             const p = state.players.find((pl) => pl.id === playerId);
             if (!p) return false;
             const role = getRole(p.roleId);
-            return role?.team === "minion";
+            return role?.team === "minion" || p.roleId === "recluse";
         });
 
         const canProceedToPlayer =
             selectedPlayers.length === 2 &&
-            minionsInSelection.length >= 1 &&
+            minionsOrRecluseInSelection.length >= 1 &&
             selectedMinion !== null;
 
         const handlePlayerToggle = (playerId: string) => {
@@ -77,6 +78,9 @@ const definition: RoleDefinition = {
             const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
             if (!player1 || !player2) return;
 
+            // If the "minion" is actually a Recluse registering as Minion, log accordingly
+            const isRecluseAsMinion = minionPlayer.roleId === "recluse";
+
             onComplete({
                 entries: [
                     {
@@ -100,6 +104,7 @@ const definition: RoleDefinition = {
                             shownPlayers: selectedPlayers,
                             minionId: selectedMinion,
                             minionRoleId: minionPlayer.roleId,
+                            recluseAsMinion: isRecluseAsMinion || undefined,
                         },
                     },
                 ],
@@ -134,6 +139,7 @@ const definition: RoleDefinition = {
                             const role = getRole(p.roleId);
                             const isSelected = selectedPlayers.includes(p.id);
                             const isMinion = role?.team === "minion";
+                            const isRecluse = p.roleId === "recluse";
 
                             return (
                                 <SelectablePlayerItem
@@ -143,26 +149,27 @@ const definition: RoleDefinition = {
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
                                     isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={isMinion ? "minion" : undefined}
-                                    teamLabel={isMinion ? t.teams.minion.name : undefined}
+                                    highlightTeam={isMinion ? "minion" : isRecluse ? "outsider" : undefined}
+                                    teamLabel={isMinion ? t.teams.minion.name : isRecluse ? t.game.recluseAsMinion : undefined}
                                     onClick={() => handlePlayerToggle(p.id)}
                                 />
                             );
                         })}
                     </StepSection>
 
-                    {selectedPlayers.length === 2 && minionsInSelection.length > 0 && (
+                    {selectedPlayers.length === 2 && minionsOrRecluseInSelection.length > 0 && (
                         <StepSection step={2} label={t.game.selectWhichRoleToShow}>
-                            {minionsInSelection.map((playerId) => {
+                            {minionsOrRecluseInSelection.map((playerId) => {
                                 const p = state.players.find((pl) => pl.id === playerId);
                                 if (!p) return null;
                                 const role = getRole(p.roleId);
+                                const isRecluse = p.roleId === "recluse";
 
                                 return (
                                     <SelectableRoleItem
                                         key={playerId}
                                         playerName={p.name}
-                                        roleName={getRoleName(p.roleId)}
+                                        roleName={isRecluse ? t.game.recluseAsMinion : getRoleName(p.roleId)}
                                         roleIcon={role?.icon ?? "user"}
                                         isSelected={selectedMinion === playerId}
                                         onClick={() => setSelectedMinion(playerId)}
@@ -172,7 +179,7 @@ const definition: RoleDefinition = {
                         </StepSection>
                     )}
 
-                    {selectedPlayers.length === 2 && minionsInSelection.length === 0 && (
+                    {selectedPlayers.length === 2 && minionsOrRecluseInSelection.length === 0 && (
                         <AlertBox message={t.game.mustIncludeMinion} />
                     )}
                 </NarratorSetupLayout>
@@ -182,6 +189,7 @@ const definition: RoleDefinition = {
         // Player View Phase
         const minionPlayer = state.players.find((p) => p.id === selectedMinion);
         const minionRole = minionPlayer ? getRole(minionPlayer.roleId) : null;
+        const isRecluseAsMinion = minionPlayer?.roleId === "recluse";
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 
@@ -201,7 +209,7 @@ const definition: RoleDefinition = {
                 {minionRole && (
                     <RoleRevealBadge
                         icon={minionRole.icon}
-                        roleName={getRoleName(minionRole.id)}
+                        roleName={isRecluseAsMinion ? t.game.recluseAsMinion : getRoleName(minionRole.id)}
                         label={t.game.oneOfThemIsThe}
                     />
                 )}

@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { RoleDefinition } from "../../types";
-import { getRole } from "../../index";
-import { useI18n } from "../../../i18n";
+import { getRole, ROLES } from "../../index";
+import { useI18n, interpolate } from "../../../i18n";
 import { hasEffect, Game, PlayerState } from "../../../types";
 import { RoleCard } from "../../../../components/items/RoleCard";
-import { NightActionLayout } from "../../../../components/layouts";
-import { MysticDivider, RoleRevealBadge } from "../../../../components/items";
-import { SelectablePlayerItem } from "../../../../components/inputs";
+import { NightActionLayout, NarratorSetupLayout } from "../../../../components/layouts";
+import { MysticDivider, RoleRevealBadge, StepSection } from "../../../../components/items";
+import { SelectablePlayerItem, SelectableRoleItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 
-type Phase = "select_player" | "show_role";
+type Phase = "select_player" | "recluse_setup" | "show_role";
 
 // Helper to check if a player was killed this night
 function wasKilledThisNight(game: Game, playerId: string): boolean {
@@ -39,6 +39,13 @@ function wasKilledThisNight(game: Game, playerId: string): boolean {
     return false;
 }
 
+// Get all Minion and Demon roles available in the game
+function getEvilRoles() {
+    return Object.values(ROLES).filter(
+        (role) => role.team === "minion" || role.team === "demon"
+    );
+}
+
 const definition: RoleDefinition = {
     id: "ravenkeeper",
     team: "townsfolk",
@@ -60,6 +67,7 @@ const definition: RoleDefinition = {
         const { t } = useI18n();
         const [phase, setPhase] = useState<Phase>("select_player");
         const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+        const [displayRoleId, setDisplayRoleId] = useState<string | null>(null);
 
         // We know we were killed (shouldWake returned true)
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
@@ -70,6 +78,20 @@ const definition: RoleDefinition = {
 
         const handleShowRole = () => {
             if (!selectedPlayer) return;
+
+            // Check if the target is a Recluse
+            const target = state.players.find((p) => p.id === selectedPlayer);
+            if (target?.roleId === "recluse") {
+                // Go to Recluse setup - narrator picks what role to show
+                setDisplayRoleId(null);
+                setPhase("recluse_setup");
+            } else {
+                setPhase("show_role");
+            }
+        };
+
+        const handleRecluseDone = () => {
+            if (!displayRoleId) return;
             setPhase("show_role");
         };
 
@@ -79,8 +101,10 @@ const definition: RoleDefinition = {
             const targetPlayer = state.players.find((p) => p.id === selectedPlayer);
             if (!targetPlayer) return;
 
-            const targetRole = getRole(targetPlayer.roleId);
-            if (!targetRole) return;
+            // Use overridden role if Recluse, otherwise use actual role
+            const shownRoleId = displayRoleId ?? targetPlayer.roleId;
+            const shownRole = getRole(shownRoleId);
+            if (!shownRole) return;
 
             onComplete({
                 entries: [
@@ -93,7 +117,7 @@ const definition: RoleDefinition = {
                                 params: {
                                     player: player.id,
                                     target: targetPlayer.id,
-                                    role: targetRole.id,
+                                    role: shownRole.id,
                                 },
                             },
                         ],
@@ -102,7 +126,9 @@ const definition: RoleDefinition = {
                             playerId: player.id,
                             action: "saw_role",
                             targetId: targetPlayer.id,
-                            targetRoleId: targetRole.id,
+                            targetRoleId: shownRole.id,
+                            actualRoleId: targetPlayer.roleId,
+                            recluseOverride: displayRoleId ? true : undefined,
                         },
                     },
                 ],
@@ -155,9 +181,54 @@ const definition: RoleDefinition = {
             );
         }
 
+        // Phase 1.5: Recluse Setup - Narrator picks displayed role
+        if (phase === "recluse_setup") {
+            const targetPlayer = state.players.find((p) => p.id === selectedPlayer);
+            const evilRoles = getEvilRoles();
+
+            // Options: own role (Recluse) + all Minion/Demon roles
+            const roleOptions = [
+                { id: "recluse", label: t.game.recluseShowAsOwnRole, icon: "flowerLotus" as const },
+                ...evilRoles.map((r) => ({
+                    id: r.id,
+                    label: getRoleName(r.id),
+                    icon: r.icon,
+                })),
+            ];
+
+            return (
+                <NarratorSetupLayout
+                    icon="birdHouse"
+                    roleName={getRoleName("ravenkeeper")}
+                    playerName={targetPlayer?.name ?? "Unknown"}
+                    onShowToPlayer={handleRecluseDone}
+                    showToPlayerDisabled={!displayRoleId}
+                >
+                    <StepSection
+                        step={1}
+                        label={interpolate(t.game.recluseSelectDisplayRole, {
+                            player: targetPlayer?.name ?? "Unknown",
+                        })}
+                    >
+                        {roleOptions.map((option) => (
+                            <SelectableRoleItem
+                                key={option.id}
+                                playerName=""
+                                roleName={option.label}
+                                roleIcon={option.icon}
+                                isSelected={displayRoleId === option.id}
+                                onClick={() => setDisplayRoleId(option.id)}
+                            />
+                        ))}
+                    </StepSection>
+                </NarratorSetupLayout>
+            );
+        }
+
         // Phase 2: Show the selected player's role
         const targetPlayer = state.players.find((p) => p.id === selectedPlayer);
-        const targetRole = targetPlayer ? getRole(targetPlayer.roleId) : null;
+        const shownRoleId = displayRoleId ?? targetPlayer?.roleId;
+        const targetRole = shownRoleId ? getRole(shownRoleId) : null;
 
         return (
             <NightActionLayout
