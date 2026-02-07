@@ -6,6 +6,7 @@ import { RoleCard } from "../../../../components/items/RoleCard";
 import { NightActionLayout } from "../../../../components/layouts";
 import { MysticDivider, RoleRevealBadge } from "../../../../components/items";
 import { Button, Icon } from "../../../../components/atoms";
+import { perceive } from "../../../pipeline";
 
 // Helper to find execution from the previous day
 function findExecutedPlayerId(game: { history: Array<{ type: string; data: Record<string, unknown> }> }): string | null {
@@ -57,7 +58,13 @@ const definition: RoleDefinition = {
         const executedPlayer = executedPlayerId
             ? state.players.find((p) => p.id === executedPlayerId)
             : null;
-        const executedRole = executedPlayer ? getRole(executedPlayer.roleId) : null;
+        // Use perception to determine what role the Undertaker "sees"
+        const executedPerception = executedPlayer
+            ? perceive(executedPlayer, player, "role", state)
+            : null;
+        const executedRole = executedPerception
+            ? getRole(executedPerception.roleId)
+            : null;
 
         const handleComplete = () => {
             if (executedPlayer && executedRole) {

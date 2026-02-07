@@ -14,6 +14,7 @@ import {
 } from "../../../../components/items";
 import { SelectablePlayerItem, SelectableRoleItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
+import { perceive } from "../../../pipeline";
 
 type Phase = "narrator_setup" | "player_view";
 
@@ -39,8 +40,8 @@ const definition: RoleDefinition = {
         const townsfolkInSelection = selectedPlayers.filter((playerId) => {
             const p = state.players.find((pl) => pl.id === playerId);
             if (!p) return false;
-            const role = getRole(p.roleId);
-            return role?.team === "townsfolk";
+            const perception = perceive(p, player, "team", state);
+            return perception.team === "townsfolk";
         });
 
         const canProceedToPlayer =
@@ -70,12 +71,15 @@ const definition: RoleDefinition = {
         const handleComplete = () => {
             if (!selectedTownsfolk) return;
 
-            const townsfolkPlayer = state.players.find((p) => p.id === selectedTownsfolk);
-            if (!townsfolkPlayer) return;
+            const townsfolkP = state.players.find((p) => p.id === selectedTownsfolk);
+            if (!townsfolkP) return;
 
             const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
             const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
             if (!player1 || !player2) return;
+
+            // Log the perceived role (what was actually shown to the player)
+            const shownPerception = perceive(townsfolkP, player, "role", state);
 
             onComplete({
                 entries: [
@@ -89,7 +93,7 @@ const definition: RoleDefinition = {
                                     player: player.id,
                                     player1: player1.id,
                                     player2: player2.id,
-                                    role: townsfolkPlayer.roleId,
+                                    role: shownPerception.roleId,
                                 },
                             },
                         ],
@@ -99,7 +103,7 @@ const definition: RoleDefinition = {
                             action: "see_townsfolk",
                             shownPlayers: selectedPlayers,
                             townsfolkId: selectedTownsfolk,
-                            townsfolkRoleId: townsfolkPlayer.roleId,
+                            shownRoleId: shownPerception.roleId,
                         },
                     },
                 ],
@@ -132,8 +136,9 @@ const definition: RoleDefinition = {
                     >
                         {otherPlayers.map((p) => {
                             const role = getRole(p.roleId);
+                            const perception = perceive(p, player, "team", state);
                             const isSelected = selectedPlayers.includes(p.id);
-                            const isTownsfolk = role?.team === "townsfolk";
+                            const registersTownsfolk = perception.team === "townsfolk";
 
                             return (
                                 <SelectablePlayerItem
@@ -143,8 +148,8 @@ const definition: RoleDefinition = {
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
                                     isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={isTownsfolk ? "townsfolk" : undefined}
-                                    teamLabel={isTownsfolk ? t.teams.townsfolk.name : undefined}
+                                    highlightTeam={registersTownsfolk ? "townsfolk" : undefined}
+                                    teamLabel={registersTownsfolk ? t.teams.townsfolk.name : undefined}
                                     onClick={() => handlePlayerToggle(p.id)}
                                 />
                             );
@@ -156,14 +161,15 @@ const definition: RoleDefinition = {
                             {townsfolkInSelection.map((playerId) => {
                                 const p = state.players.find((pl) => pl.id === playerId);
                                 if (!p) return null;
-                                const role = getRole(p.roleId);
+                                const pPerception = perceive(p, player, "role", state);
+                                const perceivedRole = getRole(pPerception.roleId);
 
                                 return (
                                     <SelectableRoleItem
                                         key={playerId}
                                         playerName={p.name}
-                                        roleName={getRoleName(p.roleId)}
-                                        roleIcon={role?.icon ?? "user"}
+                                        roleName={getRoleName(pPerception.roleId)}
+                                        roleIcon={perceivedRole?.icon ?? "user"}
                                         isSelected={selectedTownsfolk === playerId}
                                         onClick={() => setSelectedTownsfolk(playerId)}
                                     />
@@ -179,9 +185,14 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Player View Phase
+        // Player View Phase — use perceived role for display
         const townsfolkPlayer = state.players.find((p) => p.id === selectedTownsfolk);
-        const townsfolkRole = townsfolkPlayer ? getRole(townsfolkPlayer.roleId) : null;
+        const townsfolkPerception = townsfolkPlayer
+            ? perceive(townsfolkPlayer, player, "role", state)
+            : null;
+        const townsfolkRole = townsfolkPerception
+            ? getRole(townsfolkPerception.roleId)
+            : null;
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 

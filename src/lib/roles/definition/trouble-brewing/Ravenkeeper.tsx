@@ -8,6 +8,7 @@ import { NightActionLayout } from "../../../../components/layouts";
 import { MysticDivider, RoleRevealBadge } from "../../../../components/items";
 import { SelectablePlayerItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
+import { perceive } from "../../../pipeline";
 
 type Phase = "select_player" | "show_role";
 
@@ -79,7 +80,9 @@ const definition: RoleDefinition = {
             const targetPlayer = state.players.find((p) => p.id === selectedPlayer);
             if (!targetPlayer) return;
 
-            const targetRole = getRole(targetPlayer.roleId);
+            // Use perception to determine what role is shown (handles Recluse/Spy)
+            const targetPerception = perceive(targetPlayer, player, "role", state);
+            const targetRole = getRole(targetPerception.roleId);
             if (!targetRole) return;
 
             onComplete({
@@ -102,7 +105,7 @@ const definition: RoleDefinition = {
                             playerId: player.id,
                             action: "saw_role",
                             targetId: targetPlayer.id,
-                            targetRoleId: targetRole.id,
+                            shownRoleId: targetRole.id,
                         },
                     },
                 ],
@@ -155,9 +158,14 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Phase 2: Show the selected player's role
+        // Phase 2: Show the selected player's perceived role
         const targetPlayer = state.players.find((p) => p.id === selectedPlayer);
-        const targetRole = targetPlayer ? getRole(targetPlayer.roleId) : null;
+        const targetPerception = targetPlayer
+            ? perceive(targetPlayer, player, "role", state)
+            : null;
+        const targetRole = targetPerception
+            ? getRole(targetPerception.roleId)
+            : null;
 
         return (
             <NightActionLayout
