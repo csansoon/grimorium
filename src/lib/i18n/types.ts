@@ -70,7 +70,9 @@ export type Translations = {
         // Narrator prompts
         narratorGiveDevice: string;
         narratorWakePlayer: string;
+        narratorRoleChanged: string;
         readyShowToPlayer: string;
+        yourRoleHasChanged: string;
 
         // Night
         nightComplete: string;

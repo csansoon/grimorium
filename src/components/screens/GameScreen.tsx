@@ -5,6 +5,7 @@ import { RoleCard } from "../items/RoleCard";
 import {
     getNextStep,
     markRoleRevealed,
+    markRoleChangeRevealed,
     startNight,
     startDay,
     applyNightAction,
@@ -51,10 +52,11 @@ type Props = {
 };
 
 type Screen =
-    | { type: "narrator_prompt"; playerId: string; action: "role_reveal" | "night_action" }
+    | { type: "narrator_prompt"; playerId: string; action: "role_reveal" | "night_action" | "role_change" }
     | { type: "role_reveal"; playerId: string }
+    | { type: "role_change_reveal"; playerId: string }
     | { type: "night_action"; playerId: string; roleId: string }
-    | { type: "handback"; afterAction: "role_reveal" | "night_action"; playerId: string }
+    | { type: "handback"; afterAction: "role_reveal" | "night_action" | "role_change"; playerId: string }
     | { type: "night_waiting" }
     | { type: "day" }
     | { type: "nomination" }
@@ -145,6 +147,13 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                     action: "role_reveal",
                 });
                 break;
+            case "role_change_reveal":
+                setScreen({
+                    type: "narrator_prompt",
+                    playerId: step.playerId,
+                    action: "role_change",
+                });
+                break;
             case "night_action":
                 setScreen({
                     type: "narrator_prompt",
@@ -196,6 +205,8 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
         if (screen.action === "role_reveal") {
             setScreen({ type: "role_reveal", playerId: screen.playerId });
+        } else if (screen.action === "role_change") {
+            setScreen({ type: "role_change_reveal", playerId: screen.playerId });
         } else {
             const player = getPlayer(state, screen.playerId);
             if (player) {
@@ -211,6 +222,11 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const handleRoleRevealComplete = () => {
         if (screen.type !== "role_reveal") return;
         setScreen({ type: "handback", afterAction: "role_reveal", playerId: screen.playerId });
+    };
+
+    const handleRoleChangeRevealComplete = () => {
+        if (screen.type !== "role_change_reveal") return;
+        setScreen({ type: "handback", afterAction: "role_change", playerId: screen.playerId });
     };
 
     const handleNightActionComplete = (result: NightActionResult) => {
@@ -238,6 +254,10 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             } else {
                 advanceToNextStep(newGame);
             }
+        } else if (screen.afterAction === "role_change") {
+            const newGame = markRoleChangeRevealed(game, screen.playerId);
+            updateGame(newGame);
+            advanceToNextStep(newGame);
         } else if (screen.afterAction === "night_action") {
             const result = pendingNightActionResult.current;
             if (!result) {
@@ -475,6 +495,19 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                 );
             }
 
+            case "role_change_reveal": {
+                const player = getPlayer(state, screen.playerId);
+                if (!player) return null;
+
+                return (
+                    <RoleCard
+                        player={player}
+                        headerMessage={t.game.yourRoleHasChanged}
+                        onContinue={handleRoleChangeRevealComplete}
+                    />
+                );
+            }
+
             case "night_action": {
                 const player = getPlayer(state, screen.playerId);
                 if (!player) return null;
@@ -629,6 +662,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     // Determine which floating buttons to show
     const isPlayerFacingScreen =
         screen.type === "role_reveal" ||
+        screen.type === "role_change_reveal" ||
         screen.type === "night_action" ||
         screen.type === "grimoire_role_card" ||
         screen.type === "handback";
@@ -695,6 +729,12 @@ function getInitialScreen(game: Game): Screen {
                 type: "narrator_prompt",
                 playerId: step.playerId,
                 action: "role_reveal",
+            };
+        case "role_change_reveal":
+            return {
+                type: "narrator_prompt",
+                playerId: step.playerId,
+                action: "role_change",
             };
         case "night_action":
             return {

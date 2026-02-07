@@ -65,7 +65,9 @@ const es: Translations = {
     game: {
         narratorGiveDevice: "Dale el dispositivo a {player} para que vea su rol.",
         narratorWakePlayer: "Despierta a {player} ({role}) para su acción nocturna.",
+        narratorRoleChanged: "Dale el dispositivo a {player} — su rol ha cambiado.",
         readyShowToPlayer: "Listo - Mostrar al Jugador",
+        yourRoleHasChanged: "¡Tu rol ha cambiado!",
 
         nightComplete: "Noche {round} Completa",
         nightActionsResolved: "Todas las acciones nocturnas han sido resueltas. ¿Listos para comenzar el día?",

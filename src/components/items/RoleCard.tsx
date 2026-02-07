@@ -9,9 +9,11 @@ import { cn } from "../../lib/utils";
 type Props = {
     player: PlayerState;
     onContinue: () => void;
+    /** Optional header message shown above the player name (e.g., "Your role has changed!") */
+    headerMessage?: string;
 };
 
-export function RoleCard({ player, onContinue }: Props) {
+export function RoleCard({ player, onContinue, headerMessage }: Props) {
     const { t } = useI18n();
     const role = getRole(player.roleId);
 
@@ -71,6 +73,30 @@ export function RoleCard({ player, onContinue }: Props) {
 
                 {/* Card Content */}
                 <div className="relative z-10 px-8 py-10 parchment-texture">
+                    {/* Header Message (e.g., role change notification) */}
+                    {headerMessage && (
+                        <div className={cn(
+                            "text-center mb-6 px-4 py-3 rounded-lg",
+                            isEvil
+                                ? "bg-purple-900/50 border border-purple-400/30"
+                                : "bg-amber-900/30 border border-amber-400/30"
+                        )}>
+                            <div className="flex items-center justify-center gap-2">
+                                <Icon
+                                    name="sparkles"
+                                    size="sm"
+                                    className={isEvil ? "text-purple-300" : "text-amber-300"}
+                                />
+                                <p className={cn(
+                                    "text-sm font-semibold uppercase tracking-wider",
+                                    isEvil ? "text-purple-200" : "text-amber-200"
+                                )}>
+                                    {headerMessage}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Player Name */}
                     <p className={cn(
                         "text-center text-sm tracking-widest uppercase mb-6 opacity-70",

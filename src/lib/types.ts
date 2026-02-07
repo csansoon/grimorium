@@ -74,6 +74,7 @@ export type EventType =
     | "effect_added"
     | "effect_removed"
     | "role_changed"
+    | "role_change_revealed"
     | "game_ended";
 
 export type HistoryEntry = {
