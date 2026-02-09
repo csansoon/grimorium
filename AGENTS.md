@@ -11,15 +11,15 @@ This document explains every system in the codebase, how they interconnect, and 
 1. [Architecture Overview](#1-architecture-overview)
 2. [Event-Sourced Game State](#2-event-sourced-game-state)
 3. [The Game Controller](#3-the-game-controller)
-4. [Roles](#4-roles)
-5. [Effects](#5-effects)
+4. [Roles](#4-roles) — includes [Night Action Steps](#night-action-steps-nightsteplistlayout)
+5. [Effects](#5-effects) — includes `canRegisterAs` for misregistration
 6. [The Intent Pipeline](#6-the-intent-pipeline)
-7. [The Perception System](#7-the-perception-system)
+7. [The Perception System](#7-the-perception-system) — includes [Perception Query Utilities](#perception-query-utilities), [PerceptionConfigStep](#perceptionconfigstep-component), [Auto-Calc Perception Flow](#how-auto-calculating-roles-use-perception-overrides)
 8. [Day Actions](#8-day-actions)
 9. [Night Follow-Ups](#9-night-follow-ups)
 10. [Win Conditions](#10-win-conditions)
 11. [The Screen State Machine](#11-the-screen-state-machine)
-12. [UI Components](#12-ui-components)
+12. [UI Components](#12-ui-components) — includes `NightStepListLayout`, `PerceptionConfigStep`
 13. [Internationalization (i18n)](#13-internationalization-i18n)
 14. [How to Implement a New Role](#14-how-to-implement-a-new-role)
 15. [How to Implement a New Effect](#15-how-to-implement-a-new-effect)
@@ -215,6 +215,7 @@ type RoleDefinition = {
     shouldWake?: (game, player) => boolean; // Conditional waking
     initialEffects?: EffectToAdd[];         // Effects added at game creation
     winConditions?: WinConditionCheck[];    // Dynamic win conditions
+    nightSteps?: NightStepDefinition[];     // Declarative night action step list (see §4a)
     RoleReveal: FC<RoleRevealProps>;        // Component shown when player learns their role
     NightAction: FC<NightActionProps> | null; // Night action component (null = no action)
 };
@@ -245,6 +246,117 @@ type NightActionResult = {
 | **Info Roles (narrator-setup)** | Washerwoman, Librarian, Investigator | Narrator selects players/roles to show, uses `perceive()` for highlighting and role display |
 | **Info Roles (death-triggered)** | Ravenkeeper, Undertaker | Wake conditionally, show role using `perceive()` |
 | **Passive Roles** | Virgin, Slayer, Mayor, Soldier, Saint | `NightAction: null`, behavior via `initialEffects` |
+
+### Night Action Steps (NightStepListLayout)
+
+**Files:** `src/lib/roles/types.ts` (type), `src/components/layouts/NightStepListLayout.tsx` (component)
+
+Every role with a `NightAction` begins with a **step list landing page** before entering the actual action flow. This provides the narrator with a predictable, consistent UI: they always see what steps are coming before any player-facing screens appear.
+
+#### How It Works
+
+```
+NightDashboard → taps role → NightAction component
+                               │
+                               ▼
+                          NightStepListLayout (landing page)
+                               │ taps next step
+                               ▼
+                          Step 1: e.g. PerceptionConfigStep
+                               │ done → back to step list
+                               ▼
+                          Step 2: e.g. Show Result (calls onComplete)
+```
+
+The step list is **inside** each `NightAction` component — no new screen types in `GameScreen.tsx`. Each role manages its own step navigation via internal `useState` with a `phase` variable.
+
+#### NightStepDefinition
+
+Roles declare their steps via the optional `nightSteps` field on `RoleDefinition`:
+
+```typescript
+type NightStepDefinition = {
+    id: string;
+    icon: IconName;
+    getLabel: (t: Translations) => string;
+    condition?: (game: Game, player: PlayerState, state: GameState) => boolean;
+};
+```
+
+- `condition` makes steps **dynamic** — they only appear when the condition is true (e.g., "Configure Perceptions" only shows when ambiguous players exist).
+- If `nightSteps` is omitted, the role still works — it simply manages its own internal flow.
+
+#### NightStepListLayout Component
+
+The shared layout component renders the step list with:
+- Role header (icon, name, player name)
+- Numbered step rows with status badges (pending / done / next)
+- Only the next pending step is tappable (consistent with Night Dashboard pattern)
+- `isEvil` prop switches between indigo (good) and red (evil) theming
+
+```typescript
+type NightStep = {
+    id: string;
+    icon: IconName;
+    label: string;
+    status: "pending" | "done" | "active";
+};
+
+// Props
+type Props = {
+    icon: IconName;
+    roleName: string;
+    playerName: string;
+    isEvil?: boolean;
+    steps: NightStep[];
+    onSelectStep: (stepId: string) => void;
+};
+```
+
+#### How Roles Build Steps at Runtime
+
+The `NightAction` component reads its role's `nightSteps` (or hardcodes a step array) and combines static metadata with runtime status tracking:
+
+```typescript
+const steps: NightStep[] = useMemo(() => {
+    const result: NightStep[] = [];
+
+    // Conditional step — only appears when ambiguous players exist
+    if (needsPerceptionConfig) {
+        result.push({
+            id: "configure_perceptions",
+            icon: "eye",
+            label: t.game.stepConfigurePerceptions,
+            status: perceptionConfigDone ? "done" : "pending",
+        });
+    }
+
+    // Always-present step
+    result.push({
+        id: "show_result",
+        icon: "chefHat",
+        label: t.game.stepShowResult,
+        status: "pending",
+    });
+
+    return result;
+}, [needsPerceptionConfig, perceptionConfigDone, t]);
+```
+
+#### Current Role Step Configurations
+
+| Role | Steps | Notes |
+|------|-------|-------|
+| **Chef** | (1) Configure Perceptions (cond.), (2) Show Result | Perception config when ambiguous alignment players exist |
+| **Empath** | (1) Configure Perceptions (cond.), (2) Show Result | Scoped to alive neighbors only |
+| **Undertaker** | (1) Configure Perceptions (cond.), (2) Show Role | Scoped to the executed player |
+| **Fortune Teller** | (1) Assign Red Herring (cond.), (2) Select & Show | Red Herring step only on night 1 |
+| **Ravenkeeper** | (1) Select Player, (2) Configure Perceptions (cond.), (3) Show Role | Perception step appears dynamically after player selection |
+| **Washerwoman** | (1) Narrator Setup | Single step (misregistration handled inline) |
+| **Librarian** | (1) Narrator Setup | Single step |
+| **Investigator** | (1) Narrator Setup | Single step |
+| **Imp** | (1) Choose Victim | Single step, evil theming |
+| **Monk** | (1) Choose Player | Single step |
 
 ### Registering a New Role
 
@@ -290,6 +402,14 @@ type EffectDefinition = {
     nightFollowUps?: NightFollowUpDefinition[];  // Register reactive night-phase actions
     winConditions?: WinConditionCheck[];    // Register custom win conditions
     perceptionModifiers?: PerceptionModifier[];  // Alter perceived identity
+
+    // Misregistration declaration — used by perception query utilities
+    // (getAmbiguousPlayers, canRegisterAsTeam, canRegisterAsAlignment)
+    // to detect players needing narrator perception configuration
+    canRegisterAs?: {
+        teams?: TeamId[];
+        alignments?: ("good" | "evil")[];
+    };
 };
 ```
 
@@ -306,6 +426,7 @@ type EffectDefinition = {
 | `bounce` | Mayor | Redirects kills to another player | `handlers`: requests UI, redirects kill |
 | `martyrdom` | Saint | Evil wins if executed | `winConditions`: after_execution |
 | `scarlet_woman` | Scarlet Woman | Becomes Demon when Demon dies | `handlers`: piggybacks role change + `pending_role_reveal` |
+| `recluse_misregister` | Recluse | Outsider that may register as evil | `perceptionModifiers`, `canRegisterAs: { teams: [minion, demon], alignments: [evil] }` |
 | `pending_role_reveal` | Scarlet Woman handler (or any role-changing effect) | Signals a role change needs to be revealed | `nightFollowUps`: shows RoleCard to narrator |
 
 ### Effect Lifecycle
@@ -518,6 +639,84 @@ const perception = perceive(executedPlayer, undertakerPlayer, "role", state);
 const executedRole = getRole(perception.roleId);
 ```
 
+### Perception Query Utilities
+
+**File:** `src/lib/pipeline/perception.ts` (all exported from `src/lib/pipeline/index.ts`)
+
+Beyond `perceive()` and `canRegisterAsTeam()`, the perception system provides utilities for detecting and configuring ambiguous perceptions at runtime.
+
+#### `canRegisterAsAlignment(player, alignment)`
+
+Companion to `canRegisterAsTeam()`. Returns `true` if the player has any active effect whose `canRegisterAs.alignments` includes the target alignment. Used by auto-calculating roles (Chef, Empath) to detect players that may need perception configuration.
+
+```typescript
+canRegisterAsAlignment(reclusePlayer, "evil"); // true (recluse_misregister declares it)
+canRegisterAsAlignment(villagerPlayer, "evil"); // false
+```
+
+#### `getAmbiguousPlayers(players, context)`
+
+Returns the subset of `players` that have effects declaring `canRegisterAs` for the given perception context. This is how roles detect "do I need a perception config step?" **without referencing any specific role or effect**.
+
+```typescript
+const ambiguous = getAmbiguousPlayers(state.players.filter(isAlive), "alignment");
+// Returns players with effects that declare canRegisterAs.alignments (e.g., Recluse)
+```
+
+Context matching rules:
+- `"alignment"` → checks `canRegisterAs.alignments`
+- `"team"` → checks `canRegisterAs.teams`
+- `"role"` → checks both (misregistration at any level affects role perception)
+
+#### `applyPerceptionOverrides(state, overrides)`
+
+Creates a **local-only copy** of `GameState` where each overridden player's misregistration effect has `perceiveAs` data injected. No game events are emitted — this is purely ephemeral.
+
+```typescript
+const overrides = { [recluseId]: { alignment: "evil" } };
+const localState = applyPerceptionOverrides(state, overrides);
+// Now perceive(recluse, observer, "alignment", localState).alignment === "evil"
+```
+
+This works because `recluse_misregister`'s perception modifier already reads `effectData?.perceiveAs`. The function finds effects with `canRegisterAs` on the target players and injects the overrides as `perceiveAs` data into those effect instances.
+
+### PerceptionConfigStep Component
+
+**File:** `src/components/items/PerceptionConfigStep.tsx`
+
+A narrator-only screen where the narrator configures how ambiguous players register for a specific role's information ability. Used as a step within `NightAction` components.
+
+```typescript
+type Props = {
+    ambiguousPlayers: PlayerState[];     // From getAmbiguousPlayers()
+    context: PerceptionContext;          // What aspect is being configured
+    state: GameState;
+    roleIcon: string;
+    roleName: string;
+    playerName: string;
+    onComplete: (overrides: Record<string, Partial<Perception>>) => void;
+};
+```
+
+For each ambiguous player, it shows:
+- The player's name, actual role, and the effect granting misregistration
+- Toggle buttons for how they should register (e.g., "Good" vs "Evil" for alignment context)
+
+The overrides returned are `{ [playerId]: { alignment: "evil" } }` etc. The calling `NightAction` component passes these to `applyPerceptionOverrides()` to create a modified local state for calculations.
+
+### How Auto-Calculating Roles Use Perception Overrides
+
+Roles like Chef and Empath follow this pattern:
+
+1. Check `getAmbiguousPlayers(relevantPlayers, "alignment")` — if non-empty, show a perception config step
+2. The narrator configures overrides via `PerceptionConfigStep`
+3. The overrides are stored in component state (never emitted as game events)
+4. `applyPerceptionOverrides(state, overrides)` creates a local modified state
+5. The role calculates its result using `perceive()` on the modified state
+6. The result is shown to the player and recorded in history as usual
+
+This keeps perception configuration **fully modular** — roles detect ambiguity through `canRegisterAs` declarations on effects, not by checking for specific roles.
+
 ### How to Add Perception Modifiers
 
 On an `EffectDefinition`, add `perceptionModifiers`. Example for a hypothetical "misregister" effect:
@@ -534,6 +733,22 @@ perceptionModifiers: [{
 ```
 
 The narrator would configure the effect's instance data when assigning it (e.g., `{ perceiveAs: { team: "minion", alignment: "evil", roleId: "poisoner" } }`).
+
+### How to Make a New Effect Trigger Perception Configuration
+
+If a new effect should cause narrator configuration for information roles:
+
+1. Add `canRegisterAs` to the effect definition declaring what it can misregister as:
+   ```typescript
+   canRegisterAs: {
+       teams?: TeamId[];           // e.g., ["minion", "demon"]
+       alignments?: ("good" | "evil")[];  // e.g., ["evil"]
+   }
+   ```
+
+2. Add a `perceptionModifiers` entry that reads `effectData?.perceiveAs` (same pattern as `recluse_misregister`).
+
+3. No changes needed in any role — `getAmbiguousPlayers()` will automatically detect the new effect, and `PerceptionConfigStep` + `applyPerceptionOverrides()` will handle the configuration flow.
 
 ---
 
@@ -715,8 +930,9 @@ The list is ordered: regular actions first (by `nightOrder`), follow-ups appende
 ```
 1. Narrator taps next action in Night Dashboard
 2. Screen transitions to "night_action" with playerId + roleId
-3. NightAction component renders, narrator/player interacts
-4. NightAction calls onComplete(result)
+3. NightAction component renders NightStepListLayout (step list landing page)
+4. Narrator taps through steps (perception config, player selection, etc.)
+5. Final step calls onComplete(result)
 5. applyNightAction(game, result) — applies direct changes
 6. If result.intent exists:
    - resolveIntent(intent, state, game) — runs pipeline
@@ -756,8 +972,9 @@ When the pipeline returns `needs_input`:
 ```
 atoms/     → Basic primitives: Button, Icon, Badge, Card, Dialog
 inputs/    → Form elements: PlayerSelector, SelectablePlayerItem, VoteButton
-items/     → Game-specific: Grimoire, RoleCard, EditEffectsModal, BounceRedirectUI
-layouts/   → Screen wrappers: NightActionLayout, NarratorSetupLayout
+items/     → Game-specific: Grimoire, RoleCard, EditEffectsModal, BounceRedirectUI,
+              PerceptionConfigStep
+layouts/   → Screen wrappers: NightActionLayout, NarratorSetupLayout, NightStepListLayout
 screens/   → Full screens: GameScreen, RoleRevelationScreen, NightDashboard,
               DayPhase, VotingPhase, NominationScreen
 ```
@@ -767,6 +984,12 @@ screens/   → Full screens: GameScreen, RoleRevelationScreen, NightDashboard,
 **`NightActionLayout`** — For showing information to the player. Used by info roles (Chef, Empath, etc.) and the Ravenkeeper. Renders with player info, title, description, and children.
 
 **`NarratorSetupLayout`** — For narrator-only setup screens. Used by Washerwoman, Librarian, Investigator, Fortune Teller. Has a "Show to Player" button to transition from narrator setup to player view.
+
+**`NightStepListLayout`** — Landing page shown when a night action begins. Displays a numbered step list with role header and status tracking. Every role with a `NightAction` starts here before entering its actual action flow. See [§4: Night Action Steps](#night-action-steps-nightsteplistlayout) for details.
+
+### Game-Specific Items
+
+**`PerceptionConfigStep`** — Narrator-only screen for configuring how ambiguous players register for an information ability. Used as a step within multi-step night actions. See [§7: PerceptionConfigStep](#perceptionconfigstep-component) for details.
 
 ### Icon System
 
@@ -812,21 +1035,30 @@ When adding a new role or effect, add translations in **both** `src/lib/i18n/tra
    - Place in `src/lib/roles/definition/trouble-brewing/` (or the relevant script folder)
    - Export a `const definition: RoleDefinition` as default
 
-3. **Register the role:**
+3. **Implement the NightAction with step list:**
+   - Every `NightAction` must start by rendering `NightStepListLayout` as its landing page
+   - Use `useState<Phase>` to track which step/phase is active (start with `"step_list"`)
+   - Declare `nightSteps` on the role definition for metadata (conditional steps use `condition`)
+   - Build the `NightStep[]` array at runtime using `useMemo` (combining step metadata with status tracking)
+   - If the role uses `perceive()` for auto-calculation, check `getAmbiguousPlayers()` to decide whether a `PerceptionConfigStep` is needed
+   - Use `applyPerceptionOverrides()` to create a local modified state for calculations
+   - Even single-step roles must show the step list for consistency
+
+4. **Register the role:**
    - Add the role ID to the `RoleId` union in `src/lib/roles/types.ts`
    - Import and add to `ROLES` in `src/lib/roles/index.ts`
    - Add to the relevant script in `SCRIPTS`
 
-4. **Create effects if needed:**
+5. **Create effects if needed:**
    - If the role has passive abilities, create effect definitions
    - Register effects in `src/lib/effects/index.ts` and `types.ts`
    - Add effect to `initialEffects` on the role definition
 
-5. **Add translations:**
+6. **Add translations:**
    - Add to `en.ts` and `es.ts` under `roles[roleId]`
    - Add effect translations if new effects were created
 
-6. **Never modify `game.ts`** for role-specific logic. Use effects and the pipeline instead.
+7. **Never modify `game.ts`** for role-specific logic. Use effects and the pipeline instead.
 
 ### Example: Implementing a Poisoner (hypothetical)
 
@@ -852,7 +1084,32 @@ const definition: RoleDefinition = {
     team: "minion",
     icon: "flask",
     nightOrder: 5,  // Before info roles
+
+    nightSteps: [{
+        id: "choose_target",
+        icon: "flask",
+        getLabel: (t) => t.game.stepChoosePlayer,
+    }],
+
     NightAction: ({ state, player, onComplete }) => {
+        const [phase, setPhase] = useState<"step_list" | "choose_target">("step_list");
+        const { t } = useI18n();
+
+        // Step list landing page (always shown first)
+        if (phase === "step_list") {
+            return (
+                <NightStepListLayout
+                    icon="flask"
+                    roleName={t.roles.poisoner.name}
+                    playerName={player.name}
+                    isEvil
+                    steps={[{ id: "choose_target", icon: "flask",
+                              label: t.game.stepChoosePlayer, status: "pending" }]}
+                    onSelectStep={() => setPhase("choose_target")}
+                />
+            );
+        }
+
         // Select a player to poison
         // On confirm: add "poisoned" effect (expires end_of_night) to target
         onComplete({
@@ -889,7 +1146,8 @@ const definition: RoleDefinition = {
 | React to a night event with a follow-up action | `nightFollowUps` with condition + ActionComponent |
 | Show a role change reveal after transformation | Add `pending_role_reveal` effect (it has a built-in `nightFollowUp`) |
 | Create a custom win condition | `winConditions` with trigger + check |
-| Make a player register differently to info roles | `perceptionModifiers` |
+| Make a player register differently to info roles | `perceptionModifiers` + `canRegisterAs` (see §7) |
+| Enable narrator perception config for info roles | `canRegisterAs: { teams?, alignments? }` on the effect |
 | Prevent a player from waking at night | `preventsNightWake: true` |
 | Make info roles give wrong results | `poisonsAbility: true` |
 | Prevent voting | `preventsVoting: true` or `canVote` function |
@@ -1069,6 +1327,9 @@ Tests run as a required step in the CI/CD pipeline (`.github/workflows/deploy.ym
 - **Use `expiresAt` for temporary effects** — Monk's protection expires at `"end_of_night"`. Don't manually track removal.
 - **Add history entries for every significant action** — the game's undo/history system depends on the event log being complete.
 - **Use i18n keys for all user-facing text** — never hardcode English strings in components.
+- **Always start NightAction with NightStepListLayout** — every role with a night action must render a step list landing page first, even for single-step roles. This ensures narrator safety and consistency.
+- **Use `getAmbiguousPlayers()` to detect perception ambiguity** — never hardcode checks for specific roles (like "Recluse") inside information role logic. Use the generic perception query utilities to discover ambiguous players via `canRegisterAs` declarations.
+- **Use `applyPerceptionOverrides()` for local perception configuration** — perception overrides from `PerceptionConfigStep` are ephemeral. Never emit game events for perception configuration choices; create a local modified state instead.
 
 ### DON'T
 
@@ -1079,6 +1340,8 @@ Tests run as a required step in the CI/CD pipeline (`.github/workflows/deploy.ym
 - **Never skip the pipeline for interceptable actions** — even if there are currently no handlers for an intent type, still use the pipeline. Future effects may need to intercept it.
 - **Never check `player.roleId` to determine team/alignment in info role logic** — always use `perceive()`. Direct checks bypass the perception system.
 - **Never hardcode effect checks in `GameScreen.tsx`, `DayPhase.tsx`, or `NightDashboard.tsx`** — use `getAvailableDayActions()`, `getAvailableNightFollowUps()`, and `checkDynamicWinConditions()` instead.
+- **Never hardcode role/effect names in `getAmbiguousPlayers()` checks** — the perception query utilities are generic by design. If you find yourself writing `if (effectId === "recluse_misregister")` in a role's night action, you're doing it wrong. Use `canRegisterAs` declarations and let the system detect ambiguity automatically.
+- **Never skip the step list for NightAction components** — even single-step roles must render `NightStepListLayout` first. The step list is the narrator's safety net before player-facing screens.
 
 ### Handler Priority Guidelines
 
@@ -1096,7 +1359,7 @@ Tests run as a required step in the CI/CD pipeline (`.github/workflows/deploy.ym
 
 ### Import Guidelines
 
-- Roles can import from: `../types`, `../../types`, `../../i18n`, `../index` (for `getRole`), `../../pipeline` (for `perceive`), and UI components
+- Roles can import from: `../types`, `../../types`, `../../i18n`, `../index` (for `getRole`), `../../pipeline` (for `perceive`, `getAmbiguousPlayers`, `applyPerceptionOverrides`), and UI components (including `NightStepListLayout`, `PerceptionConfigStep`)
 - Effects can import from: `../types`, `../../pipeline/types`, `../../types`, and UI components (for `request_ui`)
 - Pipeline can import from: `../types`, `../effects`, `../roles/index`, `../teams`
 - `game.ts` can import from: `./types`, `./roles`, `./pipeline`, `./roles/types`
