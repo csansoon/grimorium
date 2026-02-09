@@ -7,20 +7,31 @@ import type { NightStep } from "../../../../components/layouts";
 import { PlayerSelector } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { isAlive } from "../../../types";
-import { isMalfunctioning } from "../../../effects";
 
+/**
+ * The Poisoner — Minion role.
+ *
+ * Each night (except the first), chooses a player to poison.
+ * The poisoned effect expires at "end_of_day" — it lasts through
+ * the current night AND the following day, affecting both night
+ * abilities and day-phase abilities (Slayer, win conditions, etc.).
+ * It is removed when the next night starts.
+ */
 const definition: RoleDefinition = {
-    id: "monk",
-    team: "townsfolk",
-    icon: "church",
-    nightOrder: 20, // Monk wakes before the Demon
-    shouldWake: (game, player) => isAlive(player) && (game.history.at(-1)?.stateAfter.round ?? 0) > 1,
+    id: "poisoner",
+    team: "minion",
+    icon: "flask",
+    nightOrder: 5, // Very early — before all info roles
+
+    shouldWake: (game, player) =>
+        isAlive(player) &&
+        (game.history.at(-1)?.stateAfter.round ?? 0) > 1,
 
     nightSteps: [
         {
-            id: "choose_player",
-            icon: "shield",
-            getLabel: (t) => t.game.stepChoosePlayer,
+            id: "choose_target",
+            icon: "flask",
+            getLabel: (t) => t.game.stepChooseTarget,
         },
     ],
 
@@ -28,11 +39,10 @@ const definition: RoleDefinition = {
 
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
-        const [phase, setPhase] = useState<"step_list" | "choose_player">("step_list");
+        const [phase, setPhase] = useState<"step_list" | "choose_target">("step_list");
         const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
 
-        // Can only protect other alive players (not themselves)
-        const otherAlivePlayers = state.players.filter(
+        const alivePlayers = state.players.filter(
             (p) => isAlive(p) && p.id !== player.id
         );
 
@@ -40,8 +50,6 @@ const definition: RoleDefinition = {
             const key = roleId as keyof typeof t.roles;
             return t.roles[key]?.name ?? roleId;
         };
-
-        const malfunctioning = isMalfunctioning(player);
 
         const handleConfirm = () => {
             if (!selectedTarget) return;
@@ -56,7 +64,7 @@ const definition: RoleDefinition = {
                         message: [
                             {
                                 type: "i18n",
-                                key: "roles.monk.history.protectedPlayer",
+                                key: "roles.poisoner.history.poisonedPlayer",
                                 params: {
                                     player: player.id,
                                     target: target.id,
@@ -64,26 +72,22 @@ const definition: RoleDefinition = {
                             },
                         ],
                         data: {
-                            roleId: "monk",
+                            roleId: "poisoner",
                             playerId: player.id,
-                            action: "protect",
+                            action: "poison",
                             targetId: target.id,
-                            ...(malfunctioning ? { malfunctioned: true } : {}),
                         },
                     },
                 ],
-                // When malfunctioning, the safe effect is NOT applied
-                ...(!malfunctioning && {
-                    addEffects: {
-                        [target.id]: [
-                            {
-                                type: "safe",
-                                data: { source: "monk" },
-                                expiresAt: "end_of_night",
-                            },
-                        ],
-                    },
-                }),
+                addEffects: {
+                    [target.id]: [
+                        {
+                            type: "poisoned",
+                            data: { source: "poisoner" },
+                            expiresAt: "end_of_day",
+                        },
+                    ],
+                },
             });
         };
 
@@ -91,20 +95,21 @@ const definition: RoleDefinition = {
         if (phase === "step_list") {
             const steps: NightStep[] = [
                 {
-                    id: "choose_player",
-                    icon: "shield",
-                    label: t.game.stepChoosePlayer,
+                    id: "choose_target",
+                    icon: "flask",
+                    label: t.game.stepChooseTarget,
                     status: "pending",
                 },
             ];
 
             return (
                 <NightStepListLayout
-                    icon="church"
-                    roleName={getRoleName("monk")}
+                    icon="flask"
+                    roleName={getRoleName("poisoner")}
                     playerName={player.name}
+                    isEvil
                     steps={steps}
-                    onSelectStep={() => setPhase("choose_player")}
+                    onSelectStep={() => setPhase("choose_target")}
                 />
             );
         }
@@ -112,16 +117,16 @@ const definition: RoleDefinition = {
         return (
             <NightActionLayout
                 player={player}
-                title={t.game.monkInfo}
-                description={t.game.selectPlayerToProtect}
+                title={t.game.poisonerInfo}
+                description={t.game.selectPlayerToPoison}
             >
                 <div className="mb-6">
                     <PlayerSelector
-                        players={otherAlivePlayers}
+                        players={alivePlayers}
                         selected={selectedTarget}
                         onSelect={setSelectedTarget}
-                        selectedIcon="shield"
-                        variant="blue"
+                        selectedIcon="flask"
+                        variant="red"
                     />
                 </div>
 
@@ -130,10 +135,10 @@ const definition: RoleDefinition = {
                     disabled={!selectedTarget}
                     fullWidth
                     size="lg"
-                    variant="night"
+                    variant="evil"
                 >
-                    <Icon name="shield" size="md" className="mr-2" />
-                    {t.common.iUnderstandMyRole}
+                    <Icon name="flask" size="md" className="mr-2" />
+                    {t.common.confirm}
                 </Button>
             </NightActionLayout>
         );

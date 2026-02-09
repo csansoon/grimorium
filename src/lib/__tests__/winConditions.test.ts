@@ -285,3 +285,96 @@ describe("Mayor peaceful victory", () => {
         expect(checkEndOfDayWinConditions(state, game)).toBeNull();
     });
 });
+
+// ============================================================================
+// MALFUNCTION — WIN CONDITION BYPASS
+// ============================================================================
+
+describe("Malfunction — win condition bypass", () => {
+    it("poisoned Saint's martyrdom does NOT trigger evil winning", () => {
+        const saint = addEffectTo(
+            addEffectTo(makePlayer({ id: "p1", roleId: "saint" }), "martyrdom"),
+            "poisoned"
+        );
+        const players = [
+            saint,
+            makePlayer({ id: "p2", roleId: "washerwoman" }),
+            makePlayer({ id: "p3", roleId: "chef" }),
+            makePlayer({ id: "p4", roleId: "imp" }),
+        ];
+        const state = makeState({ phase: "day", round: 1, players });
+
+        const game = makeGameWithHistory(
+            [
+                { type: "game_created" },
+                { type: "day_started", data: { round: 1 } },
+                {
+                    type: "execution",
+                    data: { playerId: "p1" },
+                },
+            ],
+            state
+        );
+
+        // Poisoned Saint's martyrdom should NOT trigger
+        expect(checkWinCondition(state, game)).toBeNull();
+    });
+
+    it("poisoned Mayor's peaceful victory does NOT trigger", () => {
+        const mayor = addEffectTo(
+            makePlayer({ id: "p1", roleId: "mayor" }),
+            "poisoned"
+        );
+        const players = [
+            mayor,
+            makePlayer({ id: "p2", roleId: "villager" }),
+            makePlayer({ id: "p3", roleId: "imp" }),
+            addEffectTo(makePlayer({ id: "p4", roleId: "chef" }), "dead"),
+            addEffectTo(makePlayer({ id: "p5", roleId: "washerwoman" }), "dead"),
+        ];
+        const state = makeState({ phase: "day", round: 3, players });
+
+        const game = makeGameWithHistory(
+            [
+                { type: "game_created" },
+                {
+                    type: "day_started",
+                    data: { round: 3 },
+                    stateOverrides: { phase: "day" },
+                },
+            ],
+            state
+        );
+
+        // Poisoned Mayor's peaceful victory should NOT trigger
+        expect(checkEndOfDayWinConditions(state, game)).toBeNull();
+    });
+
+    it("drunk Saint's martyrdom does NOT trigger evil winning", () => {
+        const saint = addEffectTo(
+            addEffectTo(makePlayer({ id: "p1", roleId: "saint" }), "martyrdom"),
+            "drunk"
+        );
+        const players = [
+            saint,
+            makePlayer({ id: "p2", roleId: "washerwoman" }),
+            makePlayer({ id: "p3", roleId: "chef" }),
+            makePlayer({ id: "p4", roleId: "imp" }),
+        ];
+        const state = makeState({ phase: "day", round: 1, players });
+
+        const game = makeGameWithHistory(
+            [
+                { type: "game_created" },
+                { type: "day_started", data: { round: 1 } },
+                {
+                    type: "execution",
+                    data: { playerId: "p1" },
+                },
+            ],
+            state
+        );
+
+        expect(checkWinCondition(state, game)).toBeNull();
+    });
+});

@@ -14,6 +14,8 @@ import {
 import { NightStepListLayout } from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
 import { perceive, getAmbiguousPlayers, applyPerceptionOverrides } from "../../../pipeline";
+import { isMalfunctioning } from "../../../effects";
+import { MalfunctionConfigStep } from "../../../../components/items";
 import { Perception } from "../../../pipeline/types";
 import { cn } from "../../../../lib/utils";
 
@@ -43,7 +45,7 @@ function findExecutedPlayerId(game: {
     return null;
 }
 
-type Phase = "step_list" | "configure_perceptions" | "show_role";
+type Phase = "step_list" | "configure_perceptions" | "configure_malfunction" | "show_role";
 
 const definition: RoleDefinition = {
     id: "undertaker",
@@ -61,10 +63,17 @@ const definition: RoleDefinition = {
 
     nightSteps: [
         {
+            id: "configure_malfunction",
+            icon: "alertTriangle",
+            getLabel: (t) => t.game.stepConfigureMalfunction,
+            condition: (_game, player) => isMalfunctioning(player),
+        },
+        {
             id: "configure_perceptions",
             icon: "eye",
             getLabel: (t) => t.game.stepConfigurePerceptions,
-            condition: (game, _player, state) => {
+            condition: (game, player, state) => {
+                if (isMalfunctioning(player)) return false;
                 const executedPlayerId = findExecutedPlayerId(game);
                 if (!executedPlayerId) return false;
                 const executedPlayer = state.players.find(
@@ -89,6 +98,10 @@ const definition: RoleDefinition = {
         const [perceptionOverrides, setPerceptionOverrides] = useState<
             Record<string, Partial<Perception>>
         >({});
+        const [malfunctionRoleId, setMalfunctionRoleId] = useState<string | null>(null);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false);
+
+        const malfunctioning = isMalfunctioning(player);
 
         // Find the executed player
         const executedPlayerId = findExecutedPlayerId(game);
@@ -96,13 +109,13 @@ const definition: RoleDefinition = {
             ? state.players.find((p) => p.id === executedPlayerId)
             : null;
 
-        // Check if perception config is needed for the executed player
+        // Check if perception config is needed (only when NOT malfunctioning)
         const ambiguousPlayers = useMemo(
             () =>
-                executedPlayer
+                !malfunctioning && executedPlayer
                     ? getAmbiguousPlayers([executedPlayer], "role")
                     : [],
-            [executedPlayer],
+            [executedPlayer, malfunctioning],
         );
         const needsPerceptionConfig = ambiguousPlayers.length > 0;
 
@@ -116,6 +129,15 @@ const definition: RoleDefinition = {
         // Build steps
         const steps: NightStep[] = useMemo(() => {
             const result: NightStep[] = [];
+
+            if (malfunctioning) {
+                result.push({
+                    id: "configure_malfunction",
+                    icon: "alertTriangle",
+                    label: t.game.stepConfigureMalfunction,
+                    status: malfunctionConfigDone ? "done" : "pending",
+                });
+            }
 
             if (needsPerceptionConfig) {
                 result.push({
@@ -134,14 +156,22 @@ const definition: RoleDefinition = {
             });
 
             return result;
-        }, [needsPerceptionConfig, perceptionConfigDone, t]);
+        }, [malfunctioning, needsPerceptionConfig, perceptionConfigDone, malfunctionConfigDone, t]);
 
         const handleSelectStep = (stepId: string) => {
-            if (stepId === "configure_perceptions") {
+            if (stepId === "configure_malfunction") {
+                setPhase("configure_malfunction");
+            } else if (stepId === "configure_perceptions") {
                 setPhase("configure_perceptions");
             } else if (stepId === "show_role") {
                 setPhase("show_role");
             }
+        };
+
+        const handleMalfunctionComplete = (roleId: string) => {
+            setMalfunctionRoleId(roleId);
+            setMalfunctionConfigDone(true);
+            setPhase("step_list");
         };
 
         const handlePerceptionComplete = (
@@ -174,12 +204,11 @@ const definition: RoleDefinition = {
             );
         }, [effectiveState, executedPlayer, player]);
 
-        const executedRole = executedPerception
-            ? getRole(executedPerception.roleId)
-            : null;
+        // Use malfunction role if set, otherwise use perceived role
+        const displayedRoleId = malfunctionRoleId ?? executedPerception?.roleId;
 
         const handleComplete = () => {
-            if (executedPlayer && executedRole) {
+            if (executedPlayer && displayedRoleId) {
                 onComplete({
                     entries: [
                         {
@@ -190,7 +219,7 @@ const definition: RoleDefinition = {
                                     key: "roles.undertaker.history.sawExecutedRole",
                                     params: {
                                         player: player.id,
-                                        role: executedRole.id,
+                                        role: displayedRoleId,
                                     },
                                 },
                             ],
@@ -199,7 +228,13 @@ const definition: RoleDefinition = {
                                 playerId: player.id,
                                 action: "saw_executed",
                                 executedPlayerId: executedPlayer.id,
-                                executedRoleId: executedRole.id,
+                                executedRoleId: displayedRoleId,
+                                ...(malfunctioning
+                                    ? {
+                                          malfunctioned: true,
+                                          actualRoleId: executedPerception?.roleId,
+                                      }
+                                    : {}),
                                 perceptionOverrides:
                                     Object.keys(perceptionOverrides).length > 0
                                         ? perceptionOverrides
@@ -224,6 +259,19 @@ const definition: RoleDefinition = {
             );
         }
 
+        // Phase: Configure Malfunction
+        if (phase === "configure_malfunction") {
+            return (
+                <MalfunctionConfigStep
+                    type="role"
+                    roleIcon="shovel"
+                    roleName={getRoleName("undertaker")}
+                    playerName={player.name}
+                    onComplete={handleMalfunctionComplete}
+                />
+            );
+        }
+
         // Phase: Configure Perceptions
         if (phase === "configure_perceptions") {
             return (
@@ -240,9 +288,9 @@ const definition: RoleDefinition = {
         }
 
         // Phase: Show Role
-        if (!executedPerception) return null;
+        if (!displayedRoleId) return null;
 
-        const shownRole = getRole(executedPerception.roleId);
+        const shownRole = getRole(displayedRoleId);
         const shownTeamId = shownRole?.team ?? "townsfolk";
         const shownTeam = getTeam(shownTeamId);
 
@@ -259,7 +307,7 @@ const definition: RoleDefinition = {
                     {t.game.executedPlayerRole}
                 </p>
 
-                <RoleCard roleId={executedPerception.roleId} />
+                <RoleCard roleId={displayedRoleId} />
 
                 <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
                     {t.common.continue}

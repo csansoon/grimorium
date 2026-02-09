@@ -9,12 +9,14 @@ import type { NightStep } from "../../../../components/layouts";
 import {
     StepSection,
     MysticDivider,
+    MalfunctionConfigStep,
 } from "../../../../components/items";
 import { SelectablePlayerItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive } from "../../../pipeline";
+import { isMalfunctioning } from "../../../effects";
 
-type Phase = "step_list" | "red_herring_setup" | "narrator_setup" | "player_view";
+type Phase = "step_list" | "red_herring_setup" | "configure_malfunction" | "narrator_setup" | "player_view";
 
 const definition: RoleDefinition = {
     id: "fortune_teller",
@@ -39,6 +41,12 @@ const definition: RoleDefinition = {
                 );
                 return isFirstNight && !hasRedHerring;
             },
+        },
+        {
+            id: "configure_malfunction",
+            icon: "alertTriangle",
+            getLabel: (t) => t.game.stepConfigureMalfunction,
+            condition: (_game, player) => isMalfunctioning(player),
         },
         {
             id: "select_and_show",
@@ -68,6 +76,10 @@ const definition: RoleDefinition = {
         const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(null);
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
         const [redHerringDone, setRedHerringDone] = useState(false);
+        const [malfunctionValue, setMalfunctionValue] = useState<boolean | null>(null);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false);
+
+        const malfunctioning = isMalfunctioning(player);
 
         // Get good players for Red Herring selection
         const goodPlayers = state.players.filter((p) => {
@@ -101,6 +113,15 @@ const definition: RoleDefinition = {
                 });
             }
 
+            if (malfunctioning) {
+                result.push({
+                    id: "configure_malfunction",
+                    icon: "alertTriangle",
+                    label: t.game.stepConfigureMalfunction,
+                    status: malfunctionConfigDone ? "done" : "pending",
+                });
+            }
+
             result.push({
                 id: "select_and_show",
                 icon: "eye",
@@ -109,14 +130,22 @@ const definition: RoleDefinition = {
             });
 
             return result;
-        }, [needsRedHerringSetup, redHerringDone, t]);
+        }, [needsRedHerringSetup, redHerringDone, malfunctioning, malfunctionConfigDone, t]);
 
         const handleSelectStep = (stepId: string) => {
             if (stepId === "red_herring_setup") {
                 setPhase("red_herring_setup");
+            } else if (stepId === "configure_malfunction") {
+                setPhase("configure_malfunction");
             } else if (stepId === "select_and_show") {
                 setPhase("narrator_setup");
             }
+        };
+
+        const handleMalfunctionComplete = (value: boolean) => {
+            setMalfunctionValue(value);
+            setMalfunctionConfigDone(true);
+            setPhase("step_list");
         };
 
         const handleSelectRandomRedHerring = () => {
@@ -162,7 +191,9 @@ const definition: RoleDefinition = {
                 return false;
             };
 
-            const sawDemon = registersDemon(player1) || registersDemon(player2);
+            const calculatedSawDemon = registersDemon(player1) || registersDemon(player2);
+            // Use malfunction override if set, otherwise use calculated result
+            const sawDemon = malfunctionValue !== null ? malfunctionValue : calculatedSawDemon;
 
             const entries: NightActionResult["entries"] = [];
 
@@ -216,6 +247,12 @@ const definition: RoleDefinition = {
                     action: "check",
                     checkedPlayers: selectedPlayers,
                     result: sawDemon ? "yes" : "no",
+                    ...(malfunctioning
+                        ? {
+                              malfunctioned: true,
+                              actualResult: calculatedSawDemon ? "yes" : "no",
+                          }
+                        : {}),
                 },
             });
 
@@ -314,6 +351,21 @@ const definition: RoleDefinition = {
             );
         }
 
+        // Phase: Configure Malfunction
+        if (phase === "configure_malfunction") {
+            return (
+                <MalfunctionConfigStep
+                    type="boolean"
+                    roleIcon="eye"
+                    roleName={getRoleName("fortune_teller")}
+                    playerName={player.name}
+                    trueLabel={t.game.yesOneIsDemon}
+                    falseLabel={t.game.noNeitherIsDemon}
+                    onComplete={handleMalfunctionComplete}
+                />
+            );
+        }
+
         // Phase: Narrator Setup - Select 2 players to check
         if (phase === "narrator_setup") {
             return (
@@ -387,7 +439,7 @@ const definition: RoleDefinition = {
             return false;
         };
 
-        const sawDemon = registersDemon(player1) || registersDemon(player2);
+        const displaySawDemon = malfunctionValue !== null ? malfunctionValue : (registersDemon(player1) || registersDemon(player2));
 
         return (
             <NightActionLayout
@@ -416,24 +468,24 @@ const definition: RoleDefinition = {
 
                 <div
                     className={`text-center p-6 rounded-lg mb-6 ${
-                        sawDemon
+                        displaySawDemon
                             ? "bg-gradient-to-br from-red-900/50 to-red-800/30 border border-red-700/50"
                             : "bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 border border-emerald-700/50"
                     }`}
                 >
                     <Icon
-                        name={sawDemon ? "alertTriangle" : "checkCircle"}
+                        name={displaySawDemon ? "alertTriangle" : "checkCircle"}
                         size="2xl"
                         className={
-                            sawDemon
+                            displaySawDemon
                                 ? "text-red-400 mx-auto mb-3"
                                 : "text-emerald-400 mx-auto mb-3"
                         }
                     />
                     <p
-                        className={`text-xl font-bold ${sawDemon ? "text-red-300" : "text-emerald-300"}`}
+                        className={`text-xl font-bold ${displaySawDemon ? "text-red-300" : "text-emerald-300"}`}
                     >
-                        {sawDemon
+                        {displaySawDemon
                             ? t.game.yesOneIsDemon
                             : t.game.noNeitherIsDemon}
                     </p>

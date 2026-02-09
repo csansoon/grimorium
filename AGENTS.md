@@ -11,8 +11,8 @@ This document explains every system in the codebase, how they interconnect, and 
 1. [Architecture Overview](#1-architecture-overview)
 2. [Event-Sourced Game State](#2-event-sourced-game-state)
 3. [The Game Controller](#3-the-game-controller)
-4. [Roles](#4-roles) — includes [Night Action Steps](#night-action-steps-nightsteplistlayout)
-5. [Effects](#5-effects) — includes `canRegisterAs` for misregistration
+4. [Roles](#4-roles) — includes [Night Action Steps](#night-action-steps-nightsteplistlayout), [Setup Actions](#setup-actions-pre-revelation)
+5. [Effects](#5-effects) — includes `canRegisterAs` for misregistration, [Malfunction System](#the-malfunction-system)
 6. [The Intent Pipeline](#6-the-intent-pipeline)
 7. [The Perception System](#7-the-perception-system) — includes [Perception Query Utilities](#perception-query-utilities), [PerceptionConfigStep](#perceptionconfigstep-component), [Auto-Calc Perception Flow](#how-auto-calculating-roles-use-perception-overrides)
 8. [Day Actions](#8-day-actions)
@@ -135,7 +135,7 @@ game = addHistoryEntry(
 
 ### Event Types
 
-The `EventType` enum tracks all possible history events: `game_created`, `night_started`, `role_revealed`, `night_action`, `night_skipped`, `night_resolved`, `day_started`, `nomination`, `vote`, `execution`, `virgin_execution`, `virgin_spent`, `slayer_shot`, `effect_added`, `effect_removed`, `game_ended`.
+The `EventType` enum tracks all possible history events: `game_created`, `night_started`, `role_revealed`, `night_action`, `night_skipped`, `night_resolved`, `day_started`, `nomination`, `vote`, `execution`, `virgin_execution`, `virgin_spent`, `slayer_shot`, `effect_added`, `effect_removed`, `setup_action`, `role_change_revealed`, `game_ended`.
 
 ### Rich Messages
 
@@ -163,6 +163,7 @@ The game controller provides pure functions that take a `Game` and return a new 
 | `checkWinCondition(state, game)` | Checks core + dynamic win conditions |
 | `checkEndOfDayWinConditions(state, game)` | Checks "end_of_day" trigger win conditions |
 | `endGame(game, winner)` | Ends game with a winner |
+| `applySetupAction(game, playerId, result)` | Applies a pre-revelation setup action (e.g., Drunk's role change) |
 | `addEffectToPlayer(game, playerId, effectType)` | Narrator manually adds an effect |
 | `removeEffectFromPlayer(game, playerId, effectType)` | Narrator manually removes an effect |
 
@@ -218,6 +219,7 @@ type RoleDefinition = {
     nightSteps?: NightStepDefinition[];     // Declarative night action step list (see §4a)
     RoleReveal: FC<RoleRevealProps>;        // Component shown when player learns their role
     NightAction: FC<NightActionProps> | null; // Night action component (null = no action)
+    SetupAction?: FC<SetupActionProps>;     // Pre-revelation narrator setup (see §4b)
 };
 ```
 
@@ -241,7 +243,7 @@ type NightActionResult = {
 
 | Category | Example Roles | Pattern |
 |----------|---------------|---------|
-| **Action Roles** | Imp, Monk | Emit an intent or apply direct effects at night |
+| **Action Roles** | Imp, Monk, Poisoner | Emit an intent or apply direct effects at night |
 | **Info Roles (auto-calc)** | Chef, Empath | Calculate information using `perceive()`, display result |
 | **Info Roles (narrator-setup)** | Washerwoman, Librarian, Investigator | Narrator selects players/roles to show, uses `perceive()` for highlighting and role display |
 | **Info Roles (death-triggered)** | Ravenkeeper, Undertaker | Wake conditionally, show role using `perceive()` |
@@ -357,6 +359,51 @@ const steps: NightStep[] = useMemo(() => {
 | **Investigator** | (1) Narrator Setup | Single step |
 | **Imp** | (1) Choose Victim | Single step, evil theming |
 | **Monk** | (1) Choose Player | Single step |
+| **Poisoner** | (1) Choose Target | Single step, evil theming. Applies `poisoned` effect to target |
+
+When a role is malfunctioning (has `poisoned` or `drunk` effect), an additional **Configure Malfunction** step is conditionally inserted before the result step. The narrator uses `MalfunctionConfigStep` to provide false results. See [§5a: The Malfunction System](#the-malfunction-system).
+
+### Setup Actions (Pre-Revelation)
+
+**Files:** `src/lib/roles/types.ts` (types), `src/components/screens/SetupActionsScreen.tsx` (UI)
+
+Some roles require narrator configuration **before** role revelation begins. These roles declare a `SetupAction` component on their `RoleDefinition`.
+
+#### SetupAction Types
+
+```typescript
+type SetupActionProps = {
+    player: PlayerState;
+    state: GameState;
+    onComplete: (result: SetupActionResult) => void;
+};
+
+type SetupActionResult = {
+    changeRole?: string;             // Change the player's roleId
+    addEffects?: Record<string, EffectToAdd[]>;
+    removeEffects?: Record<string, string[]>;
+};
+```
+
+#### How Setup Actions Work
+
+```
+createGame() → Setup Actions Screen → Role Revelation Screen → Night 1
+                    │
+                    ├── For each player with role.SetupAction:
+                    │     Narrator sees setup UI → onComplete(result)
+                    │     applySetupAction(game, playerId, result)
+                    │
+                    └── When all done → Continue to Role Revelation
+```
+
+The `SetupActionsScreen` displays a list of pending setup actions. The narrator processes each one sequentially. Each result is applied via `applySetupAction()` in `game.ts`, which creates a `setup_action` history entry and applies role changes + effects.
+
+#### Current Setup Actions
+
+| Role | Purpose |
+|------|---------|
+| **Drunk** | Narrator chooses which Townsfolk role the Drunk believes they are. Changes `roleId` to that role and applies permanent `drunk` effect. |
 
 ### Registering a New Role
 
@@ -388,9 +435,13 @@ type EffectDefinition = {
 
     // Behavior modifiers (simple boolean flags)
     preventsNightWake?: boolean;
-    poisonsAbility?: boolean;      // Used for Drunk/Poisoner — info roles give wrong info
     preventsVoting?: boolean;
     preventsNomination?: boolean;
+
+    // Malfunction flag — when true, the player's ability malfunctions
+    // (info roles give wrong info, action roles' effects don't apply,
+    // passive handlers are skipped, win conditions are disabled)
+    poisonsAbility?: boolean;
 
     // Conditional behavior
     canVote?: (player, state) => boolean;
@@ -428,6 +479,8 @@ type EffectDefinition = {
 | `scarlet_woman` | Scarlet Woman | Becomes Demon when Demon dies | `handlers`: piggybacks role change + `pending_role_reveal` |
 | `recluse_misregister` | Recluse | Outsider that may register as evil | `perceptionModifiers`, `canRegisterAs: { teams: [minion, demon], alignments: [evil] }` |
 | `pending_role_reveal` | Scarlet Woman handler (or any role-changing effect) | Signals a role change needs to be revealed | `nightFollowUps`: shows RoleCard to narrator |
+| `poisoned` | Poisoner (nightly) | Ability malfunction, expires at end of day (lasts night + day) | `poisonsAbility: true` — flag only, detected by `isMalfunctioning()` |
+| `drunk` | Drunk (permanent, via SetupAction) | Permanent malfunction + unconditional Drunk/Outsider perception | `poisonsAbility: true`, `perceptionModifiers`: always shows as Drunk/Outsider |
 
 ### Effect Lifecycle
 
@@ -441,6 +494,79 @@ type EffectDefinition = {
 2. Add `EffectId` to the union type in `src/lib/effects/types.ts`
 3. Import and register in `src/lib/effects/index.ts`
 4. Add translations in `src/lib/i18n/translations/en.ts` and `es.ts`
+
+### The Malfunction System
+
+**Files:** `src/lib/effects/types.ts` (`poisonsAbility`), `src/lib/effects/index.ts` (`isMalfunctioning()`), `src/components/items/MalfunctionConfigStep.tsx`
+
+The malfunction system handles Poisoned and Drunk effects. When a player is malfunctioning, their ability produces wrong results (for info roles), doesn't work (for action roles), and their passive effects are disabled.
+
+#### Core Mechanism
+
+Effects declare `poisonsAbility: true` to cause malfunction. The `isMalfunctioning()` helper checks if a player has any such effect:
+
+```typescript
+import { isMalfunctioning } from "../../../effects";
+
+const malfunctioning = isMalfunctioning(player);
+// true if player has any effect with poisonsAbility: true (e.g., "poisoned", "drunk")
+```
+
+#### How Malfunction Affects Each Role Category
+
+| Category | Malfunction Behavior | Implementation |
+|----------|---------------------|----------------|
+| **Info roles (auto-calc)** (Chef, Empath) | Narrator picks false result via `MalfunctionConfigStep` | Conditional "Configure Malfunction" step before "Show Result" |
+| **Info roles (narrator-setup)** (Washerwoman, Librarian, Investigator) | Narrator freely picks any players/roles | `malfunctioned: true` flag in history data; perception config skipped |
+| **Info roles (death-triggered)** (Undertaker, Ravenkeeper) | Narrator picks false role via `MalfunctionConfigStep` | Conditional "Configure Malfunction" step; perception config skipped |
+| **Info roles (boolean)** (Fortune Teller) | Narrator picks true/false via `MalfunctionConfigStep` | Conditional "Configure Malfunction" step with boolean picker |
+| **Action roles** (Monk) | Effect is not applied | `addEffects` conditionally omitted when malfunctioning |
+| **Demon** (Imp) | Kill intent is not emitted | `intent` conditionally omitted when malfunctioning |
+| **Passive handlers** (Safe, Pure, Bounce, ScarletWoman) | Handler is completely skipped | `collectActiveHandlers()` in pipeline skips malfunctioning players |
+| **Win conditions** (Martyrdom, Mayor) | Win condition is skipped | `checkDynamicWinConditions()` skips malfunctioning players |
+| **Day actions** (Slayer) | Shot always misses | `isDemon` check overridden to `false` when malfunctioning |
+
+#### Pipeline-Level Malfunction
+
+The Intent Pipeline automatically handles malfunction for passive effects:
+
+- `collectActiveHandlers()` skips ALL handlers from players who are malfunctioning — no individual handler modifications needed
+- `checkDynamicWinConditions()` skips win conditions from malfunctioning players (both effect-based and role-based)
+
+This means adding `poisonsAbility: true` to a new effect automatically disables all passive abilities for affected players.
+
+#### MalfunctionConfigStep Component
+
+**File:** `src/components/items/MalfunctionConfigStep.tsx`
+
+A narrator-only screen for configuring false results when a role is malfunctioning. Supports three input types:
+
+```typescript
+type Props = {
+    type: "number" | "boolean" | "role";
+    roleIcon: string;
+    roleName: string;
+    playerName: string;
+    // For "number" type:
+    numberRange?: [number, number];
+    onComplete: (value: number | boolean | string) => void;
+    // For "boolean" type:
+    trueLabel?: string;
+    falseLabel?: string;
+};
+```
+
+- **number**: Shown for Chef, Empath — narrator picks a false count
+- **boolean**: Shown for Fortune Teller — narrator picks yes/no
+- **role**: Shown for Undertaker, Ravenkeeper — narrator picks a false role to show
+
+#### History Data Convention
+
+When a role's action is malfunctioned, the history entry's `data` includes:
+- `malfunctioned: true` — flags that this result was narrator-controlled
+- `actualXxx` — the real value (e.g., `actualEvilPairs`, `actualResult`, `actualRoleId`)
+
+This allows history replay and debugging to distinguish real results from malfunctioned ones.
 
 ---
 
@@ -906,6 +1032,7 @@ type WinConditionCheck = {
 ### Screen Types
 
 ```
+setup_actions → setup_action (narrator configures pre-revelation settings, e.g., Drunk)
 role_revelation → showing_role (tap player to show role card)
 night_dashboard → night_action (process a role's night action)
                 → night_follow_up (process a reactive follow-up, e.g., role change reveal)
@@ -973,10 +1100,10 @@ When the pipeline returns `needs_input`:
 atoms/     → Basic primitives: Button, Icon, Badge, Card, Dialog
 inputs/    → Form elements: PlayerSelector, SelectablePlayerItem, VoteButton
 items/     → Game-specific: Grimoire, RoleCard, EditEffectsModal, BounceRedirectUI,
-              PerceptionConfigStep
+              PerceptionConfigStep, MalfunctionConfigStep
 layouts/   → Screen wrappers: NightActionLayout, NarratorSetupLayout, NightStepListLayout
-screens/   → Full screens: GameScreen, RoleRevelationScreen, NightDashboard,
-              DayPhase, VotingPhase, NominationScreen
+screens/   → Full screens: GameScreen, RoleRevelationScreen, SetupActionsScreen,
+              NightDashboard, DayPhase, VotingPhase, NominationScreen
 ```
 
 ### Layout Components
@@ -990,6 +1117,8 @@ screens/   → Full screens: GameScreen, RoleRevelationScreen, NightDashboard,
 ### Game-Specific Items
 
 **`PerceptionConfigStep`** — Narrator-only screen for configuring how ambiguous players register for an information ability. Used as a step within multi-step night actions. See [§7: PerceptionConfigStep](#perceptionconfigstep-component) for details.
+
+**`MalfunctionConfigStep`** — Narrator-only screen for providing false results when a role is malfunctioning (Poisoned/Drunk). Supports number, boolean, and role input types. See [§5: The Malfunction System](#the-malfunction-system) for details.
 
 ### Icon System
 
@@ -1044,83 +1173,28 @@ When adding a new role or effect, add translations in **both** `src/lib/i18n/tra
    - Use `applyPerceptionOverrides()` to create a local modified state for calculations
    - Even single-step roles must show the step list for consistency
 
-4. **Register the role:**
+4. **Add malfunction support:**
+   - If the role has a night action, check `isMalfunctioning(player)` at the start
+   - For **info roles**: add a conditional `MalfunctionConfigStep` where the narrator provides false results
+   - For **action roles**: conditionally skip the `addEffects` or `intent` when malfunctioning
+   - For **passive roles**: no action needed — the pipeline automatically skips handlers/win conditions for malfunctioning players
+   - Always include `malfunctioned: true` in history `data` when the result was affected by malfunction
+
+5. **Register the role:**
    - Add the role ID to the `RoleId` union in `src/lib/roles/types.ts`
    - Import and add to `ROLES` in `src/lib/roles/index.ts`
    - Add to the relevant script in `SCRIPTS`
 
-5. **Create effects if needed:**
+6. **Create effects if needed:**
    - If the role has passive abilities, create effect definitions
    - Register effects in `src/lib/effects/index.ts` and `types.ts`
    - Add effect to `initialEffects` on the role definition
 
-6. **Add translations:**
+7. **Add translations:**
    - Add to `en.ts` and `es.ts` under `roles[roleId]`
    - Add effect translations if new effects were created
 
-7. **Never modify `game.ts`** for role-specific logic. Use effects and the pipeline instead.
-
-### Example: Implementing a Poisoner (hypothetical)
-
-```typescript
-// src/lib/effects/definition/Poisoned.ts
-const definition: EffectDefinition = {
-    id: "poisoned",
-    icon: "flask",
-    poisonsAbility: true,      // Info roles give wrong info when poisoned
-    perceptionModifiers: [{     // Could alter how the poisoned player is perceived
-        context: ["alignment", "team", "role"],
-        modify: (perception, _t, _o, _s, effectData) => {
-            // Narrator configures what the poisoned player registers as
-            const overrides = effectData?.perceiveAs as Partial<Perception> | undefined;
-            return overrides ? { ...perception, ...overrides } : perception;
-        }
-    }],
-};
-
-// src/lib/roles/definition/trouble-brewing/Poisoner.tsx
-const definition: RoleDefinition = {
-    id: "poisoner",
-    team: "minion",
-    icon: "flask",
-    nightOrder: 5,  // Before info roles
-
-    nightSteps: [{
-        id: "choose_target",
-        icon: "flask",
-        getLabel: (t) => t.game.stepChoosePlayer,
-    }],
-
-    NightAction: ({ state, player, onComplete }) => {
-        const [phase, setPhase] = useState<"step_list" | "choose_target">("step_list");
-        const { t } = useI18n();
-
-        // Step list landing page (always shown first)
-        if (phase === "step_list") {
-            return (
-                <NightStepListLayout
-                    icon="flask"
-                    roleName={t.roles.poisoner.name}
-                    playerName={player.name}
-                    isEvil
-                    steps={[{ id: "choose_target", icon: "flask",
-                              label: t.game.stepChoosePlayer, status: "pending" }]}
-                    onSelectStep={() => setPhase("choose_target")}
-                />
-            );
-        }
-
-        // Select a player to poison
-        // On confirm: add "poisoned" effect (expires end_of_night) to target
-        onComplete({
-            entries: [{ type: "night_action", message: [...], data: {...} }],
-            addEffects: {
-                [targetId]: [{ type: "poisoned", expiresAt: "end_of_night" }]
-            },
-        });
-    },
-};
-```
+8. **Never modify `game.ts`** for role-specific logic. Use effects and the pipeline instead.
 
 ---
 
@@ -1149,8 +1223,8 @@ const definition: RoleDefinition = {
 | Make a player register differently to info roles | `perceptionModifiers` + `canRegisterAs` (see §7) |
 | Enable narrator perception config for info roles | `canRegisterAs: { teams?, alignments? }` on the effect |
 | Prevent a player from waking at night | `preventsNightWake: true` |
-| Make info roles give wrong results | `poisonsAbility: true` |
 | Prevent voting | `preventsVoting: true` or `canVote` function |
+| Make a player's ability malfunction | `poisonsAbility: true` on the effect (detected by `isMalfunctioning()`) |
 
 ---
 
@@ -1237,6 +1311,8 @@ Tests must validate **features and behavior**, not definition metadata. Do not t
 | **Effect night follow-ups** (PendingRoleReveal) | `condition` function, metadata (id, icon), `ActionComponent` presence, integration with `getAvailableNightFollowUps()` |
 | **Effect win conditions** (Martyrdom) | `check` function with matching and non-matching history entries |
 | **Effect behavior flags** (Dead, UsedDeadVote) | `canVote`, `canNominate`, `preventsNightWake`, etc. |
+| **Malfunction effects** (Poisoned, Drunk) | `poisonsAbility: true` flag, `isMalfunctioning()` helper |
+| **Pipeline malfunction integration** | Handlers skipped for malfunctioning players, win conditions skipped |
 
 ### Testing Perception Deception
 
@@ -1330,6 +1406,8 @@ Tests run as a required step in the CI/CD pipeline (`.github/workflows/deploy.ym
 - **Always start NightAction with NightStepListLayout** — every role with a night action must render a step list landing page first, even for single-step roles. This ensures narrator safety and consistency.
 - **Use `getAmbiguousPlayers()` to detect perception ambiguity** — never hardcode checks for specific roles (like "Recluse") inside information role logic. Use the generic perception query utilities to discover ambiguous players via `canRegisterAs` declarations.
 - **Use `applyPerceptionOverrides()` for local perception configuration** — perception overrides from `PerceptionConfigStep` are ephemeral. Never emit game events for perception configuration choices; create a local modified state instead.
+- **Use `isMalfunctioning()` to check for ability malfunction** — never hardcode checks for `"poisoned"` or `"drunk"` effect IDs. The generic helper reads `poisonsAbility` from effect definitions.
+- **Add malfunction support to every new role with a night action** — info roles need `MalfunctionConfigStep` for false results, action roles need conditional effect/intent omission.
 
 ### DON'T
 
@@ -1342,6 +1420,7 @@ Tests run as a required step in the CI/CD pipeline (`.github/workflows/deploy.ym
 - **Never hardcode effect checks in `GameScreen.tsx`, `DayPhase.tsx`, or `NightDashboard.tsx`** — use `getAvailableDayActions()`, `getAvailableNightFollowUps()`, and `checkDynamicWinConditions()` instead.
 - **Never hardcode role/effect names in `getAmbiguousPlayers()` checks** — the perception query utilities are generic by design. If you find yourself writing `if (effectId === "recluse_misregister")` in a role's night action, you're doing it wrong. Use `canRegisterAs` declarations and let the system detect ambiguity automatically.
 - **Never skip the step list for NightAction components** — even single-step roles must render `NightStepListLayout` first. The step list is the narrator's safety net before player-facing screens.
+- **Never hardcode `"poisoned"` or `"drunk"` checks in role/effect logic** — use `isMalfunctioning()` which checks the `poisonsAbility` flag. This allows future malfunction effects to work automatically.
 
 ### Handler Priority Guidelines
 
@@ -1359,7 +1438,7 @@ Tests run as a required step in the CI/CD pipeline (`.github/workflows/deploy.ym
 
 ### Import Guidelines
 
-- Roles can import from: `../types`, `../../types`, `../../i18n`, `../index` (for `getRole`), `../../pipeline` (for `perceive`, `getAmbiguousPlayers`, `applyPerceptionOverrides`), and UI components (including `NightStepListLayout`, `PerceptionConfigStep`)
+- Roles can import from: `../types`, `../../types`, `../../i18n`, `../index` (for `getRole`), `../../effects` (for `isMalfunctioning`), `../../pipeline` (for `perceive`, `getAmbiguousPlayers`, `applyPerceptionOverrides`), and UI components (including `NightStepListLayout`, `PerceptionConfigStep`, `MalfunctionConfigStep`)
 - Effects can import from: `../types`, `../../pipeline/types`, `../../types`, and UI components (for `request_ui`)
 - Pipeline can import from: `../types`, `../effects`, `../roles/index`, `../teams`
 - `game.ts` can import from: `./types`, `./roles`, `./pipeline`, `./roles/types`

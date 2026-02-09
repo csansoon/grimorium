@@ -4,13 +4,14 @@ import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { NightActionLayout, NightStepListLayout } from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
-import { RoleRevealBadge, PerceptionConfigStep } from "../../../../components/items";
+import { RoleRevealBadge, PerceptionConfigStep, MalfunctionConfigStep } from "../../../../components/items";
 import { Button, Icon } from "../../../../components/atoms";
 import { getAliveNeighbors, isAlive } from "../../../types";
 import { perceive, getAmbiguousPlayers, applyPerceptionOverrides } from "../../../pipeline";
+import { isMalfunctioning } from "../../../effects";
 import { Perception } from "../../../pipeline/types";
 
-type Phase = "step_list" | "configure_perceptions" | "show_result";
+type Phase = "step_list" | "configure_perceptions" | "configure_malfunction" | "show_result";
 
 const definition: RoleDefinition = {
     id: "empath",
@@ -21,10 +22,17 @@ const definition: RoleDefinition = {
 
     nightSteps: [
         {
+            id: "configure_malfunction",
+            icon: "alertTriangle",
+            getLabel: (t) => t.game.stepConfigureMalfunction,
+            condition: (_game, player) => isMalfunctioning(player),
+        },
+        {
             id: "configure_perceptions",
             icon: "eye",
             getLabel: (t) => t.game.stepConfigurePerceptions,
             condition: (_game, player, state) => {
+                if (isMalfunctioning(player)) return false;
                 const [left, right] = getAliveNeighbors(state, player.id);
                 const neighbors = [left, right].filter(
                     (n): n is NonNullable<typeof n> => n != null && n.id !== left?.id || n === left,
@@ -47,18 +55,22 @@ const definition: RoleDefinition = {
         const [perceptionOverrides, setPerceptionOverrides] = useState<
             Record<string, Partial<Perception>>
         >({});
+        const [malfunctionValue, setMalfunctionValue] = useState<number | null>(null);
+
+        const malfunctioning = isMalfunctioning(player);
 
         // Get alive neighbors
         const [leftNeighbor, rightNeighbor] = getAliveNeighbors(state, player.id);
 
-        // Collect unique neighbors for ambiguity check
+        // Collect unique neighbors for ambiguity check (only when NOT malfunctioning)
         const neighbors = useMemo(() => {
+            if (malfunctioning) return [];
             const result = [];
             if (leftNeighbor) result.push(leftNeighbor);
             if (rightNeighbor && rightNeighbor.id !== leftNeighbor?.id)
                 result.push(rightNeighbor);
             return result;
-        }, [leftNeighbor, rightNeighbor]);
+        }, [leftNeighbor, rightNeighbor, malfunctioning]);
 
         const ambiguousPlayers = useMemo(
             () => getAmbiguousPlayers(neighbors, "alignment"),
@@ -67,6 +79,7 @@ const definition: RoleDefinition = {
         const needsPerceptionConfig = ambiguousPlayers.length > 0;
 
         const [perceptionConfigDone, setPerceptionConfigDone] = useState(false);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false);
 
         const getRoleName = (roleId: string) => {
             const key = roleId as keyof typeof t.roles;
@@ -76,6 +89,15 @@ const definition: RoleDefinition = {
         // Build steps
         const steps: NightStep[] = useMemo(() => {
             const result: NightStep[] = [];
+
+            if (malfunctioning) {
+                result.push({
+                    id: "configure_malfunction",
+                    icon: "alertTriangle",
+                    label: t.game.stepConfigureMalfunction,
+                    status: malfunctionConfigDone ? "done" : "pending",
+                });
+            }
 
             if (needsPerceptionConfig) {
                 result.push({
@@ -94,10 +116,12 @@ const definition: RoleDefinition = {
             });
 
             return result;
-        }, [needsPerceptionConfig, perceptionConfigDone, t]);
+        }, [malfunctioning, needsPerceptionConfig, perceptionConfigDone, malfunctionConfigDone, t]);
 
         const handleSelectStep = (stepId: string) => {
-            if (stepId === "configure_perceptions") {
+            if (stepId === "configure_malfunction") {
+                setPhase("configure_malfunction");
+            } else if (stepId === "configure_perceptions") {
                 setPhase("configure_perceptions");
             } else if (stepId === "show_result") {
                 setPhase("show_result");
@@ -112,13 +136,19 @@ const definition: RoleDefinition = {
             setPhase("step_list");
         };
 
+        const handleMalfunctionComplete = (value: number) => {
+            setMalfunctionValue(value);
+            setMalfunctionConfigDone(true);
+            setPhase("step_list");
+        };
+
         // Apply overrides and calculate
         const effectiveState = useMemo(
             () => applyPerceptionOverrides(state, perceptionOverrides),
             [state, perceptionOverrides],
         );
 
-        const evilNeighbors = useMemo(() => {
+        const calculatedEvilNeighbors = useMemo(() => {
             const effectiveObserver =
                 effectiveState.players.find((p) => p.id === player.id) ?? player;
             const [effLeft, effRight] = getAliveNeighbors(
@@ -148,6 +178,9 @@ const definition: RoleDefinition = {
             return count;
         }, [effectiveState, player]);
 
+        // Use malfunction value if set, otherwise use calculated value
+        const displayedEvilNeighbors = malfunctionValue ?? calculatedEvilNeighbors;
+
         const handleComplete = () => {
             onComplete({
                 entries: [
@@ -159,7 +192,7 @@ const definition: RoleDefinition = {
                                 key: "roles.empath.history.sawEvilNeighbors",
                                 params: {
                                     player: player.id,
-                                    count: evilNeighbors.toString(),
+                                    count: displayedEvilNeighbors.toString(),
                                 },
                             },
                         ],
@@ -167,9 +200,15 @@ const definition: RoleDefinition = {
                             roleId: "empath",
                             playerId: player.id,
                             action: "count_evil_neighbors",
-                            evilNeighbors,
+                            evilNeighbors: displayedEvilNeighbors,
                             leftNeighborId: leftNeighbor?.id,
                             rightNeighborId: rightNeighbor?.id,
+                            ...(malfunctioning
+                                ? {
+                                      malfunctioned: true,
+                                      actualEvilNeighbors: calculatedEvilNeighbors,
+                                  }
+                                : {}),
                             perceptionOverrides:
                                 Object.keys(perceptionOverrides).length > 0
                                     ? perceptionOverrides
@@ -189,6 +228,20 @@ const definition: RoleDefinition = {
                     playerName={player.name}
                     steps={steps}
                     onSelectStep={handleSelectStep}
+                />
+            );
+        }
+
+        // Phase: Configure Malfunction
+        if (phase === "configure_malfunction") {
+            return (
+                <MalfunctionConfigStep
+                    type="number"
+                    roleIcon="handHeart"
+                    roleName={getRoleName("empath")}
+                    playerName={player.name}
+                    numberRange={{ min: 0, max: 2 }}
+                    onComplete={handleMalfunctionComplete}
                 />
             );
         }
@@ -221,7 +274,7 @@ const definition: RoleDefinition = {
                     </p>
                     <RoleRevealBadge
                         icon="handHeart"
-                        roleName={evilNeighbors.toString()}
+                        roleName={displayedEvilNeighbors.toString()}
                     />
                 </div>
 

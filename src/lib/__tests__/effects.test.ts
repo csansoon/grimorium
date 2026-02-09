@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { resolveIntent } from "../pipeline";
 import { getAvailableDayActions } from "../pipeline/index";
+import { isMalfunctioning } from "../effects";
 import { KillIntent, NominateIntent } from "../pipeline/types";
 import {
     makePlayer,
@@ -320,5 +321,156 @@ describe("SlayerBullet day action", () => {
             game: { slayerAction: "Slay", slayerActionDescription: "desc" },
         });
         expect(actions).toHaveLength(0);
+    });
+});
+
+// ============================================================================
+// isMalfunctioning HELPER
+// ============================================================================
+
+describe("isMalfunctioning", () => {
+    it("returns true for a player with the poisoned effect", () => {
+        const player = addEffectTo(makePlayer({ roleId: "chef" }), "poisoned");
+        expect(isMalfunctioning(player)).toBe(true);
+    });
+
+    it("returns true for a player with the drunk effect", () => {
+        const player = addEffectTo(makePlayer({ roleId: "chef" }), "drunk");
+        expect(isMalfunctioning(player)).toBe(true);
+    });
+
+    it("returns false for a player with no malfunction effects", () => {
+        const player = makePlayer({ roleId: "chef" });
+        expect(isMalfunctioning(player)).toBe(false);
+    });
+
+    it("returns false for a player with non-malfunction effects", () => {
+        let player = makePlayer({ roleId: "soldier" });
+        player = addEffectTo(player, "safe");
+        player = addEffectTo(player, "dead");
+        expect(isMalfunctioning(player)).toBe(false);
+    });
+
+    it("returns true when poisoned is among multiple effects", () => {
+        let player = makePlayer({ roleId: "soldier" });
+        player = addEffectTo(player, "safe");
+        player = addEffectTo(player, "poisoned");
+        expect(isMalfunctioning(player)).toBe(true);
+    });
+});
+
+// ============================================================================
+// MALFUNCTION — HANDLER BYPASS
+// ============================================================================
+
+describe("Malfunction — handler bypass", () => {
+    it("safe handler is bypassed when the protected player is poisoned", () => {
+        // Soldier with safe + poisoned — kill should succeed (not prevented)
+        const players = [
+            addEffectTo(
+                addEffectTo(makePlayer({ id: "p1", roleId: "soldier" }), "safe"),
+                "poisoned"
+            ),
+            makePlayer({ id: "p2", roleId: "imp" }),
+        ];
+        const state = makeState({ phase: "night", round: 2, players });
+        const game = makeGame(state);
+
+        const intent: KillIntent = {
+            type: "kill",
+            sourceId: "p2",
+            targetId: "p1",
+            cause: "demon",
+        };
+
+        const result = resolveIntent(intent, state, game);
+        expect(result.type).toBe("resolved");
+        if (result.type === "resolved") {
+            expect(result.stateChanges.addEffects?.["p1"]).toBeDefined();
+            expect(result.stateChanges.addEffects!["p1"][0].type).toBe("dead");
+        }
+    });
+
+    it("pure handler is bypassed when the virgin is poisoned", () => {
+        // Poisoned virgin — townsfolk nomination should proceed normally
+        const players = [
+            makePlayer({ id: "p1", roleId: "washerwoman" }),
+            addEffectTo(
+                addEffectTo(makePlayer({ id: "p2", roleId: "virgin" }), "pure"),
+                "poisoned"
+            ),
+        ];
+        const state = makeState({ phase: "day", round: 1, players });
+        const game = makeGame(state);
+
+        const intent: NominateIntent = {
+            type: "nominate",
+            nominatorId: "p1",
+            nomineeId: "p2",
+        };
+
+        const result = resolveIntent(intent, state, game);
+        expect(result.type).toBe("resolved");
+        if (result.type === "resolved") {
+            // Nomination succeeds normally — no virgin execution
+            expect(result.stateChanges.entries[0].type).toBe("nomination");
+            // Nominator is NOT killed
+            expect(result.stateChanges.addEffects?.["p1"]).toBeUndefined();
+        }
+    });
+
+    it("bounce handler is bypassed when the mayor is poisoned", () => {
+        // Poisoned mayor with bounce — kill goes through without redirect
+        const players = [
+            addEffectTo(
+                addEffectTo(makePlayer({ id: "p1", roleId: "mayor" }), "bounce"),
+                "poisoned"
+            ),
+            makePlayer({ id: "p2", roleId: "imp" }),
+        ];
+        const state = makeState({ phase: "night", round: 2, players });
+        const game = makeGame(state);
+
+        const intent: KillIntent = {
+            type: "kill",
+            sourceId: "p2",
+            targetId: "p1",
+            cause: "demon",
+        };
+
+        const result = resolveIntent(intent, state, game);
+        // Should resolve directly (no needs_input from bounce)
+        expect(result.type).toBe("resolved");
+        if (result.type === "resolved") {
+            expect(result.stateChanges.addEffects?.["p1"]).toBeDefined();
+            expect(result.stateChanges.addEffects!["p1"][0].type).toBe("dead");
+        }
+    });
+
+    it("drunk player's handlers are bypassed too", () => {
+        // Safe + drunk player — kill should go through
+        const players = [
+            addEffectTo(
+                addEffectTo(makePlayer({ id: "p1", roleId: "soldier" }), "safe"),
+                "drunk"
+            ),
+            makePlayer({ id: "p2", roleId: "imp" }),
+        ];
+        const state = makeState({ phase: "night", round: 2, players });
+        const game = makeGame(state);
+
+        const intent: KillIntent = {
+            type: "kill",
+            sourceId: "p2",
+            targetId: "p1",
+            cause: "demon",
+        };
+
+        const result = resolveIntent(intent, state, game);
+        expect(result.type).toBe("resolved");
+        if (result.type === "resolved") {
+            expect(result.stateChanges.addEffects?.["p1"]).toBeDefined();
+            expect(result.stateChanges.addEffects!["p1"][0].type).toBe("dead");
+        }
     });
 });

@@ -10,6 +10,8 @@ import Martyrdom from "./definition/Martyrdom";
 import ScarletWoman from "./definition/ScarletWoman";
 import RecluseMisregister from "./definition/RecluseMisregister";
 import PendingRoleReveal from "./definition/PendingRoleReveal";
+import Poisoned from "./definition/Poisoned";
+import Drunk from "./definition/Drunk";
 
 export const EFFECTS: Record<EffectId, EffectDefinition> = {
     dead: Dead,
@@ -23,6 +25,8 @@ export const EFFECTS: Record<EffectId, EffectDefinition> = {
     scarlet_woman: ScarletWoman,
     recluse_misregister: RecluseMisregister,
     pending_role_reveal: PendingRoleReveal,
+    poisoned: Poisoned,
+    drunk: Drunk,
 };
 
 export function getEffect(effectId: string): EffectDefinition | undefined {
@@ -31,6 +35,17 @@ export function getEffect(effectId: string): EffectDefinition | undefined {
 
 export function getAllEffects(): EffectDefinition[] {
     return Object.values(EFFECTS);
+}
+
+/**
+ * Check if a player's ability is malfunctioning due to effects
+ * like Poisoned or Drunk. Uses the `poisonsAbility` flag on effect definitions.
+ */
+export function isMalfunctioning(player: { effects: Array<{ type: string }> }): boolean {
+    return player.effects.some((e) => {
+        const def = EFFECTS[e.type as EffectId];
+        return def?.poisonsAbility === true;
+    });
 }
 
 export * from "./types";

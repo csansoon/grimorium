@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { isAlive } from "../../lib/types";
 import { getRole } from "../../lib/roles";
+import { isMalfunctioning } from "../../lib/effects";
 import { useI18n } from "../../lib/i18n";
 import { DayActionProps } from "../../lib/pipeline/types";
 import { Button, Icon, BackButton } from "../atoms";
@@ -30,7 +31,8 @@ export function SlayerActionScreen({
         if (!target) return;
 
         const targetRole = getRole(target.roleId);
-        const isDemon = targetRole?.team === "demon";
+        // When malfunctioning, the shot always misses
+        const isDemon = !isMalfunctioning(slayer) && targetRole?.team === "demon";
 
         if (isDemon) {
             onComplete({
@@ -80,6 +82,9 @@ export function SlayerActionScreen({
                             slayerId: playerId,
                             targetId: selectedTarget,
                             hit: false,
+                            ...(isMalfunctioning(slayer)
+                                ? { malfunctioned: true }
+                                : {}),
                         },
                     },
                 ],

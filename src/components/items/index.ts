@@ -11,3 +11,4 @@ export { RoleRevealBadge } from "./RoleRevealBadge";
 export { MysticDivider } from "./MysticDivider";
 export { InfoBox } from "./InfoBox";
 export { PerceptionConfigStep } from "./PerceptionConfigStep";
+export { MalfunctionConfigStep } from "./MalfunctionConfigStep";

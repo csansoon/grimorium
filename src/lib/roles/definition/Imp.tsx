@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RoleDefinition } from "../types";
 import { isAlive } from "../../types";
+import { isMalfunctioning } from "../../effects";
 import { useI18n } from "../../i18n";
 import { DefaultRoleReveal } from "../../../components/items/DefaultRoleReveal";
 import { NightActionLayout, NightStepListLayout } from "../../../components/layouts";
@@ -49,6 +50,8 @@ const definition: RoleDefinition = {
             return t.roles[key]?.name ?? roleId;
         };
 
+        const malfunctioning = isMalfunctioning(player);
+
         const handleConfirm = () => {
             if (!selectedTarget) return;
 
@@ -77,16 +80,19 @@ const definition: RoleDefinition = {
                             playerId: player.id,
                             action: "kill",
                             targetId: target.id,
+                            ...(malfunctioning ? { malfunctioned: true } : {}),
                         },
                     },
                 ],
-                // Emit intent — pipeline handles safe/bounce/death
-                intent: {
-                    type: "kill",
-                    sourceId: player.id,
-                    targetId: target.id,
-                    cause: "demon",
-                },
+                // When malfunctioning, the kill intent is NOT emitted
+                ...(!malfunctioning && {
+                    intent: {
+                        type: "kill" as const,
+                        sourceId: player.id,
+                        targetId: target.id,
+                        cause: "demon",
+                    },
+                }),
             });
         };
 

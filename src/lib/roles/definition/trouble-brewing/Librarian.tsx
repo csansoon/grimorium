@@ -28,6 +28,7 @@ import {
 } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
+import { isMalfunctioning } from "../../../effects";
 
 type Phase = "step_list" | "narrator_setup" | "player_view" | "no_outsiders_view";
 
@@ -138,6 +139,7 @@ const definition: RoleDefinition = {
                             roleId: "librarian",
                             playerId: player.id,
                             action: "no_outsiders",
+                            ...(isMalfunctioning(player) ? { malfunctioned: true } : {}),
                         },
                     },
                 ],
@@ -178,6 +180,7 @@ const definition: RoleDefinition = {
                             shownPlayers: selectedPlayers,
                             outsiderId: selectedOutsider,
                             shownRoleId: selectedRoleId,
+                            ...(isMalfunctioning(player) ? { malfunctioned: true } : {}),
                         },
                     },
                 ],

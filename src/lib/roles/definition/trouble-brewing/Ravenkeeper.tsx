@@ -16,6 +16,8 @@ import type { NightStep } from "../../../../components/layouts";
 import { SelectablePlayerItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive, getAmbiguousPlayers, applyPerceptionOverrides } from "../../../pipeline";
+import { isMalfunctioning } from "../../../effects";
+import { MalfunctionConfigStep } from "../../../../components/items";
 import { Perception } from "../../../pipeline/types";
 import { cn } from "../../../../lib/utils";
 
@@ -47,7 +49,7 @@ function wasKilledThisNight(game: Game, playerId: string): boolean {
     return false;
 }
 
-type Phase = "step_list" | "select_player" | "configure_perceptions" | "show_role";
+type Phase = "step_list" | "select_player" | "configure_malfunction" | "configure_perceptions" | "show_role";
 
 const definition: RoleDefinition = {
     id: "ravenkeeper",
@@ -85,20 +87,24 @@ const definition: RoleDefinition = {
         >({});
         const [selectPlayerDone, setSelectPlayerDone] = useState(false);
         const [perceptionConfigDone, setPerceptionConfigDone] = useState(false);
+        const [malfunctionRoleId, setMalfunctionRoleId] = useState<string | null>(null);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false);
+
+        const malfunctioning = isMalfunctioning(player);
 
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
-        // Check if selected target is ambiguous for "role" perception
+        // Check if selected target is ambiguous for "role" perception (only when NOT malfunctioning)
         const selectedTargetPlayer = selectedPlayer
             ? state.players.find((p) => p.id === selectedPlayer) ?? null
             : null;
 
         const ambiguousPlayers = useMemo(
             () =>
-                selectedTargetPlayer
+                !malfunctioning && selectedTargetPlayer
                     ? getAmbiguousPlayers([selectedTargetPlayer], "role")
                     : [],
-            [selectedTargetPlayer],
+            [selectedTargetPlayer, malfunctioning],
         );
         const needsPerceptionConfig = ambiguousPlayers.length > 0;
 
@@ -107,7 +113,7 @@ const definition: RoleDefinition = {
             return t.roles[key]?.name ?? roleId;
         };
 
-        // Build steps dynamically (perception step may appear after player selection)
+        // Build steps dynamically (perception/malfunction steps may appear after player selection)
         const steps: NightStep[] = useMemo(() => {
             const result: NightStep[] = [
                 {
@@ -117,6 +123,15 @@ const definition: RoleDefinition = {
                     status: selectPlayerDone ? "done" : "pending",
                 },
             ];
+
+            if (selectPlayerDone && malfunctioning) {
+                result.push({
+                    id: "configure_malfunction",
+                    icon: "alertTriangle",
+                    label: t.game.stepConfigureMalfunction,
+                    status: malfunctionConfigDone ? "done" : "pending",
+                });
+            }
 
             if (selectPlayerDone && needsPerceptionConfig) {
                 result.push({
@@ -135,16 +150,24 @@ const definition: RoleDefinition = {
             });
 
             return result;
-        }, [selectPlayerDone, needsPerceptionConfig, perceptionConfigDone, t]);
+        }, [selectPlayerDone, malfunctioning, malfunctionConfigDone, needsPerceptionConfig, perceptionConfigDone, t]);
 
         const handleSelectStep = (stepId: string) => {
             if (stepId === "select_player") {
                 setPhase("select_player");
+            } else if (stepId === "configure_malfunction") {
+                setPhase("configure_malfunction");
             } else if (stepId === "configure_perceptions") {
                 setPhase("configure_perceptions");
             } else if (stepId === "show_role") {
                 setPhase("show_role");
             }
+        };
+
+        const handleMalfunctionComplete = (roleId: string) => {
+            setMalfunctionRoleId(roleId);
+            setMalfunctionConfigDone(true);
+            setPhase("step_list");
         };
 
         const handleConfirmPlayer = () => {
@@ -178,11 +201,11 @@ const definition: RoleDefinition = {
             return perceive(effectiveTarget, effectiveObserver, "role", effectiveState);
         }, [effectiveState, selectedTargetPlayer, player]);
 
-        const handleComplete = () => {
-            if (!selectedPlayer || !targetPerception) return;
+        // Use malfunction role if set, otherwise use perceived role
+        const displayedRoleId = malfunctionRoleId ?? targetPerception?.roleId;
 
-            const targetRole = getRole(targetPerception.roleId);
-            if (!targetRole) return;
+        const handleComplete = () => {
+            if (!selectedPlayer || !displayedRoleId) return;
 
             onComplete({
                 entries: [
@@ -195,7 +218,7 @@ const definition: RoleDefinition = {
                                 params: {
                                     player: player.id,
                                     target: selectedPlayer,
-                                    role: targetRole.id,
+                                    role: displayedRoleId,
                                 },
                             },
                         ],
@@ -204,7 +227,13 @@ const definition: RoleDefinition = {
                             playerId: player.id,
                             action: "saw_role",
                             targetId: selectedPlayer,
-                            shownRoleId: targetRole.id,
+                            shownRoleId: displayedRoleId,
+                            ...(malfunctioning
+                                ? {
+                                      malfunctioned: true,
+                                      actualRoleId: targetPerception?.roleId,
+                                  }
+                                : {}),
                             perceptionOverrides:
                                 Object.keys(perceptionOverrides).length > 0
                                     ? perceptionOverrides
@@ -269,6 +298,19 @@ const definition: RoleDefinition = {
             );
         }
 
+        // Phase: Configure Malfunction
+        if (phase === "configure_malfunction") {
+            return (
+                <MalfunctionConfigStep
+                    type="role"
+                    roleIcon="birdHouse"
+                    roleName={getRoleName("ravenkeeper")}
+                    playerName={player.name}
+                    onComplete={handleMalfunctionComplete}
+                />
+            );
+        }
+
         // Phase: Configure Perceptions
         if (phase === "configure_perceptions") {
             return (
@@ -285,9 +327,9 @@ const definition: RoleDefinition = {
         }
 
         // Phase: Show Role
-        if (!targetPerception) return null;
+        if (!displayedRoleId) return null;
 
-        const shownRole = getRole(targetPerception.roleId);
+        const shownRole = getRole(displayedRoleId);
         const shownTeamId = shownRole?.team ?? "townsfolk";
         const shownTeam = getTeam(shownTeamId);
 
@@ -304,7 +346,7 @@ const definition: RoleDefinition = {
                     {t.game.playerRoleIs}
                 </p>
 
-                <RoleCard roleId={targetPerception.roleId} />
+                <RoleCard roleId={displayedRoleId} />
 
                 <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
                     {t.common.continue}

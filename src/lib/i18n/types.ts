@@ -233,6 +233,29 @@ export type Translations = {
         stepSelectPlayer: string;
         stepAssignRedHerring: string;
         stepSelectAndShow: string;
+        stepChooseTarget: string;
+
+        // Malfunction Config
+        stepConfigureMalfunction: string;
+        playerIsMalfunctioning: string;
+        chooseFalseNumber: string;
+        chooseFalseResult: string;
+        chooseFalseRole: string;
+        malfunctionWarning: string;
+
+        // Poisoner specific
+        poisonerInfo: string;
+        selectPlayerToPoison: string;
+
+        // Setup Actions
+        setupActions: string;
+        setupActionsSubtitle: string;
+        continueToRoleRevelation: string;
+
+        // Drunk setup
+        drunkSetupTitle: string;
+        drunkSetupDescription: string;
+        chooseBelievedRole: string;
 
         // Perception Config
         perceptionConfigTitle: string;
@@ -388,6 +411,17 @@ export type Translations = {
             name: string;
             description: string;
         };
+        poisoner: {
+            name: string;
+            description: string;
+            history: {
+                poisonedPlayer: string;
+            };
+        };
+        drunk: {
+            name: string;
+            description: string;
+        };
     };
 
     // Effects
@@ -436,6 +470,14 @@ export type Translations = {
             name: string;
             description: string;
         };
+        poisoned: {
+            name: string;
+            description: string;
+        };
+        drunk: {
+            name: string;
+            description: string;
+        };
     };
 
     // UI
@@ -467,6 +509,7 @@ export type Translations = {
         effectAdded: string;
         effectRemoved: string;
         roleChanged: string;
+        setupAction: string;
     };
 
     // Scripts

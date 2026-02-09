@@ -16,6 +16,7 @@ import {
 import { SelectablePlayerItem, SelectableRoleItem } from "../../../../components/inputs";
 import { Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
+import { isMalfunctioning } from "../../../effects";
 
 type Phase = "step_list" | "narrator_setup" | "player_view";
 
@@ -116,6 +117,7 @@ const definition: RoleDefinition = {
                             shownPlayers: selectedPlayers,
                             minionId: selectedMinion,
                             shownRoleId: selectedRoleId,
+                            ...(isMalfunctioning(player) ? { malfunctioned: true } : {}),
                         },
                     },
                 ],

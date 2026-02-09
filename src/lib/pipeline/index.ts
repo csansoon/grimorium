@@ -14,7 +14,7 @@ import {
     HistoryEntry,
     generateId,
 } from "../types";
-import { getEffect } from "../effects";
+import { getEffect, isMalfunctioning } from "../effects";
 import { getDefaultResolver } from "./resolvers";
 import { EffectToAdd } from "../roles/types";
 
@@ -88,6 +88,11 @@ function collectActiveHandlers(
     const result: Array<{ handler: IntentHandler; player: PlayerState }> = [];
 
     for (const player of state.players) {
+        // Skip handlers from malfunctioning players — their passive abilities
+        // don't work (e.g., Poisoned Soldier's Safe doesn't protect,
+        // Drunk Virgin's Pure doesn't trigger)
+        if (isMalfunctioning(player)) continue;
+
         for (const effectInstance of player.effects) {
             const effectDef = getEffect(effectInstance.type);
             if (!effectDef?.handlers) continue;
@@ -498,7 +503,11 @@ export function checkDynamicWinConditions(
     ) => { winConditions?: import("./types").WinConditionCheck[] } | undefined,
 ): "townsfolk" | "demon" | null {
     // Check effect-based win conditions
+    // Skip win conditions from malfunctioning players (e.g., poisoned Saint's
+    // martyrdom doesn't trigger evil winning)
     for (const player of state.players) {
+        if (isMalfunctioning(player)) continue;
+
         for (const effectInstance of player.effects) {
             const effectDef = getEffect(effectInstance.type);
             if (!effectDef?.winConditions) continue;
@@ -513,7 +522,11 @@ export function checkDynamicWinConditions(
     }
 
     // Check role-based win conditions
+    // Skip win conditions from malfunctioning players (e.g., poisoned Mayor's
+    // peaceful victory doesn't trigger)
     for (const player of state.players) {
+        if (isMalfunctioning(player)) continue;
+
         const role = getRole(player.roleId);
         if (!role?.winConditions) continue;
 

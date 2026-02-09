@@ -5,10 +5,11 @@ import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleRevea
 import { NightActionLayout } from "../../../../components/layouts";
 import { NightStepListLayout } from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
-import { RoleRevealBadge, PerceptionConfigStep } from "../../../../components/items";
+import { RoleRevealBadge, PerceptionConfigStep, MalfunctionConfigStep } from "../../../../components/items";
 import { Button, Icon } from "../../../../components/atoms";
 import { GameState, PlayerState, isAlive } from "../../../types";
 import { perceive, getAmbiguousPlayers, applyPerceptionOverrides } from "../../../pipeline";
+import { isMalfunctioning } from "../../../effects";
 import { Perception } from "../../../pipeline/types";
 
 /**
@@ -48,7 +49,7 @@ export function countEvilPairs(state: GameState, observer: PlayerState): number 
     return evilPairs;
 }
 
-type Phase = "step_list" | "configure_perceptions" | "show_result";
+type Phase = "step_list" | "configure_perceptions" | "configure_malfunction" | "show_result";
 
 const definition: RoleDefinition = {
     id: "chef",
@@ -59,10 +60,17 @@ const definition: RoleDefinition = {
 
     nightSteps: [
         {
+            id: "configure_malfunction",
+            icon: "alertTriangle",
+            getLabel: (t) => t.game.stepConfigureMalfunction,
+            condition: (_game, player) => isMalfunctioning(player),
+        },
+        {
             id: "configure_perceptions",
             icon: "eye",
             getLabel: (t) => t.game.stepConfigurePerceptions,
-            condition: (_game, _player, state) =>
+            condition: (_game, player, state) =>
+                !isMalfunctioning(player) &&
                 getAmbiguousPlayers(state.players.filter(isAlive), "alignment").length > 0,
         },
         {
@@ -80,16 +88,20 @@ const definition: RoleDefinition = {
         const [perceptionOverrides, setPerceptionOverrides] = useState<
             Record<string, Partial<Perception>>
         >({});
+        const [malfunctionValue, setMalfunctionValue] = useState<number | null>(null);
 
-        // Check if perception config is needed
+        const malfunctioning = isMalfunctioning(player);
+
+        // Check if perception config is needed (only when NOT malfunctioning)
         const ambiguousPlayers = useMemo(
-            () => getAmbiguousPlayers(state.players.filter(isAlive), "alignment"),
-            [state],
+            () => malfunctioning ? [] : getAmbiguousPlayers(state.players.filter(isAlive), "alignment"),
+            [state, malfunctioning],
         );
         const needsPerceptionConfig = ambiguousPlayers.length > 0;
 
         // Track which steps are done
         const [perceptionConfigDone, setPerceptionConfigDone] = useState(false);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false);
 
         const getRoleName = (roleId: string) => {
             const key = roleId as keyof typeof t.roles;
@@ -99,6 +111,15 @@ const definition: RoleDefinition = {
         // Build steps for the step list
         const steps: NightStep[] = useMemo(() => {
             const result: NightStep[] = [];
+
+            if (malfunctioning) {
+                result.push({
+                    id: "configure_malfunction",
+                    icon: "alertTriangle",
+                    label: t.game.stepConfigureMalfunction,
+                    status: malfunctionConfigDone ? "done" : "pending",
+                });
+            }
 
             if (needsPerceptionConfig) {
                 result.push({
@@ -117,10 +138,12 @@ const definition: RoleDefinition = {
             });
 
             return result;
-        }, [needsPerceptionConfig, perceptionConfigDone, t]);
+        }, [malfunctioning, needsPerceptionConfig, perceptionConfigDone, malfunctionConfigDone, t]);
 
         const handleSelectStep = (stepId: string) => {
-            if (stepId === "configure_perceptions") {
+            if (stepId === "configure_malfunction") {
+                setPhase("configure_malfunction");
+            } else if (stepId === "configure_perceptions") {
                 setPhase("configure_perceptions");
             } else if (stepId === "show_result") {
                 setPhase("show_result");
@@ -135,15 +158,20 @@ const definition: RoleDefinition = {
             setPhase("step_list");
         };
 
+        const handleMalfunctionComplete = (value: number) => {
+            setMalfunctionValue(value);
+            setMalfunctionConfigDone(true);
+            setPhase("step_list");
+        };
+
         // Apply perception overrides and calculate evil pairs
         const effectiveState = useMemo(
             () => applyPerceptionOverrides(state, perceptionOverrides),
             [state, perceptionOverrides],
         );
 
-        const evilPairs = useMemo(
+        const calculatedEvilPairs = useMemo(
             () => {
-                // Find the observer player in the effective state
                 const effectiveObserver = effectiveState.players.find(
                     (p) => p.id === player.id,
                 ) ?? player;
@@ -151,6 +179,9 @@ const definition: RoleDefinition = {
             },
             [effectiveState, player],
         );
+
+        // Use malfunction value if set, otherwise use calculated value
+        const displayedEvilPairs = malfunctionValue ?? calculatedEvilPairs;
 
         const handleComplete = () => {
             onComplete({
@@ -163,7 +194,7 @@ const definition: RoleDefinition = {
                                 key: "roles.chef.history.sawEvilPairs",
                                 params: {
                                     player: player.id,
-                                    count: evilPairs.toString(),
+                                    count: displayedEvilPairs.toString(),
                                 },
                             },
                         ],
@@ -171,7 +202,13 @@ const definition: RoleDefinition = {
                             roleId: "chef",
                             playerId: player.id,
                             action: "count_evil_pairs",
-                            evilPairs,
+                            evilPairs: displayedEvilPairs,
+                            ...(malfunctioning
+                                ? {
+                                      malfunctioned: true,
+                                      actualEvilPairs: calculatedEvilPairs,
+                                  }
+                                : {}),
                             perceptionOverrides:
                                 Object.keys(perceptionOverrides).length > 0
                                     ? perceptionOverrides
@@ -191,6 +228,20 @@ const definition: RoleDefinition = {
                     playerName={player.name}
                     steps={steps}
                     onSelectStep={handleSelectStep}
+                />
+            );
+        }
+
+        // Phase: Configure Malfunction
+        if (phase === "configure_malfunction") {
+            return (
+                <MalfunctionConfigStep
+                    type="number"
+                    roleIcon="chefHat"
+                    roleName={getRoleName("chef")}
+                    playerName={player.name}
+                    numberRange={{ min: 0, max: Math.floor(state.players.filter(isAlive).length / 2) }}
+                    onComplete={handleMalfunctionComplete}
                 />
             );
         }
@@ -223,7 +274,7 @@ const definition: RoleDefinition = {
                     </p>
                     <RoleRevealBadge
                         icon="chefHat"
-                        roleName={evilPairs.toString()}
+                        roleName={displayedEvilPairs.toString()}
                     />
                 </div>
 

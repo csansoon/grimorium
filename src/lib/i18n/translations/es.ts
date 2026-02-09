@@ -245,6 +245,29 @@ const es: Translations = {
         stepSelectPlayer: "Seleccionar Jugador",
         stepAssignRedHerring: "Asignar Pista Falsa",
         stepSelectAndShow: "Seleccionar y Mostrar",
+        stepChooseTarget: "Elegir Objetivo",
+
+        // Malfunction Config
+        stepConfigureMalfunction: "Configurar Mal Funcionamiento",
+        playerIsMalfunctioning: "¡Este jugador está envenenado/borracho — su habilidad falla!",
+        chooseFalseNumber: "¿Qué número debería ver?",
+        chooseFalseResult: "¿Qué resultado debería ver?",
+        chooseFalseRole: "¿Qué rol debería ver?",
+        malfunctionWarning: "Mal Funcionamiento",
+
+        // Poisoner specific
+        poisonerInfo: "Elige un Objetivo",
+        selectPlayerToPoison: "Selecciona un jugador para envenenar esta noche. Su habilidad fallará.",
+
+        // Setup Actions
+        setupActions: "Acciones de Configuración",
+        setupActionsSubtitle: "Configura los roles que necesitan preparación del narrador antes de comenzar",
+        continueToRoleRevelation: "Continuar a Revelación de Roles",
+
+        // Drunk setup
+        drunkSetupTitle: "Configuración del Borracho",
+        drunkSetupDescription: "Elige qué rol de Aldeano cree ser el Borracho. Verán este rol durante la revelación y jugarán como si fueran ese rol.",
+        chooseBelievedRole: "Elige el rol de Aldeano que cree ser",
 
         // Perception Config
         perceptionConfigTitle: "Configurar Percepciones",
@@ -433,6 +456,19 @@ const es: Translations = {
             description:
                 "Podrías registrarte como malvado y como un Secuaz o Demonio, incluso estando muerto.",
         },
+        poisoner: {
+            name: "Envenenador",
+            description:
+                "Cada noche, elige un jugador: está envenenado esta noche.",
+            history: {
+                poisonedPlayer: "{player} envenenó a {target}",
+            },
+        },
+        drunk: {
+            name: "Borracho",
+            description:
+                "No sabes que eres el Borracho. Crees que eres un personaje Aldeano, pero no lo eres.",
+        },
     },
 
     effects: {
@@ -491,6 +527,16 @@ const es: Translations = {
             description:
                 "El rol de este jugador ha cambiado y necesita ser revelado.",
         },
+        poisoned: {
+            name: "Envenenado",
+            description:
+                "La habilidad de este jugador falla esta noche. Los roles de información reciben info errónea, las habilidades pasivas fallan.",
+        },
+        drunk: {
+            name: "Borracho",
+            description:
+                "Este jugador cree ser un Aldeano, pero en realidad es el Borracho. Su habilidad falla permanentemente.",
+        },
     },
 
     ui: {
@@ -520,6 +566,7 @@ const es: Translations = {
         effectAdded: "El Narrador añadió {effect} a {player}",
         effectRemoved: "El Narrador eliminó {effect} de {player}",
         roleChanged: "{player} se convirtió en el/la {role}",
+        setupAction: "Configuración: {player} configurado como {role}",
     },
 
     scripts: {

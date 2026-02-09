@@ -64,6 +64,30 @@ export type NightStepDefinition = {
 };
 
 // ============================================================================
+// SETUP ACTION PROPS
+// ============================================================================
+
+/**
+ * Props for a role's pre-revelation setup action.
+ * Used for roles that need narrator configuration before role revelation
+ * (e.g., the Drunk choosing which Townsfolk to believe they are).
+ */
+export type SetupActionProps = {
+    player: PlayerState;
+    state: GameState;
+    onComplete: (result: SetupActionResult) => void;
+};
+
+export type SetupActionResult = {
+    // Change this player's roleId to a new role
+    changeRole?: string;
+    // Effects to add to players (playerId -> effects to add)
+    addEffects?: Record<string, EffectToAdd[]>;
+    // Effects to remove from players (playerId -> effect types to remove)
+    removeEffects?: Record<string, string[]>;
+};
+
+// ============================================================================
 // ROLE DEFINITION
 // ============================================================================
 
@@ -85,7 +109,9 @@ export type RoleId =
     | "mayor"
     | "saint"
     | "scarlet_woman"
-    | "recluse";
+    | "recluse"
+    | "poisoner"
+    | "drunk";
 
 export type RoleDefinition = {
     id: RoleId;
@@ -116,4 +142,9 @@ export type RoleDefinition = {
 
     // Component for night action, null if no action needed
     NightAction: React.FC<NightActionProps> | null;
+
+    // Optional setup action shown to the narrator AFTER role assignment
+    // but BEFORE role revelation begins. Used for roles that need
+    // narrator configuration (e.g., Drunk choosing believed role).
+    SetupAction?: React.FC<SetupActionProps>;
 };

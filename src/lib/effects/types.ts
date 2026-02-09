@@ -20,7 +20,9 @@ export type EffectId =
     | "martyrdom"
     | "scarlet_woman"
     | "recluse_misregister"
-    | "pending_role_reveal";
+    | "pending_role_reveal"
+    | "poisoned"
+    | "drunk";
 
 export type EffectDefinition = {
     id: EffectId;
@@ -28,9 +30,12 @@ export type EffectDefinition = {
 
     // Behavior modifiers
     preventsNightWake?: boolean;
-    poisonsAbility?: boolean;
     preventsVoting?: boolean;
     preventsNomination?: boolean;
+
+    // Whether this effect causes the player's ability to malfunction
+    // (e.g., Poisoned, Drunk — info roles give wrong info, passive abilities fail)
+    poisonsAbility?: boolean;
 
     // Check if a player can vote given this effect
     canVote?: (player: PlayerState, state: GameState) => boolean;

@@ -19,6 +19,7 @@ import {
     addEffectToPlayer,
     removeEffectFromPlayer,
     processAutoSkips,
+    applySetupAction,
 } from "../../lib/game";
 import {
     resolveIntent,
@@ -45,8 +46,9 @@ import { HistoryView } from "./HistoryView";
 import { GrimoireModal } from "../items/GrimoireModal";
 import { EditEffectsModal } from "../items/EditEffectsModal";
 import { Icon, LanguageToggle } from "../atoms";
-import { NightActionResult } from "../../lib/roles/types";
+import { NightActionResult, SetupActionResult } from "../../lib/roles/types";
 import type { FC } from "react";
+import { SetupActionsScreen } from "./SetupActionsScreen";
 
 type Props = {
     initialGame: Game;
@@ -54,6 +56,8 @@ type Props = {
 };
 
 type Screen =
+    | { type: "setup_actions" }
+    | { type: "setup_action"; playerId: string; roleId: string }
     | { type: "role_revelation" }
     | { type: "showing_role"; playerId: string }
     | { type: "night_dashboard" }
@@ -157,6 +161,26 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         const readyGame = processAutoSkips(nightGame);
         updateGame(readyGame);
         setScreen({ type: "night_dashboard" });
+    };
+
+    // ========================================================================
+    // SETUP ACTIONS FLOW
+    // ========================================================================
+
+    const handleOpenSetupAction = (playerId: string, roleId: string) => {
+        setScreen({ type: "setup_action", playerId, roleId });
+    };
+
+    const handleSetupActionComplete = (result: SetupActionResult) => {
+        if (screen.type !== "setup_action") return;
+
+        const newGame = applySetupAction(game, screen.playerId, result);
+        updateGame(newGame);
+        setScreen({ type: "setup_actions" });
+    };
+
+    const handleSetupActionsContinue = () => {
+        setScreen({ type: "role_revelation" });
     };
 
     // ========================================================================
@@ -441,6 +465,33 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
     const renderScreen = () => {
         switch (screen.type) {
+            case "setup_actions":
+                return (
+                    <SetupActionsScreen
+                        game={game}
+                        state={state}
+                        onOpenSetupAction={handleOpenSetupAction}
+                        onContinue={handleSetupActionsContinue}
+                        onShowRoleCard={handleShowRoleCard}
+                        onEditEffects={handleOpenEditEffects}
+                    />
+                );
+
+            case "setup_action": {
+                const setupPlayer = getPlayer(state, screen.playerId);
+                if (!setupPlayer) return null;
+                const setupRole = getRole(screen.roleId);
+                if (!setupRole?.SetupAction) return null;
+
+                return (
+                    <setupRole.SetupAction
+                        player={setupPlayer}
+                        state={state}
+                        onComplete={handleSetupActionComplete}
+                    />
+                );
+            }
+
             case "role_revelation":
                 return (
                     <RoleRevelationScreen
@@ -613,6 +664,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         screen.type === "showing_role" ||
         screen.type === "night_follow_up" ||
         screen.type === "night_action" ||
+        screen.type === "setup_action" ||
         screen.type === "grimoire_role_card";
 
     const showFloatingButtons =
@@ -669,6 +721,22 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     );
 }
 
+function hasSetupActions(game: Game): boolean {
+    const state = getCurrentState(game);
+    // Check if any player's current role has a SetupAction that hasn't been completed yet
+    const completedSetupPlayerIds = new Set(
+        game.history
+            .filter((e) => e.type === "setup_action")
+            .map((e) => e.data.playerId as string),
+    );
+
+    return state.players.some((p) => {
+        if (completedSetupPlayerIds.has(p.id)) return false;
+        const role = getRole(p.roleId);
+        return role?.SetupAction != null;
+    });
+}
+
 function getInitialScreen(game: Game): Screen {
     const state = getCurrentState(game);
 
@@ -686,6 +754,10 @@ function getInitialScreen(game: Game): Screen {
 
     switch (state.phase) {
         case "setup":
+            // Check if there are pending setup actions (e.g., Drunk choosing believed role)
+            if (hasSetupActions(game)) {
+                return { type: "setup_actions" };
+            }
             return { type: "role_revelation" };
         case "night":
             return { type: "night_dashboard" };

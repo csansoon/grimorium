@@ -169,6 +169,56 @@ export function addHistoryEntry(
 }
 
 // ============================================================================
+// SETUP ACTIONS
+// ============================================================================
+
+import type { SetupActionResult } from "./roles/types";
+
+/**
+ * Apply a setup action result to the game. Used for pre-revelation setup
+ * (e.g., the Drunk choosing which Townsfolk role to believe they are).
+ */
+export function applySetupAction(
+    game: Game,
+    playerId: string,
+    result: SetupActionResult,
+): Game {
+    const state = getCurrentState(game);
+    const player = state.players.find((p) => p.id === playerId);
+    if (!player) return game;
+
+    const changeRoles = result.changeRole
+        ? { [playerId]: result.changeRole }
+        : undefined;
+
+    return addHistoryEntry(
+        game,
+        {
+            type: "setup_action",
+            message: [
+                {
+                    type: "i18n",
+                    key: "history.setupAction",
+                    params: {
+                        player: playerId,
+                        role: result.changeRole ?? player.roleId,
+                    },
+                },
+            ],
+            data: {
+                playerId,
+                originalRole: player.roleId,
+                newRole: result.changeRole,
+            },
+        },
+        undefined,
+        result.addEffects,
+        result.removeEffects,
+        changeRoles,
+    );
+}
+
+// ============================================================================
 // GAME FLOW
 // ============================================================================
 
@@ -284,6 +334,9 @@ export function startNight(game: Game): Game {
     const state = getCurrentState(game);
     const newRound = state.phase === "setup" ? 1 : state.round + 1;
 
+    // Expire effects that should end at end of day (e.g., Poisoner's poison)
+    const stateAfterExpiration = expireEffects(state, "end_of_day");
+
     return addHistoryEntry(
         game,
         {
@@ -297,7 +350,11 @@ export function startNight(game: Game): Game {
             ],
             data: { round: newRound },
         },
-        { phase: "night", round: newRound },
+        {
+            phase: "night",
+            round: newRound,
+            players: stateAfterExpiration.players,
+        },
     );
 }
 

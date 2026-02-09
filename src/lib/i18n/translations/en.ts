@@ -238,6 +238,29 @@ const en: Translations = {
         stepSelectPlayer: "Select Player",
         stepAssignRedHerring: "Assign Red Herring",
         stepSelectAndShow: "Select & Show",
+        stepChooseTarget: "Choose Target",
+
+        // Malfunction Config
+        stepConfigureMalfunction: "Configure Malfunction",
+        playerIsMalfunctioning: "This player is poisoned/drunk — their ability malfunctions!",
+        chooseFalseNumber: "What number should they see?",
+        chooseFalseResult: "What result should they see?",
+        chooseFalseRole: "What role should they see?",
+        malfunctionWarning: "Malfunctioning",
+
+        // Poisoner specific
+        poisonerInfo: "Choose a Target",
+        selectPlayerToPoison: "Select a player to poison tonight. Their ability will malfunction.",
+
+        // Setup Actions
+        setupActions: "Setup Actions",
+        setupActionsSubtitle: "Configure roles that need narrator setup before the game begins",
+        continueToRoleRevelation: "Continue to Role Revelation",
+
+        // Drunk setup
+        drunkSetupTitle: "Drunk Setup",
+        drunkSetupDescription: "Choose which Townsfolk role the Drunk believes they are. They will see this role during role revelation and play as if they are that role.",
+        chooseBelievedRole: "Choose the believed Townsfolk role",
 
         // Perception Config
         perceptionConfigTitle: "Configure Perceptions",
@@ -426,6 +449,19 @@ const en: Translations = {
             description:
                 "You might register as evil & as a Minion or Demon, even if dead.",
         },
+        poisoner: {
+            name: "Poisoner",
+            description:
+                "Each night, choose a player: they are poisoned tonight.",
+            history: {
+                poisonedPlayer: "{player} poisoned {target}",
+            },
+        },
+        drunk: {
+            name: "Drunk",
+            description:
+                "You do not know you are the Drunk. You think you are a Townsfolk character, but you are not.",
+        },
     },
 
     effects: {
@@ -482,6 +518,16 @@ const en: Translations = {
             description:
                 "This player's role has changed and needs to be revealed.",
         },
+        poisoned: {
+            name: "Poisoned",
+            description:
+                "This player's ability malfunctions tonight. Information roles get wrong info, passive abilities fail.",
+        },
+        drunk: {
+            name: "Drunk",
+            description:
+                "This player thinks they are a Townsfolk, but they are actually the Drunk. Their ability permanently malfunctions.",
+        },
     },
 
     ui: {
@@ -511,6 +557,7 @@ const en: Translations = {
         effectAdded: "Narrator added {effect} to {player}",
         effectRemoved: "Narrator removed {effect} from {player}",
         roleChanged: "{player} became the {role}",
+        setupAction: "Setup: {player} configured as {role}",
     },
 
     scripts: {
