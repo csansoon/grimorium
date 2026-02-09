@@ -6,7 +6,10 @@ import { useI18n } from "../../../i18n";
 import { hasEffect, Game, PlayerState } from "../../../types";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { RoleCard } from "../../../../components/items/RoleCard";
-import { TeamBackground, CardLink } from "../../../../components/items/TeamBackground";
+import {
+    TeamBackground,
+    CardLink,
+} from "../../../../components/items/TeamBackground";
 import { NightActionLayout } from "../../../../components/layouts";
 import { SelectablePlayerItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
@@ -61,7 +64,9 @@ const definition: RoleDefinition = {
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
         const [phase, setPhase] = useState<Phase>("select_player");
-        const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+        const [selectedPlayer, setSelectedPlayer] = useState<string | null>(
+            null,
+        );
 
         // We know we were killed (shouldWake returned true)
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
@@ -78,11 +83,18 @@ const definition: RoleDefinition = {
         const handleComplete = () => {
             if (!selectedPlayer) return;
 
-            const targetPlayer = state.players.find((p) => p.id === selectedPlayer);
+            const targetPlayer = state.players.find(
+                (p) => p.id === selectedPlayer,
+            );
             if (!targetPlayer) return;
 
             // Use perception to determine what role is shown (handles Recluse/Spy)
-            const targetPerception = perceive(targetPlayer, player, "role", state);
+            const targetPerception = perceive(
+                targetPlayer,
+                player,
+                "role",
+                state,
+            );
             const targetRole = getRole(targetPerception.roleId);
             if (!targetRole) return;
 
@@ -168,10 +180,14 @@ const definition: RoleDefinition = {
 
         return (
             <TeamBackground teamId={shownTeamId}>
-                <p className={cn(
-                    "text-center text-xs uppercase tracking-widest font-semibold mb-4",
-                    shownTeam.isEvil ? "text-red-300/80" : "text-parchment-300/80",
-                )}>
+                <p
+                    className={cn(
+                        "text-center text-xs uppercase tracking-widest font-semibold mb-4",
+                        shownTeam.isEvil
+                            ? "text-red-300/80"
+                            : "text-parchment-300/80",
+                    )}
+                >
                     {t.game.playerRoleIs}
                 </p>
 

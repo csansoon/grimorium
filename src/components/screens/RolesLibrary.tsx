@@ -121,7 +121,8 @@ export function RolesLibrary({ onBack }: Props) {
             <div className="flex-1 overflow-y-auto px-4 pb-6">
                 <div className="space-y-6 max-w-lg mx-auto w-full">
                     {rolesByTeam.map(({ teamId, team, roles }) => {
-                        const teamTranslation = t.teams[teamId as keyof typeof t.teams];
+                        const teamTranslation =
+                            t.teams[teamId as keyof typeof t.teams];
                         const isEvil = team.isEvil;
 
                         return (
@@ -131,12 +132,18 @@ export function RolesLibrary({ onBack }: Props) {
                                     <Icon
                                         name={team.icon}
                                         size="sm"
-                                        className={isEvil ? "text-red-400" : "text-mystic-gold"}
+                                        className={
+                                            isEvil
+                                                ? "text-red-400"
+                                                : "text-mystic-gold"
+                                        }
                                     />
                                     <span
                                         className={cn(
                                             "text-sm font-semibold tracking-wider uppercase",
-                                            isEvil ? "text-red-400" : "text-mystic-gold",
+                                            isEvil
+                                                ? "text-red-400"
+                                                : "text-mystic-gold",
                                         )}
                                     >
                                         {teamTranslation?.name ?? teamId}
@@ -149,8 +156,10 @@ export function RolesLibrary({ onBack }: Props) {
                                 {/* Role Items */}
                                 <div className="space-y-1">
                                     {roles.map((role) => {
-                                        const roleKey = role.id as keyof typeof t.roles;
-                                        const roleName = t.roles[roleKey]?.name ?? role.id;
+                                        const roleKey =
+                                            role.id as keyof typeof t.roles;
+                                        const roleName =
+                                            t.roles[roleKey]?.name ?? role.id;
                                         const roleDescription =
                                             t.roles[roleKey]?.description ?? "";
 

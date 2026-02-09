@@ -217,10 +217,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             });
         } else {
             // No intent — check win conditions and return to dashboard
-            const winner = checkWinCondition(
-                getCurrentState(newGame),
-                newGame,
-            );
+            const winner = checkWinCondition(getCurrentState(newGame), newGame);
             if (winner) {
                 const finalGame = endGame(newGame, winner);
                 updateGame(finalGame);
@@ -237,11 +234,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const handleNightActionSkip = () => {
         if (screen.type !== "night_action") return;
 
-        const newGame = skipNightAction(
-            game,
-            screen.roleId,
-            screen.playerId,
-        );
+        const newGame = skipNightAction(game, screen.roleId, screen.playerId);
         const readyGame = processAutoSkips(newGame);
         updateGame(readyGame);
         setScreen({ type: "night_dashboard" });
@@ -289,10 +282,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         }
     };
 
-    const handleVoteComplete = (
-        votesFor: string[],
-        votesAgainst: string[],
-    ) => {
+    const handleVoteComplete = (votesFor: string[], votesAgainst: string[]) => {
         if (screen.type !== "voting") return;
 
         const newGame = resolveVote(
@@ -575,7 +565,10 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
                 return (
                     <TeamBackground teamId={cardTeamId}>
                         <RoleCard roleId={player.roleId} />
-                        <CardLink onClick={handleRoleCardClose} isEvil={cardTeam.isEvil}>
+                        <CardLink
+                            onClick={handleRoleCardClose}
+                            isEvil={cardTeam.isEvil}
+                        >
                             {t.common.back}
                         </CardLink>
                     </TeamBackground>

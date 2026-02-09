@@ -6,15 +6,24 @@ import { getTeam } from "../../../teams";
 import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { RoleCard } from "../../../../components/items/RoleCard";
-import { TeamBackground, CardLink } from "../../../../components/items/TeamBackground";
-import { NightActionLayout, NarratorSetupLayout } from "../../../../components/layouts";
+import {
+    TeamBackground,
+    CardLink,
+} from "../../../../components/items/TeamBackground";
+import {
+    NightActionLayout,
+    NarratorSetupLayout,
+} from "../../../../components/layouts";
 import {
     StepSection,
     AlertBox,
     RoleRevealBadge,
     InfoBox,
 } from "../../../../components/items";
-import { SelectablePlayerItem, SelectableRoleItem } from "../../../../components/inputs";
+import {
+    SelectablePlayerItem,
+    SelectableRoleItem,
+} from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
 
@@ -25,7 +34,8 @@ const definition: RoleDefinition = {
     team: "townsfolk",
     icon: "bookMarked",
     nightOrder: 11,
-    shouldWake: (game, player) => isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
+    shouldWake: (game, player) =>
+        isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
 
     RoleReveal: DefaultRoleReveal,
 
@@ -33,17 +43,26 @@ const definition: RoleDefinition = {
         const { t } = useI18n();
         const [phase, setPhase] = useState<Phase>("narrator_setup");
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
-        const [selectedOutsider, setSelectedOutsider] = useState<string | null>(null);
-        const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+        const [selectedOutsider, setSelectedOutsider] = useState<string | null>(
+            null,
+        );
+        const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
+            null,
+        );
 
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
         // All defined outsider roles (for misregistration role picker)
-        const outsiderRoles = getAllRoles().filter((r) => r.team === "outsider");
+        const outsiderRoles = getAllRoles().filter(
+            (r) => r.team === "outsider",
+        );
 
         const outsidersInGame = state.players.filter((p) => {
             const perception = perceive(p, player, "team", state);
-            return perception.team === "outsider" || canRegisterAsTeam(p, "outsider");
+            return (
+                perception.team === "outsider" ||
+                canRegisterAsTeam(p, "outsider")
+            );
         });
 
         const hasOutsiders = outsidersInGame.length > 0;
@@ -52,7 +71,10 @@ const definition: RoleDefinition = {
             const p = state.players.find((pl) => pl.id === playerId);
             if (!p) return false;
             const perception = perceive(p, player, "team", state);
-            return perception.team === "outsider" || canRegisterAsTeam(p, "outsider");
+            return (
+                perception.team === "outsider" ||
+                canRegisterAsTeam(p, "outsider")
+            );
         });
 
         const canProceedToPlayer =
@@ -115,8 +137,12 @@ const definition: RoleDefinition = {
         const handleComplete = () => {
             if (!selectedOutsider || !selectedRoleId) return;
 
-            const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
-            const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
+            const player1 = state.players.find(
+                (p) => p.id === selectedPlayers[0],
+            );
+            const player2 = state.players.find(
+                (p) => p.id === selectedPlayers[1],
+            );
             if (!player1 || !player2) return;
 
             onComplete({
@@ -154,7 +180,9 @@ const definition: RoleDefinition = {
         };
 
         const getPlayerName = (playerId: string) => {
-            return state.players.find((p) => p.id === playerId)?.name ?? "Unknown";
+            return (
+                state.players.find((p) => p.id === playerId)?.name ?? "Unknown"
+            );
         };
 
         // Narrator Setup Phase - No Outsiders
@@ -195,9 +223,16 @@ const definition: RoleDefinition = {
                     >
                         {otherPlayers.map((p) => {
                             const role = getRole(p.roleId);
-                            const perception = perceive(p, player, "team", state);
+                            const perception = perceive(
+                                p,
+                                player,
+                                "team",
+                                state,
+                            );
                             const isSelected = selectedPlayers.includes(p.id);
-                            const registersOutsider = perception.team === "outsider" || canRegisterAsTeam(p, "outsider");
+                            const registersOutsider =
+                                perception.team === "outsider" ||
+                                canRegisterAsTeam(p, "outsider");
 
                             return (
                                 <SelectablePlayerItem
@@ -206,56 +241,109 @@ const definition: RoleDefinition = {
                                     roleName={getRoleName(p.roleId)}
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
-                                    isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={registersOutsider ? "outsider" : undefined}
-                                    teamLabel={registersOutsider ? t.teams.outsider.name : undefined}
+                                    isDisabled={
+                                        !isSelected &&
+                                        selectedPlayers.length >= 2
+                                    }
+                                    highlightTeam={
+                                        registersOutsider
+                                            ? "outsider"
+                                            : undefined
+                                    }
+                                    teamLabel={
+                                        registersOutsider
+                                            ? t.teams.outsider.name
+                                            : undefined
+                                    }
                                     onClick={() => handlePlayerToggle(p.id)}
                                 />
                             );
                         })}
                     </StepSection>
 
-                    {selectedPlayers.length === 2 && outsidersInSelection.length > 0 && (
-                        <StepSection step={2} label={t.game.selectWhichRoleToShow}>
-                            {outsidersInSelection.flatMap((playerId) => {
-                                const p = state.players.find((pl) => pl.id === playerId);
-                                if (!p) return [];
-                                const pPerception = perceive(p, player, "team", state);
+                    {selectedPlayers.length === 2 &&
+                        outsidersInSelection.length > 0 && (
+                            <StepSection
+                                step={2}
+                                label={t.game.selectWhichRoleToShow}
+                            >
+                                {outsidersInSelection.flatMap((playerId) => {
+                                    const p = state.players.find(
+                                        (pl) => pl.id === playerId,
+                                    );
+                                    if (!p) return [];
+                                    const pPerception = perceive(
+                                        p,
+                                        player,
+                                        "team",
+                                        state,
+                                    );
 
-                                if (pPerception.team === "outsider") {
-                                    // Actual outsider (or configured perceiveAs): show perceived role
-                                    const rolePerception = perceive(p, player, "role", state);
-                                    const perceivedRole = getRole(rolePerception.roleId);
-                                    return [(
+                                    if (pPerception.team === "outsider") {
+                                        // Actual outsider (or configured perceiveAs): show perceived role
+                                        const rolePerception = perceive(
+                                            p,
+                                            player,
+                                            "role",
+                                            state,
+                                        );
+                                        const perceivedRole = getRole(
+                                            rolePerception.roleId,
+                                        );
+                                        return [
+                                            <SelectableRoleItem
+                                                key={playerId}
+                                                playerName={p.name}
+                                                roleName={getRoleName(
+                                                    rolePerception.roleId,
+                                                )}
+                                                roleIcon={
+                                                    perceivedRole?.icon ??
+                                                    "user"
+                                                }
+                                                isSelected={
+                                                    selectedOutsider ===
+                                                        playerId &&
+                                                    selectedRoleId ===
+                                                        rolePerception.roleId
+                                                }
+                                                onClick={() =>
+                                                    handleSelectRole(
+                                                        playerId,
+                                                        rolePerception.roleId,
+                                                    )
+                                                }
+                                            />,
+                                        ];
+                                    }
+
+                                    // Misregistering player (canRegisterAsTeam): show all outsider roles
+                                    return outsiderRoles.map((role) => (
                                         <SelectableRoleItem
-                                            key={playerId}
+                                            key={`${playerId}-${role.id}`}
                                             playerName={p.name}
-                                            roleName={getRoleName(rolePerception.roleId)}
-                                            roleIcon={perceivedRole?.icon ?? "user"}
-                                            isSelected={selectedOutsider === playerId && selectedRoleId === rolePerception.roleId}
-                                            onClick={() => handleSelectRole(playerId, rolePerception.roleId)}
+                                            roleName={getRoleName(role.id)}
+                                            roleIcon={role.icon}
+                                            isSelected={
+                                                selectedOutsider === playerId &&
+                                                selectedRoleId === role.id
+                                            }
+                                            onClick={() =>
+                                                handleSelectRole(
+                                                    playerId,
+                                                    role.id,
+                                                )
+                                            }
                                         />
-                                    )];
-                                }
+                                    ));
+                                })}
+                            </StepSection>
+                        )}
 
-                                // Misregistering player (canRegisterAsTeam): show all outsider roles
-                                return outsiderRoles.map((role) => (
-                                    <SelectableRoleItem
-                                        key={`${playerId}-${role.id}`}
-                                        playerName={p.name}
-                                        roleName={getRoleName(role.id)}
-                                        roleIcon={role.icon}
-                                        isSelected={selectedOutsider === playerId && selectedRoleId === role.id}
-                                        onClick={() => handleSelectRole(playerId, role.id)}
-                                    />
-                                ));
-                            })}
-                        </StepSection>
-                    )}
-
-                    {selectedPlayers.length === 2 && outsidersInSelection.length === 0 && (
-                        <AlertBox message={t.game.mustIncludeOutsider} />
-                    )}
+                    {selectedPlayers.length === 2 &&
+                        outsidersInSelection.length === 0 && (
+                            <AlertBox message={t.game.mustIncludeOutsider} />
+                        )}
                 </NarratorSetupLayout>
             );
         }
@@ -298,7 +386,9 @@ const definition: RoleDefinition = {
 
         return (
             <TeamBackground teamId={shownTeamId}>
-                <div className={`text-center text-xs mb-4 max-w-sm mx-auto ${shownTeam.isEvil ? "text-red-300/80" : "text-parchment-300/80"}`}>
+                <div
+                    className={`text-center text-xs mb-4 max-w-sm mx-auto ${shownTeam.isEvil ? "text-red-300/80" : "text-parchment-300/80"}`}
+                >
                     <p className="uppercase tracking-widest font-semibold mb-2">
                         {t.game.oneOfThemIsThe}
                     </p>
@@ -306,13 +396,17 @@ const definition: RoleDefinition = {
                         {player1 && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20">
                                 <Icon name="user" size="xs" />
-                                <span className="font-medium">{player1.name}</span>
+                                <span className="font-medium">
+                                    {player1.name}
+                                </span>
                             </span>
                         )}
                         {player2 && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20">
                                 <Icon name="user" size="xs" />
-                                <span className="font-medium">{player2.name}</span>
+                                <span className="font-medium">
+                                    {player2.name}
+                                </span>
                             </span>
                         )}
                     </div>
