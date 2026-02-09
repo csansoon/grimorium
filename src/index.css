@@ -51,13 +51,13 @@
 
   /* Ornate corner decorations */
   .tarot-corner {
-    @apply absolute w-6 h-6 text-mystic-gold/50;
+    @apply absolute flex items-center justify-center text-mystic-gold/50;
   }
 
-  .tarot-corner-tl { @apply top-3 left-3; }
-  .tarot-corner-tr { @apply top-3 right-3 rotate-90; }
-  .tarot-corner-bl { @apply bottom-3 left-3 -rotate-90; }
-  .tarot-corner-br { @apply bottom-3 right-3 rotate-180; }
+  .tarot-corner-tl { @apply top-4 left-4; transform: rotate(-45deg); }
+  .tarot-corner-tr { @apply top-4 right-4; transform: rotate(45deg); }
+  .tarot-corner-bl { @apply bottom-4 left-4; transform: rotate(-135deg); }
+  .tarot-corner-br { @apply bottom-4 right-4; transform: rotate(135deg); }
 
   /* Mystical divider */
   .divider-mystic {
@@ -117,7 +117,35 @@
   }
 }
 
-/* Card 3D float animation */
+/* ═══════════════════════════════════════════════════════════════
+   Card animations — summon, float, shimmer, glow, seals
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Card summon (entrance) — plays once on the wrapper */
+@keyframes cardSummon {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: blur(6px) brightness(1.5);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: blur(0px) brightness(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px) brightness(1);
+  }
+}
+
+.animate-card-summon {
+  animation: cardSummon 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity, filter;
+}
+
+/* Card 3D float — continuous gentle bob on the card itself */
 @keyframes cardFloat {
   0%, 100% {
     transform: perspective(800px) rotateY(-3deg) rotateX(3deg);
@@ -130,6 +158,184 @@
 .animate-card-float {
   animation: cardFloat 6s ease-in-out infinite;
   will-change: transform;
+}
+
+/* Holographic foil shimmer — sweeps across card synced with float */
+@keyframes cardShimmer {
+  0%, 100% {
+    background-position: -200% center;
+    opacity: 0.5;
+  }
+  50% {
+    background-position: 200% center;
+    opacity: 1;
+  }
+}
+
+.card-shimmer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 20;
+  mix-blend-mode: overlay;
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    105deg,
+    transparent 35%,
+    var(--shimmer-color, rgba(255,255,255,0.1)) 43%,
+    var(--shimmer-color, rgba(255,255,255,0.1)) 45%,
+    rgba(255,255,255,0.18) 48%,
+    rgba(255,255,255,0.22) 50%,
+    rgba(255,255,255,0.18) 52%,
+    var(--shimmer-color, rgba(255,255,255,0.1)) 55%,
+    var(--shimmer-color, rgba(255,255,255,0.1)) 57%,
+    transparent 65%
+  );
+  animation: cardShimmer 6s ease-in-out infinite;
+}
+
+/* Animated border glow — uses an opacity-animated pseudo-element
+   so the glow color (set via --glow-color) smoothly pulses. */
+.card-border-glow {
+  position: relative;
+}
+
+.card-border-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  box-shadow:
+    0 0 16px var(--glow-color, rgba(212,175,55,0.35)),
+    0 0 36px var(--glow-color, rgba(212,175,55,0.18)),
+    inset 0 0 10px var(--glow-color, rgba(212,175,55,0.06));
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Rotating arcane seal behind the role icon */
+@keyframes sealRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sealRotateReverse {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+.card-seal-outer {
+  animation: sealRotate 30s linear infinite;
+}
+
+.card-seal-inner {
+  animation: sealRotateReverse 20s linear infinite;
+}
+
+/* Team-specific inner frame styles */
+
+/* Townsfolk: elegant double-line gold frame with corner flourishes */
+.card-frame-townsfolk {
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: inset 0 0 0 3px transparent, inset 0 0 0 4px rgba(212, 175, 55, 0.08);
+}
+
+/* Outsider: dashed fractured silver frame */
+.card-frame-outsider {
+  border: 1px dashed rgba(192, 192, 192, 0.2);
+  box-shadow: inset 0 0 0 3px transparent, inset 0 0 0 4px rgba(192, 192, 192, 0.06);
+}
+
+/* Minion: ember-dotted orange frame */
+.card-frame-minion {
+  border: 1px solid rgba(234, 140, 30, 0.2);
+  background-image: radial-gradient(circle at 10% 50%, rgba(234,140,30,0.06) 0%, transparent 30%),
+                    radial-gradient(circle at 90% 30%, rgba(234,140,30,0.04) 0%, transparent 25%),
+                    radial-gradient(circle at 50% 90%, rgba(234,140,30,0.05) 0%, transparent 20%);
+}
+
+/* Demon: pulsing crimson frame with "breathing" hot corners */
+@keyframes demonFramePulse {
+  0%, 100% { border-color: rgba(200, 0, 0, 0.2); }
+  50% { border-color: rgba(200, 0, 0, 0.35); }
+}
+
+.card-frame-demon {
+  border: 1px solid rgba(200, 0, 0, 0.2);
+  animation: demonFramePulse 3s ease-in-out infinite;
+  background-image:
+    radial-gradient(circle at 0% 0%, rgba(200,0,0,0.08) 0%, transparent 30%),
+    radial-gradient(circle at 100% 0%, rgba(200,0,0,0.06) 0%, transparent 25%),
+    radial-gradient(circle at 0% 100%, rgba(200,0,0,0.06) 0%, transparent 25%),
+    radial-gradient(circle at 100% 100%, rgba(200,0,0,0.08) 0%, transparent 30%);
+}
+
+/* Scan-line overlay for Demon cards */
+@keyframes scanlines {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 4px; }
+}
+
+.card-scanlines {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 15;
+  opacity: 0.04;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 1px,
+    rgba(200, 0, 0, 0.5) 1px,
+    rgba(200, 0, 0, 0.5) 2px
+  );
+  animation: scanlines 0.3s linear infinite;
+}
+
+/* Ember particle drift for Minion cards */
+@keyframes emberDrift {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-120px) scale(0.3); opacity: 0; }
+}
+
+.card-ember-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(255, 160, 50, 0.8);
+  box-shadow: 0 0 4px rgba(255, 120, 30, 0.6);
+  pointer-events: none;
+  z-index: 15;
+  animation: emberDrift var(--ember-duration, 3s) ease-out var(--ember-delay, 0s) infinite;
+}
+
+/* Star twinkle for Townsfolk cards */
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.7; transform: scale(1); }
+}
+
+.card-star-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.9);
+  box-shadow: 0 0 4px rgba(212, 175, 55, 0.5);
+  pointer-events: none;
+  z-index: 15;
+  animation: starTwinkle var(--star-duration, 3s) ease-in-out var(--star-delay, 0s) infinite;
 }
 
 /* Dialog animations */
