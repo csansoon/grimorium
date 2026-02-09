@@ -3,7 +3,8 @@ import { RoleDefinition } from "../types";
 import { isAlive } from "../../types";
 import { useI18n } from "../../i18n";
 import { DefaultRoleReveal } from "../../../components/items/DefaultRoleReveal";
-import { NightActionLayout } from "../../../components/layouts/NightActionLayout";
+import { NightActionLayout, NightStepListLayout } from "../../../components/layouts";
+import type { NightStep } from "../../../components/layouts";
 import { PlayerSelector } from "../../../components/inputs";
 import { Button, Icon } from "../../../components/atoms";
 
@@ -24,15 +25,29 @@ const definition: RoleDefinition = {
         isAlive(player) &&
         (game.history.at(-1)?.stateAfter.round ?? 0) > 1,
 
+    nightSteps: [
+        {
+            id: "choose_victim",
+            icon: "skull",
+            getLabel: (t) => t.game.stepChooseVictim,
+        },
+    ],
+
     RoleReveal: DefaultRoleReveal,
 
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
+        const [phase, setPhase] = useState<"step_list" | "choose_victim">("step_list");
         const [selectedTarget, setSelectedTarget] = useState<string | null>(
             null
         );
 
         const alivePlayers = state.players.filter((p) => isAlive(p));
+
+        const getRoleName = (roleId: string) => {
+            const key = roleId as keyof typeof t.roles;
+            return t.roles[key]?.name ?? roleId;
+        };
 
         const handleConfirm = () => {
             if (!selectedTarget) return;
@@ -74,6 +89,29 @@ const definition: RoleDefinition = {
                 },
             });
         };
+
+        // Step List Phase
+        if (phase === "step_list") {
+            const steps: NightStep[] = [
+                {
+                    id: "choose_victim",
+                    icon: "skull",
+                    label: t.game.stepChooseVictim,
+                    status: "pending",
+                },
+            ];
+
+            return (
+                <NightStepListLayout
+                    icon="skull"
+                    roleName={getRoleName("imp")}
+                    playerName={player.name}
+                    isEvil
+                    steps={steps}
+                    onSelectStep={() => setPhase("choose_victim")}
+                />
+            );
+        }
 
         return (
             <NightActionLayout

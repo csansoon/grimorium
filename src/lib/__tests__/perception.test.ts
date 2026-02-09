@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { perceive, canRegisterAsTeam } from "../pipeline/perception";
+import {
+    perceive,
+    canRegisterAsTeam,
+    canRegisterAsAlignment,
+    getAmbiguousPlayers,
+    applyPerceptionOverrides,
+} from "../pipeline/perception";
 import {
     makePlayer,
     makeState,
@@ -367,5 +373,238 @@ describe("canRegisterAsTeam", () => {
         );
         expect(canRegisterAsTeam(player, "townsfolk")).toBe(true);
         expect(canRegisterAsTeam(player, "minion")).toBe(false);
+    });
+});
+
+// ============================================================================
+// CAN REGISTER AS ALIGNMENT
+// ============================================================================
+
+describe("canRegisterAsAlignment", () => {
+    it("returns false for a player with no effects", () => {
+        const player = makePlayer({ id: "p1", roleId: "villager" });
+        expect(canRegisterAsAlignment(player, "evil")).toBe(false);
+    });
+
+    it("returns false for a player with effects that don't declare canRegisterAs", () => {
+        const player = addEffectTo(
+            makePlayer({ id: "p1", roleId: "soldier" }),
+            "safe",
+        );
+        expect(canRegisterAsAlignment(player, "evil")).toBe(false);
+    });
+
+    it("returns true for a player with recluse_misregister for evil alignment", () => {
+        const player = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        expect(canRegisterAsAlignment(player, "evil")).toBe(true);
+    });
+
+    it("returns false for an alignment not declared in canRegisterAs", () => {
+        const player = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        expect(canRegisterAsAlignment(player, "good")).toBe(false);
+    });
+
+    it("returns true for custom effects with canRegisterAs alignments", () => {
+        registerTestEffect({
+            id: "custom_misregister" as EffectId,
+            icon: "user",
+            canRegisterAs: { alignments: ["good"] },
+        });
+
+        const player = addEffectTo(
+            makePlayer({ id: "p1", roleId: "imp" }),
+            "custom_misregister",
+        );
+        expect(canRegisterAsAlignment(player, "good")).toBe(true);
+        expect(canRegisterAsAlignment(player, "evil")).toBe(false);
+    });
+});
+
+// ============================================================================
+// GET AMBIGUOUS PLAYERS
+// ============================================================================
+
+describe("getAmbiguousPlayers", () => {
+    it("returns empty array when no players have canRegisterAs", () => {
+        const players = [
+            makePlayer({ id: "p1", roleId: "villager" }),
+            makePlayer({ id: "p2", roleId: "imp" }),
+        ];
+        expect(getAmbiguousPlayers(players, "alignment")).toEqual([]);
+    });
+
+    it("returns players with alignment misregistration for alignment context", () => {
+        const recluse = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        const villager = makePlayer({ id: "p2", roleId: "villager" });
+
+        const result = getAmbiguousPlayers([recluse, villager], "alignment");
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe("p1");
+    });
+
+    it("returns players with team misregistration for team context", () => {
+        const recluse = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        const villager = makePlayer({ id: "p2", roleId: "villager" });
+
+        const result = getAmbiguousPlayers([recluse, villager], "team");
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe("p1");
+    });
+
+    it("returns players with either team or alignment misregistration for role context", () => {
+        registerTestEffect({
+            id: "team_only_misregister" as EffectId,
+            icon: "user",
+            canRegisterAs: { teams: ["townsfolk"] },
+        });
+
+        const player1 = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        const player2 = addEffectTo(
+            makePlayer({ id: "p2", roleId: "imp" }),
+            "team_only_misregister",
+        );
+        const player3 = makePlayer({ id: "p3", roleId: "villager" });
+
+        const result = getAmbiguousPlayers(
+            [player1, player2, player3],
+            "role",
+        );
+        expect(result).toHaveLength(2);
+        expect(result.map((p) => p.id)).toEqual(["p1", "p2"]);
+    });
+
+    it("does not return players for alignment context when they only have team misregistration", () => {
+        registerTestEffect({
+            id: "team_only_misregister" as EffectId,
+            icon: "user",
+            canRegisterAs: { teams: ["townsfolk"] },
+        });
+
+        const player = addEffectTo(
+            makePlayer({ id: "p1", roleId: "imp" }),
+            "team_only_misregister",
+        );
+
+        const result = getAmbiguousPlayers([player], "alignment");
+        expect(result).toHaveLength(0);
+    });
+});
+
+// ============================================================================
+// APPLY PERCEPTION OVERRIDES
+// ============================================================================
+
+describe("applyPerceptionOverrides", () => {
+    it("returns the same state when overrides is empty", () => {
+        const state = makeState({
+            players: [makePlayer({ id: "p1", roleId: "villager" })],
+        });
+        const result = applyPerceptionOverrides(state, {});
+        expect(result).toBe(state); // Same reference
+    });
+
+    it("injects perceiveAs data into canRegisterAs effects", () => {
+        const recluse = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        const state = makeState({ players: [recluse] });
+
+        const overridden = applyPerceptionOverrides(state, {
+            p1: { alignment: "evil" },
+        });
+
+        // The recluse_misregister effect should now have perceiveAs data
+        const overriddenPlayer = overridden.players.find(
+            (p) => p.id === "p1",
+        )!;
+        const misregisterEffect = overriddenPlayer.effects.find(
+            (e) => e.type === "recluse_misregister",
+        )!;
+        expect(misregisterEffect.data?.perceiveAs).toEqual({
+            alignment: "evil",
+        });
+    });
+
+    it("does not modify effects without canRegisterAs", () => {
+        const player = addEffectTo(
+            addEffectTo(
+                makePlayer({ id: "p1", roleId: "recluse" }),
+                "recluse_misregister",
+            ),
+            "safe",
+        );
+        const state = makeState({ players: [player] });
+
+        const overridden = applyPerceptionOverrides(state, {
+            p1: { alignment: "evil" },
+        });
+
+        const overriddenPlayer = overridden.players.find(
+            (p) => p.id === "p1",
+        )!;
+        const safeEffect = overriddenPlayer.effects.find(
+            (e) => e.type === "safe",
+        )!;
+        expect(safeEffect.data).toBeUndefined();
+    });
+
+    it("does not modify players without overrides", () => {
+        const recluse = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        const villager = makePlayer({ id: "p2", roleId: "villager" });
+        const state = makeState({ players: [recluse, villager] });
+
+        const overridden = applyPerceptionOverrides(state, {
+            p1: { alignment: "evil" },
+        });
+
+        // Villager should be same reference
+        expect(overridden.players.find((p) => p.id === "p2")).toBe(villager);
+    });
+
+    it("integrates with perceive() to change perception results", () => {
+        const recluse = addEffectTo(
+            makePlayer({ id: "p1", roleId: "recluse" }),
+            "recluse_misregister",
+        );
+        const observer = makePlayer({ id: "p2", roleId: "chef" });
+        const state = makeState({ players: [recluse, observer] });
+
+        // Without overrides: recluse appears as good (no perceiveAs set)
+        const beforeResult = perceive(recluse, observer, "alignment", state);
+        expect(beforeResult.alignment).toBe("good");
+
+        // With overrides: recluse appears as evil
+        const overridden = applyPerceptionOverrides(state, {
+            p1: { alignment: "evil" },
+        });
+        const overriddenRecluse = overridden.players.find(
+            (p) => p.id === "p1",
+        )!;
+        const afterResult = perceive(
+            overriddenRecluse,
+            observer,
+            "alignment",
+            overridden,
+        );
+        expect(afterResult.alignment).toBe("evil");
     });
 });

@@ -233,6 +233,28 @@ const es: Translations = {
         actionPending: "Pendiente",
         allActionsComplete: "Todas las acciones nocturnas han sido procesadas",
         proceedToDay: "Proceder al Día",
+
+        // Night Steps
+        nightSteps: "Pasos Nocturnos",
+        stepConfigurePerceptions: "Configurar Percepciones",
+        stepShowResult: "Mostrar Resultado",
+        stepShowRole: "Mostrar Rol",
+        stepNarratorSetup: "Configuración del Narrador",
+        stepChooseVictim: "Elegir Víctima",
+        stepChoosePlayer: "Elegir Jugador",
+        stepSelectPlayer: "Seleccionar Jugador",
+        stepAssignRedHerring: "Asignar Pista Falsa",
+        stepSelectAndShow: "Seleccionar y Mostrar",
+
+        // Perception Config
+        perceptionConfigTitle: "Configurar Percepciones",
+        perceptionConfigDescription:
+            "Algunos jugadores pueden registrarse de forma diferente. Decide cómo deben aparecer para esta habilidad.",
+        howShouldRegister: "¿Cómo debe registrarse {player}?",
+        registerAsGood: "Bueno",
+        registerAsEvil: "Malvado",
+        actualRole: "Real: {role}",
+        keepDefault: "Por defecto (sin cambio)",
     },
 
     teams: {

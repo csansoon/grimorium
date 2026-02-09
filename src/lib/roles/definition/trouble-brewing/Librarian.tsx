@@ -13,7 +13,9 @@ import {
 import {
     NightActionLayout,
     NarratorSetupLayout,
+    NightStepListLayout,
 } from "../../../../components/layouts";
+import type { NightStep } from "../../../../components/layouts";
 import {
     StepSection,
     AlertBox,
@@ -27,7 +29,7 @@ import {
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
 
-type Phase = "narrator_setup" | "player_view" | "no_outsiders_view";
+type Phase = "step_list" | "narrator_setup" | "player_view" | "no_outsiders_view";
 
 const definition: RoleDefinition = {
     id: "librarian",
@@ -37,11 +39,19 @@ const definition: RoleDefinition = {
     shouldWake: (game, player) =>
         isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
 
+    nightSteps: [
+        {
+            id: "narrator_setup",
+            icon: "bookMarked",
+            getLabel: (t) => t.game.stepNarratorSetup,
+        },
+    ],
+
     RoleReveal: DefaultRoleReveal,
 
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
-        const [phase, setPhase] = useState<Phase>("narrator_setup");
+        const [phase, setPhase] = useState<Phase>("step_list");
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
         const [selectedOutsider, setSelectedOutsider] = useState<string | null>(
             null,
@@ -185,6 +195,28 @@ const definition: RoleDefinition = {
             );
         };
 
+        // Step List Phase
+        if (phase === "step_list") {
+            const steps: NightStep[] = [
+                {
+                    id: "narrator_setup",
+                    icon: "bookMarked",
+                    label: t.game.stepNarratorSetup,
+                    status: "pending",
+                },
+            ];
+
+            return (
+                <NightStepListLayout
+                    icon="bookMarked"
+                    roleName={getRoleName("librarian")}
+                    playerName={player.name}
+                    steps={steps}
+                    onSelectStep={() => setPhase("narrator_setup")}
+                />
+            );
+        }
+
         // Narrator Setup Phase - No Outsiders
         if (phase === "narrator_setup" && !hasOutsiders) {
             return (
@@ -280,7 +312,6 @@ const definition: RoleDefinition = {
                                     );
 
                                     if (pPerception.team === "outsider") {
-                                        // Actual outsider (or configured perceiveAs): show perceived role
                                         const rolePerception = perceive(
                                             p,
                                             player,
@@ -317,7 +348,6 @@ const definition: RoleDefinition = {
                                         ];
                                     }
 
-                                    // Misregistering player (canRegisterAsTeam): show all outsider roles
                                     return outsiderRoles.map((role) => (
                                         <SelectableRoleItem
                                             key={`${playerId}-${role.id}`}
@@ -374,7 +404,7 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Player View Phase — show the role card with player name context
+        // Player View Phase
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 

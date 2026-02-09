@@ -7,7 +7,8 @@ import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { RoleCard } from "../../../../components/items/RoleCard";
 import { TeamBackground, CardLink } from "../../../../components/items/TeamBackground";
-import { NarratorSetupLayout } from "../../../../components/layouts";
+import { NarratorSetupLayout, NightStepListLayout } from "../../../../components/layouts";
+import type { NightStep } from "../../../../components/layouts";
 import {
     StepSection,
     AlertBox,
@@ -16,7 +17,7 @@ import { SelectablePlayerItem, SelectableRoleItem } from "../../../../components
 import { Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
 
-type Phase = "narrator_setup" | "player_view";
+type Phase = "step_list" | "narrator_setup" | "player_view";
 
 const definition: RoleDefinition = {
     id: "washerwoman",
@@ -25,11 +26,19 @@ const definition: RoleDefinition = {
     nightOrder: 10,
     shouldWake: (game, player) => isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
 
+    nightSteps: [
+        {
+            id: "narrator_setup",
+            icon: "shirt",
+            getLabel: (t) => t.game.stepNarratorSetup,
+        },
+    ],
+
     RoleReveal: DefaultRoleReveal,
 
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
-        const [phase, setPhase] = useState<Phase>("narrator_setup");
+        const [phase, setPhase] = useState<Phase>("step_list");
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
         const [selectedTownsfolk, setSelectedTownsfolk] = useState<string | null>(null);
         const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
@@ -122,6 +131,28 @@ const definition: RoleDefinition = {
             return state.players.find((p) => p.id === playerId)?.name ?? "Unknown";
         };
 
+        // Step List Phase
+        if (phase === "step_list") {
+            const steps: NightStep[] = [
+                {
+                    id: "narrator_setup",
+                    icon: "shirt",
+                    label: t.game.stepNarratorSetup,
+                    status: "pending",
+                },
+            ];
+
+            return (
+                <NightStepListLayout
+                    icon="shirt"
+                    roleName={getRoleName("washerwoman")}
+                    playerName={player.name}
+                    steps={steps}
+                    onSelectStep={() => setPhase("narrator_setup")}
+                />
+            );
+        }
+
         // Narrator Setup Phase
         if (phase === "narrator_setup") {
             return (
@@ -167,7 +198,6 @@ const definition: RoleDefinition = {
                                 const pPerception = perceive(p, player, "team", state);
 
                                 if (pPerception.team === "townsfolk") {
-                                    // Actual townsfolk (or configured perceiveAs): show perceived role
                                     const rolePerception = perceive(p, player, "role", state);
                                     const perceivedRole = getRole(rolePerception.roleId);
                                     return [(
@@ -182,7 +212,6 @@ const definition: RoleDefinition = {
                                     )];
                                 }
 
-                                // Misregistering player (canRegisterAsTeam): show all townsfolk roles
                                 return townsfolkRoles.map((role) => (
                                     <SelectableRoleItem
                                         key={`${playerId}-${role.id}`}
@@ -204,7 +233,7 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Player View Phase — show the role card with player name context
+        // Player View Phase
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 

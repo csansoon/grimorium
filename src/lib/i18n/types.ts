@@ -221,6 +221,27 @@ export type Translations = {
         actionPending: string;
         allActionsComplete: string;
         proceedToDay: string;
+
+        // Night Steps
+        nightSteps: string;
+        stepConfigurePerceptions: string;
+        stepShowResult: string;
+        stepShowRole: string;
+        stepNarratorSetup: string;
+        stepChooseVictim: string;
+        stepChoosePlayer: string;
+        stepSelectPlayer: string;
+        stepAssignRedHerring: string;
+        stepSelectAndShow: string;
+
+        // Perception Config
+        perceptionConfigTitle: string;
+        perceptionConfigDescription: string;
+        howShouldRegister: string;
+        registerAsGood: string;
+        registerAsEvil: string;
+        actualRole: string;
+        keepDefault: string;
     };
 
     // Teams

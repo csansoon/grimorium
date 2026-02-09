@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { RoleDefinition } from "../../types";
 import { getRole } from "../../index";
 import { getTeam } from "../../../teams";
@@ -6,17 +6,18 @@ import { useI18n } from "../../../i18n";
 import { hasEffect, Game, PlayerState } from "../../../types";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { RoleCard } from "../../../../components/items/RoleCard";
+import { PerceptionConfigStep } from "../../../../components/items";
 import {
     TeamBackground,
     CardLink,
 } from "../../../../components/items/TeamBackground";
-import { NightActionLayout } from "../../../../components/layouts";
+import { NightActionLayout, NightStepListLayout } from "../../../../components/layouts";
+import type { NightStep } from "../../../../components/layouts";
 import { SelectablePlayerItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
-import { perceive } from "../../../pipeline";
+import { perceive, getAmbiguousPlayers, applyPerceptionOverrides } from "../../../pipeline";
+import { Perception } from "../../../pipeline/types";
 import { cn } from "../../../../lib/utils";
-
-type Phase = "select_player" | "show_role";
 
 // Helper to check if a player was killed this night
 function wasKilledThisNight(game: Game, playerId: string): boolean {
@@ -46,55 +47,140 @@ function wasKilledThisNight(game: Game, playerId: string): boolean {
     return false;
 }
 
+type Phase = "step_list" | "select_player" | "configure_perceptions" | "show_role";
+
 const definition: RoleDefinition = {
     id: "ravenkeeper",
     team: "townsfolk",
     icon: "birdHouse",
-    nightOrder: 35, // Wakes after demon kills, before undertaker
+    nightOrder: 35,
 
-    // Ravenkeeper wakes when killed - no isAlive check since they wake BECAUSE they died
     shouldWake: (game: Game, player: PlayerState) => {
         const round = game.history.at(-1)?.stateAfter.round ?? 0;
-        if (round <= 1) return false; // Skip first night (no deaths on first night)
+        if (round <= 1) return false;
         return wasKilledThisNight(game, player.id);
     },
+
+    nightSteps: [
+        {
+            id: "select_player",
+            icon: "user",
+            getLabel: (t) => t.game.stepSelectPlayer,
+        },
+        {
+            id: "show_role",
+            icon: "birdHouse",
+            getLabel: (t) => t.game.stepShowRole,
+        },
+    ],
 
     RoleReveal: DefaultRoleReveal,
 
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
-        const [phase, setPhase] = useState<Phase>("select_player");
-        const [selectedPlayer, setSelectedPlayer] = useState<string | null>(
-            null,
-        );
+        const [phase, setPhase] = useState<Phase>("step_list");
+        const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+        const [perceptionOverrides, setPerceptionOverrides] = useState<
+            Record<string, Partial<Perception>>
+        >({});
+        const [selectPlayerDone, setSelectPlayerDone] = useState(false);
+        const [perceptionConfigDone, setPerceptionConfigDone] = useState(false);
 
-        // We know we were killed (shouldWake returned true)
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
-        const handleSelectPlayer = (playerId: string) => {
-            setSelectedPlayer(playerId);
+        // Check if selected target is ambiguous for "role" perception
+        const selectedTargetPlayer = selectedPlayer
+            ? state.players.find((p) => p.id === selectedPlayer) ?? null
+            : null;
+
+        const ambiguousPlayers = useMemo(
+            () =>
+                selectedTargetPlayer
+                    ? getAmbiguousPlayers([selectedTargetPlayer], "role")
+                    : [],
+            [selectedTargetPlayer],
+        );
+        const needsPerceptionConfig = ambiguousPlayers.length > 0;
+
+        const getRoleName = (roleId: string) => {
+            const key = roleId as keyof typeof t.roles;
+            return t.roles[key]?.name ?? roleId;
         };
 
-        const handleShowRole = () => {
-            if (!selectedPlayer) return;
-            setPhase("show_role");
+        // Build steps dynamically (perception step may appear after player selection)
+        const steps: NightStep[] = useMemo(() => {
+            const result: NightStep[] = [
+                {
+                    id: "select_player",
+                    icon: "user",
+                    label: t.game.stepSelectPlayer,
+                    status: selectPlayerDone ? "done" : "pending",
+                },
+            ];
+
+            if (selectPlayerDone && needsPerceptionConfig) {
+                result.push({
+                    id: "configure_perceptions",
+                    icon: "eye",
+                    label: t.game.stepConfigurePerceptions,
+                    status: perceptionConfigDone ? "done" : "pending",
+                });
+            }
+
+            result.push({
+                id: "show_role",
+                icon: "birdHouse",
+                label: t.game.stepShowRole,
+                status: "pending",
+            });
+
+            return result;
+        }, [selectPlayerDone, needsPerceptionConfig, perceptionConfigDone, t]);
+
+        const handleSelectStep = (stepId: string) => {
+            if (stepId === "select_player") {
+                setPhase("select_player");
+            } else if (stepId === "configure_perceptions") {
+                setPhase("configure_perceptions");
+            } else if (stepId === "show_role") {
+                setPhase("show_role");
+            }
         };
+
+        const handleConfirmPlayer = () => {
+            if (!selectedPlayer) return;
+            setSelectPlayerDone(true);
+            setPhase("step_list");
+        };
+
+        const handlePerceptionComplete = (
+            overrides: Record<string, Partial<Perception>>,
+        ) => {
+            setPerceptionOverrides(overrides);
+            setPerceptionConfigDone(true);
+            setPhase("step_list");
+        };
+
+        // Apply overrides and get perceived role
+        const effectiveState = useMemo(
+            () => applyPerceptionOverrides(state, perceptionOverrides),
+            [state, perceptionOverrides],
+        );
+
+        const targetPerception = useMemo(() => {
+            if (!selectedTargetPlayer) return null;
+            const effectiveTarget =
+                effectiveState.players.find(
+                    (p) => p.id === selectedTargetPlayer.id,
+                ) ?? selectedTargetPlayer;
+            const effectiveObserver =
+                effectiveState.players.find((p) => p.id === player.id) ?? player;
+            return perceive(effectiveTarget, effectiveObserver, "role", effectiveState);
+        }, [effectiveState, selectedTargetPlayer, player]);
 
         const handleComplete = () => {
-            if (!selectedPlayer) return;
+            if (!selectedPlayer || !targetPerception) return;
 
-            const targetPlayer = state.players.find(
-                (p) => p.id === selectedPlayer,
-            );
-            if (!targetPlayer) return;
-
-            // Use perception to determine what role is shown (handles Recluse/Spy)
-            const targetPerception = perceive(
-                targetPlayer,
-                player,
-                "role",
-                state,
-            );
             const targetRole = getRole(targetPerception.roleId);
             if (!targetRole) return;
 
@@ -108,7 +194,7 @@ const definition: RoleDefinition = {
                                 key: "roles.ravenkeeper.history.sawRole",
                                 params: {
                                     player: player.id,
-                                    target: targetPlayer.id,
+                                    target: selectedPlayer,
                                     role: targetRole.id,
                                 },
                             },
@@ -117,15 +203,32 @@ const definition: RoleDefinition = {
                             roleId: "ravenkeeper",
                             playerId: player.id,
                             action: "saw_role",
-                            targetId: targetPlayer.id,
+                            targetId: selectedPlayer,
                             shownRoleId: targetRole.id,
+                            perceptionOverrides:
+                                Object.keys(perceptionOverrides).length > 0
+                                    ? perceptionOverrides
+                                    : undefined,
                         },
                     },
                 ],
             });
         };
 
-        // Phase 1: Select a player
+        // Phase: Step List
+        if (phase === "step_list") {
+            return (
+                <NightStepListLayout
+                    icon="birdHouse"
+                    roleName={getRoleName("ravenkeeper")}
+                    playerName={player.name}
+                    steps={steps}
+                    onSelectStep={handleSelectStep}
+                />
+            );
+        }
+
+        // Phase: Select Player
         if (phase === "select_player") {
             return (
                 <NightActionLayout
@@ -146,14 +249,14 @@ const definition: RoleDefinition = {
                                     roleIcon={isDead ? "skull" : "user"}
                                     isSelected={isSelected}
                                     isDisabled={false}
-                                    onClick={() => handleSelectPlayer(p.id)}
+                                    onClick={() => setSelectedPlayer(p.id)}
                                 />
                             );
                         })}
                     </div>
 
                     <Button
-                        onClick={handleShowRole}
+                        onClick={handleConfirmPlayer}
                         fullWidth
                         size="lg"
                         disabled={!selectedPlayer}
@@ -166,12 +269,22 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Phase 2: Show the selected player's perceived role as a full RoleCard
-        const targetPlayer = state.players.find((p) => p.id === selectedPlayer);
-        const targetPerception = targetPlayer
-            ? perceive(targetPlayer, player, "role", state)
-            : null;
+        // Phase: Configure Perceptions
+        if (phase === "configure_perceptions") {
+            return (
+                <PerceptionConfigStep
+                    ambiguousPlayers={ambiguousPlayers}
+                    context="role"
+                    state={state}
+                    roleIcon="birdHouse"
+                    roleName={getRoleName("ravenkeeper")}
+                    playerName={player.name}
+                    onComplete={handlePerceptionComplete}
+                />
+            );
+        }
 
+        // Phase: Show Role
         if (!targetPerception) return null;
 
         const shownRole = getRole(targetPerception.roleId);

@@ -2,6 +2,7 @@ import { GameState, PlayerState, HistoryEntry, Game } from "../types";
 import { IconName } from "../../components/atoms/icon";
 import { TeamId } from "../teams";
 import { Intent, WinConditionCheck } from "../pipeline/types";
+import { Translations } from "../i18n/types";
 
 // ============================================================================
 // EFFECT TYPES
@@ -47,6 +48,22 @@ export type RoleRevealProps = {
 };
 
 // ============================================================================
+// NIGHT STEPS
+// ============================================================================
+
+/**
+ * Declarative metadata for a step in a role's night action flow.
+ * Used by NightStepListLayout to render the step list landing page.
+ */
+export type NightStepDefinition = {
+    id: string;
+    icon: IconName;
+    getLabel: (t: Translations) => string;
+    /** If provided, this step is only shown when the condition returns true. */
+    condition?: (game: Game, player: PlayerState, state: GameState) => boolean;
+};
+
+// ============================================================================
 // ROLE DEFINITION
 // ============================================================================
 
@@ -88,6 +105,11 @@ export type RoleDefinition = {
 
     // Win conditions this role contributes (checked dynamically)
     winConditions?: WinConditionCheck[];
+
+    // Declarative list of steps for this role's night action.
+    // Used by NightStepListLayout to render a step list landing page.
+    // If omitted, a single default step is shown.
+    nightSteps?: NightStepDefinition[];
 
     // Component to show when revealing role to player
     RoleReveal: React.FC<RoleRevealProps>;

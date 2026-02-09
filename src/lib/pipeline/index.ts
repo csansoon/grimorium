@@ -528,5 +528,11 @@ export function checkDynamicWinConditions(
     return null;
 }
 
-export { perceive, canRegisterAsTeam } from "./perception";
+export {
+    perceive,
+    canRegisterAsTeam,
+    canRegisterAsAlignment,
+    getAmbiguousPlayers,
+    applyPerceptionOverrides,
+} from "./perception";
 export * from "./types";

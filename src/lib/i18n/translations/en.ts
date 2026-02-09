@@ -226,6 +226,28 @@ const en: Translations = {
         actionPending: "Pending",
         allActionsComplete: "All night actions have been processed",
         proceedToDay: "Proceed to Day",
+
+        // Night Steps
+        nightSteps: "Night Steps",
+        stepConfigurePerceptions: "Configure Perceptions",
+        stepShowResult: "Show Result",
+        stepShowRole: "Show Role",
+        stepNarratorSetup: "Narrator Setup",
+        stepChooseVictim: "Choose Victim",
+        stepChoosePlayer: "Choose Player",
+        stepSelectPlayer: "Select Player",
+        stepAssignRedHerring: "Assign Red Herring",
+        stepSelectAndShow: "Select & Show",
+
+        // Perception Config
+        perceptionConfigTitle: "Configure Perceptions",
+        perceptionConfigDescription:
+            "Some players can register differently. Decide how they should appear for this ability.",
+        howShouldRegister: "How should {player} register?",
+        registerAsGood: "Good",
+        registerAsEvil: "Evil",
+        actualRole: "Actual: {role}",
+        keepDefault: "Default (no change)",
     },
 
     teams: {

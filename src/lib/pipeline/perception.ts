@@ -1,4 +1,4 @@
-import { GameState, PlayerState } from "../types";
+import { GameState, PlayerState, EffectInstance } from "../types";
 import { getRole } from "../roles/index";
 import { getEffect } from "../effects";
 import { isEvilTeam, TeamId } from "../teams";
@@ -83,4 +83,108 @@ export function canRegisterAsTeam(player: PlayerState, team: TeamId): boolean {
         if (effectDef?.canRegisterAs?.teams?.includes(team)) return true;
     }
     return false;
+}
+
+/**
+ * Check whether a player could potentially register as a given alignment.
+ *
+ * Companion to `canRegisterAsTeam()`. Returns true if the player has any
+ * active effect whose `canRegisterAs.alignments` includes the target alignment.
+ *
+ * Used by auto-calculating roles (Chef, Empath) to detect ambiguous players
+ * that need narrator configuration before calculating results.
+ */
+export function canRegisterAsAlignment(
+    player: PlayerState,
+    alignment: "good" | "evil",
+): boolean {
+    for (const effectInstance of player.effects) {
+        const effectDef = getEffect(effectInstance.type);
+        if (effectDef?.canRegisterAs?.alignments?.includes(alignment))
+            return true;
+    }
+    return false;
+}
+
+/**
+ * Get players whose perception is ambiguous for a given context.
+ *
+ * Returns players that have effects declaring `canRegisterAs` for the given
+ * perception context. This is used by night action components to determine
+ * whether a perception configuration step is needed — without referencing
+ * any specific role or effect.
+ *
+ * - "alignment" context: checks `canRegisterAs.alignments`
+ * - "team" context: checks `canRegisterAs.teams`
+ * - "role" context: checks both (misregistration at any level affects role perception)
+ */
+export function getAmbiguousPlayers(
+    players: PlayerState[],
+    context: PerceptionContext,
+): PlayerState[] {
+    return players.filter((player) => {
+        for (const effectInstance of player.effects) {
+            const effectDef = getEffect(effectInstance.type);
+            if (!effectDef?.canRegisterAs) continue;
+            if (
+                context === "alignment" &&
+                effectDef.canRegisterAs.alignments?.length
+            )
+                return true;
+            if (context === "team" && effectDef.canRegisterAs.teams?.length)
+                return true;
+            if (
+                context === "role" &&
+                (effectDef.canRegisterAs.teams?.length ||
+                    effectDef.canRegisterAs.alignments?.length)
+            )
+                return true;
+        }
+        return false;
+    });
+}
+
+/**
+ * Create a local copy of GameState with perception overrides applied.
+ *
+ * For each player in `overrides`, finds their effects that have `canRegisterAs`
+ * and injects `perceiveAs` data into the effect instance. This way, when
+ * `perceive()` is called on the returned state, the existing perception
+ * modifier on the effect (which reads `effectData?.perceiveAs`) will use
+ * the narrator's chosen overrides.
+ *
+ * This is used locally within NightAction components — no game events are emitted.
+ * The overrides are ephemeral and only affect the current calculation.
+ */
+export function applyPerceptionOverrides(
+    state: GameState,
+    overrides: Record<string, Partial<Perception>>,
+): GameState {
+    if (Object.keys(overrides).length === 0) return state;
+
+    return {
+        ...state,
+        players: state.players.map((player) => {
+            const override = overrides[player.id];
+            if (!override) return player;
+
+            // Find effects that declare canRegisterAs and inject perceiveAs data
+            const updatedEffects: EffectInstance[] = player.effects.map(
+                (effectInstance) => {
+                    const effectDef = getEffect(effectInstance.type);
+                    if (!effectDef?.canRegisterAs) return effectInstance;
+
+                    return {
+                        ...effectInstance,
+                        data: {
+                            ...effectInstance.data,
+                            perceiveAs: override,
+                        },
+                    };
+                },
+            );
+
+            return { ...player, effects: updatedEffects };
+        }),
+    };
 }

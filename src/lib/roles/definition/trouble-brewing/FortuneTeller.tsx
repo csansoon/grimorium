@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { RoleDefinition, NightActionResult } from "../../types";
 import { getRole } from "../../index";
 import { isAlive } from "../../../types";
 import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
-import { NightActionLayout, NarratorSetupLayout } from "../../../../components/layouts";
+import { NightActionLayout, NarratorSetupLayout, NightStepListLayout } from "../../../../components/layouts";
+import type { NightStep } from "../../../../components/layouts";
 import {
     StepSection,
     MysticDivider,
@@ -13,38 +14,62 @@ import { SelectablePlayerItem } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive } from "../../../pipeline";
 
-type Phase = "red_herring_setup" | "narrator_setup" | "player_view";
+type Phase = "step_list" | "red_herring_setup" | "narrator_setup" | "player_view";
 
 const definition: RoleDefinition = {
     id: "fortune_teller",
     team: "townsfolk",
     icon: "eye",
-    nightOrder: 15, // After info roles like Washerwoman, before protection roles like Monk
+    nightOrder: 15,
     shouldWake: (_game, player) => isAlive(player),
+
+    nightSteps: [
+        {
+            id: "red_herring_setup",
+            icon: "fish",
+            getLabel: (t) => t.game.stepAssignRedHerring,
+            condition: (game, player, state) => {
+                const isFirstNight = state.round === 1;
+                const hasRedHerring = state.players.some((p) =>
+                    p.effects.some(
+                        (e) =>
+                            e.type === "red_herring" &&
+                            e.data?.fortuneTellerId === player.id,
+                    ),
+                );
+                return isFirstNight && !hasRedHerring;
+            },
+        },
+        {
+            id: "select_and_show",
+            icon: "eye",
+            getLabel: (t) => t.game.stepSelectAndShow,
+        },
+    ],
 
     RoleReveal: DefaultRoleReveal,
 
     NightAction: ({ state, player, onComplete }) => {
         const { t } = useI18n();
-        
+
         // Check if this Fortune Teller already has a Red Herring assigned
-        const hasRedHerring = state.players.some(p => 
-            p.effects.some(e => 
-                e.type === "red_herring" && 
-                e.data?.fortuneTellerId === player.id
-            )
+        const hasRedHerring = state.players.some((p) =>
+            p.effects.some(
+                (e) =>
+                    e.type === "red_herring" &&
+                    e.data?.fortuneTellerId === player.id,
+            ),
         );
-        
+
         const isFirstNight = state.round === 1;
         const needsRedHerringSetup = isFirstNight && !hasRedHerring;
-        
-        const [phase, setPhase] = useState<Phase>(
-            needsRedHerringSetup ? "red_herring_setup" : "narrator_setup"
-        );
+
+        const [phase, setPhase] = useState<Phase>("step_list");
         const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(null);
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+        const [redHerringDone, setRedHerringDone] = useState(false);
 
-        // Get good players for Red Herring selection (not the Fortune Teller themselves)
+        // Get good players for Red Herring selection
         const goodPlayers = state.players.filter((p) => {
             if (p.id === player.id) return false;
             const role = getRole(p.roleId);
@@ -54,6 +79,46 @@ const definition: RoleDefinition = {
         // Get all other players for the nightly check
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
+        const getRoleName = (roleId: string) => {
+            const key = roleId as keyof typeof t.roles;
+            return t.roles[key]?.name ?? roleId;
+        };
+
+        const getPlayerName = (playerId: string) => {
+            return state.players.find((p) => p.id === playerId)?.name ?? "Unknown";
+        };
+
+        // Build steps
+        const steps: NightStep[] = useMemo(() => {
+            const result: NightStep[] = [];
+
+            if (needsRedHerringSetup) {
+                result.push({
+                    id: "red_herring_setup",
+                    icon: "fish",
+                    label: t.game.stepAssignRedHerring,
+                    status: redHerringDone ? "done" : "pending",
+                });
+            }
+
+            result.push({
+                id: "select_and_show",
+                icon: "eye",
+                label: t.game.stepSelectAndShow,
+                status: "pending",
+            });
+
+            return result;
+        }, [needsRedHerringSetup, redHerringDone, t]);
+
+        const handleSelectStep = (stepId: string) => {
+            if (stepId === "red_herring_setup") {
+                setPhase("red_herring_setup");
+            } else if (stepId === "select_and_show") {
+                setPhase("narrator_setup");
+            }
+        };
+
         const handleSelectRandomRedHerring = () => {
             if (goodPlayers.length === 0) return;
             const randomIndex = Math.floor(Math.random() * goodPlayers.length);
@@ -62,7 +127,8 @@ const definition: RoleDefinition = {
 
         const handleConfirmRedHerring = () => {
             if (!selectedRedHerring) return;
-            setPhase("narrator_setup");
+            setRedHerringDone(true);
+            setPhase("step_list");
         };
 
         const handlePlayerToggle = (playerId: string) => {
@@ -89,11 +155,9 @@ const definition: RoleDefinition = {
             if (!player1 || !player2) return;
 
             // Check if either selected player registers as a Demon
-            // Perception handles: actual demons, Red Herring (via perception modifier), Recluse/Spy
             const registersDemon = (p: typeof player1) => {
                 const perception = perceive(p, player, "role", state);
                 if (perception.team === "demon") return true;
-                // First night: pending red herring not yet applied to player state
                 if (selectedRedHerring === p.id) return true;
                 return false;
             };
@@ -104,7 +168,9 @@ const definition: RoleDefinition = {
 
             // If we just assigned a Red Herring, log it first
             if (needsRedHerringSetup && selectedRedHerring) {
-                const redHerringPlayer = state.players.find((p) => p.id === selectedRedHerring);
+                const redHerringPlayer = state.players.find(
+                    (p) => p.id === selectedRedHerring,
+                );
                 if (redHerringPlayer) {
                     entries.push({
                         type: "night_action",
@@ -134,7 +200,7 @@ const definition: RoleDefinition = {
                 message: [
                     {
                         type: "i18n",
-                        key: sawDemon 
+                        key: sawDemon
                             ? "roles.fortune_teller.history.sawDemon"
                             : "roles.fortune_teller.history.sawNoDemon",
                         params: {
@@ -155,26 +221,35 @@ const definition: RoleDefinition = {
 
             onComplete({
                 entries,
-                addEffects: needsRedHerringSetup && selectedRedHerring ? {
-                    [selectedRedHerring]: [{
-                        type: "red_herring",
-                        data: { fortuneTellerId: player.id },
-                        expiresAt: "never",
-                    }],
-                } : undefined,
+                addEffects:
+                    needsRedHerringSetup && selectedRedHerring
+                        ? {
+                              [selectedRedHerring]: [
+                                  {
+                                      type: "red_herring",
+                                      data: { fortuneTellerId: player.id },
+                                      expiresAt: "never",
+                                  },
+                              ],
+                          }
+                        : undefined,
             });
         };
 
-        const getRoleName = (roleId: string) => {
-            const key = roleId as keyof typeof t.roles;
-            return t.roles[key]?.name ?? roleId;
-        };
+        // Phase: Step List
+        if (phase === "step_list") {
+            return (
+                <NightStepListLayout
+                    icon="eye"
+                    roleName={getRoleName("fortune_teller")}
+                    playerName={player.name}
+                    steps={steps}
+                    onSelectStep={handleSelectStep}
+                />
+            );
+        }
 
-        const getPlayerName = (playerId: string) => {
-            return state.players.find((p) => p.id === playerId)?.name ?? "Unknown";
-        };
-
-        // Phase 1: Red Herring Setup (first night only)
+        // Phase: Red Herring Setup
         if (phase === "red_herring_setup") {
             return (
                 <NarratorSetupLayout
@@ -220,8 +295,16 @@ const definition: RoleDefinition = {
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
                                     isDisabled={false}
-                                    highlightTeam={role?.team === "townsfolk" ? "townsfolk" : "outsider"}
-                                    teamLabel={role?.team === "townsfolk" ? t.teams.townsfolk.name : t.teams.outsider.name}
+                                    highlightTeam={
+                                        role?.team === "townsfolk"
+                                            ? "townsfolk"
+                                            : "outsider"
+                                    }
+                                    teamLabel={
+                                        role?.team === "townsfolk"
+                                            ? t.teams.townsfolk.name
+                                            : t.teams.outsider.name
+                                    }
                                     onClick={() => setSelectedRedHerring(p.id)}
                                 />
                             );
@@ -231,7 +314,7 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Phase 2: Narrator Setup - Select 2 players to check
+        // Phase: Narrator Setup - Select 2 players to check
         if (phase === "narrator_setup") {
             return (
                 <NarratorSetupLayout
@@ -249,10 +332,16 @@ const definition: RoleDefinition = {
                         {otherPlayers.map((p) => {
                             const role = getRole(p.roleId);
                             const isSelected = selectedPlayers.includes(p.id);
-                            const isActuallyEvil = role ? (role.team === "demon" || role.team === "minion") : false;
-                            // Red herring: pending first-night assignment, or has the effect (subsequent nights)
-                            const isRedHerring = selectedRedHerring === p.id ||
-                                p.effects.some((e) => e.type === "red_herring" && e.data?.fortuneTellerId === player.id);
+                            const isActuallyEvil = role
+                                ? role.team === "demon" || role.team === "minion"
+                                : false;
+                            const isRedHerring =
+                                selectedRedHerring === p.id ||
+                                p.effects.some(
+                                    (e) =>
+                                        e.type === "red_herring" &&
+                                        e.data?.fortuneTellerId === player.id,
+                                );
 
                             return (
                                 <SelectablePlayerItem
@@ -261,9 +350,21 @@ const definition: RoleDefinition = {
                                     roleName={getRoleName(p.roleId)}
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
-                                    isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={isActuallyEvil ? "demon" : isRedHerring ? "minion" : undefined}
-                                    teamLabel={isRedHerring ? t.effects.red_herring.name : undefined}
+                                    isDisabled={
+                                        !isSelected && selectedPlayers.length >= 2
+                                    }
+                                    highlightTeam={
+                                        isActuallyEvil
+                                            ? "demon"
+                                            : isRedHerring
+                                                ? "minion"
+                                                : undefined
+                                    }
+                                    teamLabel={
+                                        isRedHerring
+                                            ? t.effects.red_herring.name
+                                            : undefined
+                                    }
                                     onClick={() => handlePlayerToggle(p.id)}
                                 />
                             );
@@ -273,16 +374,15 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Phase 3: Player View - Show the result
+        // Phase: Player View - Show the result
         const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
         const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
 
-        // Calculate result for display — perception handles demons, Red Herring, Recluse/Spy
+        // Calculate result for display
         const registersDemon = (p: typeof player1) => {
             if (!p) return false;
             const perception = perceive(p, player, "role", state);
             if (perception.team === "demon") return true;
-            // First night: pending red herring not yet applied to player state
             if (selectedRedHerring === p.id) return true;
             return false;
         };
@@ -298,30 +398,44 @@ const definition: RoleDefinition = {
                 <div className="space-y-3 mb-6">
                     {player1 && (
                         <div className="text-center p-3 bg-stone-800/50 rounded-lg border border-stone-700">
-                            <span className="text-lg font-medium text-stone-200">{player1.name}</span>
+                            <span className="text-lg font-medium text-stone-200">
+                                {player1.name}
+                            </span>
                         </div>
                     )}
                     {player2 && (
                         <div className="text-center p-3 bg-stone-800/50 rounded-lg border border-stone-700">
-                            <span className="text-lg font-medium text-stone-200">{player2.name}</span>
+                            <span className="text-lg font-medium text-stone-200">
+                                {player2.name}
+                            </span>
                         </div>
                     )}
                 </div>
 
                 <MysticDivider />
 
-                <div className={`text-center p-6 rounded-lg mb-6 ${
-                    sawDemon 
-                        ? "bg-gradient-to-br from-red-900/50 to-red-800/30 border border-red-700/50" 
-                        : "bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 border border-emerald-700/50"
-                }`}>
-                    <Icon 
-                        name={sawDemon ? "alertTriangle" : "checkCircle"} 
-                        size="2xl" 
-                        className={sawDemon ? "text-red-400 mx-auto mb-3" : "text-emerald-400 mx-auto mb-3"} 
+                <div
+                    className={`text-center p-6 rounded-lg mb-6 ${
+                        sawDemon
+                            ? "bg-gradient-to-br from-red-900/50 to-red-800/30 border border-red-700/50"
+                            : "bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 border border-emerald-700/50"
+                    }`}
+                >
+                    <Icon
+                        name={sawDemon ? "alertTriangle" : "checkCircle"}
+                        size="2xl"
+                        className={
+                            sawDemon
+                                ? "text-red-400 mx-auto mb-3"
+                                : "text-emerald-400 mx-auto mb-3"
+                        }
                     />
-                    <p className={`text-xl font-bold ${sawDemon ? "text-red-300" : "text-emerald-300"}`}>
-                        {sawDemon ? t.game.yesOneIsDemon : t.game.noNeitherIsDemon}
+                    <p
+                        className={`text-xl font-bold ${sawDemon ? "text-red-300" : "text-emerald-300"}`}
+                    >
+                        {sawDemon
+                            ? t.game.yesOneIsDemon
+                            : t.game.noNeitherIsDemon}
                     </p>
                 </div>
 
