@@ -6,9 +6,10 @@ import { getNightRolesStatus, NightRoleStatus } from "../../lib/game";
 import { getAvailableNightFollowUps } from "../../lib/pipeline";
 import { AvailableNightFollowUp } from "../../lib/pipeline/types";
 import { useI18n } from "../../lib/i18n";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, BackButton } from "../atoms";
 import { Grimoire } from "../items/Grimoire";
 import { MysticDivider } from "../items";
+import { ScreenFooter } from "../layouts/ScreenFooter";
 import { cn } from "../../lib/utils";
 
 // ============================================================================
@@ -79,12 +80,7 @@ export function NightDashboard({
                 <div className="max-w-lg mx-auto">
                     {/* Back button row */}
                     <div className="flex items-center mb-4">
-                        <button
-                            onClick={onMainMenu}
-                            className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                        >
-                            <Icon name="arrowLeft" size="md" />
-                        </button>
+                        <BackButton onClick={onMainMenu} />
                         <span className="text-parchment-500 text-xs ml-1">
                             {t.common.mainMenu}
                         </span>
@@ -188,20 +184,18 @@ export function NightDashboard({
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-indigo-500/30 px-4 py-4">
-                <div className="max-w-lg mx-auto">
-                    <Button
-                        onClick={onStartDay}
-                        disabled={!allDone}
-                        fullWidth
-                        size="lg"
-                        className="bg-gradient-to-r from-amber-500 to-orange-600 text-grimoire-dark font-tarot uppercase tracking-wider"
-                    >
-                        <Icon name="sun" size="md" className="mr-2" />
-                        {t.game.proceedToDay}
-                    </Button>
-                </div>
-            </div>
+            <ScreenFooter borderColor="border-indigo-500/30">
+                <Button
+                    onClick={onStartDay}
+                    disabled={!allDone}
+                    fullWidth
+                    size="lg"
+                    variant="ember"
+                >
+                    <Icon name="sun" size="md" className="mr-2" />
+                    {t.game.proceedToDay}
+                </Button>
+            </ScreenFooter>
         </div>
     );
 }

@@ -86,7 +86,7 @@ const definition: RoleDefinition = {
                     disabled={!selectedTarget}
                     fullWidth
                     size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-700 font-tarot uppercase tracking-wider"
+                    variant="night"
                 >
                     <Icon name="shield" size="md" className="mr-2" />
                     {t.common.iUnderstandMyRole}

@@ -277,7 +277,7 @@ const definition: RoleDefinition = {
                         onClick={handleCompleteNoOutsiders}
                         fullWidth
                         size="lg"
-                        className="bg-gradient-to-r from-blue-600 to-indigo-700 font-tarot uppercase tracking-wider"
+                        variant="night"
                     >
                         <Icon name="check" size="md" className="mr-2" />
                         {t.common.iUnderstandMyRole}

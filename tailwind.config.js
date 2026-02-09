@@ -1,3 +1,5 @@
+import plugin from "tailwindcss/plugin";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -9,6 +11,9 @@ export default {
       fontFamily: {
         tarot: ['"Cinzel"', 'serif'],
         body: ['"Inter"', 'sans-serif'],
+      },
+      letterSpacing: {
+        'widest-xl': '0.2em',
       },
       colors: {
         // Parchment/cream colors for good teams
@@ -38,6 +43,9 @@ export default {
       },
       backgroundImage: {
         'tarot-pattern': 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 50%)',
+        'parchment-texture':
+          'radial-gradient(ellipse at 20% 20%, rgba(255,250,240,0.03) 0%, transparent 50%), ' +
+          'radial-gradient(ellipse at 80% 80%, rgba(255,250,240,0.02) 0%, transparent 50%)',
       },
       boxShadow: {
         'tarot': '0 0 0 1px rgba(212, 175, 55, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -45,5 +53,21 @@ export default {
       },
     },
   },
-  plugins: [],
-}
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        '.text-glow-gold': {
+          'text-shadow': '0 0 10px rgba(212, 175, 55, 0.5)',
+        },
+        '.text-glow-crimson': {
+          'text-shadow': '0 0 10px rgba(139, 0, 0, 0.7)',
+        },
+        '.min-h-app': {
+          'min-height': 'var(--app-height)',
+          'max-height': 'var(--app-height)',
+          'overflow-y': 'auto',
+        },
+      });
+    }),
+  ],
+};

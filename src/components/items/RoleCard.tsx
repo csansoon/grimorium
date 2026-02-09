@@ -1,9 +1,39 @@
 import { getRole } from "../../lib/roles";
 import { getTeam, TeamId } from "../../lib/teams";
 import { useI18n } from "../../lib/i18n";
-import { Icon } from "../atoms";
+import { Icon, type IconName } from "../atoms";
 import { MysticDivider } from "../items";
 import { cn } from "../../lib/utils";
+
+// ─── Corner icon decorations ─────────────────────────────────────────────────
+
+const CORNER_POSITIONS = {
+    tl: "top-4 left-4 -rotate-45",
+    tr: "top-4 right-4 rotate-45",
+    bl: "bottom-4 left-4 -rotate-[135deg]",
+    br: "bottom-4 right-4 rotate-[135deg]",
+} as const;
+
+function CornerIcon({
+    position,
+    icon,
+    className,
+}: {
+    position: keyof typeof CORNER_POSITIONS;
+    icon: IconName;
+    className?: string;
+}) {
+    return (
+        <div
+            className={cn(
+                "absolute flex items-center justify-center text-mystic-gold/50",
+                CORNER_POSITIONS[position],
+            )}
+        >
+            <Icon name={icon} size="sm" className={className} />
+        </div>
+    );
+}
 
 type Props = {
     roleId: string;
@@ -221,21 +251,17 @@ export function RoleCard({ roleId }: Props) {
             />
 
             {/* Corner Icons */}
-            <div className="tarot-corner tarot-corner-tl">
-                <Icon name={role.icon} size="sm" className={team.colors.accent} />
-            </div>
-            <div className="tarot-corner tarot-corner-tr">
-                <Icon name={role.icon} size="sm" className={team.colors.accent} />
-            </div>
-            <div className="tarot-corner tarot-corner-bl">
-                <Icon name={role.icon} size="sm" className={team.colors.accent} />
-            </div>
-            <div className="tarot-corner tarot-corner-br">
-                <Icon name={role.icon} size="sm" className={team.colors.accent} />
-            </div>
+            {(["tl", "tr", "bl", "br"] as const).map((pos) => (
+                <CornerIcon
+                    key={pos}
+                    position={pos}
+                    icon={role.icon}
+                    className={team.colors.accent}
+                />
+            ))}
 
             {/* Card Content */}
-            <div className="relative z-10 px-5 py-6 sm:px-8 sm:py-10 parchment-texture">
+            <div className="relative z-10 px-5 py-6 sm:px-8 sm:py-10 bg-parchment-texture">
                 {/* Role Icon with arcane seal */}
                 <div className="relative flex justify-center mb-3 sm:mb-6">
                     {/* Rotating arcane seal rings */}

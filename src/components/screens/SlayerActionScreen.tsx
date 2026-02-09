@@ -3,8 +3,9 @@ import { isAlive } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { useI18n } from "../../lib/i18n";
 import { DayActionProps } from "../../lib/pipeline/types";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, BackButton } from "../atoms";
 import { MysticDivider } from "../items";
+import { ScreenFooter } from "../layouts/ScreenFooter";
 
 /**
  * Day action component for the Slayer's ability.
@@ -93,12 +94,7 @@ export function SlayerActionScreen({
             <div className="bg-gradient-to-b from-amber-900/50 to-transparent px-4 py-4">
                 <div className="max-w-lg mx-auto">
                     <div className="flex items-center mb-4">
-                        <button
-                            onClick={onBack}
-                            className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                        >
-                            <Icon name="arrowLeft" size="md" />
-                        </button>
+                        <BackButton onClick={onBack} />
                         <span className="text-parchment-500 text-xs ml-1">
                             {t.common.back}
                         </span>
@@ -174,20 +170,18 @@ export function SlayerActionScreen({
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-red-500/30 px-4 py-4">
-                <div className="max-w-lg mx-auto">
-                    <Button
-                        onClick={handleConfirm}
-                        disabled={!selectedTarget}
-                        fullWidth
-                        size="lg"
-                        className="bg-gradient-to-r from-red-600 to-orange-700 font-tarot uppercase tracking-wider"
-                    >
-                        <Icon name="crosshair" size="md" className="mr-2" />
-                        {t.game.confirmSlayerShot}
-                    </Button>
-                </div>
-            </div>
+            <ScreenFooter borderColor="border-red-500/30">
+                <Button
+                    onClick={handleConfirm}
+                    disabled={!selectedTarget}
+                    fullWidth
+                    size="lg"
+                    variant="slayer"
+                >
+                    <Icon name="crosshair" size="md" className="mr-2" />
+                    {t.game.confirmSlayerShot}
+                </Button>
+            </ScreenFooter>
         </div>
     );
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { GameState, getAlivePlayers } from "../../lib/types";
 import { useI18n } from "../../lib/i18n";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, BackButton } from "../atoms";
+import { ScreenFooter } from "../layouts/ScreenFooter";
 import { MysticDivider } from "../items";
 
 type Props = {
@@ -30,12 +31,7 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
             {/* Header */}
             <div className="sticky top-0 z-10 bg-grimoire-dark/95 backdrop-blur-sm border-b border-red-500/30 px-4 py-3">
                 <div className="flex items-center gap-3 max-w-lg mx-auto">
-                    <button
-                        onClick={onBack}
-                        className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                    >
-                        <Icon name="arrowLeft" size="md" />
-                    </button>
+                    <BackButton onClick={onBack} />
                     <div>
                         <h1 className="font-tarot text-lg text-parchment-100 tracking-wider uppercase">
                             {t.game.newNomination}
@@ -122,20 +118,18 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-red-500/30 px-4 py-4">
-                <div className="max-w-lg mx-auto">
-                    <Button
-                        onClick={handleNominate}
-                        disabled={!canNominate}
-                        fullWidth
-                        size="lg"
-                        className="bg-gradient-to-r from-red-700 to-red-900 font-tarot uppercase tracking-wider"
-                    >
-                        <Icon name="swords" size="md" className="mr-2" />
-                        {t.game.startNomination}
-                    </Button>
-                </div>
-            </div>
+            <ScreenFooter borderColor="border-red-500/30">
+                <Button
+                    onClick={handleNominate}
+                    disabled={!canNominate}
+                    fullWidth
+                    size="lg"
+                    variant="evil"
+                >
+                    <Icon name="swords" size="md" className="mr-2" />
+                    {t.game.startNomination}
+                </Button>
+            </ScreenFooter>
         </div>
     );
 }

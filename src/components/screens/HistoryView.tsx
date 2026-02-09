@@ -1,7 +1,7 @@
 import { Game, getCurrentState } from "../../lib/types";
 import { useI18n } from "../../lib/i18n";
 import { RichMessage } from "../items/RichMessage";
-import { Icon, IconName } from "../atoms";
+import { Icon, IconName, BackButton } from "../atoms";
 
 type Props = {
     game: Game;
@@ -41,12 +41,7 @@ export function HistoryView({ game, onClose }: Props) {
             {/* Header */}
             <div className="sticky top-0 z-10 bg-grimoire-dark/95 backdrop-blur-sm border-b border-mystic-gold/20 px-4 py-3">
                 <div className="flex items-center gap-3 max-w-lg mx-auto">
-                    <button
-                        onClick={onClose}
-                        className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                    >
-                        <Icon name="arrowLeft" size="md" />
-                    </button>
+                    <BackButton onClick={onClose} />
                     <div className="flex items-center gap-3">
                         <Icon name="scrollText" size="md" className="text-mystic-gold" />
                         <h1 className="font-tarot text-lg text-parchment-100 tracking-wider uppercase">

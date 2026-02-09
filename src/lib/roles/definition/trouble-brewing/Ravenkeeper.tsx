@@ -145,7 +145,7 @@ const definition: RoleDefinition = {
                         fullWidth
                         size="lg"
                         disabled={!selectedPlayer}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-700 font-tarot uppercase tracking-wider disabled:opacity-50"
+                        variant="night"
                     >
                         <Icon name="eye" size="md" className="mr-2" />
                         {t.common.confirm}

@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Icon, Button } from "../atoms";
 import { IconName } from "../atoms/icon";
+import { ScreenFooter } from "./ScreenFooter";
 import { useI18n } from "../../lib/i18n";
 
 type NarratorSetupLayoutProps = {
@@ -50,22 +51,20 @@ export function NarratorSetupLayout({
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-blue-500/30 px-4 py-4">
-                <div className="max-w-lg mx-auto">
-                    {footer ?? (
-                        <Button
-                            onClick={onShowToPlayer}
-                            disabled={showToPlayerDisabled}
-                            fullWidth
-                            size="lg"
-                            className="bg-gradient-to-r from-blue-600 to-indigo-700 font-tarot uppercase tracking-wider"
-                        >
-                            <Icon name="eye" size="md" className="mr-2" />
-                            {showToPlayerLabel ?? t.game.showToPlayer}
-                        </Button>
-                    )}
-                </div>
-            </div>
+            <ScreenFooter borderColor="border-blue-500/30">
+                {footer ?? (
+                    <Button
+                        onClick={onShowToPlayer}
+                        disabled={showToPlayerDisabled}
+                        fullWidth
+                        size="lg"
+                        variant="night"
+                    >
+                        <Icon name="eye" size="md" className="mr-2" />
+                        {showToPlayerLabel ?? t.game.showToPlayer}
+                    </Button>
+                )}
+            </ScreenFooter>
         </div>
     );
 }

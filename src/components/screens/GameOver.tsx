@@ -124,12 +124,7 @@ export function GameOver({ state, onMainMenu, onShowHistory }: Props) {
                     onClick={onMainMenu}
                     fullWidth
                     size="lg"
-                    className={cn(
-                        "font-tarot uppercase tracking-wider bg-gradient-to-r",
-                        isGoodWin
-                            ? "from-mystic-gold to-mystic-bronze text-grimoire-dark"
-                            : "from-red-700 to-red-900 text-white"
-                    )}
+                    variant={isGoodWin ? "gold" : "evil"}
                 >
                     {t.game.backToMainMenu}
                 </Button>

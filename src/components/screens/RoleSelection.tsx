@@ -8,7 +8,8 @@ import {
 import { RoleDefinition } from "../../lib/roles/types";
 import { getTeam, TeamId } from "../../lib/teams";
 import { useI18n, interpolate } from "../../lib/i18n";
-import { Button, Icon, Badge } from "../atoms";
+import { Button, Icon, Badge, BackButton } from "../atoms";
+import { ScreenFooter } from "../layouts/ScreenFooter";
 import { cn } from "../../lib/utils";
 
 type Props = {
@@ -141,12 +142,7 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
             {/* Header */}
             <div className="sticky top-0 z-10 bg-grimoire-dark/95 backdrop-blur-sm border-b border-mystic-gold/20 px-4 py-3">
                 <div className="flex items-center gap-3 max-w-lg mx-auto">
-                    <button
-                        onClick={onBack}
-                        className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                    >
-                        <Icon name="arrowLeft" size="md" />
-                    </button>
+                    <BackButton onClick={onBack} />
                     <div className="flex-1">
                         <h1 className="font-tarot text-lg text-parchment-100 tracking-wider uppercase">
                             {t.newGame.step2Title}
@@ -433,23 +429,21 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
             </div>
 
             {/* Footer with counter on button */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-mystic-gold/20 px-4 py-4">
-                <div className="max-w-lg mx-auto">
-                    <Button
-                        onClick={handleNext}
-                        disabled={!canProceed}
-                        fullWidth
-                        size="lg"
-                        className="bg-gradient-to-r from-mystic-gold to-mystic-bronze text-grimoire-dark font-tarot uppercase tracking-wider"
-                    >
-                        {t.newGame.nextAssignRoles}
-                        <span className="ml-2 opacity-70 font-sans text-sm normal-case">
-                            ({totalRoles}/{players.length})
-                        </span>
-                        <Icon name="arrowRight" size="md" className="ml-1" />
-                    </Button>
-                </div>
-            </div>
+            <ScreenFooter>
+                <Button
+                    onClick={handleNext}
+                    disabled={!canProceed}
+                    fullWidth
+                    size="lg"
+                    variant="gold"
+                >
+                    {t.newGame.nextAssignRoles}
+                    <span className="ml-2 opacity-70 font-sans text-sm normal-case">
+                        ({totalRoles}/{players.length})
+                    </span>
+                    <Icon name="arrowRight" size="md" className="ml-1" />
+                </Button>
+            </ScreenFooter>
         </div>
     );
 }

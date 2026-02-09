@@ -1,7 +1,7 @@
 import { PlayerState } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { useI18n, interpolate } from "../../lib/i18n";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, BackButton } from "../atoms";
 import { MysticDivider } from "../items";
 
 type Props = {
@@ -38,13 +38,7 @@ export function NarratorPrompt({ player, action, onProceed, onMainMenu }: Props)
         <div className="min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col">
             {/* Back button */}
             <div className="px-4 py-4">
-                <button
-                    onClick={onMainMenu}
-                    className="flex items-center gap-1 p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                >
-                    <Icon name="arrowLeft" size="md" />
-                    <span className="text-xs">{t.common.mainMenu}</span>
-                </button>
+                <BackButton onClick={onMainMenu} label={t.common.mainMenu} />
             </div>
             
             <div className="flex-1 flex items-center justify-center p-4">
@@ -74,7 +68,7 @@ export function NarratorPrompt({ player, action, onProceed, onMainMenu }: Props)
                     onClick={onProceed}
                     fullWidth
                     size="lg"
-                    className="bg-gradient-to-r from-mystic-gold to-mystic-bronze text-grimoire-dark font-tarot uppercase tracking-wider"
+                    variant="gold"
                 >
                     {t.game.readyShowToPlayer}
                 </Button>

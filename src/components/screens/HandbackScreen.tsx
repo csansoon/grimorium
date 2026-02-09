@@ -37,7 +37,7 @@ export function HandbackScreen({ onContinue }: Props) {
                     onClick={onContinue}
                     size="lg"
                     fullWidth
-                    className="bg-gradient-to-r from-mystic-gold to-mystic-bronze text-grimoire-dark font-tarot uppercase tracking-wider"
+                    variant="gold"
                 >
                     <Icon name="check" size="md" className="mr-2" />
                     {t.game.narratorReady}

@@ -19,6 +19,15 @@ const buttonVariants = cva(
                 ghost: "bg-transparent text-white hover:bg-white/10",
                 outline:
                     "border border-white/30 bg-transparent text-white hover:bg-white/10",
+                gold: "bg-gradient-to-r from-mystic-gold to-mystic-bronze text-grimoire-dark font-tarot uppercase tracking-wider shadow-lg",
+                night:
+                    "bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-tarot uppercase tracking-wider shadow-lg",
+                evil: "bg-gradient-to-r from-red-700 to-red-900 text-white font-tarot uppercase tracking-wider shadow-lg",
+                dawn: "bg-gradient-to-r from-indigo-600 to-purple-700 text-white font-tarot uppercase tracking-wider shadow-lg",
+                ember:
+                    "bg-gradient-to-r from-amber-500 to-orange-600 text-grimoire-dark font-tarot uppercase tracking-wider shadow-lg",
+                slayer:
+                    "bg-gradient-to-r from-red-600 to-orange-700 text-white font-tarot uppercase tracking-wider shadow-lg",
             },
             size: {
                 default: "h-12 px-6 py-3",

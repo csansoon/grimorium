@@ -3,7 +3,8 @@ import { Game, GameState, PlayerState } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { getTeam } from "../../lib/teams";
 import { useI18n } from "../../lib/i18n";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, BackButton } from "../atoms";
+import { ScreenFooter } from "../layouts/ScreenFooter";
 import { cn } from "../../lib/utils";
 
 type Props = {
@@ -46,12 +47,7 @@ export function RoleRevelationScreen({
                 <div className="max-w-lg mx-auto">
                     {/* Back button row */}
                     <div className="flex items-center mb-4">
-                        <button
-                            onClick={onMainMenu}
-                            className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                        >
-                            <Icon name="arrowLeft" size="md" />
-                        </button>
+                        <BackButton onClick={onMainMenu} />
                         <span className="text-parchment-500 text-xs ml-1">
                             {t.common.mainMenu}
                         </span>
@@ -97,27 +93,25 @@ export function RoleRevelationScreen({
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-mystic-gold/20 px-4 py-4">
-                <div className="max-w-lg mx-auto">
-                    <Button
+            <ScreenFooter>
+                <Button
+                    onClick={onStartNight}
+                    fullWidth
+                    size="lg"
+                    variant="dawn"
+                >
+                    <Icon name="moon" size="md" className="mr-2" />
+                    {t.game.startFirstNight}
+                </Button>
+                {!allRevealed && (
+                    <button
                         onClick={onStartNight}
-                        fullWidth
-                        size="lg"
-                        className="bg-gradient-to-r from-indigo-600 to-purple-700 font-tarot uppercase tracking-wider"
+                        className="w-full mt-3 text-center text-parchment-600 text-xs hover:text-parchment-400 transition-colors"
                     >
-                        <Icon name="moon" size="md" className="mr-2" />
-                        {t.game.startFirstNight}
-                    </Button>
-                    {!allRevealed && (
-                        <button
-                            onClick={onStartNight}
-                            className="w-full mt-3 text-center text-parchment-600 text-xs hover:text-parchment-400 transition-colors"
-                        >
-                            {t.game.skipRoleRevelation}
-                        </button>
-                    )}
-                </div>
-            </div>
+                        {t.game.skipRoleRevelation}
+                    </button>
+                )}
+            </ScreenFooter>
         </div>
     );
 }

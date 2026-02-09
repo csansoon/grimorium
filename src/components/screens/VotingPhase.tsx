@@ -2,7 +2,8 @@ import { useState } from "react";
 import { GameState, PlayerState, isAlive, hasEffect, getAlivePlayers } from "../../lib/types";
 import { getEffect } from "../../lib/effects";
 import { useI18n, interpolate } from "../../lib/i18n";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, BackButton } from "../atoms";
+import { ScreenFooter } from "../layouts/ScreenFooter";
 import { cn } from "../../lib/utils";
 
 type Props = {
@@ -59,12 +60,7 @@ export function VotingPhase({ state, nomineeId, onVoteComplete, onCancel }: Prop
                 <div className="max-w-lg mx-auto">
                     {/* Back button row */}
                     <div className="flex items-center mb-4">
-                        <button
-                            onClick={onCancel}
-                            className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                        >
-                            <Icon name="arrowLeft" size="md" />
-                        </button>
+                        <BackButton onClick={onCancel} />
                         <span className="text-parchment-500 text-xs ml-1">{t.game.cancelNomination}</span>
                     </div>
                     
@@ -178,12 +174,12 @@ export function VotingPhase({ state, nomineeId, onVoteComplete, onCancel }: Prop
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-red-500/30 px-4 py-4">
-                <div className="max-w-lg mx-auto space-y-2">
+            <ScreenFooter borderColor="border-red-500/30">
+                <div className="space-y-2">
                     <Button
                         onClick={handleConfirm}
                         fullWidth
-                        className="bg-gradient-to-r from-red-700 to-red-900 font-tarot uppercase tracking-wider"
+                        variant="evil"
                     >
                         {t.game.confirmVotes}
                     </Button>
@@ -191,7 +187,7 @@ export function VotingPhase({ state, nomineeId, onVoteComplete, onCancel }: Prop
                         {t.game.cancelNomination}
                     </Button>
                 </div>
-            </div>
+            </ScreenFooter>
         </div>
     );
 }

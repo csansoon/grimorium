@@ -96,7 +96,7 @@ const definition: RoleDefinition = {
                     disabled={!selectedTarget}
                     fullWidth
                     size="lg"
-                    className="bg-gradient-to-r from-red-700 to-red-900 font-tarot uppercase tracking-wider"
+                    variant="evil"
                 >
                     <Icon name="skull" size="md" className="mr-2" />
                     {t.game.confirmKill}

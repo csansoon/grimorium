@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { getRole } from "../../lib/roles";
 import { getTeam } from "../../lib/teams";
 import { useI18n, interpolate } from "../../lib/i18n";
-import { Button, Icon, Badge } from "../atoms";
+import { Button, Icon, Badge, BackButton } from "../atoms";
+import { ScreenFooter } from "../layouts/ScreenFooter";
 import { cn } from "../../lib/utils";
 
 type Props = {
@@ -153,12 +154,7 @@ export function RoleAssignment({
             {/* Header */}
             <div className="sticky top-0 z-10 bg-grimoire-dark/95 backdrop-blur-sm border-b border-mystic-gold/20 px-4 py-3">
                 <div className="flex items-center gap-3 max-w-lg mx-auto">
-                    <button
-                        onClick={onBack}
-                        className="p-2 -ml-2 text-parchment-400 hover:text-parchment-100 transition-colors"
-                    >
-                        <Icon name="arrowLeft" size="md" />
-                    </button>
+                    <BackButton onClick={onBack} />
                     <div>
                         <h1 className="font-tarot text-lg text-parchment-100 tracking-wider uppercase">
                             {t.newGame.step3Title}
@@ -487,19 +483,17 @@ export function RoleAssignment({
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-mystic-gold/20 px-4 py-4">
-                <div className="max-w-lg mx-auto">
-                    <Button
-                        onClick={handleStart}
-                        fullWidth
-                        size="lg"
-                        className="bg-gradient-to-r from-mystic-gold to-mystic-bronze text-grimoire-dark font-tarot uppercase tracking-wider"
-                    >
-                        <Icon name="play" size="md" className="mr-2" />
-                        {t.common.startGame}
-                    </Button>
-                </div>
-            </div>
+            <ScreenFooter>
+                <Button
+                    onClick={handleStart}
+                    fullWidth
+                    size="lg"
+                    variant="gold"
+                >
+                    <Icon name="play" size="md" className="mr-2" />
+                    {t.common.startGame}
+                </Button>
+            </ScreenFooter>
         </div>
     );
 }

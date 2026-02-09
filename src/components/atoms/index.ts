@@ -22,3 +22,4 @@ export {
     DialogBody,
 } from "./dialog";
 export { LanguageToggle } from "./LanguageToggle";
+export { BackButton } from "./BackButton";
