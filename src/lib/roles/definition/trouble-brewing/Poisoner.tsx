@@ -4,7 +4,7 @@ import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { NightActionLayout, NightStepListLayout } from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
-import { PlayerSelector } from "../../../../components/inputs";
+import { PlayerPickerList } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { isAlive } from "../../../types";
 
@@ -121,11 +121,11 @@ const definition: RoleDefinition = {
                 description={t.game.selectPlayerToPoison}
             >
                 <div className="mb-6">
-                    <PlayerSelector
+                    <PlayerPickerList
                         players={alivePlayers}
-                        selected={selectedTarget}
+                        selected={selectedTarget ? [selectedTarget] : []}
                         onSelect={setSelectedTarget}
-                        selectedIcon="flask"
+                        selectionCount={1}
                         variant="red"
                     />
                 </div>

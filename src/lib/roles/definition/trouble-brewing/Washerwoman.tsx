@@ -13,7 +13,7 @@ import {
     StepSection,
     AlertBox,
 } from "../../../../components/items";
-import { SelectablePlayerItem, SelectableRoleItem } from "../../../../components/inputs";
+import { PlayerPickerList, RolePickerGrid } from "../../../../components/inputs";
 import { Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
 import { isMalfunctioning } from "../../../effects";
@@ -170,60 +170,52 @@ const definition: RoleDefinition = {
                         label={t.game.selectTwoPlayers}
                         count={{ current: selectedPlayers.length, max: 2 }}
                     >
-                        {otherPlayers.map((p) => {
-                            const role = getRole(p.roleId);
-                            const perception = perceive(p, player, "team", state);
-                            const isSelected = selectedPlayers.includes(p.id);
-                            const registersTownsfolk = perception.team === "townsfolk" || canRegisterAsTeam(p, "townsfolk");
-
-                            return (
-                                <SelectablePlayerItem
-                                    key={p.id}
-                                    playerName={p.name}
-                                    roleName={getRoleName(p.roleId)}
-                                    roleIcon={role?.icon ?? "user"}
-                                    isSelected={isSelected}
-                                    isDisabled={!isSelected && selectedPlayers.length >= 2}
-                                    highlightTeam={registersTownsfolk ? "townsfolk" : undefined}
-                                    teamLabel={registersTownsfolk ? t.teams.townsfolk.name : undefined}
-                                    onClick={() => handlePlayerToggle(p.id)}
-                                />
-                            );
-                        })}
+                        <PlayerPickerList
+                            players={otherPlayers}
+                            selected={selectedPlayers}
+                            onSelect={handlePlayerToggle}
+                            selectionCount={2}
+                            variant="blue"
+                        />
                     </StepSection>
 
                     {selectedPlayers.length === 2 && townsfolkInSelection.length > 0 && (
                         <StepSection step={2} label={t.game.selectWhichRoleToShow}>
-                            {townsfolkInSelection.flatMap((playerId) => {
+                            {townsfolkInSelection.map((playerId) => {
                                 const p = state.players.find((pl) => pl.id === playerId);
-                                if (!p) return [];
+                                if (!p) return null;
                                 const pPerception = perceive(p, player, "team", state);
 
-                                if (pPerception.team === "townsfolk") {
-                                    const rolePerception = perceive(p, player, "role", state);
-                                    const perceivedRole = getRole(rolePerception.roleId);
-                                    return [(
-                                        <SelectableRoleItem
-                                            key={playerId}
-                                            playerName={p.name}
-                                            roleName={getRoleName(rolePerception.roleId)}
-                                            roleIcon={perceivedRole?.icon ?? "user"}
-                                            isSelected={selectedTownsfolk === playerId && selectedRoleId === rolePerception.roleId}
-                                            onClick={() => handleSelectRole(playerId, rolePerception.roleId)}
-                                        />
-                                    )];
-                                }
+                                // Determine available roles for this player
+                                const availableRoles = pPerception.team === "townsfolk"
+                                    ? (() => {
+                                        const rolePerception = perceive(p, player, "role", state);
+                                        const perceivedRole = getRole(rolePerception.roleId);
+                                        return perceivedRole ? [perceivedRole] : [];
+                                    })()
+                                    : townsfolkRoles;
 
-                                return townsfolkRoles.map((role) => (
-                                    <SelectableRoleItem
-                                        key={`${playerId}-${role.id}`}
-                                        playerName={p.name}
-                                        roleName={getRoleName(role.id)}
-                                        roleIcon={role.icon}
-                                        isSelected={selectedTownsfolk === playerId && selectedRoleId === role.id}
-                                        onClick={() => handleSelectRole(playerId, role.id)}
-                                    />
-                                ));
+                                const currentSelected =
+                                    selectedTownsfolk === playerId && selectedRoleId
+                                        ? [selectedRoleId]
+                                        : [];
+
+                                return (
+                                    <div key={playerId} className="mb-3">
+                                        <div className="text-xs font-medium text-parchment-400 mb-1.5 ml-1">
+                                            <Icon name="user" size="xs" className="inline mr-1 text-parchment-500" />
+                                            {p.name}
+                                        </div>
+                                        <RolePickerGrid
+                                            roles={availableRoles}
+                                            state={state}
+                                            selected={currentSelected}
+                                            onSelect={(roleId) => handleSelectRole(playerId, roleId)}
+                                            selectionCount={1}
+                                            colorMode="team"
+                                        />
+                                    </div>
+                                );
                             })}
                         </StepSection>
                     )}

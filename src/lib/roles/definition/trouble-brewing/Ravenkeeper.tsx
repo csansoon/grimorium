@@ -3,7 +3,7 @@ import { RoleDefinition } from "../../types";
 import { getRole } from "../../index";
 import { getTeam } from "../../../teams";
 import { useI18n } from "../../../i18n";
-import { hasEffect, Game, PlayerState } from "../../../types";
+import { Game, PlayerState } from "../../../types";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { RoleCard } from "../../../../components/items/RoleCard";
 import { PerceptionConfigStep } from "../../../../components/items";
@@ -13,7 +13,7 @@ import {
 } from "../../../../components/items/TeamBackground";
 import { NightActionLayout, NightStepListLayout } from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
-import { SelectablePlayerItem } from "../../../../components/inputs";
+import { PlayerPickerList } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive, getAmbiguousPlayers, applyPerceptionOverrides } from "../../../pipeline";
 import { isMalfunctioning } from "../../../effects";
@@ -265,23 +265,14 @@ const definition: RoleDefinition = {
                     title={t.game.ravenkeeperInfo}
                     description={t.game.selectPlayerToSeeRole}
                 >
-                    <div className="space-y-2 mb-6">
-                        {otherPlayers.map((p) => {
-                            const isDead = hasEffect(p, "dead");
-                            const isSelected = selectedPlayer === p.id;
-
-                            return (
-                                <SelectablePlayerItem
-                                    key={p.id}
-                                    playerName={p.name}
-                                    roleName={isDead ? t.effects.dead.name : ""}
-                                    roleIcon={isDead ? "skull" : "user"}
-                                    isSelected={isSelected}
-                                    isDisabled={false}
-                                    onClick={() => setSelectedPlayer(p.id)}
-                                />
-                            );
-                        })}
+                    <div className="mb-6">
+                        <PlayerPickerList
+                            players={otherPlayers}
+                            selected={selectedPlayer ? [selectedPlayer] : []}
+                            onSelect={setSelectedPlayer}
+                            selectionCount={1}
+                            variant="blue"
+                        />
                     </div>
 
                     <Button
@@ -306,6 +297,7 @@ const definition: RoleDefinition = {
                     roleIcon="birdHouse"
                     roleName={getRoleName("ravenkeeper")}
                     playerName={player.name}
+                    state={state}
                     onComplete={handleMalfunctionComplete}
                 />
             );

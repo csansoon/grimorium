@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { GameState, getAlivePlayers } from "../../lib/types";
 import { useI18n } from "../../lib/i18n";
 import { Button, Icon, BackButton } from "../atoms";
 import { ScreenFooter } from "../layouts/ScreenFooter";
 import { MysticDivider } from "../items";
+import { PlayerPickerList } from "../inputs";
 
 type Props = {
     state: GameState;
@@ -17,6 +18,17 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
     const [nominee, setNominee] = useState<string | null>(null);
 
     const alivePlayers = getAlivePlayers(state);
+
+    const nomineeCandidates = useMemo(
+        () => alivePlayers.filter((p) => p.id !== nominator),
+        [alivePlayers, nominator],
+    );
+
+    const handleSelectNominator = (playerId: string) => {
+        setNominator(playerId);
+        // Clear nominee if it's the same as the new nominator
+        if (nominee === playerId) setNominee(null);
+    };
 
     const handleNominate = () => {
         if (nominator && nominee) {
@@ -48,25 +60,13 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
                         <Icon name="userRound" size="sm" />
                         {t.game.whoIsNominating}
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {alivePlayers.map((player) => (
-                            <button
-                                key={player.id}
-                                onClick={() => {
-                                    setNominator(player.id);
-                                    // Clear nominee if it's the same as nominator
-                                    if (nominee === player.id) setNominee(null);
-                                }}
-                                className={`p-3 rounded-lg border text-left transition-colors ${
-                                    nominator === player.id
-                                        ? "bg-red-900/40 border-red-500/60 text-parchment-100"
-                                        : "bg-white/5 border-white/10 text-parchment-300 hover:bg-white/10"
-                                }`}
-                            >
-                                <span className="text-sm font-medium">{player.name}</span>
-                            </button>
-                        ))}
-                    </div>
+                    <PlayerPickerList
+                        players={alivePlayers}
+                        selected={nominator ? [nominator] : []}
+                        onSelect={handleSelectNominator}
+                        selectionCount={1}
+                        variant="red"
+                    />
                 </div>
 
                 {/* Divider */}
@@ -78,26 +78,13 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
                         <Icon name="userX" size="sm" />
                         {t.game.whoAreTheyNominating}
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        {alivePlayers
-                            .filter((p) => p.id !== nominator)
-                            .map((player) => (
-                                <button
-                                    key={player.id}
-                                    onClick={() => setNominee(player.id)}
-                                    disabled={!nominator}
-                                    className={`p-3 rounded-lg border text-left transition-colors ${
-                                        nominee === player.id
-                                            ? "bg-red-900/40 border-red-500/60 text-parchment-100"
-                                            : !nominator
-                                                ? "bg-white/5 border-white/10 text-parchment-500 opacity-50"
-                                                : "bg-white/5 border-white/10 text-parchment-300 hover:bg-white/10"
-                                    }`}
-                                >
-                                    <span className="text-sm font-medium">{player.name}</span>
-                                </button>
-                            ))}
-                    </div>
+                    <PlayerPickerList
+                        players={nomineeCandidates}
+                        selected={nominee ? [nominee] : []}
+                        onSelect={setNominee}
+                        selectionCount={1}
+                        variant="red"
+                    />
                 </div>
 
                 {/* Summary */}

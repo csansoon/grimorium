@@ -15,7 +15,7 @@ import {
     MysticDivider,
     MalfunctionConfigStep,
 } from "../../../../components/items";
-import { SelectablePlayerItem } from "../../../../components/inputs";
+import { PlayerPickerList } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive } from "../../../pipeline";
 import { isMalfunctioning } from "../../../effects";
@@ -350,32 +350,13 @@ const definition: RoleDefinition = {
                         step={1}
                         label={t.game.selectGoodPlayerAsRedHerring}
                     >
-                        {goodPlayers.map((p) => {
-                            const role = getRole(p.roleId);
-                            const isSelected = selectedRedHerring === p.id;
-
-                            return (
-                                <SelectablePlayerItem
-                                    key={p.id}
-                                    playerName={p.name}
-                                    roleName={getRoleName(p.roleId)}
-                                    roleIcon={role?.icon ?? "user"}
-                                    isSelected={isSelected}
-                                    isDisabled={false}
-                                    highlightTeam={
-                                        role?.team === "townsfolk"
-                                            ? "townsfolk"
-                                            : "outsider"
-                                    }
-                                    teamLabel={
-                                        role?.team === "townsfolk"
-                                            ? t.teams.townsfolk.name
-                                            : t.teams.outsider.name
-                                    }
-                                    onClick={() => setSelectedRedHerring(p.id)}
-                                />
-                            );
-                        })}
+                        <PlayerPickerList
+                            players={goodPlayers}
+                            selected={selectedRedHerring ? [selectedRedHerring] : []}
+                            onSelect={setSelectedRedHerring}
+                            selectionCount={1}
+                            variant="blue"
+                        />
                     </StepSection>
                 </NarratorSetupLayout>
             );
@@ -411,48 +392,13 @@ const definition: RoleDefinition = {
                         label={t.game.selectTwoPlayersToCheck}
                         count={{ current: selectedPlayers.length, max: 2 }}
                     >
-                        {otherPlayers.map((p) => {
-                            const role = getRole(p.roleId);
-                            const isSelected = selectedPlayers.includes(p.id);
-                            const isActuallyEvil = role
-                                ? role.team === "demon" ||
-                                  role.team === "minion"
-                                : false;
-                            const isRedHerring =
-                                selectedRedHerring === p.id ||
-                                p.effects.some(
-                                    (e) =>
-                                        e.type === "red_herring" &&
-                                        e.data?.fortuneTellerId === player.id,
-                                );
-
-                            return (
-                                <SelectablePlayerItem
-                                    key={p.id}
-                                    playerName={p.name}
-                                    roleName={getRoleName(p.roleId)}
-                                    roleIcon={role?.icon ?? "user"}
-                                    isSelected={isSelected}
-                                    isDisabled={
-                                        !isSelected &&
-                                        selectedPlayers.length >= 2
-                                    }
-                                    highlightTeam={
-                                        isActuallyEvil
-                                            ? "demon"
-                                            : isRedHerring
-                                              ? "minion"
-                                              : undefined
-                                    }
-                                    teamLabel={
-                                        isRedHerring
-                                            ? t.effects.red_herring.name
-                                            : undefined
-                                    }
-                                    onClick={() => handlePlayerToggle(p.id)}
-                                />
-                            );
-                        })}
+                        <PlayerPickerList
+                            players={otherPlayers}
+                            selected={selectedPlayers}
+                            onSelect={handlePlayerToggle}
+                            selectionCount={2}
+                            variant="blue"
+                        />
                     </StepSection>
                 </NarratorSetupLayout>
             );

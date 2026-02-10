@@ -23,8 +23,8 @@ import {
     InfoBox,
 } from "../../../../components/items";
 import {
-    SelectablePlayerItem,
-    SelectableRoleItem,
+    PlayerPickerList,
+    RolePickerGrid,
 } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
@@ -256,44 +256,13 @@ const definition: RoleDefinition = {
                         label={t.game.selectTwoPlayers}
                         count={{ current: selectedPlayers.length, max: 2 }}
                     >
-                        {otherPlayers.map((p) => {
-                            const role = getRole(p.roleId);
-                            const perception = perceive(
-                                p,
-                                player,
-                                "team",
-                                state,
-                            );
-                            const isSelected = selectedPlayers.includes(p.id);
-                            const registersOutsider =
-                                perception.team === "outsider" ||
-                                canRegisterAsTeam(p, "outsider");
-
-                            return (
-                                <SelectablePlayerItem
-                                    key={p.id}
-                                    playerName={p.name}
-                                    roleName={getRoleName(p.roleId)}
-                                    roleIcon={role?.icon ?? "user"}
-                                    isSelected={isSelected}
-                                    isDisabled={
-                                        !isSelected &&
-                                        selectedPlayers.length >= 2
-                                    }
-                                    highlightTeam={
-                                        registersOutsider
-                                            ? "outsider"
-                                            : undefined
-                                    }
-                                    teamLabel={
-                                        registersOutsider
-                                            ? t.teams.outsider.name
-                                            : undefined
-                                    }
-                                    onClick={() => handlePlayerToggle(p.id)}
-                                />
-                            );
-                        })}
+                        <PlayerPickerList
+                            players={otherPlayers}
+                            selected={selectedPlayers}
+                            onSelect={handlePlayerToggle}
+                            selectionCount={2}
+                            variant="blue"
+                        />
                     </StepSection>
 
                     {selectedPlayers.length === 2 &&
@@ -302,11 +271,11 @@ const definition: RoleDefinition = {
                                 step={2}
                                 label={t.game.selectWhichRoleToShow}
                             >
-                                {outsidersInSelection.flatMap((playerId) => {
+                                {outsidersInSelection.map((playerId) => {
                                     const p = state.players.find(
                                         (pl) => pl.id === playerId,
                                     );
-                                    if (!p) return [];
+                                    if (!p) return null;
                                     const pPerception = perceive(
                                         p,
                                         player,
@@ -314,61 +283,36 @@ const definition: RoleDefinition = {
                                         state,
                                     );
 
-                                    if (pPerception.team === "outsider") {
-                                        const rolePerception = perceive(
-                                            p,
-                                            player,
-                                            "role",
-                                            state,
-                                        );
-                                        const perceivedRole = getRole(
-                                            rolePerception.roleId,
-                                        );
-                                        return [
-                                            <SelectableRoleItem
-                                                key={playerId}
-                                                playerName={p.name}
-                                                roleName={getRoleName(
-                                                    rolePerception.roleId,
-                                                )}
-                                                roleIcon={
-                                                    perceivedRole?.icon ??
-                                                    "user"
-                                                }
-                                                isSelected={
-                                                    selectedOutsider ===
-                                                        playerId &&
-                                                    selectedRoleId ===
-                                                        rolePerception.roleId
-                                                }
-                                                onClick={() =>
-                                                    handleSelectRole(
-                                                        playerId,
-                                                        rolePerception.roleId,
-                                                    )
-                                                }
-                                            />,
-                                        ];
-                                    }
+                                    // Determine available roles for this player
+                                    const availableRoles = pPerception.team === "outsider"
+                                        ? (() => {
+                                            const rolePerception = perceive(p, player, "role", state);
+                                            const perceivedRole = getRole(rolePerception.roleId);
+                                            return perceivedRole ? [perceivedRole] : [];
+                                        })()
+                                        : outsiderRoles;
 
-                                    return outsiderRoles.map((role) => (
-                                        <SelectableRoleItem
-                                            key={`${playerId}-${role.id}`}
-                                            playerName={p.name}
-                                            roleName={getRoleName(role.id)}
-                                            roleIcon={role.icon}
-                                            isSelected={
-                                                selectedOutsider === playerId &&
-                                                selectedRoleId === role.id
-                                            }
-                                            onClick={() =>
-                                                handleSelectRole(
-                                                    playerId,
-                                                    role.id,
-                                                )
-                                            }
-                                        />
-                                    ));
+                                    const currentSelected =
+                                        selectedOutsider === playerId && selectedRoleId
+                                            ? [selectedRoleId]
+                                            : [];
+
+                                    return (
+                                        <div key={playerId} className="mb-3">
+                                            <div className="text-xs font-medium text-parchment-400 mb-1.5 ml-1">
+                                                <Icon name="user" size="xs" className="inline mr-1 text-parchment-500" />
+                                                {p.name}
+                                            </div>
+                                            <RolePickerGrid
+                                                roles={availableRoles}
+                                                state={state}
+                                                selected={currentSelected}
+                                                onSelect={(roleId) => handleSelectRole(playerId, roleId)}
+                                                selectionCount={1}
+                                                colorMode="team"
+                                            />
+                                        </div>
+                                    );
                                 })}
                             </StepSection>
                         )}

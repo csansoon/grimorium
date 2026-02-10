@@ -304,17 +304,26 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
                                                                 )
                                                             }
                                                             className={cn(
-                                                                "rounded-xl p-3 border-2 transition-all text-left relative",
+                                                                "rounded-xl border-2 transition-all relative flex flex-col",
                                                                 isSelected
                                                                     ? cn(
                                                                           team
                                                                               .colors
                                                                               .cardBorder,
-                                                                          "bg-white/10"
+                                                                          "bg-gradient-to-b from-white/10 to-white/5"
                                                                       )
                                                                     : "border-white/10 bg-white/5 hover:bg-white/[0.08]"
                                                             )}
+                                                            style={
+                                                                isSelected
+                                                                    ? {
+                                                                          boxShadow: `0 0 16px ${team.colors.cardGlow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+                                                                      }
+                                                                    : undefined
+                                                            }
                                                         >
+                                                            {/* Card body */}
+                                                            <div className="px-3 pt-4 pb-3 text-center flex-1">
                                                             {/* Selected checkmark */}
                                                             {isSelected && (
                                                                 <div className="absolute top-2 right-2">
@@ -339,20 +348,30 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
                                                                 </div>
                                                             )}
 
-                                                            <Icon
-                                                                name={role.icon}
-                                                                size="lg"
-                                                                className={
-                                                                    isSelected
-                                                                        ? team
-                                                                              .colors
-                                                                              .text
-                                                                        : "text-parchment-500"
-                                                                }
-                                                            />
+                                                            {/* Role icon medallion */}
                                                             <div
                                                                 className={cn(
-                                                                    "text-sm font-medium mt-1.5",
+                                                                    "w-9 h-9 rounded-full flex items-center justify-center mx-auto",
+                                                                    isSelected
+                                                                        ? team.colors.cardIconBg
+                                                                        : "bg-white/5 border border-white/10"
+                                                                )}
+                                                            >
+                                                                <Icon
+                                                                    name={role.icon}
+                                                                    size="md"
+                                                                    className={
+                                                                        isSelected
+                                                                            ? team
+                                                                                  .colors
+                                                                                  .text
+                                                                            : "text-parchment-500"
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <div
+                                                                className={cn(
+                                                                    "text-[11px] font-tarot tracking-wider uppercase mt-2",
                                                                     isSelected
                                                                         ? "text-parchment-100"
                                                                         : "text-parchment-300"
@@ -362,14 +381,15 @@ export function RoleSelection({ players, onNext, onBack }: Props) {
                                                                     role
                                                                 )}
                                                             </div>
-                                                            <p className="text-[11px] text-parchment-500 line-clamp-2 mt-0.5 leading-tight">
+                                                            <p className="text-[11px] text-parchment-500 line-clamp-2 mt-1 leading-snug text-left">
                                                                 {desc}
                                                             </p>
+                                                            </div>
 
                                                             {/* +/- Controls (only when selected) */}
                                                             {isSelected && (
                                                                 <div
-                                                                    className="flex items-center justify-center gap-2 mt-2 pt-2 border-t border-white/10"
+                                                                    className="flex items-center justify-center gap-2 pt-2 pb-2.5 border-t border-white/10"
                                                                     onClick={(
                                                                         e
                                                                     ) =>

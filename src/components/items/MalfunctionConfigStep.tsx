@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { getAllRoles } from "../../lib/roles";
+import { GameState } from "../../lib/types";
 import { useI18n } from "../../lib/i18n";
 import { Icon, Button } from "../atoms";
 import { IconName } from "../atoms/icon";
 import { NarratorSetupLayout } from "../layouts";
+import { RolePickerGrid } from "../inputs/RolePickerGrid";
 import { cn } from "../../lib/utils";
 
 type NumberProps = {
@@ -30,6 +32,7 @@ type RoleProps = {
     roleIcon: IconName;
     roleName: string;
     playerName: string;
+    state: GameState;
     onComplete: (result: string) => void;
 };
 
@@ -181,15 +184,14 @@ function BooleanPicker({ trueLabel, falseLabel, onComplete }: BooleanProps) {
 // ROLE PICKER
 // ============================================================================
 
-function RolePicker({ onComplete }: RoleProps) {
+function RolePicker({ state, onComplete }: RoleProps) {
     const { t } = useI18n();
     const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
     const allRoles = getAllRoles();
 
-    const getRoleName = (roleId: string) => {
-        const key = roleId as keyof typeof t.roles;
-        return t.roles[key]?.name ?? roleId;
+    const handleSelect = (roleId: string) => {
+        setSelectedRole((prev) => (prev === roleId ? null : roleId));
     };
 
     return (
@@ -198,39 +200,15 @@ function RolePicker({ onComplete }: RoleProps) {
                 {t.game.chooseFalseRole}
             </h3>
 
-            <div className="space-y-1 mb-6 max-h-64 overflow-y-auto">
-                {allRoles.map((role) => (
-                    <button
-                        key={role.id}
-                        onClick={() => setSelectedRole(role.id)}
-                        className={cn(
-                            "w-full p-3 rounded-lg border flex items-center gap-3 transition-colors text-left",
-                            selectedRole === role.id
-                                ? "bg-amber-900/30 border-amber-500/50"
-                                : "bg-white/5 border-white/10 hover:bg-white/10",
-                        )}
-                    >
-                        <Icon
-                            name={role.icon}
-                            size="md"
-                            className={
-                                selectedRole === role.id
-                                    ? "text-amber-300"
-                                    : "text-parchment-400"
-                            }
-                        />
-                        <span
-                            className={cn(
-                                "text-sm font-medium",
-                                selectedRole === role.id
-                                    ? "text-amber-200"
-                                    : "text-parchment-300",
-                            )}
-                        >
-                            {getRoleName(role.id)}
-                        </span>
-                    </button>
-                ))}
+            <div className="mb-6">
+                <RolePickerGrid
+                    roles={allRoles}
+                    state={state}
+                    selected={selectedRole ? [selectedRole] : []}
+                    onSelect={handleSelect}
+                    selectionCount={1}
+                    colorMode="team"
+                />
             </div>
 
             <Button

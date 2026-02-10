@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { PipelineInputProps, KillIntent } from "../../lib/pipeline/types";
-import { isAlive } from "../../lib/types";
+import { isAlive, hasEffect } from "../../lib/types";
 import { useI18n } from "../../lib/i18n";
-import { PlayerSelector } from "../inputs";
+import { PlayerPickerList } from "../inputs";
 import { Button, Icon } from "../atoms";
 
 /**
@@ -16,9 +16,9 @@ export function BounceRedirectUI({ state, intent, onComplete }: PipelineInputPro
 
     const originalTarget = state.players.find((p) => p.id === kill.targetId);
 
-    // All alive players except the kill source (the demon) can be selected
+    // All alive players except the kill source (the demon) and safe players
     const alivePlayers = state.players.filter(
-        (p) => isAlive(p) && p.id !== kill.sourceId
+        (p) => isAlive(p) && p.id !== kill.sourceId && !hasEffect(p, "safe")
     );
 
     return (
@@ -46,19 +46,12 @@ export function BounceRedirectUI({ state, intent, onComplete }: PipelineInputPro
 
                 {/* Player Selector */}
                 <div className="mb-6">
-                    <PlayerSelector
+                    <PlayerPickerList
                         players={alivePlayers}
-                        selected={selectedTarget}
+                        selected={selectedTarget ? [selectedTarget] : []}
                         onSelect={setSelectedTarget}
-                        showRoles
-                        excludeEffects={["safe"]}
-                        selectedIcon="skull"
+                        selectionCount={1}
                         variant="red"
-                        getLabel={(p) =>
-                            p.id === kill.targetId
-                                ? t.roles.imp.bounceOriginalLabel
-                                : undefined
-                        }
                     />
                 </div>
 

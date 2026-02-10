@@ -4,7 +4,7 @@ import { getAllRoles } from "../../index";
 import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import { Button, Icon } from "../../../../components/atoms";
-import { SelectableRoleItem } from "../../../../components/inputs";
+import { RolePickerGrid } from "../../../../components/inputs";
 
 /**
  * The Drunk — Outsider role.
@@ -26,16 +26,15 @@ import { SelectableRoleItem } from "../../../../components/inputs";
  * NightAction is null for the same reason.
  */
 
-function DrunkSetupAction({ player, onComplete }: SetupActionProps) {
+function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
     const { t } = useI18n();
     const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
     // Get all Townsfolk roles for the narrator to choose from
     const townsfolkRoles = getAllRoles().filter((r) => r.team === "townsfolk");
 
-    const getRoleName = (roleId: string) => {
-        const key = roleId as keyof typeof t.roles;
-        return t.roles[key]?.name ?? roleId;
+    const handleSelect = (roleId: string) => {
+        setSelectedRole((prev) => (prev === roleId ? null : roleId));
     };
 
     const handleConfirm = () => {
@@ -90,17 +89,15 @@ function DrunkSetupAction({ player, onComplete }: SetupActionProps) {
                     {t.game.chooseBelievedRole}
                 </h3>
 
-                <div className="space-y-2 mb-6">
-                    {townsfolkRoles.map((role) => (
-                        <SelectableRoleItem
-                            key={role.id}
-                            playerName=""
-                            roleName={getRoleName(role.id)}
-                            roleIcon={role.icon}
-                            isSelected={selectedRole === role.id}
-                            onClick={() => setSelectedRole(role.id)}
-                        />
-                    ))}
+                <div className="mb-6">
+                    <RolePickerGrid
+                        roles={townsfolkRoles}
+                        state={state}
+                        selected={selectedRole ? [selectedRole] : []}
+                        onSelect={handleSelect}
+                        selectionCount={1}
+                        colorMode="team"
+                    />
                 </div>
             </div>
 

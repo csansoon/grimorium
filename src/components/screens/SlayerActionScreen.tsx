@@ -6,6 +6,7 @@ import { useI18n } from "../../lib/i18n";
 import { DayActionProps } from "../../lib/pipeline/types";
 import { Button, Icon, BackButton } from "../atoms";
 import { MysticDivider } from "../items";
+import { PlayerPickerList } from "../inputs";
 import { ScreenFooter } from "../layouts/ScreenFooter";
 
 /**
@@ -142,35 +143,13 @@ export function SlayerActionScreen({
                             {t.game.selectTarget}
                         </span>
                     </div>
-                    <div className="space-y-2">
-                        {alivePlayers.map((player) => (
-                            <button
-                                key={player.id}
-                                onClick={() => setSelectedTarget(player.id)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                                    selectedTarget === player.id
-                                        ? "bg-red-700/40 border-red-500"
-                                        : "bg-white/5 border-white/10 hover:border-white/30"
-                                }`}
-                            >
-                                <Icon
-                                    name="user"
-                                    size="md"
-                                    className="text-parchment-400"
-                                />
-                                <span className="text-parchment-100">
-                                    {player.name}
-                                </span>
-                                {selectedTarget === player.id && (
-                                    <Icon
-                                        name="check"
-                                        size="md"
-                                        className="text-red-400 ml-auto"
-                                    />
-                                )}
-                            </button>
-                        ))}
-                    </div>
+                    <PlayerPickerList
+                        players={alivePlayers}
+                        selected={selectedTarget ? [selectedTarget] : []}
+                        onSelect={setSelectedTarget}
+                        selectionCount={1}
+                        variant="red"
+                    />
                 </div>
             </div>
 

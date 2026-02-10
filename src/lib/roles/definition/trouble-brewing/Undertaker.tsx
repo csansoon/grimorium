@@ -267,6 +267,7 @@ const definition: RoleDefinition = {
                     roleIcon="shovel"
                     roleName={getRoleName("undertaker")}
                     playerName={player.name}
+                    state={state}
                     onComplete={handleMalfunctionComplete}
                 />
             );

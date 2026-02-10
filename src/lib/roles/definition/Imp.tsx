@@ -12,8 +12,7 @@ import {
     NightStepListLayout,
 } from "../../../components/layouts";
 import type { NightStep } from "../../../components/layouts";
-import { SelectablePlayerItem } from "../../../components/inputs";
-import { PlayerSelector } from "../../../components/inputs";
+import { PlayerPickerList, RolePickerGrid } from "../../../components/inputs";
 import { StepSection, MysticDivider } from "../../../components/items";
 import { Button, Icon } from "../../../components/atoms";
 
@@ -503,33 +502,14 @@ const definition: RoleDefinition = {
                             max: 3,
                         }}
                     >
-                        {goodRolesNotInPlay.map((role) => {
-                            const isSelected = selectedBluffs.includes(
-                                role.id,
-                            );
-                            return (
-                                <SelectablePlayerItem
-                                    key={role.id}
-                                    playerName={getRoleName(role.id)}
-                                    roleName={
-                                        t.teams[role.team]?.name ?? role.team
-                                    }
-                                    roleIcon={role.icon}
-                                    isSelected={isSelected}
-                                    isDisabled={
-                                        !isSelected &&
-                                        selectedBluffs.length >= 3
-                                    }
-                                    highlightTeam={role.team}
-                                    teamLabel={
-                                        t.teams[role.team]?.name ?? role.team
-                                    }
-                                    onClick={() =>
-                                        handleBluffToggle(role.id)
-                                    }
-                                />
-                            );
-                        })}
+                        <RolePickerGrid
+                            roles={goodRolesNotInPlay}
+                            state={state}
+                            selected={selectedBluffs}
+                            onSelect={handleBluffToggle}
+                            selectionCount={3}
+                            colorMode="team"
+                        />
                     </StepSection>
                 </NarratorSetupLayout>
             );
@@ -625,25 +605,13 @@ const definition: RoleDefinition = {
                         step={1}
                         label={t.game.selectMinionToBecome}
                     >
-                        {aliveMinions.map((p) => {
-                            const role = getRole(p.roleId);
-                            const isSelected = selectedNewImp === p.id;
-                            return (
-                                <SelectablePlayerItem
-                                    key={p.id}
-                                    playerName={p.name}
-                                    roleName={getRoleName(p.roleId)}
-                                    roleIcon={role?.icon ?? "user"}
-                                    isSelected={isSelected}
-                                    isDisabled={false}
-                                    highlightTeam="minion"
-                                    teamLabel={t.teams.minion.name}
-                                    onClick={() =>
-                                        setSelectedNewImp(p.id)
-                                    }
-                                />
-                            );
-                        })}
+                        <PlayerPickerList
+                            players={aliveMinions}
+                            selected={selectedNewImp ? [selectedNewImp] : []}
+                            onSelect={setSelectedNewImp}
+                            selectionCount={1}
+                            variant="red"
+                        />
                     </StepSection>
                 </NarratorSetupLayout>
             );
@@ -660,11 +628,11 @@ const definition: RoleDefinition = {
                 description={t.game.selectVictim}
             >
                 <div className="mb-6">
-                    <PlayerSelector
+                    <PlayerPickerList
                         players={alivePlayers}
-                        selected={selectedTarget}
+                        selected={selectedTarget ? [selectedTarget] : []}
                         onSelect={setSelectedTarget}
-                        selectedIcon="skull"
+                        selectionCount={1}
                         variant="red"
                     />
                 </div>
