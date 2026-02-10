@@ -13,15 +13,19 @@ import {
 } from "../../../components/layouts";
 import type { NightStep } from "../../../components/layouts";
 import { SelectablePlayerItem } from "../../../components/inputs";
+import { PlayerSelector } from "../../../components/inputs";
 import { StepSection, MysticDivider } from "../../../components/items";
 import { Button, Icon } from "../../../components/atoms";
 
 type Phase =
     | "step_list"
+    // First night phases
     | "show_minions"
     | "select_bluffs"
     | "show_bluffs"
-    | "choose_victim";
+    // Kill phases (subsequent nights)
+    | "choose_victim"
+    | "select_new_imp";
 
 /**
  * The Imp — Demon role.
@@ -31,9 +35,14 @@ type Phase =
  * No kill action on the first night.
  *
  * Subsequent nights: the Imp selects a target and emits a kill intent.
- * All effect interactions (Safe protection, Bounce redirect) are handled
- * by the pipeline through effect handlers. The Imp has zero knowledge
- * of other roles.
+ * If the Imp targets themselves and there are alive Minions, the narrator
+ * selects which Minion becomes the new Imp. This bypasses the pipeline
+ * entirely (no kill intent emitted), so passive effects like Scarlet Woman
+ * do NOT trigger — it is always the narrator's choice.
+ *
+ * All other effect interactions (Safe protection, Bounce redirect) are
+ * handled by the pipeline through effect handlers. The Imp has zero
+ * knowledge of other roles.
  */
 const definition: RoleDefinition = {
     id: "imp",
@@ -67,6 +76,8 @@ const definition: RoleDefinition = {
             getLabel: (t) => t.game.stepChooseVictim,
             condition: (_game, _player, state) => state.round > 1,
         },
+        // select_new_imp is NOT declared here — it's a dynamic runtime step
+        // that only appears after the Imp selects themselves as a target.
     ],
 
     RoleReveal: DefaultRoleReveal,
@@ -80,6 +91,10 @@ const definition: RoleDefinition = {
         const [selectedBluffs, setSelectedBluffs] = useState<string[]>([]);
         const [selectBluffsDone, setSelectBluffsDone] = useState(false);
         const [selectedTarget, setSelectedTarget] = useState<string | null>(
+            null,
+        );
+        const [chooseVictimDone, setChooseVictimDone] = useState(false);
+        const [selectedNewImp, setSelectedNewImp] = useState<string | null>(
             null,
         );
 
@@ -115,6 +130,27 @@ const definition: RoleDefinition = {
         }, [state.players]);
 
         // ================================================================
+        // Self-Kill Helpers
+        // ================================================================
+
+        // Find alive minion players (candidates for new Imp)
+        const aliveMinions = useMemo(
+            () =>
+                state.players.filter((p) => {
+                    if (!isAlive(p)) return false;
+                    const role = getRole(p.roleId);
+                    return role?.team === "minion";
+                }),
+            [state.players],
+        );
+
+        const hasAliveMinions = aliveMinions.length > 0;
+
+        // Detect self-kill scenario: target is self, alive minions exist, not malfunctioning
+        const isSelfKillConversion =
+            selectedTarget === player.id && hasAliveMinions && !malfunctioning;
+
+        // ================================================================
         // Step List
         // ================================================================
 
@@ -142,15 +178,34 @@ const definition: RoleDefinition = {
                 ];
             }
 
-            return [
+            const result: NightStep[] = [
                 {
                     id: "choose_victim",
                     icon: "skull",
                     label: t.game.stepChooseVictim,
-                    status: "pending",
+                    status: chooseVictimDone ? "done" : "pending",
                 },
             ];
-        }, [isFirstNight, showMinionsDone, selectBluffsDone, t]);
+
+            // Dynamic step: appears after the Imp selects themselves as target
+            if (isSelfKillConversion && chooseVictimDone) {
+                result.push({
+                    id: "select_new_imp",
+                    icon: "sparkles",
+                    label: t.game.stepSelectNewImp,
+                    status: "pending",
+                });
+            }
+
+            return result;
+        }, [
+            isFirstNight,
+            showMinionsDone,
+            selectBluffsDone,
+            chooseVictimDone,
+            isSelfKillConversion,
+            t,
+        ]);
 
         const handleSelectStep = (stepId: string) => {
             setPhase(stepId as Phase);
@@ -192,7 +247,7 @@ const definition: RoleDefinition = {
         };
 
         // ================================================================
-        // Kill handler (subsequent nights)
+        // Kill confirm handler (subsequent nights)
         // ================================================================
 
         const handleConfirmKill = () => {
@@ -203,6 +258,15 @@ const definition: RoleDefinition = {
             );
             if (!target) return;
 
+            // Self-kill with alive minions: mark step as done, go to step list
+            // to show the "Select New Imp" step
+            if (selectedTarget === player.id && hasAliveMinions && !malfunctioning) {
+                setChooseVictimDone(true);
+                setPhase("step_list");
+                return;
+            }
+
+            // Normal kill (or self-kill with no alive minions, or malfunctioning)
             onComplete({
                 entries: [
                     {
@@ -237,6 +301,76 @@ const definition: RoleDefinition = {
                         cause: "demon",
                     },
                 }),
+            });
+        };
+
+        // ================================================================
+        // Self-kill conversion: confirm new Imp
+        // ================================================================
+
+        const handleConfirmNewImp = () => {
+            if (!selectedNewImp) return;
+
+            const newImpPlayer = state.players.find(
+                (p) => p.id === selectedNewImp,
+            );
+            if (!newImpPlayer) return;
+
+            onComplete({
+                entries: [
+                    {
+                        type: "night_action",
+                        message: [
+                            {
+                                type: "i18n",
+                                key: "roles.imp.history.selfKilled",
+                                params: { player: player.id },
+                            },
+                        ],
+                        data: {
+                            roleId: "imp",
+                            playerId: player.id,
+                            action: "self_kill",
+                        },
+                    },
+                    {
+                        type: "role_changed",
+                        message: [
+                            {
+                                type: "i18n",
+                                key: "roles.imp.history.minionBecameImp",
+                                params: { player: newImpPlayer.id },
+                            },
+                        ],
+                        data: {
+                            playerId: newImpPlayer.id,
+                            fromRole: newImpPlayer.roleId,
+                            toRole: "imp",
+                        },
+                    },
+                ],
+                // Kill the old Imp + give the new Imp a pending role reveal
+                addEffects: {
+                    [player.id]: [
+                        {
+                            type: "dead",
+                            data: { cause: "imp_self_kill" },
+                            expiresAt: "never",
+                        },
+                    ],
+                    [selectedNewImp]: [
+                        {
+                            type: "pending_role_reveal",
+                            expiresAt: "never",
+                        },
+                    ],
+                },
+                // Change the selected Minion's role to "imp"
+                changeRoles: {
+                    [selectedNewImp]: "imp",
+                },
+                // No intent — bypasses the pipeline entirely.
+                // This prevents the Scarlet Woman from auto-triggering.
             });
         };
 
@@ -461,6 +595,57 @@ const definition: RoleDefinition = {
                         {t.common.iUnderstandMyRole}
                     </Button>
                 </NightActionLayout>
+            );
+        }
+
+        // ================================================================
+        // RENDER: Select New Imp (narrator-facing)
+        // ================================================================
+
+        if (phase === "select_new_imp") {
+            return (
+                <NarratorSetupLayout
+                    icon="skull"
+                    roleName={getRoleName("imp")}
+                    playerName={player.name}
+                    onShowToPlayer={handleConfirmNewImp}
+                    showToPlayerDisabled={!selectedNewImp}
+                    showToPlayerLabel={t.game.confirmNewImp}
+                >
+                    <div className="text-center mb-4">
+                        <h3 className="text-lg font-semibold text-amber-200">
+                            {t.game.selectNewImpTitle}
+                        </h3>
+                        <p className="text-sm text-stone-400 mt-1">
+                            {t.game.selectNewImpDescription}
+                        </p>
+                    </div>
+
+                    <StepSection
+                        step={1}
+                        label={t.game.selectMinionToBecome}
+                    >
+                        {aliveMinions.map((p) => {
+                            const role = getRole(p.roleId);
+                            const isSelected = selectedNewImp === p.id;
+                            return (
+                                <SelectablePlayerItem
+                                    key={p.id}
+                                    playerName={p.name}
+                                    roleName={getRoleName(p.roleId)}
+                                    roleIcon={role?.icon ?? "user"}
+                                    isSelected={isSelected}
+                                    isDisabled={false}
+                                    highlightTeam="minion"
+                                    teamLabel={t.teams.minion.name}
+                                    onClick={() =>
+                                        setSelectedNewImp(p.id)
+                                    }
+                                />
+                            );
+                        })}
+                    </StepSection>
+                </NarratorSetupLayout>
             );
         }
 

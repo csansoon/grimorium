@@ -237,6 +237,7 @@ export type Translations = {
         stepShowMinions: string;
         stepSelectBluffs: string;
         stepShowBluffs: string;
+        stepSelectNewImp: string;
 
         // Malfunction Config
         stepConfigureMalfunction: string;
@@ -245,6 +246,12 @@ export type Translations = {
         chooseFalseResult: string;
         chooseFalseRole: string;
         malfunctionWarning: string;
+
+        // Imp self-kill
+        selectNewImpTitle: string;
+        selectNewImpDescription: string;
+        selectMinionToBecome: string;
+        confirmNewImp: string;
 
         // Demon first night
         demonMinionsTitle: string;
@@ -319,6 +326,8 @@ export type Translations = {
                 failedToKill: string;
                 bounceRedirected: string;
                 shownMinionsAndBluffs: string;
+                selfKilled: string;
+                minionBecameImp: string;
             };
         };
         washerwoman: {

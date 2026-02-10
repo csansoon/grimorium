@@ -452,6 +452,7 @@ export function applyNightAction(game: Game, result: NightActionResult): Game {
         stateUpdates: result.stateUpdates,
         addEffects: result.addEffects,
         removeEffects: result.removeEffects,
+        changeRoles: result.changeRoles,
     };
 
     for (const entry of directResult.entries) {
@@ -461,11 +462,13 @@ export function applyNightAction(game: Game, result: NightActionResult): Game {
             directResult.stateUpdates,
             directResult.addEffects,
             directResult.removeEffects,
+            directResult.changeRoles,
         );
-        // Only apply state/effects on first entry
+        // Only apply state/effects/roles on first entry
         directResult.stateUpdates = undefined;
         directResult.addEffects = undefined;
         directResult.removeEffects = undefined;
+        directResult.changeRoles = undefined;
     }
 
     return updatedGame;

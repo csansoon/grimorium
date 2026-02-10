@@ -249,6 +249,13 @@ const es: Translations = {
         stepShowMinions: "Mostrar Secuaces",
         stepSelectBluffs: "Seleccionar Faroles",
         stepShowBluffs: "Mostrar Faroles",
+        stepSelectNewImp: "Seleccionar Nuevo Imp",
+
+        // Imp self-kill
+        selectNewImpTitle: "Seleccionar Nuevo Imp",
+        selectNewImpDescription: "El Imp se mató a sí mismo. Elige qué Secuaz vivo se convierte en el nuevo Imp.",
+        selectMinionToBecome: "Selecciona un Secuaz para convertirse en el Imp",
+        confirmNewImp: "Confirmar Nuevo Imp",
 
         // Demon first night
         demonMinionsTitle: "Tus Secuaces",
@@ -339,6 +346,10 @@ const es: Translations = {
                     "{player} eligió a {target}, pero el asesinato fue redirigido a {redirect}",
                 shownMinionsAndBluffs:
                     "{player} vio a sus Secuaces y recibió faroles: {bluffs}",
+                selfKilled:
+                    "{player} (Imp) eligió matarse a sí mismo/a",
+                minionBecameImp:
+                    "{player} se convirtió en el nuevo Imp",
             },
         },
         washerwoman: {

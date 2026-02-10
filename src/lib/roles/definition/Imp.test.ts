@@ -84,6 +84,12 @@ describe("Imp", () => {
             // Later nights: choose_victim should be active
             expect(chooseVictim?.condition!(laterGame, player, laterNightState)).toBe(true);
         });
+
+        it("does not declare select_new_imp in nightSteps (it is a dynamic runtime step)", () => {
+            const steps = definition.nightSteps!;
+            const selectNewImp = steps.find((s) => s.id === "select_new_imp");
+            expect(selectNewImp).toBeUndefined();
+        });
     });
 
     // ================================================================

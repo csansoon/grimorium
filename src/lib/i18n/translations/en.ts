@@ -242,6 +242,13 @@ const en: Translations = {
         stepShowMinions: "Show Minions",
         stepSelectBluffs: "Select Bluffs",
         stepShowBluffs: "Show Bluffs",
+        stepSelectNewImp: "Select New Imp",
+
+        // Imp self-kill
+        selectNewImpTitle: "Select New Imp",
+        selectNewImpDescription: "The Imp killed themselves. Choose which alive Minion becomes the new Imp.",
+        selectMinionToBecome: "Select a Minion to become the Imp",
+        confirmNewImp: "Confirm New Imp",
 
         // Demon first night
         demonMinionsTitle: "Your Minions",
@@ -332,6 +339,10 @@ const en: Translations = {
                     "{player} targeted {target}, but the kill was redirected to {redirect}",
                 shownMinionsAndBluffs:
                     "{player} was shown their Minions and given bluffs: {bluffs}",
+                selfKilled:
+                    "{player} (Imp) chose to kill themselves",
+                minionBecameImp:
+                    "{player} became the new Imp",
             },
         },
         washerwoman: {

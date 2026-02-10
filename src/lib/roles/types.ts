@@ -34,6 +34,8 @@ export type NightActionResult = {
     addEffects?: Record<string, EffectToAdd[]>;
     // Effects to remove from players (playerId -> effect types to remove)
     removeEffects?: Record<string, string[]>;
+    // Role changes to apply to players (playerId -> new roleId)
+    changeRoles?: Record<string, string>;
     // Intent to resolve through the pipeline (for action roles like Imp)
     intent?: Intent;
 };
