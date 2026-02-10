@@ -234,6 +234,9 @@ export type Translations = {
         stepAssignRedHerring: string;
         stepSelectAndShow: string;
         stepChooseTarget: string;
+        stepShowMinions: string;
+        stepSelectBluffs: string;
+        stepShowBluffs: string;
 
         // Malfunction Config
         stepConfigureMalfunction: string;
@@ -242,6 +245,18 @@ export type Translations = {
         chooseFalseResult: string;
         chooseFalseRole: string;
         malfunctionWarning: string;
+
+        // Demon first night
+        demonMinionsTitle: string;
+        demonMinionsDescription: string;
+        theseAreYourMinions: string;
+        selectBluffsTitle: string;
+        selectBluffsDescription: string;
+        selectThreeBluffs: string;
+        bluffsSelected: string;
+        demonBluffsTitle: string;
+        demonBluffsDescription: string;
+        theseAreYourBluffs: string;
 
         // Poisoner specific
         poisonerInfo: string;
@@ -303,6 +318,7 @@ export type Translations = {
                 choseToKill: string;
                 failedToKill: string;
                 bounceRedirected: string;
+                shownMinionsAndBluffs: string;
             };
         };
         washerwoman: {

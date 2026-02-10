@@ -239,6 +239,21 @@ const en: Translations = {
         stepAssignRedHerring: "Assign Red Herring",
         stepSelectAndShow: "Select & Show",
         stepChooseTarget: "Choose Target",
+        stepShowMinions: "Show Minions",
+        stepSelectBluffs: "Select Bluffs",
+        stepShowBluffs: "Show Bluffs",
+
+        // Demon first night
+        demonMinionsTitle: "Your Minions",
+        demonMinionsDescription: "These players are on your evil team.",
+        theseAreYourMinions: "These are your Minions:",
+        selectBluffsTitle: "Select Bluffs",
+        selectBluffsDescription: "Choose 3 good roles not in play for the Demon to bluff as.",
+        selectThreeBluffs: "Select 3 roles as bluffs",
+        bluffsSelected: "{count} of 3 selected",
+        demonBluffsTitle: "Your Bluffs",
+        demonBluffsDescription: "These good roles are NOT in play. You may bluff as one of them.",
+        theseAreYourBluffs: "These roles are not in play:",
 
         // Malfunction Config
         stepConfigureMalfunction: "Configure Malfunction",
@@ -315,6 +330,8 @@ const en: Translations = {
                     "{player} tried to kill {target}, but they were protected",
                 bounceRedirected:
                     "{player} targeted {target}, but the kill was redirected to {redirect}",
+                shownMinionsAndBluffs:
+                    "{player} was shown their Minions and given bluffs: {bluffs}",
             },
         },
         washerwoman: {

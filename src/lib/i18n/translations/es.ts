@@ -246,6 +246,21 @@ const es: Translations = {
         stepAssignRedHerring: "Asignar Pista Falsa",
         stepSelectAndShow: "Seleccionar y Mostrar",
         stepChooseTarget: "Elegir Objetivo",
+        stepShowMinions: "Mostrar Secuaces",
+        stepSelectBluffs: "Seleccionar Faroles",
+        stepShowBluffs: "Mostrar Faroles",
+
+        // Demon first night
+        demonMinionsTitle: "Tus Secuaces",
+        demonMinionsDescription: "Estos jugadores están en tu equipo malvado.",
+        theseAreYourMinions: "Estos son tus Secuaces:",
+        selectBluffsTitle: "Seleccionar Faroles",
+        selectBluffsDescription: "Elige 3 roles buenos que no están en juego para que el Demonio finja ser.",
+        selectThreeBluffs: "Selecciona 3 roles como faroles",
+        bluffsSelected: "{count} de 3 seleccionados",
+        demonBluffsTitle: "Tus Faroles",
+        demonBluffsDescription: "Estos roles buenos NO están en juego. Puedes fingir ser uno de ellos.",
+        theseAreYourBluffs: "Estos roles no están en juego:",
 
         // Malfunction Config
         stepConfigureMalfunction: "Configurar Mal Funcionamiento",
@@ -322,6 +337,8 @@ const es: Translations = {
                     "{player} intentó matar a {target}, pero estaba protegido/a",
                 bounceRedirected:
                     "{player} eligió a {target}, pero el asesinato fue redirigido a {redirect}",
+                shownMinionsAndBluffs:
+                    "{player} vio a sus Secuaces y recibió faroles: {bluffs}",
             },
         },
         washerwoman: {
