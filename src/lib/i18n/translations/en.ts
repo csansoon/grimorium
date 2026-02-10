@@ -284,6 +284,13 @@ const en: Translations = {
         drunkSetupDescription: "Choose which Townsfolk role the Drunk believes they are. They will see this role during role revelation and play as if they are that role.",
         chooseBelievedRole: "Choose the believed Townsfolk role",
 
+        // Butler specific
+        butlerInfo: "Choose Your Master",
+        selectPlayerAsMaster: "Select a player to be your master. Tomorrow, you may only vote if they vote too.",
+        stepChooseMaster: "Choose Master",
+        butlerMasterLabel: "Master: {player}",
+        butlerVoteRestriction: "May only vote if their master votes",
+
         // Perception Config
         perceptionConfigTitle: "Configure Perceptions",
         perceptionConfigDescription:
@@ -490,6 +497,14 @@ const en: Translations = {
             description:
                 "You do not know you are the Drunk. You think you are a Townsfolk character, but you are not.",
         },
+        butler: {
+            name: "Butler",
+            description:
+                "Each night, choose a player (not yourself): tomorrow, you may only vote if they are voting too.",
+            history: {
+                choseMaster: "{player} chose {target} as their master",
+            },
+        },
     },
 
     effects: {
@@ -555,6 +570,11 @@ const en: Translations = {
             name: "Drunk",
             description:
                 "This player thinks they are a Townsfolk, but they are actually the Drunk. Their ability permanently malfunctions.",
+        },
+        butler_master: {
+            name: "Master",
+            description:
+                "This player is the Butler — they may only vote if their chosen master is also voting.",
         },
     },
 

@@ -113,7 +113,8 @@ export type RoleId =
     | "scarlet_woman"
     | "recluse"
     | "poisoner"
-    | "drunk";
+    | "drunk"
+    | "butler";
 
 export type RoleDefinition = {
     id: RoleId;

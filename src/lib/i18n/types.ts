@@ -279,6 +279,13 @@ export type Translations = {
         drunkSetupDescription: string;
         chooseBelievedRole: string;
 
+        // Butler specific
+        butlerInfo: string;
+        selectPlayerAsMaster: string;
+        stepChooseMaster: string;
+        butlerMasterLabel: string;
+        butlerVoteRestriction: string;
+
         // Perception Config
         perceptionConfigTitle: string;
         perceptionConfigDescription: string;
@@ -447,6 +454,13 @@ export type Translations = {
             name: string;
             description: string;
         };
+        butler: {
+            name: string;
+            description: string;
+            history: {
+                choseMaster: string;
+            };
+        };
     };
 
     // Effects
@@ -500,6 +514,10 @@ export type Translations = {
             description: string;
         };
         drunk: {
+            name: string;
+            description: string;
+        };
+        butler_master: {
             name: string;
             description: string;
         };

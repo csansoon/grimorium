@@ -15,18 +15,34 @@ type Props = {
 
 type VoteValue = "for" | "against" | "abstain" | null;
 
+/**
+ * Get the Butler's master player name, if this player has the butler_master effect.
+ * Returns null if the player is not the Butler or has no master assigned.
+ */
+function getButlerMasterName(player: PlayerState, state: GameState): string | null {
+    const butlerEffect = player.effects.find((e) => e.type === "butler_master");
+    if (!butlerEffect?.data?.masterId) return null;
+    const master = state.players.find((p) => p.id === butlerEffect.data!.masterId);
+    return master?.name ?? null;
+}
+
 export function VotingPhase({ state, nomineeId, onVoteComplete, onCancel }: Props) {
     const { t } = useI18n();
     const nominee = state.players.find((p) => p.id === nomineeId);
     const [votes, setVotes] = useState<Record<string, VoteValue>>({});
 
     const canPlayerVote = (player: PlayerState): boolean => {
-        if (!isAlive(player)) {
-            const deadEffect = getEffect("dead");
-            if (deadEffect?.canVote) {
-                return deadEffect.canVote(player, state);
+        // Check all effects for voting restrictions
+        for (const effect of player.effects) {
+            const def = getEffect(effect.type);
+            if (!def) continue;
+            if (def.preventsVoting) {
+                // If the effect has a canVote function, defer to it (e.g., dead players get one vote)
+                if (def.canVote) {
+                    return def.canVote(player, state);
+                }
+                return false;
             }
-            return false;
         }
         return true;
     };
@@ -102,14 +118,31 @@ export function VotingPhase({ state, nomineeId, onVoteComplete, onCancel }: Prop
                 <div className="space-y-2">
                     {eligibleVoters.map((player) => {
                         const isDead = hasEffect(player, "dead");
+                        const butlerMasterName = getButlerMasterName(player, state);
                         const currentVote = votes[player.id];
 
                         return (
-                            <div key={player.id} className="border border-white/10 rounded-lg p-3">
+                            <div key={player.id} className={cn(
+                                "rounded-lg p-3",
+                                butlerMasterName
+                                    ? "border-2 border-amber-500/50 bg-amber-950/20"
+                                    : "border border-white/10"
+                            )}>
                                 <div className="flex items-center gap-2 mb-2">
                                     {isDead && <Icon name="skull" size="sm" className="text-parchment-500" />}
                                     <span className="text-parchment-200 text-sm flex-1">{player.name}</span>
                                 </div>
+                                {butlerMasterName && (
+                                    <div className="flex items-center gap-1.5 mb-2 px-2 py-1 rounded bg-amber-900/30 border border-amber-500/30">
+                                        <Icon name="handHeart" size="sm" className="text-amber-400" />
+                                        <span className="text-amber-300 text-xs font-medium">
+                                            {interpolate(t.game.butlerMasterLabel, { player: butlerMasterName })}
+                                        </span>
+                                        <span className="text-amber-400/60 text-xs ml-auto">
+                                            {t.game.butlerVoteRestriction}
+                                        </span>
+                                    </div>
+                                )}
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => handleVote(player.id, "for")}

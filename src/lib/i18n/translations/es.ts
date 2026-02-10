@@ -291,6 +291,13 @@ const es: Translations = {
         drunkSetupDescription: "Elige qué rol de Aldeano cree ser el Borracho. Verán este rol durante la revelación y jugarán como si fueran ese rol.",
         chooseBelievedRole: "Elige el rol de Aldeano que cree ser",
 
+        // Butler specific
+        butlerInfo: "Elige a tu Amo",
+        selectPlayerAsMaster: "Selecciona un jugador como tu amo. Mañana, solo podrás votar si ellos también votan.",
+        stepChooseMaster: "Elegir Amo",
+        butlerMasterLabel: "Amo: {player}",
+        butlerVoteRestriction: "Solo puede votar si su amo vota",
+
         // Perception Config
         perceptionConfigTitle: "Configurar Percepciones",
         perceptionConfigDescription:
@@ -497,6 +504,14 @@ const es: Translations = {
             description:
                 "No sabes que eres el Borracho. Crees que eres un personaje Aldeano, pero no lo eres.",
         },
+        butler: {
+            name: "Mayordomo",
+            description:
+                "Cada noche, elige un jugador (no tú): mañana, solo puedes votar si ellos también están votando.",
+            history: {
+                choseMaster: "{player} eligió a {target} como su amo",
+            },
+        },
     },
 
     effects: {
@@ -564,6 +579,11 @@ const es: Translations = {
             name: "Borracho",
             description:
                 "Este jugador cree ser un Aldeano, pero en realidad es el Borracho. Su habilidad falla permanentemente.",
+        },
+        butler_master: {
+            name: "Amo",
+            description:
+                "Este jugador es el Mayordomo — solo puede votar si su amo elegido también está votando.",
         },
     },
 

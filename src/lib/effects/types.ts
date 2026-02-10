@@ -22,7 +22,8 @@ export type EffectId =
     | "recluse_misregister"
     | "pending_role_reveal"
     | "poisoned"
-    | "drunk";
+    | "drunk"
+    | "butler_master";
 
 export type EffectDefinition = {
     id: EffectId;
