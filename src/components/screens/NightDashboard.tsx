@@ -123,7 +123,7 @@ export function NightDashboard({
                         {items.map((item, index) =>
                             item.type === "night_action" ? (
                                 <NightActionRow
-                                    key={`action-${item.data.roleId}`}
+                                    key={`action-${item.data.playerId}`}
                                     roleStatus={item.data}
                                     index={index + 1}
                                     isNext={index === nextPendingIndex}

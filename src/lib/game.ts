@@ -8,8 +8,8 @@ import {
     hasEffect,
     getAlivePlayers,
 } from "./types";
-import { getRole, getNightOrderRoles } from "./roles";
-import { NightActionResult, EffectToAdd } from "./roles/types";
+import { getRole } from "./roles";
+import { RoleDefinition, NightActionResult, EffectToAdd } from "./roles/types";
 import {
     resolveIntent,
     applyPipelineChanges,
@@ -222,6 +222,28 @@ export function applySetupAction(
 // GAME FLOW
 // ============================================================================
 
+/**
+ * Build a player-centric list of all players with night roles, sorted by nightOrder.
+ * When multiple players share the same role, they appear consecutively in player order.
+ */
+function getPlayersWithNightRoles(
+    state: GameState,
+): { player: PlayerState; role: RoleDefinition }[] {
+    const result: { player: PlayerState; role: RoleDefinition }[] = [];
+
+    for (const player of state.players) {
+        const role = getRole(player.roleId);
+        if (role && role.nightOrder !== null) {
+            result.push({ player, role });
+        }
+    }
+
+    // Sort by nightOrder (stable sort preserves player order for ties)
+    result.sort((a, b) => (a.role.nightOrder ?? 0) - (b.role.nightOrder ?? 0));
+
+    return result;
+}
+
 export type GameStep =
     | { type: "role_reveal"; playerId: string }
     | { type: "night_action"; playerId: string; roleId: string }
@@ -258,36 +280,37 @@ export function getNextStep(game: Game): GameStep {
     }
 
     if (state.phase === "night") {
-        // Find which roles have acted this night
+        // Find which players have acted this night (tracked by playerId)
         const nightStartIndex = findLastEventIndex(game, "night_started");
-        const actedRoles = game.history
-            .slice(nightStartIndex + 1)
-            .filter(
-                (e) => e.type === "night_action" || e.type === "night_skipped",
-            )
-            .map((e) => e.data.roleId as string);
+        const actedPlayerIds = new Set(
+            game.history
+                .slice(nightStartIndex + 1)
+                .filter(
+                    (e) =>
+                        e.type === "night_action" ||
+                        e.type === "night_skipped",
+                )
+                .map((e) => e.data.playerId as string),
+        );
 
-        // Get all roles with night actions in order
-        const nightRoles = getNightOrderRoles();
+        // Build a player-centric list sorted by nightOrder
+        const playersWithNightRoles = getPlayersWithNightRoles(state);
 
-        // Find next role that hasn't acted
-        for (const role of nightRoles) {
-            if (!actedRoles.includes(role.id)) {
-                const player = state.players.find((p) => p.roleId === role.id);
-                if (player) {
-                    if (role.shouldWake && !role.shouldWake(game, player)) {
-                        return {
-                            type: "night_action_skip",
-                            playerId: player.id,
-                            roleId: role.id,
-                        };
-                    }
+        // Find next player that hasn't acted
+        for (const { player, role } of playersWithNightRoles) {
+            if (!actedPlayerIds.has(player.id)) {
+                if (role.shouldWake && !role.shouldWake(game, player)) {
                     return {
-                        type: "night_action",
+                        type: "night_action_skip",
                         playerId: player.id,
                         roleId: role.id,
                     };
                 }
+                return {
+                    type: "night_action",
+                    playerId: player.id,
+                    roleId: role.id,
+                };
             }
         }
 
@@ -707,7 +730,6 @@ export type NightRoleStatus = {
  */
 export function getNightRolesStatus(game: Game): NightRoleStatus[] {
     const state = getCurrentState(game);
-    const nightRoles = getNightOrderRoles();
 
     const nightStartIndex = findLastEventIndex(game, "night_started");
     const actedEntries = game.history
@@ -716,19 +738,26 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
             (e) => e.type === "night_action" || e.type === "night_skipped",
         );
 
+    // Track acted players by playerId
+    const actedPlayerIds = new Map<string, "night_action" | "night_skipped">();
+    for (const entry of actedEntries) {
+        actedPlayerIds.set(
+            entry.data.playerId as string,
+            entry.type as "night_action" | "night_skipped",
+        );
+    }
+
+    // Build a player-centric list sorted by nightOrder
+    const playersWithNightRoles = getPlayersWithNightRoles(state);
+
     const result: NightRoleStatus[] = [];
 
-    for (const role of nightRoles) {
-        const player = state.players.find((p) => p.roleId === role.id);
-        if (!player) continue;
+    for (const { player, role } of playersWithNightRoles) {
+        const actedType = actedPlayerIds.get(player.id);
 
-        const entry = actedEntries.find(
-            (e) => e.data.roleId === role.id,
-        );
-
-        if (entry) {
+        if (actedType) {
             // Already processed — only include if it actually acted (not skipped)
-            if (entry.type === "night_action") {
+            if (actedType === "night_action") {
                 result.push({
                     roleId: role.id,
                     playerId: player.id,
