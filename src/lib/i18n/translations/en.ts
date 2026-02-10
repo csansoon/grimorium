@@ -291,6 +291,13 @@ const en: Translations = {
         butlerMasterLabel: "Master: {player}",
         butlerVoteRestriction: "May only vote if their master votes",
 
+        // Spy specific
+        stepViewGrimoire: "View Grimoire",
+        spyGrimoireTitle: "The Grimoire",
+        spyGrimoireDescription: "You may see all players and their roles.",
+        spyMalfunctionTitle: "The Grimoire",
+        spyMalfunctionDescription: "The Spy is malfunctioning — do not show the real Grimoire.",
+
         // Perception Config
         perceptionConfigTitle: "Configure Perceptions",
         perceptionConfigDescription:
@@ -510,6 +517,14 @@ const en: Translations = {
             description:
                 "There are extra Outsiders in play. [+2 Outsiders]",
         },
+        spy: {
+            name: "Spy",
+            description:
+                "Each night, you may look at the Grimoire. You might register as good & as a Townsfolk or Outsider, even if you are dead.",
+            history: {
+                viewedGrimoire: "{player} looked at the Grimoire",
+            },
+        },
     },
 
     effects: {
@@ -580,6 +595,11 @@ const en: Translations = {
             name: "Master",
             description:
                 "This player is the Butler — they may only vote if their chosen master is also voting.",
+        },
+        spy_misregister: {
+            name: "Misregister",
+            description:
+                "This player might register as good & as a Townsfolk or Outsider to information abilities.",
         },
     },
 

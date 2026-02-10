@@ -13,6 +13,7 @@ import PendingRoleReveal from "./definition/PendingRoleReveal";
 import Poisoned from "./definition/Poisoned";
 import Drunk from "./definition/Drunk";
 import ButlerMaster from "./definition/ButlerMaster";
+import SpyMisregister from "./definition/SpyMisregister";
 
 export const EFFECTS: Record<EffectId, EffectDefinition> = {
     dead: Dead,
@@ -29,6 +30,7 @@ export const EFFECTS: Record<EffectId, EffectDefinition> = {
     poisoned: Poisoned,
     drunk: Drunk,
     butler_master: ButlerMaster,
+    spy_misregister: SpyMisregister,
 };
 
 export function getEffect(effectId: string): EffectDefinition | undefined {

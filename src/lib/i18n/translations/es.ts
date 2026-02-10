@@ -298,6 +298,13 @@ const es: Translations = {
         butlerMasterLabel: "Amo: {player}",
         butlerVoteRestriction: "Solo puede votar si su amo vota",
 
+        // Spy specific
+        stepViewGrimoire: "Ver Grimorio",
+        spyGrimoireTitle: "El Grimorio",
+        spyGrimoireDescription: "Puedes ver a todos los jugadores y sus roles.",
+        spyMalfunctionTitle: "El Grimorio",
+        spyMalfunctionDescription: "El Espía está fallando — no muestres el Grimorio real.",
+
         // Perception Config
         perceptionConfigTitle: "Configurar Percepciones",
         perceptionConfigDescription:
@@ -517,6 +524,14 @@ const es: Translations = {
             description:
                 "Hay Forasteros extra en juego. [+2 Forasteros]",
         },
+        spy: {
+            name: "Espía",
+            description:
+                "Cada noche, puedes mirar el Grimorio. Podrías registrarte como bueno y como un Aldeano o Forastero, incluso estando muerto.",
+            history: {
+                viewedGrimoire: "{player} miró el Grimorio",
+            },
+        },
     },
 
     effects: {
@@ -589,6 +604,11 @@ const es: Translations = {
             name: "Amo",
             description:
                 "Este jugador es el Mayordomo — solo puede votar si su amo elegido también está votando.",
+        },
+        spy_misregister: {
+            name: "Registro Falso",
+            description:
+                "Este jugador podría registrarse como bueno y como un Aldeano o Forastero ante habilidades de información.",
         },
     },
 

@@ -23,7 +23,8 @@ export type EffectId =
     | "pending_role_reveal"
     | "poisoned"
     | "drunk"
-    | "butler_master";
+    | "butler_master"
+    | "spy_misregister";
 
 export type EffectDefinition = {
     id: EffectId;

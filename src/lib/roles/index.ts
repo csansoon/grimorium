@@ -22,6 +22,7 @@ import Poisoner from "./definition/trouble-brewing/Poisoner";
 import Drunk from "./definition/trouble-brewing/Drunk";
 import Butler from "./definition/trouble-brewing/Butler";
 import Baron from "./definition/trouble-brewing/Baron";
+import Spy from "./definition/trouble-brewing/Spy";
 
 export const ROLES: Record<RoleId, RoleDefinition> = {
     imp: Imp,
@@ -46,6 +47,7 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
     drunk: Drunk,
     butler: Butler,
     baron: Baron,
+    spy: Spy,
 };
 
 // Scripts define which roles are in each edition
@@ -76,6 +78,7 @@ export const SCRIPTS: Record<ScriptId, { name: string; roles: RoleId[] }> = {
             "drunk",
             "butler",
             "baron",
+            "spy",
             "imp",
         ],
     },

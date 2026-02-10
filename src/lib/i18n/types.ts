@@ -286,6 +286,13 @@ export type Translations = {
         butlerMasterLabel: string;
         butlerVoteRestriction: string;
 
+        // Spy specific
+        stepViewGrimoire: string;
+        spyGrimoireTitle: string;
+        spyGrimoireDescription: string;
+        spyMalfunctionTitle: string;
+        spyMalfunctionDescription: string;
+
         // Perception Config
         perceptionConfigTitle: string;
         perceptionConfigDescription: string;
@@ -465,6 +472,13 @@ export type Translations = {
             name: string;
             description: string;
         };
+        spy: {
+            name: string;
+            description: string;
+            history: {
+                viewedGrimoire: string;
+            };
+        };
     };
 
     // Effects
@@ -522,6 +536,10 @@ export type Translations = {
             description: string;
         };
         butler_master: {
+            name: string;
+            description: string;
+        };
+        spy_misregister: {
             name: string;
             description: string;
         };
