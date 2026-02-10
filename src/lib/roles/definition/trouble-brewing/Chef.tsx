@@ -2,11 +2,16 @@ import { useState, useMemo } from "react";
 import { RoleDefinition } from "../../types";
 import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
-import { NightActionLayout } from "../../../../components/layouts";
 import { NightStepListLayout } from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
-import { RoleRevealBadge, PerceptionConfigStep, MalfunctionConfigStep } from "../../../../components/items";
-import { Button, Icon } from "../../../../components/atoms";
+import {
+    PerceptionConfigStep,
+    MalfunctionConfigStep,
+    OracleCard,
+    NumberReveal,
+    TeamBackground,
+    CardLink,
+} from "../../../../components/items";
 import { GameState, PlayerState, isAlive } from "../../../types";
 import { perceive, getAmbiguousPlayers, applyPerceptionOverrides } from "../../../pipeline";
 import { isMalfunctioning } from "../../../effects";
@@ -261,33 +266,27 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Phase: Show Result
-        return (
-            <NightActionLayout
-                player={player}
-                title={t.game.chefInfo}
-                description={t.game.evilPairsExplanation}
-            >
-                <div className="text-center mb-6">
-                    <p className="text-parchment-400 text-sm mb-4">
-                        {t.game.evilPairsCount}
-                    </p>
-                    <RoleRevealBadge
-                        icon="chefHat"
-                        roleName={displayedEvilPairs.toString()}
-                    />
-                </div>
+        // Phase: Show Result — dynamic theme based on result
+        const resultTeam = displayedEvilPairs > 0 ? "minion" : "townsfolk";
 
-                <Button
-                    onClick={handleComplete}
-                    fullWidth
-                    size="lg"
-                    variant="night"
+        return (
+            <TeamBackground teamId={resultTeam}>
+                <OracleCard
+                    icon="chefHat"
+                    teamId={resultTeam}
+                    title={t.game.chefInfo}
+                    subtitle={getRoleName("chef")}
                 >
-                    <Icon name="check" size="md" className="mr-2" />
+                    <NumberReveal
+                        value={displayedEvilPairs}
+                        label={t.game.evilPairsCount}
+                        teamId={resultTeam}
+                    />
+                </OracleCard>
+                <CardLink onClick={handleComplete} isEvil={resultTeam !== "townsfolk"}>
                     {t.common.iUnderstandMyRole}
-                </Button>
-            </NightActionLayout>
+                </CardLink>
+            </TeamBackground>
         );
     },
 };

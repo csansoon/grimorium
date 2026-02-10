@@ -189,6 +189,8 @@ const en: Translations = {
         selectRandomRedHerring: "Random",
         yesOneIsDemon: "YES — One of them is a Demon!",
         noNeitherIsDemon: "NO — Neither is a Demon.",
+        fortuneTellerDemonDetected: "A Demon walks among them",
+        fortuneTellerNoDemon: "No Demon walks among them",
 
         // Undertaker specific
         undertakerInfo: "The Executed Role",

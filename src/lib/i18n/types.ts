@@ -186,6 +186,8 @@ export type Translations = {
         selectRandomRedHerring: string;
         yesOneIsDemon: string;
         noNeitherIsDemon: string;
+        fortuneTellerDemonDetected: string;
+        fortuneTellerNoDemon: string;
 
         // Undertaker specific
         undertakerInfo: string;

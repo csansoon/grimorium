@@ -5,15 +5,17 @@ import { isAlive } from "../../../types";
 import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
 import {
-    NightActionLayout,
     NarratorSetupLayout,
     NightStepListLayout,
 } from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
 import {
     StepSection,
-    MysticDivider,
     MalfunctionConfigStep,
+    OracleCard,
+    VisionReveal,
+    TeamBackground,
+    CardLink,
 } from "../../../../components/items";
 import { PlayerPickerList } from "../../../../components/inputs";
 import { Button, Icon } from "../../../../components/atoms";
@@ -422,66 +424,35 @@ const definition: RoleDefinition = {
                 ? malfunctionValue
                 : registersDemon(player1) || registersDemon(player2);
 
+        // Dynamic theme: demon background when detected, townsfolk when safe
+        const resultTeam = displaySawDemon ? "demon" : "townsfolk";
+
         return (
-            <NightActionLayout
-                player={player}
-                title={t.game.fortuneTellerInfo}
-                description={t.game.selectTwoPlayersToCheck}
-            >
-                <div className="space-y-3 mb-6">
-                    {player1 && (
-                        <div className="text-center p-3 bg-stone-800/50 rounded-lg border border-stone-700">
-                            <span className="text-lg font-medium text-stone-200">
-                                {player1.name}
-                            </span>
-                        </div>
-                    )}
-                    {player2 && (
-                        <div className="text-center p-3 bg-stone-800/50 rounded-lg border border-stone-700">
-                            <span className="text-lg font-medium text-stone-200">
-                                {player2.name}
-                            </span>
-                        </div>
-                    )}
-                </div>
-
-                <MysticDivider />
-
-                <div
-                    className={`text-center p-6 rounded-lg mb-6 ${
-                        displaySawDemon
-                            ? "bg-gradient-to-br from-red-900/50 to-red-800/30 border border-red-700/50"
-                            : "bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 border border-emerald-700/50"
-                    }`}
+            <TeamBackground teamId={resultTeam}>
+                <OracleCard
+                    icon="eye"
+                    teamId={resultTeam}
+                    title={t.game.fortuneTellerInfo}
+                    subtitle={getRoleName("fortune_teller")}
                 >
-                    <Icon
-                        name={displaySawDemon ? "alertTriangle" : "checkCircle"}
-                        size="2xl"
-                        className={
+                    <VisionReveal
+                        players={[
+                            player1?.name ?? "???",
+                            player2?.name ?? "???",
+                        ]}
+                        verdict={
                             displaySawDemon
-                                ? "text-red-400 mx-auto mb-3"
-                                : "text-emerald-400 mx-auto mb-3"
+                                ? t.game.fortuneTellerDemonDetected
+                                : t.game.fortuneTellerNoDemon
                         }
+                        verdictIcon={displaySawDemon ? "skull" : "shield"}
+                        teamId={resultTeam}
                     />
-                    <p
-                        className={`text-xl font-bold ${displaySawDemon ? "text-red-300" : "text-emerald-300"}`}
-                    >
-                        {displaySawDemon
-                            ? t.game.yesOneIsDemon
-                            : t.game.noNeitherIsDemon}
-                    </p>
-                </div>
-
-                <Button
-                    onClick={handleComplete}
-                    fullWidth
-                    size="lg"
-                    variant="night"
-                >
-                    <Icon name="check" size="md" className="mr-2" />
+                </OracleCard>
+                <CardLink onClick={handleComplete} isEvil={displaySawDemon}>
                     {t.common.iUnderstandMyRole}
-                </Button>
-            </NightActionLayout>
+                </CardLink>
+            </TeamBackground>
         );
     },
 };
