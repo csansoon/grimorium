@@ -512,6 +512,11 @@ const es: Translations = {
                 choseMaster: "{player} eligió a {target} como su amo",
             },
         },
+        baron: {
+            name: "Barón",
+            description:
+                "Hay Forasteros extra en juego. [+2 Forasteros]",
+        },
     },
 
     effects: {

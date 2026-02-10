@@ -461,6 +461,10 @@ export type Translations = {
                 choseMaster: string;
             };
         };
+        baron: {
+            name: string;
+            description: string;
+        };
     };
 
     // Effects

@@ -505,6 +505,11 @@ const en: Translations = {
                 choseMaster: "{player} chose {target} as their master",
             },
         },
+        baron: {
+            name: "Baron",
+            description:
+                "There are extra Outsiders in play. [+2 Outsiders]",
+        },
     },
 
     effects: {
