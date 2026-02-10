@@ -12,7 +12,11 @@ import { cn } from "../../lib/utils";
  * Smooth, readable motion with a bright “hope” core.
  */
 const TOWNSFOLK_SHADER = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform float u_time;
 uniform vec2 u_resolution;
 
@@ -101,7 +105,11 @@ void main() {
  * Looks “wrong” on purpose: refraction, facets, and wandering warps.
  */
 const OUTSIDER_SHADER = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform float u_time;
 uniform vec2 u_resolution;
 
@@ -204,7 +212,11 @@ void main(){
  * Busy, sneaky energy: warm sparks drifting through smoldering haze.
  */
 const MINION_SHADER = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform float u_time;
 uniform vec2 u_resolution;
 
@@ -296,7 +308,11 @@ void main(){
  * Reads as a presence: breathing core, ritual geometry, and violent interference.
  */
 const DEMON_SHADER = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform float u_time;
 uniform vec2 u_resolution;
 

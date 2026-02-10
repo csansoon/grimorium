@@ -86,14 +86,22 @@ export function useShaderBackground(
 
         // --- Resize handler (renders at reduced resolution) ---
         const resize = () => {
-            const w = Math.max(1, Math.floor(canvas.clientWidth * pixelScale));
-            const h = Math.max(1, Math.floor(canvas.clientHeight * pixelScale));
+            // DPR-aware drawing buffer size
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            // Apply your perf scale *after* DPR so it behaves consistently across devices
+            const scale = pixelScale * dpr;
+
+            const w = Math.max(1, Math.floor(canvas.clientWidth * scale));
+            const h = Math.max(1, Math.floor(canvas.clientHeight * scale));
+
             if (canvas.width !== w || canvas.height !== h) {
                 canvas.width = w;
                 canvas.height = h;
                 gl.viewport(0, 0, w, h);
             }
         };
+
         resize();
 
         const observer = new ResizeObserver(resize);
@@ -110,6 +118,7 @@ export function useShaderBackground(
                 gl.useProgram(program);
                 gl.uniform1f(timeLoc, time);
                 gl.uniform2f(resLoc, canvas.width, canvas.height);
+                gl.clear(gl.COLOR_BUFFER_BIT);
                 gl.drawArrays(gl.TRIANGLES, 0, 6);
             }
             animationId = requestAnimationFrame(render);
