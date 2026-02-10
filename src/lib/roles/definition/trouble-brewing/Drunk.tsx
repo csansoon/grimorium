@@ -26,7 +26,7 @@ import { SelectableRoleItem } from "../../../../components/inputs";
  * NightAction is null for the same reason.
  */
 
-function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
+function DrunkSetupAction({ player, onComplete }: SetupActionProps) {
     const { t } = useI18n();
     const [selectedRole, setSelectedRole] = useState<string | null>(null);
 
@@ -61,7 +61,11 @@ function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
             <div className="sticky top-0 z-10 bg-grimoire-dark/95 backdrop-blur-sm border-b border-mystic-gold/20 px-4 py-3">
                 <div className="flex items-center gap-3 max-w-lg mx-auto">
                     <div className="w-10 h-10 rounded-full bg-amber-900/30 border border-amber-700/50 flex items-center justify-center">
-                        <Icon name="beer" size="md" className="text-amber-400" />
+                        <Icon
+                            name="beer"
+                            size="md"
+                            className="text-amber-400"
+                        />
                     </div>
                     <div>
                         <h1 className="font-tarot text-lg text-parchment-100 tracking-wider uppercase">

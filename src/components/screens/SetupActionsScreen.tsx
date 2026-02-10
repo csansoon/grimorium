@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Game, GameState, PlayerState } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { useI18n } from "../../lib/i18n";
-import { Button, Icon } from "../atoms";
+import { Button, Icon, IconName } from "../atoms";
 import { ScreenFooter } from "../layouts/ScreenFooter";
 import { cn } from "../../lib/utils";
 
@@ -20,7 +20,7 @@ type SetupActionItem = {
     playerName: string;
     roleId: string;
     roleName: string;
-    roleIcon: string;
+    roleIcon: IconName;
     isDone: boolean;
 };
 

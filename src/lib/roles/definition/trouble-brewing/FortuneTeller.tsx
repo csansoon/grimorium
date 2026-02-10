@@ -4,7 +4,11 @@ import { getRole } from "../../index";
 import { isAlive } from "../../../types";
 import { useI18n } from "../../../i18n";
 import { DefaultRoleReveal } from "../../../../components/items/DefaultRoleReveal";
-import { NightActionLayout, NarratorSetupLayout, NightStepListLayout } from "../../../../components/layouts";
+import {
+    NightActionLayout,
+    NarratorSetupLayout,
+    NightStepListLayout,
+} from "../../../../components/layouts";
 import type { NightStep } from "../../../../components/layouts";
 import {
     StepSection,
@@ -16,7 +20,12 @@ import { Button, Icon } from "../../../../components/atoms";
 import { perceive } from "../../../pipeline";
 import { isMalfunctioning } from "../../../effects";
 
-type Phase = "step_list" | "red_herring_setup" | "configure_malfunction" | "narrator_setup" | "player_view";
+type Phase =
+    | "step_list"
+    | "red_herring_setup"
+    | "configure_malfunction"
+    | "narrator_setup"
+    | "player_view";
 
 const definition: RoleDefinition = {
     id: "fortune_teller",
@@ -30,7 +39,7 @@ const definition: RoleDefinition = {
             id: "red_herring_setup",
             icon: "fish",
             getLabel: (t) => t.game.stepAssignRedHerring,
-            condition: (game, player, state) => {
+            condition: (_game, player, state) => {
                 const isFirstNight = state.round === 1;
                 const hasRedHerring = state.players.some((p) =>
                     p.effects.some(
@@ -73,11 +82,16 @@ const definition: RoleDefinition = {
         const needsRedHerringSetup = isFirstNight && !hasRedHerring;
 
         const [phase, setPhase] = useState<Phase>("step_list");
-        const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(null);
+        const [selectedRedHerring, setSelectedRedHerring] = useState<
+            string | null
+        >(null);
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
         const [redHerringDone, setRedHerringDone] = useState(false);
-        const [malfunctionValue, setMalfunctionValue] = useState<boolean | null>(null);
-        const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false);
+        const [malfunctionValue, setMalfunctionValue] = useState<
+            boolean | null
+        >(null);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] =
+            useState(false);
 
         const malfunctioning = isMalfunctioning(player);
 
@@ -97,7 +111,9 @@ const definition: RoleDefinition = {
         };
 
         const getPlayerName = (playerId: string) => {
-            return state.players.find((p) => p.id === playerId)?.name ?? "Unknown";
+            return (
+                state.players.find((p) => p.id === playerId)?.name ?? "Unknown"
+            );
         };
 
         // Build steps
@@ -130,7 +146,13 @@ const definition: RoleDefinition = {
             });
 
             return result;
-        }, [needsRedHerringSetup, redHerringDone, malfunctioning, malfunctionConfigDone, t]);
+        }, [
+            needsRedHerringSetup,
+            redHerringDone,
+            malfunctioning,
+            malfunctionConfigDone,
+            t,
+        ]);
 
         const handleSelectStep = (stepId: string) => {
             if (stepId === "red_herring_setup") {
@@ -179,8 +201,12 @@ const definition: RoleDefinition = {
         const handleComplete = () => {
             if (selectedPlayers.length !== 2) return;
 
-            const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
-            const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
+            const player1 = state.players.find(
+                (p) => p.id === selectedPlayers[0],
+            );
+            const player2 = state.players.find(
+                (p) => p.id === selectedPlayers[1],
+            );
             if (!player1 || !player2) return;
 
             // Check if either selected player registers as a Demon
@@ -191,9 +217,13 @@ const definition: RoleDefinition = {
                 return false;
             };
 
-            const calculatedSawDemon = registersDemon(player1) || registersDemon(player2);
+            const calculatedSawDemon =
+                registersDemon(player1) || registersDemon(player2);
             // Use malfunction override if set, otherwise use calculated result
-            const sawDemon = malfunctionValue !== null ? malfunctionValue : calculatedSawDemon;
+            const sawDemon =
+                malfunctionValue !== null
+                    ? malfunctionValue
+                    : calculatedSawDemon;
 
             const entries: NightActionResult["entries"] = [];
 
@@ -385,7 +415,8 @@ const definition: RoleDefinition = {
                             const role = getRole(p.roleId);
                             const isSelected = selectedPlayers.includes(p.id);
                             const isActuallyEvil = role
-                                ? role.team === "demon" || role.team === "minion"
+                                ? role.team === "demon" ||
+                                  role.team === "minion"
                                 : false;
                             const isRedHerring =
                                 selectedRedHerring === p.id ||
@@ -403,14 +434,15 @@ const definition: RoleDefinition = {
                                     roleIcon={role?.icon ?? "user"}
                                     isSelected={isSelected}
                                     isDisabled={
-                                        !isSelected && selectedPlayers.length >= 2
+                                        !isSelected &&
+                                        selectedPlayers.length >= 2
                                     }
                                     highlightTeam={
                                         isActuallyEvil
                                             ? "demon"
                                             : isRedHerring
-                                                ? "minion"
-                                                : undefined
+                                              ? "minion"
+                                              : undefined
                                     }
                                     teamLabel={
                                         isRedHerring
@@ -439,7 +471,10 @@ const definition: RoleDefinition = {
             return false;
         };
 
-        const displaySawDemon = malfunctionValue !== null ? malfunctionValue : (registersDemon(player1) || registersDemon(player2));
+        const displaySawDemon =
+            malfunctionValue !== null
+                ? malfunctionValue
+                : registersDemon(player1) || registersDemon(player2);
 
         return (
             <NightActionLayout

@@ -4,7 +4,7 @@ import { getRole } from "../../lib/roles";
 import { getEffect } from "../../lib/effects";
 import { useI18n } from "../../lib/i18n";
 import { Perception, PerceptionContext } from "../../lib/pipeline/types";
-import { Icon, Button } from "../atoms";
+import { Icon } from "../atoms";
 import { NarratorSetupLayout } from "../layouts";
 import { cn } from "../../lib/utils";
 
@@ -37,7 +37,6 @@ type Props = {
 export function PerceptionConfigStep({
     ambiguousPlayers,
     context,
-    state,
     roleIcon,
     roleName,
     playerName,
@@ -128,11 +127,11 @@ export function PerceptionConfigStep({
                         ? getEffect(misregisterEffect.type)
                         : null;
                     const effectName = effectDef
-                        ? (
+                        ? ((
                               t.effects[
                                   effectDef.id as keyof typeof t.effects
                               ] as { name: string } | undefined
-                          )?.name ?? effectDef.id
+                          )?.name ?? effectDef.id)
                         : "";
 
                     return (
