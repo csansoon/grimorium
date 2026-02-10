@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
     GameState,
     PlayerState,
     hasEffect,
-    getAlivePlayers,
 } from "../../lib/types";
 import { getEffect } from "../../lib/effects";
 import { useI18n, interpolate } from "../../lib/i18n";
@@ -44,7 +43,6 @@ export function VotingPhase({
 }: Props) {
     const { t } = useI18n();
     const nominee = state.players.find((p) => p.id === nomineeId);
-    const [votes, setVotes] = useState<Record<string, VoteValue>>({});
 
     const canPlayerVote = (player: PlayerState): boolean => {
         // Check all effects for voting restrictions
@@ -62,9 +60,24 @@ export function VotingPhase({
         return true;
     };
 
-    const eligibleVoters = state.players.filter(
-        (p) => p.id !== nomineeId && canPlayerVote(p),
+    const eligibleVoters = useMemo(
+        () => state.players.filter(
+            (p) => p.id !== nomineeId && canPlayerVote(p),
+        ),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [state.players, nomineeId],
     );
+
+    // Preselect all eligible voters to "abstain"
+    const initialVotes = useMemo(() => {
+        const init: Record<string, VoteValue> = {};
+        for (const voter of eligibleVoters) {
+            init[voter.id] = "abstain";
+        }
+        return init;
+    }, [eligibleVoters]);
+
+    const [votes, setVotes] = useState<Record<string, VoteValue>>(initialVotes);
 
     const handleVote = (playerId: string, vote: VoteValue) => {
         setVotes({ ...votes, [playerId]: vote });
@@ -90,9 +103,7 @@ export function VotingPhase({
         (v) => v === "abstain",
     ).length;
 
-    const aliveCount = getAlivePlayers(state).length;
-    const majority = Math.ceil(aliveCount / 2);
-    const willPass = votesForCount >= majority;
+    const willPass = votesForCount > votesAgainstCount;
 
     if (!nominee) return null;
 
@@ -124,9 +135,7 @@ export function VotingPhase({
                             })}
                         </h1>
                         <p className="text-parchment-400 text-sm">
-                            {interpolate(t.game.majorityNeeded, {
-                                count: majority,
-                            })}
+                            {t.game.yesVsNoNeeded}
                         </p>
                     </div>
                 </div>
@@ -272,20 +281,18 @@ export function VotingPhase({
                 >
                     {willPass ? (
                         <p className="text-red-200 text-sm">
-                            ⚰️{" "}
                             {interpolate(t.game.willBeExecuted, {
                                 player: nominee.name,
-                                votes: votesForCount,
-                                majority,
+                                votesFor: votesForCount,
+                                votesAgainst: votesAgainstCount,
                             })}
                         </p>
                     ) : (
                         <p className="text-green-200 text-sm">
-                            ✓{" "}
                             {interpolate(t.game.willNotBeExecuted, {
                                 player: nominee.name,
-                                votes: votesForCount,
-                                majority,
+                                votesFor: votesForCount,
+                                votesAgainst: votesAgainstCount,
                             })}
                         </p>
                     )}

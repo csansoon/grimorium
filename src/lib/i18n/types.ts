@@ -104,14 +104,12 @@ export type Translations = {
 
         // Voting
         executePlayer: string;
-        majorityNeeded: string;
+        yesVsNoNeeded: string;
         votesFor: string;
         votesAgainst: string;
         abstain: string;
         willBeExecuted: string;
         willNotBeExecuted: string;
-        votes: string;
-        needed: string;
         confirmVotes: string;
         cancelNomination: string;
 

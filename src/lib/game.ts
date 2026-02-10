@@ -566,9 +566,7 @@ export function resolveVote(
     const nominee = state.players.find((p) => p.id === nomineeId);
     if (!nominee) return game;
 
-    const aliveCount = getAlivePlayers(state).length;
-    const majority = Math.ceil(aliveCount / 2);
-    const passed = votesFor.length >= majority;
+    const passed = votesFor.length > votesAgainst.length;
 
     // Mark dead voters as having used their vote
     const addEffects: Record<string, { type: string }[]> = {};
@@ -602,7 +600,7 @@ export function resolveVote(
                     key: passed ? "history.votePassed" : "history.voteFailed",
                 },
             ],
-            data: { nomineeId, votesFor, votesAgainst, passed, majority },
+            data: { nomineeId, votesFor, votesAgainst, passed },
         },
         { phase: "day" },
         addEffects,

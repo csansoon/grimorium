@@ -101,15 +101,13 @@ const es: Translations = {
         endDayGoToNight: "Terminar Día → Ir a Noche",
 
         executePlayer: "¿Ejecutar a {player}?",
-        majorityNeeded: "Mayoría necesaria: {count} votos",
+        yesVsNoNeeded: "Se necesitan más votos SÍ que NO",
         votesFor: "A favor",
         votesAgainst: "En contra",
         abstain: "Abstención",
-        willBeExecuted: "{player} será EJECUTADO ({votes}/{majority} votos)",
+        willBeExecuted: "{player} será EJECUTADO ({votesFor} sí vs {votesAgainst} no)",
         willNotBeExecuted:
-            "{player} NO será ejecutado ({votes}/{majority} necesarios)",
-        votes: "votos",
-        needed: "necesarios",
+            "{player} NO será ejecutado ({votesFor} sí vs {votesAgainst} no)",
         confirmVotes: "Confirmar Votos",
         cancelNomination: "Cancelar Nominación",
 

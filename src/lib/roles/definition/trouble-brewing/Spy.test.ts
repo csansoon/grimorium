@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import definition from "./Spy";
-import { EffectDefinition, EffectId } from "../../../effects/types";
+import { EffectDefinition } from "../../../effects/types";
 import {
     makePlayer,
     makeState,
@@ -51,7 +51,7 @@ describe("Spy", () => {
                         stateOverrides: { round: 1 },
                     },
                 ],
-                makeState({ round: 1, players: [player] })
+                makeState({ round: 1, players: [player] }),
             );
 
             expect(definition.shouldWake!(game, player)).toBe(true);
@@ -67,7 +67,7 @@ describe("Spy", () => {
                         stateOverrides: { round: 3 },
                     },
                 ],
-                makeState({ round: 3, players: [player] })
+                makeState({ round: 3, players: [player] }),
             );
 
             expect(definition.shouldWake!(game, player)).toBe(true);
@@ -76,7 +76,7 @@ describe("Spy", () => {
         it("does not wake when dead", () => {
             const player = addEffectTo(
                 makePlayer({ id: "p1", roleId: "spy" }),
-                "dead"
+                "dead",
             );
             const game = makeGameWithHistory(
                 [
@@ -86,7 +86,7 @@ describe("Spy", () => {
                         stateOverrides: { round: 1 },
                     },
                 ],
-                makeState({ round: 1, players: [player] })
+                makeState({ round: 1, players: [player] }),
             );
 
             expect(definition.shouldWake!(game, player)).toBe(false);
@@ -101,14 +101,11 @@ describe("Spy", () => {
         it("is detected by getAmbiguousPlayers for alignment context", () => {
             const spy = addEffectTo(
                 makePlayer({ id: "s1", roleId: "spy" }),
-                "spy_misregister"
+                "spy_misregister",
             );
             const villager = makePlayer({ id: "v1", roleId: "villager" });
 
-            const ambiguous = getAmbiguousPlayers(
-                [spy, villager],
-                "alignment"
-            );
+            const ambiguous = getAmbiguousPlayers([spy, villager], "alignment");
             expect(ambiguous).toHaveLength(1);
             expect(ambiguous[0].id).toBe("s1");
         });
@@ -116,14 +113,11 @@ describe("Spy", () => {
         it("is detected by getAmbiguousPlayers for team context", () => {
             const spy = addEffectTo(
                 makePlayer({ id: "s1", roleId: "spy" }),
-                "spy_misregister"
+                "spy_misregister",
             );
             const villager = makePlayer({ id: "v1", roleId: "villager" });
 
-            const ambiguous = getAmbiguousPlayers(
-                [spy, villager],
-                "team"
-            );
+            const ambiguous = getAmbiguousPlayers([spy, villager], "team");
             expect(ambiguous).toHaveLength(1);
             expect(ambiguous[0].id).toBe("s1");
         });
@@ -131,7 +125,7 @@ describe("Spy", () => {
         it("is detected by getAmbiguousPlayers for role context", () => {
             const spy = addEffectTo(
                 makePlayer({ id: "s1", roleId: "spy" }),
-                "spy_misregister"
+                "spy_misregister",
             );
 
             const ambiguous = getAmbiguousPlayers([spy], "role");
@@ -141,7 +135,7 @@ describe("Spy", () => {
         it("canRegisterAsTeam returns true for townsfolk and outsider", () => {
             const spy = addEffectTo(
                 makePlayer({ id: "s1", roleId: "spy" }),
-                "spy_misregister"
+                "spy_misregister",
             );
 
             expect(canRegisterAsTeam(spy, "townsfolk")).toBe(true);
@@ -153,7 +147,7 @@ describe("Spy", () => {
         it("canRegisterAsAlignment returns true for good", () => {
             const spy = addEffectTo(
                 makePlayer({ id: "s1", roleId: "spy" }),
-                "spy_misregister"
+                "spy_misregister",
             );
 
             expect(canRegisterAsAlignment(spy, "good")).toBe(true);

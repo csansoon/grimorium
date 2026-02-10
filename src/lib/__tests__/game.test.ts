@@ -370,10 +370,11 @@ describe("nominate", () => {
 });
 
 describe("resolveVote", () => {
-    it("executes player when majority votes for", () => {
-        const players = makeStandardPlayers(); // 5 alive => majority is 3
+    it("executes player when more yes than no votes", () => {
+        const players = makeStandardPlayers();
         const game = makeGame(makeState({ phase: "voting", round: 1, players }));
 
+        // 3 for, 1 against => passes (3 > 1)
         const updated = resolveVote(game, "p5", ["p1", "p2", "p3"], ["p4"]);
         const state = getCurrentState(updated);
         expect(state.phase).toBe("day");
@@ -385,10 +386,23 @@ describe("resolveVote", () => {
         expect(execEntry).toBeDefined();
     });
 
-    it("does not execute when vote fails", () => {
-        const players = makeStandardPlayers(); // 5 alive => majority is 3
+    it("executes when even a single yes with no opposition", () => {
+        const players = makeStandardPlayers();
         const game = makeGame(makeState({ phase: "voting", round: 1, players }));
 
+        // 1 for, 0 against => passes (1 > 0)
+        const updated = resolveVote(game, "p5", ["p1"], []);
+        const state = getCurrentState(updated);
+
+        const p5 = state.players.find((p) => p.id === "p5")!;
+        expect(hasEffect(p5, "dead")).toBe(true);
+    });
+
+    it("does not execute when more no than yes votes", () => {
+        const players = makeStandardPlayers();
+        const game = makeGame(makeState({ phase: "voting", round: 1, players }));
+
+        // 1 for, 3 against => fails (1 < 3)
         const updated = resolveVote(game, "p5", ["p1"], ["p2", "p3", "p4"]);
         const state = getCurrentState(updated);
         expect(state.phase).toBe("day");
@@ -398,6 +412,33 @@ describe("resolveVote", () => {
 
         const execEntry = updated.history.find((e) => e.type === "execution");
         expect(execEntry).toBeUndefined();
+    });
+
+    it("does not execute on a tie", () => {
+        const players = makeStandardPlayers();
+        const game = makeGame(makeState({ phase: "voting", round: 1, players }));
+
+        // 2 for, 2 against => fails (tie, not strictly more)
+        const updated = resolveVote(game, "p5", ["p1", "p2"], ["p3", "p4"]);
+        const state = getCurrentState(updated);
+
+        const p5 = state.players.find((p) => p.id === "p5")!;
+        expect(hasEffect(p5, "dead")).toBe(false);
+
+        const execEntry = updated.history.find((e) => e.type === "execution");
+        expect(execEntry).toBeUndefined();
+    });
+
+    it("does not execute when everyone abstains (0 vs 0)", () => {
+        const players = makeStandardPlayers();
+        const game = makeGame(makeState({ phase: "voting", round: 1, players }));
+
+        // 0 for, 0 against => fails (0 is not > 0)
+        const updated = resolveVote(game, "p5", [], []);
+        const state = getCurrentState(updated);
+
+        const p5 = state.players.find((p) => p.id === "p5")!;
+        expect(hasEffect(p5, "dead")).toBe(false);
     });
 
     it("tracks dead voter's used vote", () => {
