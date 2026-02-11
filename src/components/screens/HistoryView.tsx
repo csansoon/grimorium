@@ -43,7 +43,7 @@ export function HistoryView({ game, onClose }: Props) {
         <div className='flex items-center gap-3 max-w-lg mx-auto'>
           <BackButton onClick={onClose} />
           <div className='flex items-center gap-3'>
-            <Icon name='scrollText' size='md' className='text-mystic-gold' />
+            <Icon name='history' size='md' className='text-mystic-gold' />
             <h1 className='font-tarot text-lg text-parchment-100 tracking-wider uppercase'>
               {t.game.gameHistory}
             </h1>
@@ -104,7 +104,7 @@ export function HistoryView({ game, onClose }: Props) {
         {game.history.length === 0 && (
           <div className='text-center py-12 text-parchment-500'>
             <Icon
-              name='scrollText'
+              name='history'
               size='3xl'
               className='mx-auto mb-4 opacity-30'
             />

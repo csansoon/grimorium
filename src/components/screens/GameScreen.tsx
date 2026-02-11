@@ -676,7 +676,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             className='w-12 h-12 rounded-full bg-grimoire-dark/90 border border-mystic-gold/30 text-mystic-gold flex items-center justify-center shadow-lg hover:bg-grimoire-dark hover:border-mystic-gold/50 transition-colors'
             title={t.game.grimoire}
           >
-            <Icon name='scrollText' size='md' />
+            <Icon name='bookUser' size='md' />
           </button>
 
           <button
@@ -684,7 +684,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             className='w-12 h-12 rounded-full bg-grimoire-dark/90 border border-parchment-500/30 text-parchment-400 flex items-center justify-center shadow-lg hover:bg-grimoire-dark hover:border-parchment-400/50 hover:text-parchment-300 transition-colors'
             title={t.common.history}
           >
-            <Icon name='clock' size='md' />
+            <Icon name='history' size='md' />
           </button>
         </div>
       )}

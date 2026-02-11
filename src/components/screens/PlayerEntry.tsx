@@ -93,7 +93,7 @@ export function PlayerEntry({ onNext, onBack }: Props) {
           </div>
           {loadedFromLast && (
             <span className='text-xs text-mystic-gold/60 flex items-center gap-1'>
-              <Icon name='clock' size='xs' />
+              <Icon name='history' size='xs' />
               {t.newGame.loadedFromLastGame}
             </span>
           )}

@@ -32,7 +32,7 @@ export function GrimoireModal({
       <DialogContent className='max-h-[90vh]'>
         <DialogHeader>
           <div className='flex items-center justify-center gap-2'>
-            <Icon name='scrollText' size='md' className='text-mystic-gold' />
+            <Icon name='bookUser' size='md' className='text-mystic-gold' />
             <DialogTitle>{t.game.grimoire}</DialogTitle>
           </div>
         </DialogHeader>

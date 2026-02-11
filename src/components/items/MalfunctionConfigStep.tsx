@@ -60,7 +60,7 @@ export function MalfunctionConfigStep(props: Props) {
       <div className='rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4'>
         <div className='flex items-center gap-2'>
           <Icon
-            name='alertTriangle'
+            name='flask'
             size='md'
             className='text-amber-400 flex-shrink-0'
           />

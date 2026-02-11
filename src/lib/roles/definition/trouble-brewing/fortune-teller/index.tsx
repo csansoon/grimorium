@@ -66,7 +66,7 @@ const definition: RoleDefinition = {
     },
     {
       id: 'configure_malfunction',
-      icon: 'alertTriangle',
+      icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
     },
@@ -138,7 +138,7 @@ const definition: RoleDefinition = {
       if (malfunctioning) {
         result.push({
           id: 'configure_malfunction',
-          icon: 'alertTriangle',
+          icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
         })

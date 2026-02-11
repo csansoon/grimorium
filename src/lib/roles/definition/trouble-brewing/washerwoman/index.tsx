@@ -58,7 +58,7 @@ const definition: RoleDefinition = {
     },
     {
       id: 'configure_malfunction',
-      icon: 'alertTriangle',
+      icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
     },
@@ -211,7 +211,7 @@ const definition: RoleDefinition = {
       if (malfunctioning) {
         result.push({
           id: 'configure_malfunction',
-          icon: 'alertTriangle',
+          icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
         })
@@ -352,7 +352,7 @@ const definition: RoleDefinition = {
           <div className='rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4'>
             <div className='flex items-center gap-2'>
               <Icon
-                name='alertTriangle'
+                name='flask'
                 size='md'
                 className='text-amber-400 flex-shrink-0'
               />
@@ -399,7 +399,7 @@ const definition: RoleDefinition = {
           <div className='rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4'>
             <div className='flex items-center gap-2'>
               <Icon
-                name='alertTriangle'
+                name='flask'
                 size='md'
                 className='text-amber-400 flex-shrink-0'
               />

@@ -5,6 +5,7 @@ import {
   ArrowRightIcon,
   BeerIcon,
   BookMarkedIcon,
+  BookUserIcon,
   BirdhouseIcon,
   BombIcon,
   CrownIcon,
@@ -17,11 +18,12 @@ import {
   ChevronUpIcon,
   ChurchIcon,
   CircleIcon,
-  ClockIcon,
+  ConciergeBellIcon,
   CrosshairIcon,
   DiamondIcon,
   DicesIcon,
   EyeIcon,
+  FingerprintPatternIcon,
   FishIcon,
   FlaskConicalIcon,
   FlameIcon,
@@ -29,7 +31,9 @@ import {
   Gamepad2Icon,
   GlobeIcon,
   HandHeartIcon,
+  HatGlassesIcon,
   HeartIcon,
+  HistoryIcon,
   LandmarkIcon,
   ListOrderedIcon,
   MinusIcon,
@@ -63,7 +67,7 @@ import {
   ZapOffIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import { candleHolderLit, flowerLotus, starNorth } from '@lucide/lab'
+import { candleHolderLit, flowerLotus, hatTop, starNorth } from '@lucide/lab'
 
 const Icons = {
   alertTriangle: AlertTriangleIcon,
@@ -73,6 +77,7 @@ const Icons = {
   birdHouse: BirdhouseIcon,
   bomb: BombIcon,
   bookMarked: BookMarkedIcon,
+  bookUser: BookUserIcon,
   check: CheckIcon,
   crown: CrownIcon,
   checkCircle: CheckCircleIcon,
@@ -83,13 +88,14 @@ const Icons = {
   chevronUp: ChevronUpIcon,
   church: ChurchIcon,
   circle: CircleIcon,
-  clock: ClockIcon,
+  conciergeBell: ConciergeBellIcon,
   crosshair: CrosshairIcon,
   diamond: DiamondIcon,
   landmark: LandmarkIcon,
   listOrdered: ListOrderedIcon,
   dices: DicesIcon,
   eye: EyeIcon,
+  fingerprint: FingerprintPatternIcon,
   fish: FishIcon,
   flask: FlaskConicalIcon,
   flame: FlameIcon,
@@ -97,7 +103,9 @@ const Icons = {
   gamepad: Gamepad2Icon,
   globe: GlobeIcon,
   handHeart: HandHeartIcon,
+  hatGlasses: HatGlassesIcon,
   heart: HeartIcon,
+  history: HistoryIcon,
   minus: MinusIcon,
   moon: MoonIcon,
   play: PlayIcon,
@@ -133,6 +141,7 @@ const LabIcons = {
   candleHolderLit,
   flowerLotus,
   starNorth,
+  hatTop,
 }
 
 export type IconName = keyof typeof Icons | keyof typeof LabIcons

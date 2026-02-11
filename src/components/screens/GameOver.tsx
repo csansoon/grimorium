@@ -139,7 +139,7 @@ export function GameOver({ state, onMainMenu, onShowHistory }: Props) {
           variant='secondary'
           className='font-tarot uppercase tracking-wider'
         >
-          <Icon name='scrollText' size='md' className='mr-2' />
+          <Icon name='history' size='md' className='mr-2' />
           {t.common.history}
         </Button>
         <Button

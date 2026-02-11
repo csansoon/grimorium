@@ -150,7 +150,7 @@ const definition: RoleDefinition = {
       if (selectPlayerDone && malfunctioning) {
         result.push({
           id: 'configure_malfunction',
-          icon: 'alertTriangle',
+          icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
         })

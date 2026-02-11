@@ -68,7 +68,7 @@ export function DayPhase({
         {/* Grimoire Section */}
         <div className='mb-6'>
           <div className='flex items-center gap-2 mb-3 px-1'>
-            <Icon name='scrollText' size='sm' className='text-mystic-gold' />
+            <Icon name='bookUser' size='sm' className='text-mystic-gold' />
             <span className='font-tarot text-sm text-parchment-100 tracking-wider uppercase'>
               {t.game.grimoire}
             </span>

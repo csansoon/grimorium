@@ -51,13 +51,13 @@ const definition: RoleDefinition = {
   nightSteps: [
     {
       id: 'configure_malfunction',
-      icon: 'alertTriangle',
+      icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
     },
     {
       id: 'configure_perceptions',
-      icon: 'eye',
+      icon: 'hatGlasses',
       getLabel: (t) => t.game.stepConfigurePerceptions,
       condition: (_game, player, state) => {
         if (isMalfunctioning(player)) return false
@@ -122,7 +122,7 @@ const definition: RoleDefinition = {
       if (malfunctioning) {
         result.push({
           id: 'configure_malfunction',
-          icon: 'alertTriangle',
+          icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
         })
@@ -131,7 +131,7 @@ const definition: RoleDefinition = {
       if (needsPerceptionConfig) {
         result.push({
           id: 'configure_perceptions',
-          icon: 'eye',
+          icon: 'hatGlasses',
           label: t.game.stepConfigurePerceptions,
           status: perceptionConfigDone ? 'done' : 'pending',
         })

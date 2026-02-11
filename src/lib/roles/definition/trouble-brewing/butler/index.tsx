@@ -40,13 +40,13 @@ registerRoleTranslations('butler', 'es', es)
 const definition: RoleDefinition = {
   id: 'butler',
   team: 'outsider',
-  icon: 'handHeart',
+  icon: 'conciergeBell',
   nightOrder: 35, // Late — the Butler's choice doesn't interact with other night abilities
 
   nightSteps: [
     {
       id: 'choose_master',
-      icon: 'handHeart',
+      icon: 'conciergeBell',
       getLabel: (t) => t.game.stepChooseMaster,
     },
   ],

@@ -55,7 +55,7 @@ type Phase = 'step_list' | 'view_grimoire'
 const definition: RoleDefinition = {
   id: 'spy',
   team: 'minion',
-  icon: 'eye',
+  icon: 'hatGlasses',
   nightOrder: 36, // Late — sees up-to-date state after most actions
 
   shouldWake: (_game, player) => isAlive(player),
@@ -65,7 +65,7 @@ const definition: RoleDefinition = {
   nightSteps: [
     {
       id: 'view_grimoire',
-      icon: 'scrollText',
+      icon: 'bookUser',
       getLabel: (t) => t.game.stepViewGrimoire,
     },
   ],
@@ -113,7 +113,7 @@ const definition: RoleDefinition = {
       const steps: NightStep[] = [
         {
           id: 'view_grimoire',
-          icon: 'scrollText',
+          icon: 'bookUser',
           label: t.game.stepViewGrimoire,
           status: 'pending',
         },
@@ -121,7 +121,7 @@ const definition: RoleDefinition = {
 
       return (
         <NightStepListLayout
-          icon='eye'
+          icon='hatGlasses'
           roleName={getRoleName('spy', language)}
           playerName={player.name}
           isEvil
@@ -145,11 +145,7 @@ const definition: RoleDefinition = {
           >
             <div className='text-center mb-6'>
               <div className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-900/30 border border-amber-600/30'>
-                <Icon
-                  name='alertTriangle'
-                  size='md'
-                  className='text-amber-400'
-                />
+                <Icon name='flask' size='md' className='text-amber-400' />
                 <span className='text-amber-200 text-sm font-medium'>
                   {t.game.malfunctionWarning}
                 </span>

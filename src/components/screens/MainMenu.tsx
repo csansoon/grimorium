@@ -146,7 +146,7 @@ export function MainMenu({
         {games.length > 0 && (
           <div className='w-full'>
             <div className='flex items-center gap-2 mb-3 text-parchment-400'>
-              <Icon name='clock' size='sm' />
+              <Icon name='history' size='sm' />
               <span className='text-sm tracking-wider uppercase'>
                 {t.mainMenu.previousGames}
               </span>

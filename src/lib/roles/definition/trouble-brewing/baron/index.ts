@@ -22,7 +22,7 @@ registerRoleTranslations('baron', 'es', es)
 const definition: RoleDefinition = {
   id: 'baron',
   team: 'minion',
-  icon: 'crown',
+  icon: 'hatTop',
   nightOrder: null, // Doesn't wake at night — passive ability
 
   RoleReveal: DefaultRoleReveal,
