@@ -5,6 +5,7 @@ import { getTeam } from "../../lib/teams";
 import { useI18n } from "../../lib/i18n";
 import { Icon, Badge, IconName } from "../atoms";
 import { PlayerDetailModal } from "./PlayerDetailModal";
+import { PlayerRoleIcon, filterVisibleEffects } from "./PlayerRoleIcon";
 import { cn } from "../../lib/utils";
 import { getEffect } from "../../lib/effects";
 
@@ -28,7 +29,7 @@ function PlayerRow({ player, onClick }: { player: PlayerState; onClick: () => vo
     }, [player.roleId, t.roles]);
 
     const effectIcons = useMemo<IconName[]>(() => {
-        return player.effects.map(e => {
+        return filterVisibleEffects(player.effects).map(e => {
             const effect = getEffect(e.type);
             return effect ? effect.icon : "x";
         });
@@ -44,25 +45,7 @@ function PlayerRow({ player, onClick }: { player: PlayerState; onClick: () => vo
                 isDead ? "opacity-60" : ""
             )}
         >
-            {/* Role Icon */}
-            <div
-                className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 border",
-                    isDead
-                        ? "bg-parchment-500/10 border-parchment-500/20"
-                        : team?.isEvil
-                            ? "bg-red-900/30 border-red-600/30"
-                            : "bg-mystic-gold/10 border-mystic-gold/20"
-                )}
-            >
-                {isDead ? (
-                    <Icon name="skull" size="md" className="text-parchment-500" />
-                ) : role ? (
-                    <Icon name={role.icon} size="md" className={team?.colors.text} />
-                ) : (
-                    <Icon name="user" size="md" className="text-parchment-400" />
-                )}
-            </div>
+            <PlayerRoleIcon player={player} size="md" />
 
             {/* Player Info */}
             <div className="flex-1 min-w-0">

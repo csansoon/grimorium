@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { PlayerState } from "../../lib/types";
+import { PlayerState, hasEffect } from "../../lib/types";
 import { getRole } from "../../lib/roles";
 import { getTeam } from "../../lib/teams";
 import { getEffect } from "../../lib/effects";
 import { useI18n } from "../../lib/i18n";
 import { Icon } from "../atoms";
 import { IconName } from "../atoms/icon";
+import { PlayerRoleIcon, filterVisibleEffects } from "../items/PlayerRoleIcon";
 import { cn } from "../../lib/utils";
 
 type PlayerPickerListProps = {
@@ -75,6 +76,7 @@ export function PlayerPickerList({
                 const isDisabled = !isSelected && isAtMax;
                 const role = getRole(player.roleId);
                 const team = role ? getTeam(role.team) : null;
+                const isDead = hasEffect(player, "dead");
 
                 return (
                     <button
@@ -88,6 +90,7 @@ export function PlayerPickerList({
                                 ? styles.selected
                                 : "border-white/10 bg-white/5 hover:bg-white/[0.08]",
                             isDisabled && "opacity-40 cursor-not-allowed",
+                            isDead && !isSelected && "opacity-60",
                         )}
                         style={
                             isSelected
@@ -95,25 +98,20 @@ export function PlayerPickerList({
                                 : undefined
                         }
                     >
-                        {/* Role icon medallion */}
-                        <div
-                            className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                        <PlayerRoleIcon
+                            player={player}
+                            size="sm"
+                            circleClassName={
                                 isSelected && team
                                     ? team.colors.cardIconBg
-                                    : "bg-white/5 border border-white/10",
-                            )}
-                        >
-                            <Icon
-                                name={role?.icon ?? "user"}
-                                size="sm"
-                                className={
-                                    isSelected && team
-                                        ? team.colors.text
-                                        : "text-parchment-500"
-                                }
-                            />
-                        </div>
+                                    : "bg-white/5 border border-white/10"
+                            }
+                            iconClassName={
+                                isSelected && team
+                                    ? team.colors.text
+                                    : "text-parchment-500"
+                            }
+                        />
 
                         {/* Player info */}
                         <div className="flex-1 min-w-0 text-left">
@@ -121,9 +119,11 @@ export function PlayerPickerList({
                             <span
                                 className={cn(
                                     "text-sm font-medium truncate block",
-                                    isSelected
-                                        ? "text-parchment-100"
-                                        : "text-parchment-200",
+                                    isDead
+                                        ? "text-parchment-500 line-through"
+                                        : isSelected
+                                            ? "text-parchment-100"
+                                            : "text-parchment-200",
                                 )}
                             >
                                 {player.name}
@@ -192,7 +192,7 @@ export function PlayerPickerList({
 
 function EffectIcons({ player }: { player: PlayerState }) {
     const effectIcons = useMemo(() => {
-        return player.effects
+        return filterVisibleEffects(player.effects)
             .map((e) => {
                 const def = getEffect(e.type);
                 return def

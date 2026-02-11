@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { RoleDefinition } from "../../lib/roles/types";
 import { getTeam, TeamId } from "../../lib/teams";
-import { GameState, PlayerState } from "../../lib/types";
+import { GameState, PlayerState, hasEffect } from "../../lib/types";
 import { getEffect } from "../../lib/effects";
 import { useI18n } from "../../lib/i18n";
 import { Icon } from "../atoms";
 import { IconName } from "../atoms/icon";
+import { filterVisibleEffects } from "../items/PlayerRoleIcon";
 import { cn } from "../../lib/utils";
 
 const TEAM_ORDER: TeamId[] = ["townsfolk", "outsider", "minion", "demon"];
@@ -269,8 +270,11 @@ export function RolePickerGrid({
 // ============================================================================
 
 function PlayerRow({ player }: { player: PlayerState }) {
-    // Get visible effect icons (skip internal/hidden effects)
-    const effectIcons = player.effects
+    const isDead = hasEffect(player, "dead");
+    const isDrunk = hasEffect(player, "drunk");
+
+    // Get visible effect icons (skip effects with dedicated custom UI)
+    const effectIcons = filterVisibleEffects(player.effects)
         .map((e) => {
             const def = getEffect(e.type);
             return def ? { id: e.type, icon: def.icon as IconName } : null;
@@ -280,9 +284,16 @@ function PlayerRow({ player }: { player: PlayerState }) {
         );
 
     return (
-        <div className="flex items-center gap-1 min-w-0">
-            <Icon name="user" size="xs" className="text-parchment-500 flex-shrink-0" />
-            <span className="text-[11px] text-parchment-400 truncate flex-1">
+        <div className={cn("flex items-center gap-1 min-w-0", isDead && "opacity-60")}>
+            <Icon
+                name={isDead ? "skull" : isDrunk ? "beer" : "user"}
+                size="xs"
+                className={cn("flex-shrink-0", isDrunk && !isDead ? "text-amber-400" : "text-parchment-500")}
+            />
+            <span className={cn(
+                "text-[11px] truncate flex-1",
+                isDead ? "text-parchment-500 line-through" : "text-parchment-400",
+            )}>
                 {player.name}
             </span>
             {effectIcons.length > 0 && (

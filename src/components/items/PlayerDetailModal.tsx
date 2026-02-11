@@ -13,6 +13,7 @@ import {
     Badge,
     Button,
 } from "../atoms";
+import { PlayerRoleIcon, filterVisibleEffects } from "./PlayerRoleIcon";
 import { cn } from "../../lib/utils";
 
 type Props = {
@@ -31,6 +32,8 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard, onEdi
     const role = getRole(player.roleId);
     const team = role ? getTeam(role.team) : null;
     const isDead = hasEffect(player, "dead");
+    const isDrunk = hasEffect(player, "drunk");
+    const isEvil = team?.isEvil ?? false;
 
     const roleId = role?.id as keyof typeof t.roles | undefined;
     const teamId = role?.team as TeamId | undefined;
@@ -39,8 +42,6 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard, onEdi
     const roleDescription = (roleId && t.roles[roleId]?.description) ?? "";
     const teamName = teamId ? t.teams[teamId]?.name : "";
     const winCondition = teamId ? t.teams[teamId]?.winCondition : "";
-
-    const isEvil = team?.isEvil ?? false;
 
     const getEffectName = (effectType: string) => {
         const effectKey = effectType as EffectId;
@@ -58,28 +59,11 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard, onEdi
                 <DialogHeader>
                     {/* Player status indicator */}
                     <div className="flex justify-center mb-4">
-                        <div
-                            className={cn(
-                                "w-16 h-16 rounded-full flex items-center justify-center border-2",
-                                isDead
-                                    ? "bg-parchment-500/10 border-parchment-500/30"
-                                    : isEvil
-                                        ? "bg-red-900/30 border-red-600/40"
-                                        : "bg-mystic-gold/10 border-mystic-gold/30"
-                            )}
-                        >
-                            {isDead ? (
-                                <Icon name="skull" size="2xl" className="text-parchment-500" />
-                            ) : role ? (
-                                <Icon
-                                    name={role.icon}
-                                    size="2xl"
-                                    className={isEvil ? "text-red-400" : "text-mystic-gold"}
-                                />
-                            ) : (
-                                <Icon name="user" size="2xl" className="text-parchment-400" />
-                            )}
-                        </div>
+                        <PlayerRoleIcon
+                            player={player}
+                            size="lg"
+                            iconClassName={isEvil ? "text-red-400" : "text-mystic-gold"}
+                        />
                     </div>
 
                     {/* Player Name */}
@@ -91,6 +75,12 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard, onEdi
                             <Badge variant="dead">
                                 <Icon name="skull" size="xs" className="mr-1" />
                                 {t.effects.dead.name}
+                            </Badge>
+                        )}
+                        {isDrunk && (
+                            <Badge variant="outsider">
+                                <Icon name="beer" size="xs" className="mr-1" />
+                                {t.effects.drunk.name}
                             </Badge>
                         )}
                         {role && (
@@ -121,8 +111,8 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard, onEdi
                         </div>
                     )}
 
-                    {/* Effects Section */}
-                    {player.effects.length > 0 && (
+                    {/* Effects Section (dead and drunk are shown via custom UI above) */}
+                    {filterVisibleEffects(player.effects).length > 0 && (
                         <div className="mb-6">
                             <div className="flex items-center gap-2 mb-2">
                                 <Icon name="sparkles" size="sm" className="text-cyan-400" />
@@ -131,7 +121,8 @@ export function PlayerDetailModal({ player, open, onClose, onShowRoleCard, onEdi
                                 </span>
                             </div>
                             <div className="space-y-2">
-                                {player.effects.map((effectInstance, index) => {
+                                {filterVisibleEffects(player.effects)
+                                    .map((effectInstance, index) => {
                                     const effect = getEffect(effectInstance.type);
                                     const effectName = getEffectName(effectInstance.type);
                                     const effectDescription = getEffectDescription(effectInstance.type);
