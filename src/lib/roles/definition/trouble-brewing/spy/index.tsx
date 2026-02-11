@@ -9,7 +9,12 @@ import {
 } from '../../../../i18n'
 import { getRole } from '../../../index'
 import { getTeam } from '../../../../teams'
-import { isMalfunctioning } from '../../../../effects'
+import {
+  isMalfunctioning,
+  getEffect,
+  getEffectType,
+  EFFECT_TYPE_BADGE_VARIANT,
+} from '../../../../effects'
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import {
   NightActionLayout,
@@ -225,10 +230,16 @@ function SpyGrimoireRow({
   const visibleEffects = useMemo(() => {
     return player.effects
       .filter((e) => e.type !== 'dead' && e.type !== 'used_dead_vote')
-      .map((e) => ({
-        type: e.type,
-        name: getEffectName(e.type, language),
-      }))
+      .map((e) => {
+        const def = getEffect(e.type)
+        const effectType = getEffectType(e, def)
+        const variant = EFFECT_TYPE_BADGE_VARIANT[effectType]
+        return {
+          type: e.type,
+          name: getEffectName(e.type, language),
+          variant,
+        }
+      })
   }, [player.effects, language])
 
   return (
@@ -276,7 +287,7 @@ function SpyGrimoireRow({
           {visibleEffects.map((effect) => (
             <Badge
               key={effect.type}
-              variant='effect'
+              variant={effect.variant}
               className='px-1.5 py-0.5 text-[10px]'
             >
               {effect.name}

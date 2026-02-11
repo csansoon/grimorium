@@ -11,6 +11,7 @@ registerEffectTranslations('recluse_misregister', 'es', es)
 const definition: EffectDefinition = {
   id: 'recluse_misregister',
   icon: 'candleHolderLit',
+  defaultType: 'perception',
   canRegisterAs: {
     teams: ['minion', 'demon'],
     alignments: ['evil'],

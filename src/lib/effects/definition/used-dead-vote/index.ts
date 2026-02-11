@@ -10,6 +10,7 @@ registerEffectTranslations('used_dead_vote', 'es', es)
 const definition: EffectDefinition = {
   id: 'used_dead_vote',
   icon: 'vote',
+  defaultType: 'nerf',
 
   preventsVoting: true,
 

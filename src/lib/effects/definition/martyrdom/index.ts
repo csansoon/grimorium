@@ -40,6 +40,7 @@ const martyrdomWinCondition: WinConditionCheck = {
 const definition: EffectDefinition = {
   id: 'martyrdom',
   icon: 'bomb',
+  defaultType: 'passive',
   winConditions: [martyrdomWinCondition],
 }
 

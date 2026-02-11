@@ -102,6 +102,7 @@ const pureHandler: IntentHandler = {
 const definition: EffectDefinition = {
   id: 'pure',
   icon: 'flowerLotus',
+  defaultType: 'passive',
   handlers: [pureHandler],
 }
 

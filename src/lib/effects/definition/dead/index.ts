@@ -11,6 +11,7 @@ registerEffectTranslations('dead', 'es', es)
 const definition: EffectDefinition = {
   id: 'dead',
   icon: 'skull',
+  defaultType: 'nerf',
 
   preventsNightWake: true,
   preventsVoting: true,

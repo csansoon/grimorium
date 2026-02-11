@@ -4,6 +4,7 @@ import {
   getPlayer,
 } from '../../lib/types'
 import { getRole } from '../../lib/roles'
+import { getEffect, getEffectType, EFFECT_TYPE_BADGE_VARIANT } from '../../lib/effects'
 import {
   useI18n,
   Translations,
@@ -169,10 +170,17 @@ export function RichMessage({ message, state }: Props) {
             renderRoleBadge(String(paramValue), `${baseKey}-role-${paramKey}`),
           )
         } else if (EFFECT_PARAM_KEYS.includes(paramKey)) {
-          // Render as effect badge
+          // Render as effect badge (use default type when no instance)
+          const effectTypeId = String(paramValue)
+          const effect = getEffect(effectTypeId)
+          const effectType = getEffectType(
+            { id: '', type: effectTypeId, data: {} },
+            effect,
+          )
+          const badgeVariant = EFFECT_TYPE_BADGE_VARIANT[effectType]
           result.push(
-            <Badge key={`${baseKey}-effect-${paramKey}`} variant='effect'>
-              {getLocalEffectName(String(paramValue))}
+            <Badge key={`${baseKey}-effect-${paramKey}`} variant={badgeVariant}>
+              {getLocalEffectName(effectTypeId)}
             </Badge>,
           )
         } else {
@@ -239,8 +247,14 @@ export function RichMessage({ message, state }: Props) {
           }
 
           case 'effect': {
+            const effect = getEffect(part.effectType)
+            const effectType = getEffectType(
+              { id: '', type: part.effectType, data: {} },
+              effect,
+            )
+            const badgeVariant = EFFECT_TYPE_BADGE_VARIANT[effectType]
             return (
-              <Badge key={index} variant='effect'>
+              <Badge key={index} variant={badgeVariant}>
                 {getLocalEffectName(part.effectType)}
               </Badge>
             )

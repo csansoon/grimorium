@@ -1,5 +1,5 @@
 import { IconName } from '../../components/atoms/icon'
-import { GameState, PlayerState } from '../types'
+import { EffectInstance, GameState, PlayerState } from '../types'
 import { TeamId } from '../teams'
 import {
   IntentHandler,
@@ -25,6 +25,24 @@ export type EffectId =
   | 'drunk'
   | 'butler_master'
   | 'spy_misregister'
+
+/**
+ * Semantic type of an effect for badge styling.
+ * Generic categories: why it's there + valence (buff/nerf/neutral).
+ * - buff: helps the player (protection, ability)
+ * - nerf: hurts the player (death, malfunction)
+ * - marker: informational only, no mechanical impact
+ * - passive: reactive, triggers on events
+ * - perception: affects how info roles see you
+ * - pending: workflow, awaiting narrator action
+ */
+export type EffectType =
+  | 'buff'
+  | 'nerf'
+  | 'marker'
+  | 'passive'
+  | 'perception'
+  | 'pending'
 
 export type EffectDefinition = {
   id: EffectId
@@ -69,4 +87,15 @@ export type EffectDefinition = {
     teams?: TeamId[]
     alignments?: ('good' | 'evil')[]
   }
+
+  /**
+   * Semantic type for badge styling. Generic: buff/nerf/marker/passive/perception/pending.
+   */
+  defaultType?: EffectType
+
+  /**
+   * Resolves the semantic type for a specific effect instance.
+   * Use when the same effect can have different types based on context.
+   */
+  getType?: (instance: EffectInstance) => EffectType
 }

@@ -1,7 +1,7 @@
 import { PlayerState, hasEffect } from '../../lib/types'
 import { getRole } from '../../lib/roles'
 import { getTeam, TeamId } from '../../lib/teams'
-import { getEffect } from '../../lib/effects'
+import { getEffect, getEffectType, EFFECT_TYPE_BADGE_VARIANT } from '../../lib/effects'
 import {
   useI18n,
   getRoleName as getRegistryRoleName,
@@ -141,6 +141,8 @@ export function PlayerDetailModal({
                     const effectDescription = getEffectDescription(
                       effectInstance.type,
                     )
+                    const effectType = getEffectType(effectInstance, effect)
+                    const badgeVariant = EFFECT_TYPE_BADGE_VARIANT[effectType]
 
                     return (
                       <div
@@ -149,7 +151,7 @@ export function PlayerDetailModal({
                       >
                         <div className='flex items-center gap-2'>
                           {effect && <Icon name={effect.icon} size='xs' />}
-                          <Badge variant='effect'>{effectName}</Badge>
+                          <Badge variant={badgeVariant}>{effectName}</Badge>
                         </div>
                         {effectDescription && (
                           <p className='text-parchment-400 text-xs mt-2'>

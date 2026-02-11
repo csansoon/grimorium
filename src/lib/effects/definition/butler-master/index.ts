@@ -21,6 +21,7 @@ registerEffectTranslations('butler_master', 'es', es)
 const definition: EffectDefinition = {
   id: 'butler_master',
   icon: 'handHeart',
+  defaultType: 'marker',
 }
 
 export default definition

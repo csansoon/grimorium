@@ -109,6 +109,7 @@ const scarletWomanHandler: IntentHandler = {
 const definition: EffectDefinition = {
   id: 'scarlet_woman',
   icon: 'sparkles',
+  defaultType: 'passive',
   handlers: [scarletWomanHandler],
 }
 

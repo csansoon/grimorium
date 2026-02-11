@@ -1,4 +1,5 @@
-import { EffectDefinition, EffectId } from './types'
+import { EffectDefinition, EffectId, EffectType } from './types'
+import type { EffectInstance } from '../types'
 import Dead from './definition/dead'
 import UsedDeadVote from './definition/used-dead-vote'
 import Safe from './definition/safe'
@@ -52,6 +53,32 @@ export function isMalfunctioning(player: {
     const def = EFFECTS[e.type as EffectId]
     return def?.poisonsAbility === true
   })
+}
+
+/**
+ * Resolves the semantic type of an effect instance for badge styling.
+ * Same effect can have different types (e.g. safe from Soldier vs Monk).
+ */
+export function getEffectType(
+  instance: EffectInstance,
+  def?: EffectDefinition | null,
+): EffectType {
+  if (!def) return 'marker'
+  if (def.getType) return def.getType(instance)
+  return def.defaultType ?? 'marker'
+}
+
+/** Badge variant for each effect type (for Badge component). */
+export const EFFECT_TYPE_BADGE_VARIANT: Record<
+  EffectType,
+  `effect_${EffectType}`
+> = {
+  buff: 'effect_buff',
+  nerf: 'effect_nerf',
+  marker: 'effect_marker',
+  passive: 'effect_passive',
+  perception: 'effect_perception',
+  pending: 'effect_pending',
 }
 
 export * from './types'

@@ -28,6 +28,7 @@ registerEffectTranslations('drunk', 'es', es)
 const definition: EffectDefinition = {
   id: 'drunk',
   icon: 'beer',
+  defaultType: 'nerf',
   poisonsAbility: true,
   perceptionModifiers: [
     {

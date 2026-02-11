@@ -92,6 +92,7 @@ const roleChangeFollowUp: NightFollowUpDefinition = {
 const definition: EffectDefinition = {
   id: 'pending_role_reveal',
   icon: 'sparkles',
+  defaultType: 'pending',
   nightFollowUps: [roleChangeFollowUp],
 }
 

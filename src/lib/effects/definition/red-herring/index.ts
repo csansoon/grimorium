@@ -10,6 +10,7 @@ registerEffectTranslations('red_herring', 'es', es)
 const definition: EffectDefinition = {
   id: 'red_herring',
   icon: 'fish',
+  defaultType: 'marker',
   perceptionModifiers: [
     {
       context: 'role',

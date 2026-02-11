@@ -49,6 +49,7 @@ const safeHandler: IntentHandler = {
 const definition: EffectDefinition = {
   id: 'safe',
   icon: 'shield',
+  defaultType: 'buff',
   handlers: [safeHandler],
 }
 

@@ -65,6 +65,7 @@ const bounceHandler: IntentHandler = {
 const definition: EffectDefinition = {
   id: 'bounce',
   icon: 'trendingUpDown',
+  defaultType: 'buff',
   handlers: [bounceHandler],
 }
 

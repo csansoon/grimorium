@@ -21,6 +21,7 @@ registerEffectTranslations('poisoned', 'es', es)
 const definition: EffectDefinition = {
   id: 'poisoned',
   icon: 'flask',
+  defaultType: 'nerf',
   poisonsAbility: true,
 }
 

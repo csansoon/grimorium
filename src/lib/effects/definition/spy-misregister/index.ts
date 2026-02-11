@@ -23,6 +23,7 @@ registerEffectTranslations('spy_misregister', 'es', es)
 const definition: EffectDefinition = {
   id: 'spy_misregister',
   icon: 'eye',
+  defaultType: 'perception',
   canRegisterAs: {
     teams: ['townsfolk', 'outsider'],
     alignments: ['good'],

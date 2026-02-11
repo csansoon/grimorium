@@ -18,6 +18,13 @@ const badgeVariants = cva(
         dead: 'bg-gray-600/50 text-gray-300 border border-gray-500/30',
         success: 'bg-green-500/20 text-green-200 border border-green-400/30',
         warning: 'bg-yellow-500/20 text-yellow-200 border border-yellow-400/30',
+        // Effect type variants (buff/nerf/marker/passive/perception/pending)
+        effect_buff: 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30',
+        effect_nerf: 'bg-rose-600/20 text-rose-200 border border-rose-500/30',
+        effect_marker: 'bg-amber-500/20 text-amber-200 border border-amber-400/30',
+        effect_passive: 'bg-violet-500/20 text-violet-200 border border-violet-400/30',
+        effect_perception: 'bg-indigo-500/20 text-indigo-200 border border-indigo-400/30',
+        effect_pending: 'bg-yellow-500/20 text-yellow-200 border border-yellow-400/30',
       },
     },
     defaultVariants: {

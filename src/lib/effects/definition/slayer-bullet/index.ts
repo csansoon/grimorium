@@ -22,6 +22,7 @@ const slayerDayAction: DayActionDefinition = {
 const definition: EffectDefinition = {
   id: 'slayer_bullet',
   icon: 'crosshair',
+  defaultType: 'buff',
   dayActions: [slayerDayAction],
 }
 
