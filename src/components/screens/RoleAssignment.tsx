@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { getRole } from "../../lib/roles";
 import { getTeam } from "../../lib/teams";
 import { useI18n, interpolate } from "../../lib/i18n";
+import { resolveRoleAssignments } from "../../lib/roleAssignment";
 import { Button, Icon, Badge, BackButton } from "../atoms";
 import { ScreenFooter } from "../layouts/ScreenFooter";
 import { cn } from "../../lib/utils";
@@ -80,31 +81,11 @@ export function RoleAssignment({
     };
 
     const handleStart = () => {
-        const finalAssignments: { name: string; roleId: string }[] = [];
-        const remainingRoles: string[] = [...selectedRoles];
-
-        for (const [playerName, roleId] of Object.entries(assignments)) {
-            if (roleId) {
-                finalAssignments.push({ name: playerName, roleId });
-                const index = remainingRoles.indexOf(roleId);
-                if (index !== -1) {
-                    remainingRoles.splice(index, 1);
-                }
-            }
-        }
-
-        const unassignedPlayers = players.filter(
-            (name) => !assignments[name]
-        );
-        const shuffled = [...remainingRoles].sort(() => Math.random() - 0.5);
-
-        for (const playerName of unassignedPlayers) {
-            const roleId = shuffled.pop();
-            if (roleId) {
-                finalAssignments.push({ name: playerName, roleId: roleId });
-            }
-        }
-
+        const finalAssignments = resolveRoleAssignments({
+            players,
+            selectedRoles,
+            manualAssignments: assignments,
+        });
         onStart(finalAssignments);
     };
 
