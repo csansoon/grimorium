@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { SCRIPTS, getRole } from "../../lib/roles";
 import { RoleId } from "../../lib/roles/types";
 import { getTeam, TeamId } from "../../lib/teams";
@@ -10,14 +10,21 @@ import { MysticDivider } from "../items";
 import { cn } from "../../lib/utils";
 
 type Props = {
+    selectedRoleId: RoleId | null;
     onBack: () => void;
+    onSelectRole: (roleId: RoleId) => void;
+    onDeselectRole: () => void;
 };
 
 const TEAM_ORDER: TeamId[] = ["townsfolk", "outsider", "minion", "demon"];
 
-export function RolesLibrary({ onBack }: Props) {
+export function RolesLibrary({
+    selectedRoleId,
+    onBack,
+    onSelectRole,
+    onDeselectRole,
+}: Props) {
     const { t } = useI18n();
-    const [selectedRoleId, setSelectedRoleId] = useState<RoleId | null>(null);
 
     // Get all roles from the Trouble Brewing script (currently the only one)
     const scriptRoles = SCRIPTS["trouble-brewing"].roles;
@@ -50,11 +57,11 @@ export function RolesLibrary({ onBack }: Props) {
         const goToPrev = () => {
             const prevIndex =
                 (currentIndex - 1 + allRoleIds.length) % allRoleIds.length;
-            setSelectedRoleId(allRoleIds[prevIndex]);
+            onSelectRole(allRoleIds[prevIndex]);
         };
         const goToNext = () => {
             const nextIndex = (currentIndex + 1) % allRoleIds.length;
-            setSelectedRoleId(allRoleIds[nextIndex]);
+            onSelectRole(allRoleIds[nextIndex]);
         };
 
         return (
@@ -85,7 +92,7 @@ export function RolesLibrary({ onBack }: Props) {
 
                 <RoleCard roleId={selectedRoleId} />
                 <CardLink
-                    onClick={() => setSelectedRoleId(null)}
+                    onClick={onDeselectRole}
                     isEvil={selectedTeam.isEvil}
                 >
                     {t.common.back}
@@ -167,7 +174,7 @@ export function RolesLibrary({ onBack }: Props) {
                                             <button
                                                 key={role.id}
                                                 onClick={() =>
-                                                    setSelectedRoleId(role.id)
+                                                    onSelectRole(role.id)
                                                 }
                                                 className={cn(
                                                     "w-full py-3 px-4 text-left rounded-lg transition-colors group",

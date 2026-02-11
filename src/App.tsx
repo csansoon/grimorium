@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Game } from "./lib/types";
+import { useEffect, useMemo, useState } from "react";
 import { createGame, PlayerSetup } from "./lib/game";
 import {
     saveGame,
@@ -16,36 +15,81 @@ import {
     RolesLibrary,
 } from "./components/screens";
 import { LanguageToggle } from "./components/atoms";
+import { useRouter } from "./hooks/useRouter";
+import { RoleId } from "./lib/roles/types";
+import { getRole } from "./lib/roles";
 
-type Screen =
-    | { type: "main_menu" }
-    | { type: "roles_library" }
+// Internal screens for the new-game wizard (not routed — stays on "/")
+type NewGameScreen =
     | { type: "new_game_players" }
     | { type: "new_game_roles"; players: string[] }
-    | { type: "new_game_assign"; players: string[]; selectedRoles: string[] }
-    | { type: "game"; game: Game };
+    | { type: "new_game_assign"; players: string[]; selectedRoles: string[] };
 
 function App() {
-    const [screen, setScreen] = useState<Screen>({ type: "main_menu" });
+    const { path, navigate, replace } = useRouter();
+
+    // New-game wizard state (lives entirely on the "/" route)
+    const [newGameScreen, setNewGameScreen] = useState<NewGameScreen | null>(
+        null,
+    );
+
+    // Parse route segments once
+    const segments = useMemo(
+        () => path.split("/").filter(Boolean),
+        [path],
+    );
+
+    const routeType = segments[0] ?? "home";
+
+    // ========================================================================
+    // Side effects for route changes
+    // ========================================================================
+
+    // Redirect invalid /game/:id to /
+    useEffect(() => {
+        if (routeType === "game" && segments[1]) {
+            const game = getGame(segments[1]);
+            if (!game) {
+                replace("/");
+            }
+        }
+    }, [routeType, segments, replace]);
+
+    // Track current game ID in localStorage
+    useEffect(() => {
+        if (routeType === "game" && segments[1]) {
+            const game = getGame(segments[1]);
+            if (game) {
+                setCurrentGameId(segments[1]);
+            }
+        }
+    }, [routeType, segments]);
+
+    // Clear new-game wizard when navigating away from home
+    useEffect(() => {
+        if (routeType !== "home") {
+            setNewGameScreen(null);
+        }
+    }, [routeType]);
+
+    // ========================================================================
+    // New-game wizard handlers
+    // ========================================================================
 
     const handleNewGame = () => {
-        setScreen({ type: "new_game_players" });
-    };
-
-    const handleRolesLibrary = () => {
-        setScreen({ type: "roles_library" });
+        setNewGameScreen({ type: "new_game_players" });
     };
 
     const handlePlayersNext = (players: string[]) => {
-        setScreen({ type: "new_game_roles", players });
+        setNewGameScreen({ type: "new_game_roles", players });
     };
 
     const handleRolesNext = (players: string[], selectedRoles: string[]) => {
-        setScreen({ type: "new_game_assign", players, selectedRoles });
+        setNewGameScreen({ type: "new_game_assign", players, selectedRoles });
     };
 
     const handleStartGame = (
-        roleAssignments: { name: string; roleId: string }[]
+        roleAssignments: { name: string; roleId: string }[],
     ) => {
         const players: PlayerSetup[] = roleAssignments.map((a) => ({
             name: a.name,
@@ -57,98 +101,139 @@ function App() {
 
         saveGame(game);
         setCurrentGameId(game.id);
+        setNewGameScreen(null);
 
-        setScreen({ type: "game", game });
+        navigate(`/game/${game.id}`);
     };
 
-    const handleContinueGame = (gameId: string) => {
+    const handleBackToMenu = () => {
+        setNewGameScreen(null);
+    };
+
+    // ========================================================================
+    // Route: /game/:id
+    // ========================================================================
+
+    if (routeType === "game" && segments[1]) {
+        const gameId = segments[1];
         const game = getGame(gameId);
-        if (game) {
-            setCurrentGameId(gameId);
-            setScreen({ type: "game", game });
+        if (!game) {
+            // The useEffect above will redirect; render nothing until then
+            return null;
         }
-    };
-
-    const handleLoadGame = (gameId: string) => {
-        const game = getGame(gameId);
-        if (game) {
-            setCurrentGameId(gameId);
-            setScreen({ type: "game", game });
-        }
-    };
-
-    const handleMainMenu = () => {
-        clearCurrentGame();
-        setScreen({ type: "main_menu" });
-    };
-
-    const handleBack = () => {
-        setScreen({ type: "main_menu" });
-    };
-
-    const renderScreen = () => {
-        switch (screen.type) {
-            case "main_menu":
-                return (
-                    <MainMenu
-                        onNewGame={handleNewGame}
-                        onContinue={handleContinueGame}
-                        onLoadGame={handleLoadGame}
-                        onRolesLibrary={handleRolesLibrary}
-                    />
-                );
-
-            case "roles_library":
-                return (
-                    <RolesLibrary
-                        onBack={handleBack}
-                    />
-                );
-
-            case "new_game_players":
-                return <PlayerEntry onNext={handlePlayersNext} onBack={handleBack} />;
-
-            case "new_game_roles":
-                return (
-                    <RoleSelection
-                        players={screen.players}
-                        onNext={(selectedRoles) => handleRolesNext(screen.players, selectedRoles)}
-                        onBack={() => setScreen({ type: "new_game_players" })}
-                    />
-                );
-
-            case "new_game_assign":
-                return (
-                    <RoleAssignment
-                        players={screen.players}
-                        selectedRoles={screen.selectedRoles}
-                        onStart={handleStartGame}
-                        onBack={() => setScreen({ type: "new_game_roles", players: screen.players })}
-                    />
-                );
-
-            case "game":
-                return (
-                    <GameScreen
-                        initialGame={screen.game}
-                        onMainMenu={handleMainMenu}
-                    />
-                );
-
-            default:
-                return null;
-        }
-    };
-
-    // For game screen, it handles its own language toggle
-    if (screen.type === "game") {
-        return renderScreen();
+        return (
+            <GameScreen
+                key={gameId}
+                initialGame={game}
+                onMainMenu={() => {
+                    clearCurrentGame();
+                    navigate("/");
+                }}
+            />
+        );
     }
 
-    // For all other screens, wrap with floating language toggle
+    // ========================================================================
+    // Route: /roles and /roles/:roleId
+    // ========================================================================
+
+    if (routeType === "roles") {
+        const candidateRoleId = segments[1] ?? null;
+        // Validate roleId — fall back to list view if invalid
+        const selectedRoleId =
+            candidateRoleId && getRole(candidateRoleId as RoleId)
+                ? (candidateRoleId as RoleId)
+                : null;
+
+        // If the URL has an invalid role ID, clean it up
+        if (candidateRoleId && !selectedRoleId) {
+            replace("/roles");
+        }
+
+        return (
+            <div className="relative">
+                <RolesLibrary
+                    selectedRoleId={selectedRoleId}
+                    onBack={() => navigate("/")}
+                    onSelectRole={(id) => navigate(`/roles/${id}`)}
+                    onDeselectRole={() => navigate("/roles")}
+                />
+                <div className="fixed top-4 right-4 z-50">
+                    <LanguageToggle variant="floating" />
+                </div>
+            </div>
+        );
+    }
+
+    // ========================================================================
+    // Route: / (home — main menu + new-game wizard)
+    // ========================================================================
+
+    // Redirect unknown routes to home
+    if (routeType !== "home") {
+        replace("/");
+        return null;
+    }
+
+    const renderHome = () => {
+        // New-game wizard (internal to "/" route)
+        if (newGameScreen) {
+            switch (newGameScreen.type) {
+                case "new_game_players":
+                    return (
+                        <PlayerEntry
+                            onNext={handlePlayersNext}
+                            onBack={handleBackToMenu}
+                        />
+                    );
+
+                case "new_game_roles":
+                    return (
+                        <RoleSelection
+                            players={newGameScreen.players}
+                            onNext={(selectedRoles) =>
+                                handleRolesNext(
+                                    newGameScreen.players,
+                                    selectedRoles,
+                                )
+                            }
+                            onBack={() =>
+                                setNewGameScreen({ type: "new_game_players" })
+                            }
+                        />
+                    );
+
+                case "new_game_assign":
+                    return (
+                        <RoleAssignment
+                            players={newGameScreen.players}
+                            selectedRoles={newGameScreen.selectedRoles}
+                            onStart={handleStartGame}
+                            onBack={() =>
+                                setNewGameScreen({
+                                    type: "new_game_roles",
+                                    players: newGameScreen.players,
+                                })
+                            }
+                        />
+                    );
+            }
+        }
+
+        // Main menu
+        return (
+            <MainMenu
+                onNewGame={handleNewGame}
+                onContinue={(gameId) => navigate(`/game/${gameId}`)}
+                onLoadGame={(gameId) => navigate(`/game/${gameId}`)}
+                onRolesLibrary={() => navigate("/roles")}
+            />
+        );
+    };
+
     return (
         <div className="relative">
-            {renderScreen()}
+            {renderHome()}
             <div className="fixed top-4 right-4 z-50">
                 <LanguageToggle variant="floating" />
             </div>
