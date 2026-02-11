@@ -90,6 +90,8 @@ export type Translations = {
     accusePlayerDescription: string
     executionAlreadyHappened: string
     nominatesForExecution: string
+    nominatesVerb: string
+    forExecution: string
 
     // Day
     day: string
@@ -195,6 +197,7 @@ export type Translations = {
     // Setup Actions
     setupActions: string
     setupActionsSubtitle: string
+    allSetupActionsComplete: string
     continueToRoleRevelation: string
 
     // Perception Config
@@ -239,6 +242,7 @@ export type Translations = {
 
   // History messages
   history: {
+    noEventsYet: string
     gameStarted: string
     nightBegins: string
     sunRises: string

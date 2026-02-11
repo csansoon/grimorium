@@ -98,11 +98,14 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
               <span className='font-medium text-parchment-100'>
                 {alivePlayers.find((p) => p.id === nominator)?.name}
               </span>
-              {' nominates '}
+              {' '}
+              {t.game.nominatesVerb}
+              {' '}
               <span className='font-medium text-red-300'>
                 {alivePlayers.find((p) => p.id === nominee)?.name}
               </span>
-              {' for execution'}
+              {' '}
+              {t.game.forExecution}
             </p>
           </div>
         )}

@@ -127,7 +127,7 @@ export function SetupActionsScreen({
                 className='text-emerald-500 mx-auto mb-2'
               />
               <p className='text-parchment-400 text-sm'>
-                All setup actions complete
+                {t.game.allSetupActionsComplete}
               </p>
             </div>
           )}

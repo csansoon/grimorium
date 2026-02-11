@@ -56,7 +56,7 @@ export function PlayerPickerList({
   selectionCount = 1,
   variant = 'blue',
 }: PlayerPickerListProps) {
-  const { language } = useI18n()
+  const { t, language } = useI18n()
   const styles = variantStyles[variant]
 
   const isAtMax =
@@ -135,7 +135,7 @@ export function PlayerPickerList({
                         team.isEvil ? 'text-red-400/70' : 'text-blue-300/70',
                       )}
                     >
-                      {team.isEvil ? 'Evil' : 'Good'}
+                      {team.isEvil ? t.game.registerAsEvil : t.game.registerAsGood}
                     </span>
                   </>
                 )}

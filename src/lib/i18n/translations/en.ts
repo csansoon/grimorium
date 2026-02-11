@@ -87,6 +87,8 @@ const en: Translations = {
     accusePlayerDescription: 'Accuse a player and put them to vote',
     executionAlreadyHappened: 'An execution has already happened today',
     nominatesForExecution: '{nominator} nominates {nominee} for execution',
+    nominatesVerb: 'nominates',
+    forExecution: 'for execution',
 
     day: 'Day',
     discussionAndNominations: 'Discussion and nominations',
@@ -193,6 +195,7 @@ const en: Translations = {
     setupActions: 'Setup Actions',
     setupActionsSubtitle:
       'Configure roles that need narrator setup before the game begins',
+    allSetupActionsComplete: 'All setup actions complete',
     continueToRoleRevelation: 'Continue to Role Revelation',
 
     // Perception Config
@@ -238,6 +241,7 @@ const en: Translations = {
   },
 
   history: {
+    noEventsYet: 'No events yet',
     gameStarted: 'Game started',
     nightBegins: 'Night {round} begins',
     sunRises: 'The sun rises...',

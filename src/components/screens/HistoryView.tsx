@@ -108,7 +108,7 @@ export function HistoryView({ game, onClose }: Props) {
               size='3xl'
               className='mx-auto mb-4 opacity-30'
             />
-            <p className='text-sm'>No events yet</p>
+            <p className='text-sm'>{t.history.noEventsYet}</p>
           </div>
         )}
       </div>

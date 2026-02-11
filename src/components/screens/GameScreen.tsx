@@ -674,7 +674,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
           <button
             onClick={() => setShowGrimoire(true)}
             className='w-12 h-12 rounded-full bg-grimoire-dark/90 border border-mystic-gold/30 text-mystic-gold flex items-center justify-center shadow-lg hover:bg-grimoire-dark hover:border-mystic-gold/50 transition-colors'
-            title='Grimoire'
+            title={t.game.grimoire}
           >
             <Icon name='scrollText' size='md' />
           </button>
