@@ -15,6 +15,7 @@ import {
   NightActionLayout,
   NarratorSetupLayout,
   NightStepListLayout,
+  PlayerFacingScreen,
 } from '../../../../components/layouts'
 import type { NightStep } from '../../../../components/layouts'
 import { PlayerPickerList, RolePickerGrid } from '../../../../components/inputs'
@@ -409,60 +410,62 @@ const definition: RoleDefinition = {
 
     if (phase === 'show_minions') {
       return (
-        <NightActionLayout
-          player={player}
-          title={roleT.demonMinionsTitle}
-          description={roleT.demonMinionsDescription}
-        >
-          <div className='space-y-3 mb-6'>
-            <p className='text-sm text-red-300/70 text-center font-medium mb-2'>
-              {roleT.theseAreYourMinions}
-            </p>
-            {minionPlayers.map((p) => {
-              const role = getRole(p.roleId)
-              return (
-                <div
-                  key={p.id}
-                  className='p-4 rounded-lg bg-red-900/30 border border-red-700/40 flex items-center gap-3'
-                >
-                  <div className='w-10 h-10 rounded-full bg-red-800/40 border border-red-600/30 flex items-center justify-center'>
-                    <Icon
-                      name={role?.icon ?? 'user'}
-                      size='md'
-                      className='text-red-300'
-                    />
-                  </div>
-                  <div>
-                    <div className='text-parchment-100 font-medium'>
-                      {p.name}
-                    </div>
-                    <div className='text-xs text-red-400/70'>
-                      {getRoleName(p.roleId, language)}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-            {minionPlayers.length === 0 && (
-              <div className='text-center p-4 text-parchment-500'>
-                No Minions in play
-              </div>
-            )}
-          </div>
-
-          <Button
-            onClick={() => {
-              setShowMinionsDone(true)
-              setPhase('step_list')
-            }}
-            fullWidth
-            size='lg'
-            variant='evil'
+        <PlayerFacingScreen>
+          <NightActionLayout
+            player={player}
+            title={roleT.demonMinionsTitle}
+            description={roleT.demonMinionsDescription}
           >
-            <Icon name='check' size='md' className='mr-2' />
-            {t.common.continue}
-          </Button>
-        </NightActionLayout>
+            <div className='space-y-3 mb-6'>
+              <p className='text-sm text-red-300/70 text-center font-medium mb-2'>
+                {roleT.theseAreYourMinions}
+              </p>
+              {minionPlayers.map((p) => {
+                const role = getRole(p.roleId)
+                return (
+                  <div
+                    key={p.id}
+                    className='p-4 rounded-lg bg-red-900/30 border border-red-700/40 flex items-center gap-3'
+                  >
+                    <div className='w-10 h-10 rounded-full bg-red-800/40 border border-red-600/30 flex items-center justify-center'>
+                      <Icon
+                        name={role?.icon ?? 'user'}
+                        size='md'
+                        className='text-red-300'
+                      />
+                    </div>
+                    <div>
+                      <div className='text-parchment-100 font-medium'>
+                        {p.name}
+                      </div>
+                      <div className='text-xs text-red-400/70'>
+                        {getRoleName(p.roleId, language)}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+              {minionPlayers.length === 0 && (
+                <div className='text-center p-4 text-parchment-500'>
+                  No Minions in play
+                </div>
+              )}
+            </div>
+
+            <Button
+              onClick={() => {
+                setShowMinionsDone(true)
+                setPhase('step_list')
+              }}
+              fullWidth
+              size='lg'
+              variant='evil'
+            >
+              <Icon name='check' size='md' className='mr-2' />
+              {t.common.continue}
+            </Button>
+          </NightActionLayout>
+        </PlayerFacingScreen>
       )
     }
 
@@ -521,55 +524,57 @@ const definition: RoleDefinition = {
       const bluffRoles = selectedBluffs.map((id) => getRole(id)).filter(Boolean)
 
       return (
-        <NightActionLayout
-          player={player}
-          title={roleT.demonBluffsTitle}
-          description={roleT.demonBluffsDescription}
-        >
-          <div className='space-y-3 mb-6'>
-            <p className='text-sm text-red-300/70 text-center font-medium mb-2'>
-              {roleT.theseAreYourBluffs}
-            </p>
-            {bluffRoles.map((role) => {
-              if (!role) return null
-              return (
-                <div
-                  key={role.id}
-                  className='p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-blue-900/30 border border-indigo-600/30 flex items-center gap-3'
-                >
-                  <div className='w-10 h-10 rounded-full bg-indigo-800/40 border border-indigo-500/30 flex items-center justify-center'>
-                    <Icon
-                      name={role.icon}
-                      size='md'
-                      className='text-indigo-300'
-                    />
-                  </div>
-                  <div>
-                    <div className='text-parchment-100 font-medium'>
-                      {getRoleName(role.id, language)}
-                    </div>
-                    <div className='text-xs text-indigo-400/70'>
-                      {t.teams[role.team]?.name ?? role.team}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          <MysticDivider />
-
-          <Button
-            onClick={handleFirstNightComplete}
-            fullWidth
-            size='lg'
-            variant='evil'
-            className='mt-4'
+        <PlayerFacingScreen>
+          <NightActionLayout
+            player={player}
+            title={roleT.demonBluffsTitle}
+            description={roleT.demonBluffsDescription}
           >
-            <Icon name='check' size='md' className='mr-2' />
-            {t.common.iUnderstandMyRole}
-          </Button>
-        </NightActionLayout>
+            <div className='space-y-3 mb-6'>
+              <p className='text-sm text-red-300/70 text-center font-medium mb-2'>
+                {roleT.theseAreYourBluffs}
+              </p>
+              {bluffRoles.map((role) => {
+                if (!role) return null
+                return (
+                  <div
+                    key={role.id}
+                    className='p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-blue-900/30 border border-indigo-600/30 flex items-center gap-3'
+                  >
+                    <div className='w-10 h-10 rounded-full bg-indigo-800/40 border border-indigo-500/30 flex items-center justify-center'>
+                      <Icon
+                        name={role.icon}
+                        size='md'
+                        className='text-indigo-300'
+                      />
+                    </div>
+                    <div>
+                      <div className='text-parchment-100 font-medium'>
+                        {getRoleName(role.id, language)}
+                      </div>
+                      <div className='text-xs text-indigo-400/70'>
+                        {t.teams[role.team]?.name ?? role.team}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <MysticDivider />
+
+            <Button
+              onClick={handleFirstNightComplete}
+              fullWidth
+              size='lg'
+              variant='evil'
+              className='mt-4'
+            >
+              <Icon name='check' size='md' className='mr-2' />
+              {t.common.iUnderstandMyRole}
+            </Button>
+          </NightActionLayout>
+        </PlayerFacingScreen>
       )
     }
 

@@ -12,6 +12,7 @@ import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleRe
 import {
   NarratorSetupLayout,
   NightStepListLayout,
+  PlayerFacingScreen,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
@@ -419,28 +420,30 @@ const definition: RoleDefinition = {
     const resultTeam = displaySawDemon ? 'demon' : 'townsfolk'
 
     return (
-      <TeamBackground teamId={resultTeam}>
-        <OracleCard
-          icon='eye'
-          teamId={resultTeam}
-          title={roleT.fortuneTellerInfo}
-          subtitle={getRoleName('fortune_teller', language)}
-        >
-          <VisionReveal
-            players={[player1?.name ?? '???', player2?.name ?? '???']}
-            verdict={
-              displaySawDemon
-                ? roleT.fortuneTellerDemonDetected
-                : roleT.fortuneTellerNoDemon
-            }
-            verdictIcon={displaySawDemon ? 'skull' : 'shield'}
+      <PlayerFacingScreen>
+        <TeamBackground teamId={resultTeam}>
+          <OracleCard
+            icon='eye'
             teamId={resultTeam}
-          />
-        </OracleCard>
-        <CardLink onClick={handleComplete} isEvil={displaySawDemon}>
-          {t.common.iUnderstandMyRole}
-        </CardLink>
-      </TeamBackground>
+            title={roleT.fortuneTellerInfo}
+            subtitle={getRoleName('fortune_teller', language)}
+          >
+            <VisionReveal
+              players={[player1?.name ?? '???', player2?.name ?? '???']}
+              verdict={
+                displaySawDemon
+                  ? roleT.fortuneTellerDemonDetected
+                  : roleT.fortuneTellerNoDemon
+              }
+              verdictIcon={displaySawDemon ? 'skull' : 'shield'}
+              teamId={resultTeam}
+            />
+          </OracleCard>
+          <CardLink onClick={handleComplete} isEvil={displaySawDemon}>
+            {t.common.iUnderstandMyRole}
+          </CardLink>
+        </TeamBackground>
+      </PlayerFacingScreen>
     )
   },
 }

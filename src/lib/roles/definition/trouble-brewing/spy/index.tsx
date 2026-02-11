@@ -14,6 +14,7 @@ import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleRe
 import {
   NightActionLayout,
   NightStepListLayout,
+  PlayerFacingScreen,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import { Button, Icon, Badge } from '../../../../../components/atoms'
@@ -131,25 +132,31 @@ const definition: RoleDefinition = {
 
     if (malfunctioning) {
       return (
-        <NightActionLayout
-          player={player}
-          title={roleT.spyMalfunctionTitle}
-          description={roleT.spyMalfunctionDescription}
-        >
-          <div className='text-center mb-6'>
-            <div className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-900/30 border border-amber-600/30'>
-              <Icon name='alertTriangle' size='md' className='text-amber-400' />
-              <span className='text-amber-200 text-sm font-medium'>
-                {t.game.malfunctionWarning}
-              </span>
+        <PlayerFacingScreen>
+          <NightActionLayout
+            player={player}
+            title={roleT.spyMalfunctionTitle}
+            description={roleT.spyMalfunctionDescription}
+          >
+            <div className='text-center mb-6'>
+              <div className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-900/30 border border-amber-600/30'>
+                <Icon
+                  name='alertTriangle'
+                  size='md'
+                  className='text-amber-400'
+                />
+                <span className='text-amber-200 text-sm font-medium'>
+                  {t.game.malfunctionWarning}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <Button onClick={handleComplete} fullWidth size='lg' variant='evil'>
-            <Icon name='check' size='md' className='mr-2' />
-            {t.common.continue}
-          </Button>
-        </NightActionLayout>
+            <Button onClick={handleComplete} fullWidth size='lg' variant='evil'>
+              <Icon name='check' size='md' className='mr-2' />
+              {t.common.continue}
+            </Button>
+          </NightActionLayout>
+        </PlayerFacingScreen>
       )
     }
 
@@ -158,36 +165,38 @@ const definition: RoleDefinition = {
     // ================================================================
 
     return (
-      <NightActionLayout
-        player={player}
-        title={roleT.spyGrimoireTitle}
-        description={roleT.spyGrimoireDescription}
-      >
-        <div className='space-y-1 mb-6'>
-          {state.players.map((p) => (
-            <SpyGrimoireRow
-              key={p.id}
-              player={p}
-              getLocalRoleName={getLocalRoleName}
-              language={language}
-              t={t}
-            />
-          ))}
-        </div>
-
-        <MysticDivider />
-
-        <Button
-          onClick={handleComplete}
-          fullWidth
-          size='lg'
-          variant='evil'
-          className='mt-4'
+      <PlayerFacingScreen>
+        <NightActionLayout
+          player={player}
+          title={roleT.spyGrimoireTitle}
+          description={roleT.spyGrimoireDescription}
         >
-          <Icon name='check' size='md' className='mr-2' />
-          {t.common.iUnderstandMyRole}
-        </Button>
-      </NightActionLayout>
+          <div className='space-y-1 mb-6'>
+            {state.players.map((p) => (
+              <SpyGrimoireRow
+                key={p.id}
+                player={p}
+                getLocalRoleName={getLocalRoleName}
+                language={language}
+                t={t}
+              />
+            ))}
+          </div>
+
+          <MysticDivider />
+
+          <Button
+            onClick={handleComplete}
+            fullWidth
+            size='lg'
+            variant='evil'
+            className='mt-4'
+          >
+            <Icon name='check' size='md' className='mr-2' />
+            {t.common.iUnderstandMyRole}
+          </Button>
+        </NightActionLayout>
+      </PlayerFacingScreen>
     )
   },
 }

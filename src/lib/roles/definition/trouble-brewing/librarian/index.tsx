@@ -19,6 +19,7 @@ import {
   NightActionLayout,
   NarratorSetupLayout,
   NightStepListLayout,
+  PlayerFacingScreen,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
@@ -493,23 +494,28 @@ const definition: RoleDefinition = {
     // ================================================================
     if (phase === 'no_outsiders_view') {
       return (
-        <NightActionLayout
-          player={player}
-          title={roleT.librarianInfo}
-          description={roleT.noOutsidersMessage}
-        >
-          <RoleRevealBadge icon='sparkles' roleName={roleT.noOutsidersInGame} />
-
-          <Button
-            onClick={handleCompleteNoOutsiders}
-            fullWidth
-            size='lg'
-            variant='night'
+        <PlayerFacingScreen>
+          <NightActionLayout
+            player={player}
+            title={roleT.librarianInfo}
+            description={roleT.noOutsidersMessage}
           >
-            <Icon name='check' size='md' className='mr-2' />
-            {t.common.iUnderstandMyRole}
-          </Button>
-        </NightActionLayout>
+            <RoleRevealBadge
+              icon='sparkles'
+              roleName={roleT.noOutsidersInGame}
+            />
+
+            <Button
+              onClick={handleCompleteNoOutsiders}
+              fullWidth
+              size='lg'
+              variant='night'
+            >
+              <Icon name='check' size='md' className='mr-2' />
+              {t.common.iUnderstandMyRole}
+            </Button>
+          </NightActionLayout>
+        </PlayerFacingScreen>
       )
     }
 
@@ -526,35 +532,37 @@ const definition: RoleDefinition = {
     const shownTeam = getTeam(shownTeamId)
 
     return (
-      <TeamBackground teamId={shownTeamId}>
-        <div
-          className={`text-center text-sm mb-5 max-w-sm mx-auto ${shownTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80'}`}
-        >
-          <p className='uppercase tracking-widest font-semibold mb-3'>
-            {t.game.oneOfThemIsThe}
-          </p>
-          <div className='flex items-center justify-center gap-2 flex-wrap'>
-            {player1 && (
-              <span className='inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base'>
-                <Icon name='user' size='sm' />
-                <span className='font-medium'>{player1.name}</span>
-              </span>
-            )}
-            {player2 && (
-              <span className='inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base'>
-                <Icon name='user' size='sm' />
-                <span className='font-medium'>{player2.name}</span>
-              </span>
-            )}
+      <PlayerFacingScreen>
+        <TeamBackground teamId={shownTeamId}>
+          <div
+            className={`text-center text-sm mb-5 max-w-sm mx-auto ${shownTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80'}`}
+          >
+            <p className='uppercase tracking-widest font-semibold mb-3'>
+              {t.game.oneOfThemIsThe}
+            </p>
+            <div className='flex items-center justify-center gap-2 flex-wrap'>
+              {player1 && (
+                <span className='inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base'>
+                  <Icon name='user' size='sm' />
+                  <span className='font-medium'>{player1.name}</span>
+                </span>
+              )}
+              {player2 && (
+                <span className='inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base'>
+                  <Icon name='user' size='sm' />
+                  <span className='font-medium'>{player2.name}</span>
+                </span>
+              )}
+            </div>
           </div>
-        </div>
 
-        <RoleCard roleId={selectedRoleId} />
+          <RoleCard roleId={selectedRoleId} />
 
-        <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
-          {t.common.continue}
-        </CardLink>
-      </TeamBackground>
+          <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
+            {t.common.continue}
+          </CardLink>
+        </TeamBackground>
+      </PlayerFacingScreen>
     )
   },
 }

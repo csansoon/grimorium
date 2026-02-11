@@ -7,7 +7,10 @@ import {
   getRoleTranslations,
 } from '../../../../i18n'
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
-import { NightStepListLayout } from '../../../../../components/layouts'
+import {
+  NightStepListLayout,
+  PlayerFacingScreen,
+} from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
   PerceptionConfigStep,
@@ -302,23 +305,28 @@ const definition: RoleDefinition = {
     const resultTeam = displayedEvilPairs > 0 ? 'minion' : 'townsfolk'
 
     return (
-      <TeamBackground teamId={resultTeam}>
-        <OracleCard
-          icon='chefHat'
-          teamId={resultTeam}
-          title={roleT.info}
-          subtitle={getRoleName('chef', language)}
-        >
-          <NumberReveal
-            value={displayedEvilPairs}
-            label={roleT.evilPairsCount}
+      <PlayerFacingScreen>
+        <TeamBackground teamId={resultTeam}>
+          <OracleCard
+            icon='chefHat'
             teamId={resultTeam}
-          />
-        </OracleCard>
-        <CardLink onClick={handleComplete} isEvil={resultTeam !== 'townsfolk'}>
-          {t.common.iUnderstandMyRole}
-        </CardLink>
-      </TeamBackground>
+            title={roleT.info}
+            subtitle={getRoleName('chef', language)}
+          >
+            <NumberReveal
+              value={displayedEvilPairs}
+              label={roleT.evilPairsCount}
+              teamId={resultTeam}
+            />
+          </OracleCard>
+          <CardLink
+            onClick={handleComplete}
+            isEvil={resultTeam !== 'townsfolk'}
+          >
+            {t.common.iUnderstandMyRole}
+          </CardLink>
+        </TeamBackground>
+      </PlayerFacingScreen>
     )
   },
 }

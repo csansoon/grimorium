@@ -16,7 +16,10 @@ import {
   TeamBackground,
   CardLink,
 } from '../../../../../components/items/TeamBackground'
-import { NightStepListLayout } from '../../../../../components/layouts'
+import {
+  NightStepListLayout,
+  PlayerFacingScreen,
+} from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
   perceive,
@@ -320,22 +323,24 @@ const definition: RoleDefinition = {
     const shownTeam = getTeam(shownTeamId)
 
     return (
-      <TeamBackground teamId={shownTeamId}>
-        <p
-          className={cn(
-            'text-center text-sm uppercase tracking-widest font-semibold mb-5',
-            shownTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
-          )}
-        >
-          {roleT.executedPlayerRole}
-        </p>
+      <PlayerFacingScreen>
+        <TeamBackground teamId={shownTeamId}>
+          <p
+            className={cn(
+              'text-center text-sm uppercase tracking-widest font-semibold mb-5',
+              shownTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
+            )}
+          >
+            {roleT.executedPlayerRole}
+          </p>
 
-        <RoleCard roleId={displayedRoleId} />
+          <RoleCard roleId={displayedRoleId} />
 
-        <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
-          {t.common.continue}
-        </CardLink>
-      </TeamBackground>
+          <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
+            {t.common.continue}
+          </CardLink>
+        </TeamBackground>
+      </PlayerFacingScreen>
     )
   },
 }

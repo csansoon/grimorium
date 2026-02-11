@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Game, getCurrentState, getPlayer, PlayerState } from '../../lib/types'
 import { getRole } from '../../lib/roles'
 import { getTeam } from '../../lib/teams'
@@ -49,6 +49,8 @@ import { Icon, LanguageToggle } from '../atoms'
 import { NightActionResult, SetupActionResult } from '../../lib/roles/types'
 import type { FC } from 'react'
 import { SetupActionsScreen } from './SetupActionsScreen'
+import { PlayerFacingContext } from '../context/PlayerFacingContext'
+import { PlayerFacingScreen } from '../layouts/PlayerFacingScreen'
 
 type Props = {
   initialGame: Game
@@ -88,6 +90,13 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     intent: import('../../lib/pipeline/types').Intent
     onResult: (result: unknown) => void
   } | null>(null)
+
+  // Player-facing state — set by PlayerFacingScreen wrapper inside NightAction components
+  const [isPlayerFacing, setIsPlayerFacing] = useState(false)
+  const playerFacingCtx = useMemo(
+    () => ({ setPlayerFacing: setIsPlayerFacing }),
+    [],
+  )
 
   const state = getCurrentState(game)
 
@@ -491,10 +500,12 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         if (!role) return null
 
         return (
-          <role.RoleReveal
-            player={player}
-            onContinue={handleRoleRevealDismiss}
-          />
+          <PlayerFacingScreen>
+            <role.RoleReveal
+              player={player}
+              onContinue={handleRoleRevealDismiss}
+            />
+          </PlayerFacingScreen>
         )
       }
 
@@ -637,20 +648,20 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     }
   }
 
-  // Determine which floating buttons to show
-  const isPlayerFacingScreen =
-    screen.type === 'showing_role' ||
-    screen.type === 'night_follow_up' ||
-    screen.type === 'night_action' ||
-    screen.type === 'setup_action' ||
-    screen.type === 'grimoire_role_card'
-
+  // Floating buttons are shown everywhere except:
+  // - game_over: dedicated summary screen
+  // - grimoire_role_card: full-screen role card overlay
+  // - when a child component signals it's player-facing (via PlayerFacingScreen)
   const showFloatingButtons =
-    !isPlayerFacingScreen && screen.type !== 'game_over'
+    screen.type !== 'game_over' &&
+    screen.type !== 'grimoire_role_card' &&
+    !isPlayerFacing
 
   return (
     <div className='relative'>
-      {renderScreen()}
+      <PlayerFacingContext.Provider value={playerFacingCtx}>
+        {renderScreen()}
+      </PlayerFacingContext.Provider>
 
       {/* Floating Language Toggle */}
       <div className='fixed top-4 right-4 z-50'>

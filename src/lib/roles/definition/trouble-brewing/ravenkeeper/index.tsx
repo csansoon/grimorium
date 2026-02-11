@@ -19,6 +19,7 @@ import {
 import {
   NightActionLayout,
   NightStepListLayout,
+  PlayerFacingScreen,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import { PlayerPickerList } from '../../../../../components/inputs'
@@ -359,22 +360,24 @@ const definition: RoleDefinition = {
     const shownTeam = getTeam(shownTeamId)
 
     return (
-      <TeamBackground teamId={shownTeamId}>
-        <p
-          className={cn(
-            'text-center text-sm uppercase tracking-widest font-semibold mb-5',
-            shownTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
-          )}
-        >
-          {roleT.playerRoleIs}
-        </p>
+      <PlayerFacingScreen>
+        <TeamBackground teamId={shownTeamId}>
+          <p
+            className={cn(
+              'text-center text-sm uppercase tracking-widest font-semibold mb-5',
+              shownTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
+            )}
+          >
+            {roleT.playerRoleIs}
+          </p>
 
-        <RoleCard roleId={displayedRoleId} />
+          <RoleCard roleId={displayedRoleId} />
 
-        <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
-          {t.common.continue}
-        </CardLink>
-      </TeamBackground>
+          <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
+            {t.common.continue}
+          </CardLink>
+        </TeamBackground>
+      </PlayerFacingScreen>
     )
   },
 }
