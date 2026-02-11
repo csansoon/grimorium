@@ -60,7 +60,7 @@ export function RoleCard({ roleId }: Props) {
             {/* Role Name */}
             <h1
                 className={cn(
-                    "font-tarot text-2xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2",
+                    "font-tarot text-xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2",
                     team.colors.cardText,
                 )}
                 style={{ textShadow: team.colors.cardIconGlow }}
@@ -71,7 +71,7 @@ export function RoleCard({ roleId }: Props) {
             {/* Team Badge */}
             <p
                 className={cn(
-                    "text-center text-xs tracking-widest uppercase mb-4 sm:mb-6",
+                    "text-center text-xs tracking-widest uppercase mb-3 sm:mb-6",
                     team.colors.cardTeamBadge,
                 )}
             >
@@ -90,7 +90,7 @@ export function RoleCard({ roleId }: Props) {
             {/* Description */}
             <p
                 className={cn(
-                    "text-center text-sm leading-relaxed mb-4 sm:mb-6",
+                    "text-center text-sm leading-relaxed mb-3 sm:mb-6",
                     team.colors.cardText,
                     "opacity-80",
                 )}

@@ -8,10 +8,10 @@ import { TownsfolkParticles, MinionParticles } from "./CardParticles";
 // ─── Corner icon decorations ─────────────────────────────────────────────────
 
 const CORNER_POSITIONS = {
-    tl: "top-4 left-4 -rotate-45",
-    tr: "top-4 right-4 rotate-45",
-    bl: "bottom-4 left-4 -rotate-[135deg]",
-    br: "bottom-4 right-4 rotate-[135deg]",
+    tl: "top-3 left-3 sm:top-4 sm:left-4 -rotate-45",
+    tr: "top-3 right-3 sm:top-4 sm:right-4 rotate-45",
+    bl: "bottom-3 left-3 sm:bottom-4 sm:left-4 -rotate-[135deg]",
+    br: "bottom-3 right-3 sm:bottom-4 sm:right-4 rotate-[135deg]",
 } as const;
 
 function CornerIcon({
@@ -98,7 +98,7 @@ export function CardShell({ teamId, icon, children }: CardShellProps) {
                 {/* Inner decorative border — team-specific frame style */}
                 <div
                     className={cn(
-                        "absolute inset-4 rounded-lg pointer-events-none",
+                        "absolute inset-3 sm:inset-4 rounded-lg pointer-events-none",
                         getFrameClass(teamId),
                     )}
                 />
@@ -114,7 +114,7 @@ export function CardShell({ teamId, icon, children }: CardShellProps) {
                 ))}
 
                 {/* Card Content */}
-                <div className="relative z-10 px-5 py-6 sm:px-8 sm:py-10 bg-parchment-texture">
+                <div className="relative z-10 px-4 py-5 sm:px-8 sm:py-10 bg-parchment-texture">
                     {children}
                 </div>
             </div>

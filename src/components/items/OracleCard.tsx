@@ -47,7 +47,7 @@ export function OracleCard({
             {/* Title */}
             <h1
                 className={cn(
-                    "font-tarot text-2xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2",
+                    "font-tarot text-xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2",
                     team.colors.cardText,
                 )}
                 style={{ textShadow: team.colors.cardIconGlow }}
@@ -58,7 +58,7 @@ export function OracleCard({
             {/* Subtitle (role name) */}
             <p
                 className={cn(
-                    "text-center text-xs tracking-widest uppercase mb-4 sm:mb-6",
+                    "text-center text-xs tracking-widest uppercase mb-3 sm:mb-6",
                     team.colors.cardTeamBadge,
                 )}
             >
@@ -100,7 +100,7 @@ export function NumberReveal({ value, label, teamId }: NumberRevealProps) {
             {/* Label */}
             <p
                 className={cn(
-                    "text-sm tracking-wide mb-4 sm:mb-6 opacity-80",
+                    "text-sm tracking-wide mb-3 sm:mb-6 opacity-80",
                     team.colors.cardText,
                 )}
             >
@@ -152,7 +152,7 @@ export function VisionReveal({
     return (
         <div className="text-center py-2 sm:py-4">
             {/* Player name cards */}
-            <div className="space-y-2 mb-5 sm:mb-6">
+            <div className="space-y-2 mb-4 sm:mb-6">
                 {players.map((name, i) => (
                     <div
                         key={i}

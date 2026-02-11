@@ -299,7 +299,7 @@ const definition: RoleDefinition = {
             <TeamBackground teamId={shownTeamId}>
                 <p
                     className={cn(
-                        "text-center text-xs uppercase tracking-widest font-semibold mb-4",
+                        "text-center text-sm uppercase tracking-widest font-semibold mb-5",
                         shownTeam.isEvil
                             ? "text-red-300/80"
                             : "text-parchment-300/80",

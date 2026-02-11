@@ -364,23 +364,23 @@ const definition: RoleDefinition = {
         return (
             <TeamBackground teamId={shownTeamId}>
                 <div
-                    className={`text-center text-xs mb-4 max-w-sm mx-auto ${shownTeam.isEvil ? "text-red-300/80" : "text-parchment-300/80"}`}
+                    className={`text-center text-sm mb-5 max-w-sm mx-auto ${shownTeam.isEvil ? "text-red-300/80" : "text-parchment-300/80"}`}
                 >
-                    <p className="uppercase tracking-widest font-semibold mb-2">
+                    <p className="uppercase tracking-widest font-semibold mb-3">
                         {t.game.oneOfThemIsThe}
                     </p>
                     <div className="flex items-center justify-center gap-2 flex-wrap">
                         {player1 && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20">
-                                <Icon name="user" size="xs" />
+                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base">
+                                <Icon name="user" size="sm" />
                                 <span className="font-medium">
                                     {player1.name}
                                 </span>
                             </span>
                         )}
                         {player2 && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20">
-                                <Icon name="user" size="xs" />
+                            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base">
+                                <Icon name="user" size="sm" />
                                 <span className="font-medium">
                                     {player2.name}
                                 </span>
