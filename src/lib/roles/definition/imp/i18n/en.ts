@@ -39,7 +39,7 @@ const en = {
     bounceRedirected:
       '{player} targeted {target}, but the kill was redirected to {redirect}',
     shownMinionsAndBluffs:
-      '{player} was shown their Minions and given bluffs: {bluffs}',
+      '{player} was shown their Minions and given bluffs: ',
     selfKilled: '{player} (Imp) chose to kill themselves',
     minionBecameImp: '{player} became the new Imp',
   },

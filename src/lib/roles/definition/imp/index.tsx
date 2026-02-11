@@ -218,10 +218,6 @@ const definition: RoleDefinition = {
     // ================================================================
 
     const handleFirstNightComplete = () => {
-      const bluffNames = selectedBluffs
-        .map((id) => getRoleName(id, language))
-        .join(', ')
-
       onComplete({
         entries: [
           {
@@ -232,9 +228,14 @@ const definition: RoleDefinition = {
                 key: 'roles.imp.history.shownMinionsAndBluffs',
                 params: {
                   player: player.id,
-                  bluffs: bluffNames,
                 },
               },
+              ...selectedBluffs.flatMap((id, i) => [
+                ...(i > 0
+                  ? [{ type: 'text' as const, content: ', ' }]
+                  : []),
+                { type: 'role' as const, roleId: id },
+              ]),
             ],
             data: {
               roleId: 'imp',

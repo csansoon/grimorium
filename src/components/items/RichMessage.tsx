@@ -76,6 +76,7 @@ const PLAYER_PARAM_KEYS = [
   'nominee',
   'slayer',
   'redirect',
+  'redHerring',
 ]
 // Param keys that represent role IDs
 const ROLE_PARAM_KEYS = ['role']

@@ -39,7 +39,7 @@ const es = {
     bounceRedirected:
       '{player} eligió a {target}, pero el asesinato fue redirigido a {redirect}',
     shownMinionsAndBluffs:
-      '{player} vio a sus Secuaces y recibió faroles: {bluffs}',
+      '{player} vio a sus Secuaces y recibió faroles: ',
     selfKilled: '{player} (Imp) eligió matarse a sí mismo/a',
     minionBecameImp: '{player} se convirtió en el nuevo Imp',
   },
