@@ -231,6 +231,7 @@ export type Translations = {
         stepChooseVictim: string;
         stepChoosePlayer: string;
         stepSelectPlayer: string;
+        stepSelectPlayers: string;
         stepAssignRedHerring: string;
         stepSelectAndShow: string;
         stepChooseTarget: string;
@@ -244,6 +245,7 @@ export type Translations = {
         playerIsMalfunctioning: string;
         chooseFalseNumber: string;
         chooseFalseResult: string;
+        chooseFalseTarget: string;
         chooseFalseRole: string;
         malfunctionWarning: string;
 

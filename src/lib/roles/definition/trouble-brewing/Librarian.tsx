@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { RoleDefinition } from "../../types";
 import { isAlive } from "../../../types";
 import { getRole, getAllRoles } from "../../index";
@@ -30,7 +30,12 @@ import { Button, Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
 import { isMalfunctioning } from "../../../effects";
 
-type Phase = "step_list" | "narrator_setup" | "player_view" | "no_outsiders_view";
+type Phase =
+    | "step_list"
+    | "select_players"
+    | "configure_malfunction"
+    | "show_results"
+    | "no_outsiders_view";
 
 const definition: RoleDefinition = {
     id: "librarian",
@@ -42,9 +47,20 @@ const definition: RoleDefinition = {
 
     nightSteps: [
         {
-            id: "narrator_setup",
+            id: "select_players",
             icon: "bookMarked",
-            getLabel: (t) => t.game.stepNarratorSetup,
+            getLabel: (t) => t.game.stepSelectPlayers,
+        },
+        {
+            id: "configure_malfunction",
+            icon: "alertTriangle",
+            getLabel: (t) => t.game.stepConfigureMalfunction,
+            condition: (_game, player) => isMalfunctioning(player),
+        },
+        {
+            id: "show_results",
+            icon: "bookMarked",
+            getLabel: (t) => t.game.stepShowResult,
         },
     ],
 
@@ -54,20 +70,25 @@ const definition: RoleDefinition = {
         const { t } = useI18n();
         const [phase, setPhase] = useState<Phase>("step_list");
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
-        const [selectedOutsider, setSelectedOutsider] = useState<string | null>(
-            null,
-        );
+        const [selectedOutsider, setSelectedOutsider] = useState<
+            string | null
+        >(null);
         const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
             null,
         );
+        const [selectPlayersDone, setSelectPlayersDone] = useState(false);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] =
+            useState(false);
 
+        const malfunctioning = isMalfunctioning(player);
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
-        // All defined outsider roles (for misregistration role picker)
+        // All defined outsider roles (for malfunction role picker)
         const outsiderRoles = getAllRoles().filter(
             (r) => r.team === "outsider",
         );
 
+        // Check if any outsiders exist in game (for healthy flow)
         const outsidersInGame = state.players.filter((p) => {
             const perception = perceive(p, player, "team", state);
             return (
@@ -75,9 +96,9 @@ const definition: RoleDefinition = {
                 canRegisterAsTeam(p, "outsider")
             );
         });
-
         const hasOutsiders = outsidersInGame.length > 0;
 
+        // Players that register or could register as outsider in selection (for healthy flow)
         const outsidersInSelection = selectedPlayers.filter((playerId) => {
             const p = state.players.find((pl) => pl.id === playerId);
             if (!p) return false;
@@ -88,11 +109,18 @@ const definition: RoleDefinition = {
             );
         });
 
-        const canProceedToPlayer =
+        // Healthy flow: can proceed when 2 players selected + outsider identified + role selected
+        const canCompleteHealthySetup =
             selectedPlayers.length === 2 &&
             outsidersInSelection.length >= 1 &&
             selectedOutsider !== null &&
             selectedRoleId !== null;
+
+        // Malfunction flow: can proceed from select_players when 2 players selected
+        const canCompleteMalfunctionSelect = selectedPlayers.length === 2;
+
+        // Malfunction flow: can proceed from configure_malfunction when role selected
+        const canCompleteMalfunctionConfig = selectedRoleId !== null;
 
         const handlePlayerToggle = (playerId: string) => {
             setSelectedPlayers((prev) => {
@@ -114,13 +142,31 @@ const definition: RoleDefinition = {
             setSelectedRoleId(roleId);
         };
 
-        const handleShowToPlayer = () => {
-            if (!hasOutsiders) {
-                setPhase("no_outsiders_view");
-                return;
+        const handleMalfunctionSelectRole = (roleId: string) => {
+            setSelectedRoleId((prev) => (prev === roleId ? null : roleId));
+        };
+
+        const handleCompleteSelectPlayers = () => {
+            if (malfunctioning) {
+                if (!canCompleteMalfunctionSelect) return;
+            } else {
+                if (!canCompleteHealthySetup) return;
             }
-            if (!canProceedToPlayer) return;
-            setPhase("player_view");
+            setSelectPlayersDone(true);
+            setPhase("step_list");
+        };
+
+        const handleCompleteMalfunctionConfig = () => {
+            if (!selectedRoleId) return;
+            // Auto-assign target player for history (arbitrary — info is false)
+            if (!selectedOutsider) setSelectedOutsider(selectedPlayers[0]);
+            setMalfunctionConfigDone(true);
+            setPhase("step_list");
+        };
+
+        // Healthy flow: no outsiders → show "no outsiders" to player
+        const handleShowNoOutsiders = () => {
+            setPhase("no_outsiders_view");
         };
 
         const handleCompleteNoOutsiders = () => {
@@ -139,7 +185,9 @@ const definition: RoleDefinition = {
                             roleId: "librarian",
                             playerId: player.id,
                             action: "no_outsiders",
-                            ...(isMalfunctioning(player) ? { malfunctioned: true } : {}),
+                            ...(malfunctioning
+                                ? { malfunctioned: true }
+                                : {}),
                         },
                     },
                 ],
@@ -180,7 +228,9 @@ const definition: RoleDefinition = {
                             shownPlayers: selectedPlayers,
                             outsiderId: selectedOutsider,
                             shownRoleId: selectedRoleId,
-                            ...(isMalfunctioning(player) ? { malfunctioned: true } : {}),
+                            ...(malfunctioning
+                                ? { malfunctioned: true }
+                                : {}),
                         },
                     },
                 ],
@@ -198,36 +248,68 @@ const definition: RoleDefinition = {
             );
         };
 
-        // Step List Phase
-        if (phase === "step_list") {
-            const steps: NightStep[] = [
-                {
-                    id: "narrator_setup",
-                    icon: "bookMarked",
-                    label: t.game.stepNarratorSetup,
-                    status: "pending",
-                },
-            ];
+        // Build steps
+        const steps: NightStep[] = useMemo(() => {
+            const result: NightStep[] = [];
 
+            result.push({
+                id: "select_players",
+                icon: "bookMarked",
+                label: t.game.stepSelectPlayers,
+                status: selectPlayersDone ? "done" : "pending",
+            });
+
+            if (malfunctioning) {
+                result.push({
+                    id: "configure_malfunction",
+                    icon: "alertTriangle",
+                    label: t.game.stepConfigureMalfunction,
+                    status: malfunctionConfigDone ? "done" : "pending",
+                });
+            }
+
+            result.push({
+                id: "show_results",
+                icon: "bookMarked",
+                label: t.game.stepShowResult,
+                status: "pending",
+            });
+
+            return result;
+        }, [selectPlayersDone, malfunctioning, malfunctionConfigDone, t]);
+
+        const handleSelectStep = (stepId: string) => {
+            if (stepId === "select_players") setPhase("select_players");
+            else if (stepId === "configure_malfunction")
+                setPhase("configure_malfunction");
+            else if (stepId === "show_results") setPhase("show_results");
+        };
+
+        // ================================================================
+        // Phase: Step List
+        // ================================================================
+        if (phase === "step_list") {
             return (
                 <NightStepListLayout
                     icon="bookMarked"
                     roleName={getRoleName("librarian")}
                     playerName={player.name}
                     steps={steps}
-                    onSelectStep={() => setPhase("narrator_setup")}
+                    onSelectStep={handleSelectStep}
                 />
             );
         }
 
-        // Narrator Setup Phase - No Outsiders
-        if (phase === "narrator_setup" && !hasOutsiders) {
+        // ================================================================
+        // Phase: Select Players (healthy, no outsiders in game)
+        // ================================================================
+        if (phase === "select_players" && !malfunctioning && !hasOutsiders) {
             return (
                 <NarratorSetupLayout
                     icon="bookMarked"
                     roleName={getRoleName("librarian")}
                     playerName={getPlayerName(player.id)}
-                    onShowToPlayer={handleShowToPlayer}
+                    onShowToPlayer={handleShowNoOutsiders}
                     showToPlayerLabel={t.game.confirmNoOutsiders}
                 >
                     <div className="flex-1 flex items-center justify-center">
@@ -241,15 +323,18 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Narrator Setup Phase - Normal
-        if (phase === "narrator_setup") {
+        // ================================================================
+        // Phase: Select Players (healthy, outsiders exist — with constraints + role picking)
+        // ================================================================
+        if (phase === "select_players" && !malfunctioning) {
             return (
                 <NarratorSetupLayout
                     icon="bookMarked"
                     roleName={getRoleName("librarian")}
                     playerName={getPlayerName(player.id)}
-                    onShowToPlayer={handleShowToPlayer}
-                    showToPlayerDisabled={!canProceedToPlayer}
+                    onShowToPlayer={handleCompleteSelectPlayers}
+                    showToPlayerDisabled={!canCompleteHealthySetup}
+                    showToPlayerLabel={t.common.confirm}
                 >
                     <StepSection
                         step={1}
@@ -284,30 +369,51 @@ const definition: RoleDefinition = {
                                     );
 
                                     // Determine available roles for this player
-                                    const availableRoles = pPerception.team === "outsider"
-                                        ? (() => {
-                                            const rolePerception = perceive(p, player, "role", state);
-                                            const perceivedRole = getRole(rolePerception.roleId);
-                                            return perceivedRole ? [perceivedRole] : [];
-                                        })()
-                                        : outsiderRoles;
+                                    const availableRoles =
+                                        pPerception.team === "outsider"
+                                            ? (() => {
+                                                  const rolePerception =
+                                                      perceive(
+                                                          p,
+                                                          player,
+                                                          "role",
+                                                          state,
+                                                      );
+                                                  const perceivedRole = getRole(
+                                                      rolePerception.roleId,
+                                                  );
+                                                  return perceivedRole
+                                                      ? [perceivedRole]
+                                                      : [];
+                                              })()
+                                            : outsiderRoles;
 
                                     const currentSelected =
-                                        selectedOutsider === playerId && selectedRoleId
+                                        selectedOutsider === playerId &&
+                                        selectedRoleId
                                             ? [selectedRoleId]
                                             : [];
 
                                     return (
                                         <div key={playerId} className="mb-3">
                                             <div className="text-xs font-medium text-parchment-400 mb-1.5 ml-1">
-                                                <Icon name="user" size="xs" className="inline mr-1 text-parchment-500" />
+                                                <Icon
+                                                    name="user"
+                                                    size="xs"
+                                                    className="inline mr-1 text-parchment-500"
+                                                />
                                                 {p.name}
                                             </div>
                                             <RolePickerGrid
                                                 roles={availableRoles}
                                                 state={state}
                                                 selected={currentSelected}
-                                                onSelect={(roleId) => handleSelectRole(playerId, roleId)}
+                                                onSelect={(roleId) =>
+                                                    handleSelectRole(
+                                                        playerId,
+                                                        roleId,
+                                                    )
+                                                }
                                                 selectionCount={1}
                                                 colorMode="team"
                                             />
@@ -325,7 +431,100 @@ const definition: RoleDefinition = {
             );
         }
 
-        // No Outsiders View Phase
+        // ================================================================
+        // Phase: Select Players (malfunctioning — free selection)
+        // ================================================================
+        if (phase === "select_players" && malfunctioning) {
+            return (
+                <NarratorSetupLayout
+                    icon="bookMarked"
+                    roleName={getRoleName("librarian")}
+                    playerName={getPlayerName(player.id)}
+                    onShowToPlayer={handleCompleteSelectPlayers}
+                    showToPlayerDisabled={!canCompleteMalfunctionSelect}
+                    showToPlayerLabel={t.common.confirm}
+                >
+                    {/* Malfunction warning */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Icon
+                                name="alertTriangle"
+                                size="md"
+                                className="text-amber-400 flex-shrink-0"
+                            />
+                            <p className="text-sm text-amber-300 font-medium">
+                                {t.game.malfunctionWarning}
+                            </p>
+                        </div>
+                        <p className="text-xs text-amber-400/70 mt-1 ml-7">
+                            {t.game.playerIsMalfunctioning}
+                        </p>
+                    </div>
+
+                    <StepSection
+                        step={1}
+                        label={t.game.selectTwoPlayers}
+                        count={{ current: selectedPlayers.length, max: 2 }}
+                    >
+                        <PlayerPickerList
+                            players={otherPlayers}
+                            selected={selectedPlayers}
+                            onSelect={handlePlayerToggle}
+                            selectionCount={2}
+                            variant="blue"
+                        />
+                    </StepSection>
+                </NarratorSetupLayout>
+            );
+        }
+
+        // ================================================================
+        // Phase: Configure Malfunction
+        // ================================================================
+        if (phase === "configure_malfunction") {
+            return (
+                <NarratorSetupLayout
+                    icon="bookMarked"
+                    roleName={getRoleName("librarian")}
+                    playerName={getPlayerName(player.id)}
+                    onShowToPlayer={handleCompleteMalfunctionConfig}
+                    showToPlayerDisabled={!canCompleteMalfunctionConfig}
+                    showToPlayerLabel={t.common.confirm}
+                >
+                    {/* Malfunction warning */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Icon
+                                name="alertTriangle"
+                                size="md"
+                                className="text-amber-400 flex-shrink-0"
+                            />
+                            <p className="text-sm text-amber-300 font-medium">
+                                {t.game.malfunctionWarning}
+                            </p>
+                        </div>
+                        <p className="text-xs text-amber-400/70 mt-1 ml-7">
+                            {t.game.playerIsMalfunctioning}
+                        </p>
+                    </div>
+
+                    <StepSection step={1} label={t.game.chooseFalseRole}>
+                        <RolePickerGrid
+                            roles={outsiderRoles}
+                            state={state}
+                            selected={selectedRoleId ? [selectedRoleId] : []}
+                            onSelect={handleMalfunctionSelectRole}
+                            selectionCount={1}
+                            colorMode="team"
+                        />
+                    </StepSection>
+                </NarratorSetupLayout>
+            );
+        }
+
+        // ================================================================
+        // Phase: No Outsiders View (healthy path — player-facing)
+        // ================================================================
         if (phase === "no_outsiders_view") {
             return (
                 <NightActionLayout
@@ -351,9 +550,15 @@ const definition: RoleDefinition = {
             );
         }
 
-        // Player View Phase
-        const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
-        const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
+        // ================================================================
+        // Phase: Show Results (player view)
+        // ================================================================
+        const player1 = state.players.find(
+            (p) => p.id === selectedPlayers[0],
+        );
+        const player2 = state.players.find(
+            (p) => p.id === selectedPlayers[1],
+        );
 
         if (!selectedRoleId) return null;
 

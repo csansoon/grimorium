@@ -236,6 +236,7 @@ const en: Translations = {
         stepChooseVictim: "Choose Victim",
         stepChoosePlayer: "Choose Player",
         stepSelectPlayer: "Select Player",
+        stepSelectPlayers: "Select Players",
         stepAssignRedHerring: "Assign Red Herring",
         stepSelectAndShow: "Select & Show",
         stepChooseTarget: "Choose Target",
@@ -267,6 +268,7 @@ const en: Translations = {
         playerIsMalfunctioning: "This player is poisoned/drunk — their ability malfunctions!",
         chooseFalseNumber: "What number should they see?",
         chooseFalseResult: "What result should they see?",
+        chooseFalseTarget: "Which player should they be told is the role?",
         chooseFalseRole: "What role should they see?",
         malfunctionWarning: "Malfunctioning",
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { RoleDefinition } from "../../types";
 import { isAlive } from "../../../types";
 import { getRole, getAllRoles } from "../../index";
@@ -18,20 +18,36 @@ import { Icon } from "../../../../components/atoms";
 import { perceive, canRegisterAsTeam } from "../../../pipeline";
 import { isMalfunctioning } from "../../../effects";
 
-type Phase = "step_list" | "narrator_setup" | "player_view";
+type Phase =
+    | "step_list"
+    | "select_players"
+    | "configure_malfunction"
+    | "show_results";
 
 const definition: RoleDefinition = {
     id: "washerwoman",
     team: "townsfolk",
     icon: "shirt",
     nightOrder: 10,
-    shouldWake: (game, player) => isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
+    shouldWake: (game, player) =>
+        isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
 
     nightSteps: [
         {
-            id: "narrator_setup",
+            id: "select_players",
             icon: "shirt",
-            getLabel: (t) => t.game.stepNarratorSetup,
+            getLabel: (t) => t.game.stepSelectPlayers,
+        },
+        {
+            id: "configure_malfunction",
+            icon: "alertTriangle",
+            getLabel: (t) => t.game.stepConfigureMalfunction,
+            condition: (_game, player) => isMalfunctioning(player),
+        },
+        {
+            id: "show_results",
+            icon: "shirt",
+            getLabel: (t) => t.game.stepShowResult,
         },
     ],
 
@@ -41,26 +57,47 @@ const definition: RoleDefinition = {
         const { t } = useI18n();
         const [phase, setPhase] = useState<Phase>("step_list");
         const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
-        const [selectedTownsfolk, setSelectedTownsfolk] = useState<string | null>(null);
-        const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+        const [selectedTownsfolk, setSelectedTownsfolk] = useState<
+            string | null
+        >(null);
+        const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
+            null,
+        );
+        const [selectPlayersDone, setSelectPlayersDone] = useState(false);
+        const [malfunctionConfigDone, setMalfunctionConfigDone] =
+            useState(false);
 
+        const malfunctioning = isMalfunctioning(player);
         const otherPlayers = state.players.filter((p) => p.id !== player.id);
 
-        // All defined townsfolk roles (for misregistration role picker)
-        const townsfolkRoles = getAllRoles().filter((r) => r.team === "townsfolk");
+        // All defined townsfolk roles (for malfunction role picker)
+        const townsfolkRoles = getAllRoles().filter(
+            (r) => r.team === "townsfolk",
+        );
 
+        // Players that register or could register as townsfolk (for healthy flow)
         const townsfolkInSelection = selectedPlayers.filter((playerId) => {
             const p = state.players.find((pl) => pl.id === playerId);
             if (!p) return false;
             const perception = perceive(p, player, "team", state);
-            return perception.team === "townsfolk" || canRegisterAsTeam(p, "townsfolk");
+            return (
+                perception.team === "townsfolk" ||
+                canRegisterAsTeam(p, "townsfolk")
+            );
         });
 
-        const canProceedToPlayer =
+        // Healthy flow: can proceed when 2 players selected + townsfolk identified + role selected
+        const canCompleteHealthySetup =
             selectedPlayers.length === 2 &&
             townsfolkInSelection.length >= 1 &&
             selectedTownsfolk !== null &&
             selectedRoleId !== null;
+
+        // Malfunction flow: can proceed from select_players when 2 players selected
+        const canCompleteMalfunctionSelect = selectedPlayers.length === 2;
+
+        // Malfunction flow: can proceed from configure_malfunction when role selected
+        const canCompleteMalfunctionConfig = selectedRoleId !== null;
 
         const handlePlayerToggle = (playerId: string) => {
             setSelectedPlayers((prev) => {
@@ -82,16 +119,37 @@ const definition: RoleDefinition = {
             setSelectedRoleId(roleId);
         };
 
-        const handleShowToPlayer = () => {
-            if (!canProceedToPlayer) return;
-            setPhase("player_view");
+        const handleMalfunctionSelectRole = (roleId: string) => {
+            setSelectedRoleId((prev) => (prev === roleId ? null : roleId));
+        };
+
+        const handleCompleteSelectPlayers = () => {
+            if (malfunctioning) {
+                if (!canCompleteMalfunctionSelect) return;
+            } else {
+                if (!canCompleteHealthySetup) return;
+            }
+            setSelectPlayersDone(true);
+            setPhase("step_list");
+        };
+
+        const handleCompleteMalfunctionConfig = () => {
+            if (!selectedRoleId) return;
+            // Auto-assign target player for history (arbitrary — info is false)
+            if (!selectedTownsfolk) setSelectedTownsfolk(selectedPlayers[0]);
+            setMalfunctionConfigDone(true);
+            setPhase("step_list");
         };
 
         const handleComplete = () => {
             if (!selectedTownsfolk || !selectedRoleId) return;
 
-            const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
-            const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
+            const player1 = state.players.find(
+                (p) => p.id === selectedPlayers[0],
+            );
+            const player2 = state.players.find(
+                (p) => p.id === selectedPlayers[1],
+            );
             if (!player1 || !player2) return;
 
             onComplete({
@@ -117,7 +175,9 @@ const definition: RoleDefinition = {
                             shownPlayers: selectedPlayers,
                             townsfolkId: selectedTownsfolk,
                             shownRoleId: selectedRoleId,
-                            ...(isMalfunctioning(player) ? { malfunctioned: true } : {}),
+                            ...(malfunctioning
+                                ? { malfunctioned: true }
+                                : {}),
                         },
                     },
                 ],
@@ -130,40 +190,75 @@ const definition: RoleDefinition = {
         };
 
         const getPlayerName = (playerId: string) => {
-            return state.players.find((p) => p.id === playerId)?.name ?? "Unknown";
+            return (
+                state.players.find((p) => p.id === playerId)?.name ?? "Unknown"
+            );
         };
 
-        // Step List Phase
-        if (phase === "step_list") {
-            const steps: NightStep[] = [
-                {
-                    id: "narrator_setup",
-                    icon: "shirt",
-                    label: t.game.stepNarratorSetup,
-                    status: "pending",
-                },
-            ];
+        // Build steps
+        const steps: NightStep[] = useMemo(() => {
+            const result: NightStep[] = [];
 
+            result.push({
+                id: "select_players",
+                icon: "shirt",
+                label: t.game.stepSelectPlayers,
+                status: selectPlayersDone ? "done" : "pending",
+            });
+
+            if (malfunctioning) {
+                result.push({
+                    id: "configure_malfunction",
+                    icon: "alertTriangle",
+                    label: t.game.stepConfigureMalfunction,
+                    status: malfunctionConfigDone ? "done" : "pending",
+                });
+            }
+
+            result.push({
+                id: "show_results",
+                icon: "shirt",
+                label: t.game.stepShowResult,
+                status: "pending",
+            });
+
+            return result;
+        }, [selectPlayersDone, malfunctioning, malfunctionConfigDone, t]);
+
+        const handleSelectStep = (stepId: string) => {
+            if (stepId === "select_players") setPhase("select_players");
+            else if (stepId === "configure_malfunction")
+                setPhase("configure_malfunction");
+            else if (stepId === "show_results") setPhase("show_results");
+        };
+
+        // ================================================================
+        // Phase: Step List
+        // ================================================================
+        if (phase === "step_list") {
             return (
                 <NightStepListLayout
                     icon="shirt"
                     roleName={getRoleName("washerwoman")}
                     playerName={player.name}
                     steps={steps}
-                    onSelectStep={() => setPhase("narrator_setup")}
+                    onSelectStep={handleSelectStep}
                 />
             );
         }
 
-        // Narrator Setup Phase
-        if (phase === "narrator_setup") {
+        // ================================================================
+        // Phase: Select Players (healthy — with constraints + role picking)
+        // ================================================================
+        if (phase === "select_players" && !malfunctioning) {
             return (
                 <NarratorSetupLayout
                     icon="shirt"
                     roleName={getRoleName("washerwoman")}
                     playerName={getPlayerName(player.id)}
-                    onShowToPlayer={handleShowToPlayer}
-                    showToPlayerDisabled={!canProceedToPlayer}
+                    onShowToPlayer={handleCompleteSelectPlayers}
+                    showToPlayerDisabled={!canCompleteHealthySetup}
+                    showToPlayerLabel={t.common.confirm}
                 >
                     <StepSection
                         step={1}
@@ -179,57 +274,187 @@ const definition: RoleDefinition = {
                         />
                     </StepSection>
 
-                    {selectedPlayers.length === 2 && townsfolkInSelection.length > 0 && (
-                        <StepSection step={2} label={t.game.selectWhichRoleToShow}>
-                            {townsfolkInSelection.map((playerId) => {
-                                const p = state.players.find((pl) => pl.id === playerId);
-                                if (!p) return null;
-                                const pPerception = perceive(p, player, "team", state);
+                    {selectedPlayers.length === 2 &&
+                        townsfolkInSelection.length > 0 && (
+                            <StepSection
+                                step={2}
+                                label={t.game.selectWhichRoleToShow}
+                            >
+                                {townsfolkInSelection.map((playerId) => {
+                                    const p = state.players.find(
+                                        (pl) => pl.id === playerId,
+                                    );
+                                    if (!p) return null;
+                                    const pPerception = perceive(
+                                        p,
+                                        player,
+                                        "team",
+                                        state,
+                                    );
 
-                                // Determine available roles for this player
-                                const availableRoles = pPerception.team === "townsfolk"
-                                    ? (() => {
-                                        const rolePerception = perceive(p, player, "role", state);
-                                        const perceivedRole = getRole(rolePerception.roleId);
-                                        return perceivedRole ? [perceivedRole] : [];
-                                    })()
-                                    : townsfolkRoles;
+                                    // Determine available roles for this player
+                                    const availableRoles =
+                                        pPerception.team === "townsfolk"
+                                            ? (() => {
+                                                  const rolePerception =
+                                                      perceive(
+                                                          p,
+                                                          player,
+                                                          "role",
+                                                          state,
+                                                      );
+                                                  const perceivedRole = getRole(
+                                                      rolePerception.roleId,
+                                                  );
+                                                  return perceivedRole
+                                                      ? [perceivedRole]
+                                                      : [];
+                                              })()
+                                            : townsfolkRoles;
 
-                                const currentSelected =
-                                    selectedTownsfolk === playerId && selectedRoleId
-                                        ? [selectedRoleId]
-                                        : [];
+                                    const currentSelected =
+                                        selectedTownsfolk === playerId &&
+                                        selectedRoleId
+                                            ? [selectedRoleId]
+                                            : [];
 
-                                return (
-                                    <div key={playerId} className="mb-3">
-                                        <div className="text-xs font-medium text-parchment-400 mb-1.5 ml-1">
-                                            <Icon name="user" size="xs" className="inline mr-1 text-parchment-500" />
-                                            {p.name}
+                                    return (
+                                        <div key={playerId} className="mb-3">
+                                            <div className="text-xs font-medium text-parchment-400 mb-1.5 ml-1">
+                                                <Icon
+                                                    name="user"
+                                                    size="xs"
+                                                    className="inline mr-1 text-parchment-500"
+                                                />
+                                                {p.name}
+                                            </div>
+                                            <RolePickerGrid
+                                                roles={availableRoles}
+                                                state={state}
+                                                selected={currentSelected}
+                                                onSelect={(roleId) =>
+                                                    handleSelectRole(
+                                                        playerId,
+                                                        roleId,
+                                                    )
+                                                }
+                                                selectionCount={1}
+                                                colorMode="team"
+                                            />
                                         </div>
-                                        <RolePickerGrid
-                                            roles={availableRoles}
-                                            state={state}
-                                            selected={currentSelected}
-                                            onSelect={(roleId) => handleSelectRole(playerId, roleId)}
-                                            selectionCount={1}
-                                            colorMode="team"
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </StepSection>
-                    )}
+                                    );
+                                })}
+                            </StepSection>
+                        )}
 
-                    {selectedPlayers.length === 2 && townsfolkInSelection.length === 0 && (
-                        <AlertBox message={t.game.mustIncludeTownsfolk} />
-                    )}
+                    {selectedPlayers.length === 2 &&
+                        townsfolkInSelection.length === 0 && (
+                            <AlertBox message={t.game.mustIncludeTownsfolk} />
+                        )}
                 </NarratorSetupLayout>
             );
         }
 
-        // Player View Phase
-        const player1 = state.players.find((p) => p.id === selectedPlayers[0]);
-        const player2 = state.players.find((p) => p.id === selectedPlayers[1]);
+        // ================================================================
+        // Phase: Select Players (malfunctioning — free selection)
+        // ================================================================
+        if (phase === "select_players" && malfunctioning) {
+            return (
+                <NarratorSetupLayout
+                    icon="shirt"
+                    roleName={getRoleName("washerwoman")}
+                    playerName={getPlayerName(player.id)}
+                    onShowToPlayer={handleCompleteSelectPlayers}
+                    showToPlayerDisabled={!canCompleteMalfunctionSelect}
+                    showToPlayerLabel={t.common.confirm}
+                >
+                    {/* Malfunction warning */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Icon
+                                name="alertTriangle"
+                                size="md"
+                                className="text-amber-400 flex-shrink-0"
+                            />
+                            <p className="text-sm text-amber-300 font-medium">
+                                {t.game.malfunctionWarning}
+                            </p>
+                        </div>
+                        <p className="text-xs text-amber-400/70 mt-1 ml-7">
+                            {t.game.playerIsMalfunctioning}
+                        </p>
+                    </div>
+
+                    <StepSection
+                        step={1}
+                        label={t.game.selectTwoPlayers}
+                        count={{ current: selectedPlayers.length, max: 2 }}
+                    >
+                        <PlayerPickerList
+                            players={otherPlayers}
+                            selected={selectedPlayers}
+                            onSelect={handlePlayerToggle}
+                            selectionCount={2}
+                            variant="blue"
+                        />
+                    </StepSection>
+                </NarratorSetupLayout>
+            );
+        }
+
+        // ================================================================
+        // Phase: Configure Malfunction
+        // ================================================================
+        if (phase === "configure_malfunction") {
+            return (
+                <NarratorSetupLayout
+                    icon="shirt"
+                    roleName={getRoleName("washerwoman")}
+                    playerName={getPlayerName(player.id)}
+                    onShowToPlayer={handleCompleteMalfunctionConfig}
+                    showToPlayerDisabled={!canCompleteMalfunctionConfig}
+                    showToPlayerLabel={t.common.confirm}
+                >
+                    {/* Malfunction warning */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4">
+                        <div className="flex items-center gap-2">
+                            <Icon
+                                name="alertTriangle"
+                                size="md"
+                                className="text-amber-400 flex-shrink-0"
+                            />
+                            <p className="text-sm text-amber-300 font-medium">
+                                {t.game.malfunctionWarning}
+                            </p>
+                        </div>
+                        <p className="text-xs text-amber-400/70 mt-1 ml-7">
+                            {t.game.playerIsMalfunctioning}
+                        </p>
+                    </div>
+
+                    <StepSection step={1} label={t.game.chooseFalseRole}>
+                        <RolePickerGrid
+                            roles={townsfolkRoles}
+                            state={state}
+                            selected={selectedRoleId ? [selectedRoleId] : []}
+                            onSelect={handleMalfunctionSelectRole}
+                            selectionCount={1}
+                            colorMode="team"
+                        />
+                    </StepSection>
+                </NarratorSetupLayout>
+            );
+        }
+
+        // ================================================================
+        // Phase: Show Results (player view)
+        // ================================================================
+        const player1 = state.players.find(
+            (p) => p.id === selectedPlayers[0],
+        );
+        const player2 = state.players.find(
+            (p) => p.id === selectedPlayers[1],
+        );
 
         if (!selectedRoleId) return null;
 
@@ -239,7 +464,9 @@ const definition: RoleDefinition = {
 
         return (
             <TeamBackground teamId={shownTeamId}>
-                <div className={`text-center text-sm mb-5 max-w-sm mx-auto ${shownTeam.isEvil ? "text-red-300/80" : "text-parchment-300/80"}`}>
+                <div
+                    className={`text-center text-sm mb-5 max-w-sm mx-auto ${shownTeam.isEvil ? "text-red-300/80" : "text-parchment-300/80"}`}
+                >
                     <p className="uppercase tracking-widest font-semibold mb-3">
                         {t.game.oneOfThemIsThe}
                     </p>
@@ -247,13 +474,17 @@ const definition: RoleDefinition = {
                         {player1 && (
                             <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base">
                                 <Icon name="user" size="sm" />
-                                <span className="font-medium">{player1.name}</span>
+                                <span className="font-medium">
+                                    {player1.name}
+                                </span>
                             </span>
                         )}
                         {player2 && (
                             <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base">
                                 <Icon name="user" size="sm" />
-                                <span className="font-medium">{player2.name}</span>
+                                <span className="font-medium">
+                                    {player2.name}
+                                </span>
                             </span>
                         )}
                     </div>

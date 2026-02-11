@@ -243,6 +243,7 @@ const es: Translations = {
         stepChooseVictim: "Elegir Víctima",
         stepChoosePlayer: "Elegir Jugador",
         stepSelectPlayer: "Seleccionar Jugador",
+        stepSelectPlayers: "Seleccionar Jugadores",
         stepAssignRedHerring: "Asignar Pista Falsa",
         stepSelectAndShow: "Seleccionar y Mostrar",
         stepChooseTarget: "Elegir Objetivo",
@@ -274,6 +275,7 @@ const es: Translations = {
         playerIsMalfunctioning: "¡Este jugador está envenenado/borracho — su habilidad falla!",
         chooseFalseNumber: "¿Qué número debería ver?",
         chooseFalseResult: "¿Qué resultado debería ver?",
+        chooseFalseTarget: "¿A qué jugador le dirán que es el rol?",
         chooseFalseRole: "¿Qué rol debería ver?",
         malfunctionWarning: "Mal Funcionamiento",
 

@@ -50,7 +50,7 @@ const definition: RoleDefinition = {
                             e.data?.fortuneTellerId === player.id,
                     ),
                 );
-                return isFirstNight && !hasRedHerring;
+                return isFirstNight && !hasRedHerring && !isMalfunctioning(player);
             },
         },
         {
@@ -81,7 +81,9 @@ const definition: RoleDefinition = {
         );
 
         const isFirstNight = state.round === 1;
-        const needsRedHerringSetup = isFirstNight && !hasRedHerring;
+        const malfunctioning = isMalfunctioning(player);
+        const needsRedHerringSetup =
+            isFirstNight && !hasRedHerring && !malfunctioning;
 
         const [phase, setPhase] = useState<Phase>("step_list");
         const [selectedRedHerring, setSelectedRedHerring] = useState<
@@ -94,8 +96,6 @@ const definition: RoleDefinition = {
         >(null);
         const [malfunctionConfigDone, setMalfunctionConfigDone] =
             useState(false);
-
-        const malfunctioning = isMalfunctioning(player);
 
         // Get good players for Red Herring selection
         const goodPlayers = state.players.filter((p) => {

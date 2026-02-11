@@ -126,6 +126,62 @@ describe("FortuneTeller", () => {
     });
 
     // ================================================================
+    // NIGHT STEPS — Red Herring setup skipped when malfunctioning
+    // ================================================================
+
+    describe("nightSteps red_herring_setup condition", () => {
+        const redHerringStep = definition.nightSteps!.find(
+            (s) => s.id === "red_herring_setup"
+        )!;
+
+        it("shows red herring setup on night 1 when healthy", () => {
+            const ft = makePlayer({ id: "p1", roleId: "fortune_teller" });
+            const state = makeState({ round: 1, players: [ft] });
+            const game = makeGameWithHistory([], state);
+            expect(redHerringStep.condition!(game, ft, state)).toBe(true);
+        });
+
+        it("skips red herring setup when player is malfunctioning (drunk)", () => {
+            const ft = addEffectTo(
+                makePlayer({ id: "p1", roleId: "fortune_teller" }),
+                "drunk"
+            );
+            const state = makeState({ round: 1, players: [ft] });
+            const game = makeGameWithHistory([], state);
+            expect(redHerringStep.condition!(game, ft, state)).toBe(false);
+        });
+
+        it("skips red herring setup when player is malfunctioning (poisoned)", () => {
+            const ft = addEffectTo(
+                makePlayer({ id: "p1", roleId: "fortune_teller" }),
+                "poisoned"
+            );
+            const state = makeState({ round: 1, players: [ft] });
+            const game = makeGameWithHistory([], state);
+            expect(redHerringStep.condition!(game, ft, state)).toBe(false);
+        });
+
+        it("skips red herring setup on subsequent nights", () => {
+            const ft = makePlayer({ id: "p1", roleId: "fortune_teller" });
+            const state = makeState({ round: 2, players: [ft] });
+            const game = makeGameWithHistory([], state);
+            expect(redHerringStep.condition!(game, ft, state)).toBe(false);
+        });
+
+        it("skips red herring setup when already assigned", () => {
+            const ft = makePlayer({ id: "p1", roleId: "fortune_teller" });
+            const herring = addEffectTo(
+                makePlayer({ id: "p2", roleId: "villager" }),
+                "red_herring",
+                { fortuneTellerId: "p1" }
+            );
+            const state = makeState({ round: 1, players: [ft, herring] });
+            const game = makeGameWithHistory([], state);
+            expect(redHerringStep.condition!(game, ft, state)).toBe(false);
+        });
+    });
+
+    // ================================================================
     // RED HERRING (via perception — see RedHerring.test.ts for full tests)
     // ================================================================
 
