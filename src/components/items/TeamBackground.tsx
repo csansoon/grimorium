@@ -1,7 +1,7 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { getTeam, TeamId } from "../../lib/teams";
-import { useShaderBackground } from "../../hooks/useShaderBackground";
-import { cn } from "../../lib/utils";
+import { ReactNode, useEffect, useRef, useState } from 'react'
+import { getTeam, TeamId } from '../../lib/teams'
+import { useShaderBackground } from '../../hooks/useShaderBackground'
+import { cn } from '../../lib/utils'
 
 // =============================================================================
 // FRAGMENT SHADERS — one per team
@@ -98,7 +98,7 @@ void main() {
   col *= vig;
   gl_FragColor = vec4(col, 1.0);
 }
-`;
+`
 
 /**
  * Outsiders — Fractured prism + unstable distortion.
@@ -205,7 +205,7 @@ void main(){
   col *= vig;
   gl_FragColor = vec4(col, 1.0);
 }
-`;
+`
 
 /**
  * Minions — Embers + smoke + heat shimmer.
@@ -301,7 +301,7 @@ void main(){
   col *= vig;
   gl_FragColor = vec4(col, 1.0);
 }
-`;
+`
 
 /**
  * Demon — Infernal pulse + sigil ring + harsh tearing.
@@ -413,75 +413,74 @@ void main(){
 
   gl_FragColor = vec4(col, 1.0);
 }
-`;
-
+`
 
 const TEAM_SHADERS: Record<TeamId, string> = {
-    townsfolk: TOWNSFOLK_SHADER,
-    outsider: OUTSIDER_SHADER,
-    minion: MINION_SHADER,
-    demon: DEMON_SHADER,
-};
+  townsfolk: TOWNSFOLK_SHADER,
+  outsider: OUTSIDER_SHADER,
+  minion: MINION_SHADER,
+  demon: DEMON_SHADER,
+}
 
 // =============================================================================
 // COMPONENTS
 // =============================================================================
 
 type TeamBackgroundProps = {
-    teamId: TeamId;
-    children: ReactNode;
-};
+  teamId: TeamId
+  children: ReactNode
+}
 
 // ─── Internal: single shader canvas ─────────────────────────────────────────
 
 function ShaderCanvas({ teamId }: { teamId: TeamId }) {
-    const team = getTeam(teamId);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    useShaderBackground(canvasRef, TEAM_SHADERS[teamId]);
-    return (
-        <canvas
-            ref={canvasRef}
-            className={cn(
-                "absolute inset-0 w-full h-full bg-gradient-to-br",
-                team.colors.gradient,
-            )}
-        />
-    );
+  const team = getTeam(teamId)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  useShaderBackground(canvasRef, TEAM_SHADERS[teamId])
+  return (
+    <canvas
+      ref={canvasRef}
+      className={cn(
+        'absolute inset-0 w-full h-full bg-gradient-to-br',
+        team.colors.gradient,
+      )}
+    />
+  )
 }
 
 // ─── Internal: fading-out shader layer ──────────────────────────────────────
 
 function FadeOutLayer({
-    teamId,
-    onDone,
+  teamId,
+  onDone,
 }: {
-    teamId: TeamId;
-    onDone: () => void;
+  teamId: TeamId
+  onDone: () => void
 }) {
-    const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(true)
 
-    useEffect(() => {
-        // Trigger the fade on the next frame so the browser paints at opacity 1 first
-        const raf = requestAnimationFrame(() =>
-            requestAnimationFrame(() => setVisible(false)),
-        );
-        return () => cancelAnimationFrame(raf);
-    }, []);
+  useEffect(() => {
+    // Trigger the fade on the next frame so the browser paints at opacity 1 first
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setVisible(false)),
+    )
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
-    return (
-        <div
-            className="absolute inset-0 transition-opacity duration-700 ease-in-out"
-            style={{ opacity: visible ? 1 : 0 }}
-            onTransitionEnd={onDone}
-        >
-            <ShaderCanvas teamId={teamId} />
-        </div>
-    );
+  return (
+    <div
+      className='absolute inset-0 transition-opacity duration-700 ease-in-out'
+      style={{ opacity: visible ? 1 : 0 }}
+      onTransitionEnd={onDone}
+    >
+      <ShaderCanvas teamId={teamId} />
+    </div>
+  )
 }
 
 // ─── Public component ───────────────────────────────────────────────────────
 
-type FadingLayer = { key: number; teamId: TeamId };
+type FadingLayer = { key: number; teamId: TeamId }
 
 /**
  * Full-screen team-themed background with a live WebGL shader animation.
@@ -491,66 +490,66 @@ type FadingLayer = { key: number; teamId: TeamId };
  * When `teamId` changes, the old shader crossfades out smoothly over 700 ms.
  */
 export function TeamBackground({ teamId, children }: TeamBackgroundProps) {
-    const [fadingLayers, setFadingLayers] = useState<FadingLayer[]>([]);
-    const prevTeamRef = useRef(teamId);
-    const keyRef = useRef(0);
+  const [fadingLayers, setFadingLayers] = useState<FadingLayer[]>([])
+  const prevTeamRef = useRef(teamId)
+  const keyRef = useRef(0)
 
-    useEffect(() => {
-        if (teamId !== prevTeamRef.current) {
-            const oldTeam = prevTeamRef.current;
-            prevTeamRef.current = teamId;
-            const key = ++keyRef.current;
-            setFadingLayers((prev) => [...prev, { key, teamId: oldTeam }]);
-        }
-    }, [teamId]);
+  useEffect(() => {
+    if (teamId !== prevTeamRef.current) {
+      const oldTeam = prevTeamRef.current
+      prevTeamRef.current = teamId
+      const key = ++keyRef.current
+      setFadingLayers((prev) => [...prev, { key, teamId: oldTeam }])
+    }
+  }, [teamId])
 
-    const removeFadingLayer = (key: number) => {
-        setFadingLayers((prev) => prev.filter((l) => l.key !== key));
-    };
+  const removeFadingLayer = (key: number) => {
+    setFadingLayers((prev) => prev.filter((l) => l.key !== key))
+  }
 
-    return (
-        <div className="isolate relative min-h-app flex flex-col items-center justify-center p-4">
-            {/* Background layers */}
-            <div className="absolute inset-0 -z-10 overflow-hidden">
-                {/* Current shader (always underneath) */}
-                <ShaderCanvas teamId={teamId} />
+  return (
+    <div className='isolate relative min-h-app flex flex-col items-center justify-center p-4'>
+      {/* Background layers */}
+      <div className='absolute inset-0 -z-10 overflow-hidden'>
+        {/* Current shader (always underneath) */}
+        <ShaderCanvas teamId={teamId} />
 
-                {/* Previous shaders fading out on top */}
-                {fadingLayers.map((layer) => (
-                    <FadeOutLayer
-                        key={layer.key}
-                        teamId={layer.teamId}
-                        onDone={() => removeFadingLayer(layer.key)}
-                    />
-                ))}
-            </div>
-            {children}
-        </div>
-    );
+        {/* Previous shaders fading out on top */}
+        {fadingLayers.map((layer) => (
+          <FadeOutLayer
+            key={layer.key}
+            teamId={layer.teamId}
+            onDone={() => removeFadingLayer(layer.key)}
+          />
+        ))}
+      </div>
+      {children}
+    </div>
+  )
 }
 
 type CardLinkProps = {
-    onClick: () => void;
-    isEvil: boolean;
-    children: ReactNode;
-};
+  onClick: () => void
+  isEvil: boolean
+  children: ReactNode
+}
 
 /**
  * Subtle underlined link-style button for card screens.
  * Adapts color to good (parchment) or evil (red) themes.
  */
 export function CardLink({ onClick, isEvil, children }: CardLinkProps) {
-    return (
-        <button
-            onClick={onClick}
-            className={cn(
-                "mt-5 text-sm underline underline-offset-4 decoration-1 transition-colors",
-                isEvil
-                    ? "text-red-300/70 hover:text-red-200 decoration-red-400/40"
-                    : "text-parchment-300/70 hover:text-parchment-100 decoration-parchment-400/40",
-            )}
-        >
-            {children}
-        </button>
-    );
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'mt-5 text-sm underline underline-offset-4 decoration-1 transition-colors',
+        isEvil
+          ? 'text-red-300/70 hover:text-red-200 decoration-red-400/40'
+          : 'text-parchment-300/70 hover:text-parchment-100 decoration-parchment-400/40',
+      )}
+    >
+      {children}
+    </button>
+  )
 }

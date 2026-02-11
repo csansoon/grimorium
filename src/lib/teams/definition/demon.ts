@@ -1,29 +1,30 @@
-import { TeamDefinition } from "../types";
+import { TeamDefinition } from '../types'
 
 const definition: TeamDefinition = {
-    id: "demon",
-    icon: "skull",
-    isEvil: true,
-    colors: {
-        cardBg: "bg-gradient-to-b from-grimoire-darker to-grimoire-blood",
-        cardBorder: "border-red-600/40",
-        cardText: "text-parchment-100",
-        cardGlow: "rgba(200, 0, 0, 0.4)",
-        cardShimmer: "rgba(255, 40, 20, 0.15)",
-        cardSealRing: "border-red-500/15",
-        cardIconBg: "bg-red-900/30 border border-red-600/40",
-        cardIconGlow: "0 0 14px rgba(200,0,0,0.6)",
-        cardDividerIcon: "skull",
-        cardWinBg: "bg-red-950/50 border border-red-600/30",
-        cardWinAccent: "text-red-400",
-        cardTeamBadge: "text-red-400/70",
-        gradient: "from-red-950 via-grimoire-blood to-black",
-        buttonGradient: "from-red-700 to-red-900 hover:from-red-800 hover:to-red-950",
-        text: "text-red-400",
-        accent: "text-red-500",
-        badge: "bg-red-500/20 border-red-500/50",
-        badgeText: "text-red-200",
-    },
-};
+  id: 'demon',
+  icon: 'skull',
+  isEvil: true,
+  colors: {
+    cardBg: 'bg-gradient-to-b from-grimoire-darker to-grimoire-blood',
+    cardBorder: 'border-red-600/40',
+    cardText: 'text-parchment-100',
+    cardGlow: 'rgba(200, 0, 0, 0.4)',
+    cardShimmer: 'rgba(255, 40, 20, 0.15)',
+    cardSealRing: 'border-red-500/15',
+    cardIconBg: 'bg-red-900/30 border border-red-600/40',
+    cardIconGlow: '0 0 14px rgba(200,0,0,0.6)',
+    cardDividerIcon: 'skull',
+    cardWinBg: 'bg-red-950/50 border border-red-600/30',
+    cardWinAccent: 'text-red-400',
+    cardTeamBadge: 'text-red-400/70',
+    gradient: 'from-red-950 via-grimoire-blood to-black',
+    buttonGradient:
+      'from-red-700 to-red-900 hover:from-red-800 hover:to-red-950',
+    text: 'text-red-400',
+    accent: 'text-red-500',
+    badge: 'bg-red-500/20 border-red-500/50',
+    badgeText: 'text-red-200',
+  },
+}
 
-export default definition;
+export default definition

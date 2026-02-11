@@ -1,0 +1,20 @@
+const es = {
+  name: 'Lavandera',
+  description:
+    'Empiezas sabiendo que 1 de 2 jugadores es un Aldeano en particular.',
+
+  // NightAction UI
+  washerwomanInfo: 'Tu Información',
+  mustIncludeTownsfolk:
+    'Al menos uno de los jugadores seleccionados debe ser un Aldeano',
+  oneOfTheseIsTheTownsfolk:
+    'Uno de estos jugadores es un Aldeano. ¡Recuerda quiénes son!',
+
+  // History
+  history: {
+    discoveredTownsfolk:
+      '{player} descubrió que {player1} o {player2} es el/la {role}',
+  },
+} as const
+
+export default es

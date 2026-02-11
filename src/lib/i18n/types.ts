@@ -1,586 +1,266 @@
-export type Language = "en" | "es";
+export type Language = 'en' | 'es'
 
 export type Translations = {
-    // Common
-    common: {
-        continue: string;
-        confirm: string;
-        cancel: string;
-        back: string;
-        next: string;
-        players: string;
-        player: string;
-        roles: string;
-        role: string;
-        random: string;
-        startGame: string;
-        mainMenu: string;
-        history: string;
-        winCondition: string;
-        youAreThe: string;
-        iUnderstandMyRole: string;
-    };
+  // Common
+  common: {
+    continue: string
+    confirm: string
+    cancel: string
+    back: string
+    next: string
+    players: string
+    player: string
+    roles: string
+    role: string
+    random: string
+    startGame: string
+    mainMenu: string
+    history: string
+    winCondition: string
+    youAreThe: string
+    iUnderstandMyRole: string
+  }
 
-    // Main Menu
-    mainMenu: {
-        title: string;
-        subtitle: string;
-        continueGame: string;
-        newGame: string;
-        startFreshGame: string;
-        rolesLibrary: string;
-        browseAllRoles: string;
-        previousGames: string;
-        completed: string;
-        settingUp: string;
-        round: string;
-        language: string;
-    };
+  // Main Menu
+  mainMenu: {
+    title: string
+    subtitle: string
+    continueGame: string
+    newGame: string
+    startFreshGame: string
+    rolesLibrary: string
+    browseAllRoles: string
+    previousGames: string
+    completed: string
+    settingUp: string
+    round: string
+    language: string
+  }
 
-    // New Game Flow
-    newGame: {
-        step1Title: string;
-        step1Subtitle: string;
-        addPlayer: string;
-        playerPlaceholder: string;
-        minPlayersWarning: string;
-        nextSelectRoles: string;
-        loadedFromLastGame: string;
+  // New Game Flow
+  newGame: {
+    step1Title: string
+    step1Subtitle: string
+    addPlayer: string
+    playerPlaceholder: string
+    minPlayersWarning: string
+    nextSelectRoles: string
+    loadedFromLastGame: string
 
-        step2Title: string;
-        step2Subtitle: string;
-        needAtLeastRoles: string;
-        needAtLeastImp: string;
-        nextAssignRoles: string;
-        suggested: string;
+    step2Title: string
+    step2Subtitle: string
+    needAtLeastRoles: string
+    needAtLeastImp: string
+    nextAssignRoles: string
+    suggested: string
 
-        step3Title: string;
-        step3Subtitle: string;
-        assignmentInfo: string;
-        resetToRandom: string;
-        playerAssignments: string;
-        randomPool: string;
-        rolesForPlayers: string;
-        impNotAssignedWarning: string;
-        rolesRandomlyAssigned: string;
-        customizeAssignments: string;
-        tapToAssign: string;
-    };
+    step3Title: string
+    step3Subtitle: string
+    assignmentInfo: string
+    resetToRandom: string
+    playerAssignments: string
+    randomPool: string
+    rolesForPlayers: string
+    impNotAssignedWarning: string
+    rolesRandomlyAssigned: string
+    customizeAssignments: string
+    tapToAssign: string
+  }
 
-    // Game Phases
-    game: {
-        // Narrator prompts
-        narratorGiveDevice: string;
-        narratorWakePlayer: string;
-        narratorRoleChanged: string;
-        readyShowToPlayer: string;
-        yourRoleHasChanged: string;
+  // Game Phases
+  game: {
+    // Narrator prompts
+    narratorGiveDevice: string
+    narratorWakePlayer: string
+    narratorRoleChanged: string
+    readyShowToPlayer: string
+    yourRoleHasChanged: string
 
-        // Night
-        nightComplete: string;
-        nightActionsResolved: string;
-        startDay: string;
-        choosePlayerToKill: string;
-        selectVictim: string;
-        confirmKill: string;
+    // Night
+    nightComplete: string
+    nightActionsResolved: string
+    startDay: string
+    choosePlayerToKill: string
+    selectVictim: string
+    confirmKill: string
 
-        // Grimoire
-        grimoire: string;
-        daytimeActions: string;
-        accusePlayerDescription: string;
-        executionAlreadyHappened: string;
-        nominatesForExecution: string;
+    // Grimoire
+    grimoire: string
+    daytimeActions: string
+    accusePlayerDescription: string
+    executionAlreadyHappened: string
+    nominatesForExecution: string
 
-        // Day
-        day: string;
-        discussionAndNominations: string;
-        newNomination: string;
-        whoIsNominating: string;
-        whoAreTheyNominating: string;
-        selectNominator: string;
-        selectNominee: string;
-        startNomination: string;
-        endDayGoToNight: string;
+    // Day
+    day: string
+    discussionAndNominations: string
+    newNomination: string
+    whoIsNominating: string
+    whoAreTheyNominating: string
+    selectNominator: string
+    selectNominee: string
+    startNomination: string
+    endDayGoToNight: string
 
-        // Voting
-        executePlayer: string;
-        yesVsNoNeeded: string;
-        votesFor: string;
-        votesAgainst: string;
-        abstain: string;
-        willBeExecuted: string;
-        willNotBeExecuted: string;
-        confirmVotes: string;
-        cancelNomination: string;
+    // Voting
+    executePlayer: string
+    yesVsNoNeeded: string
+    votesFor: string
+    votesAgainst: string
+    abstain: string
+    willBeExecuted: string
+    willNotBeExecuted: string
+    confirmVotes: string
+    cancelNomination: string
 
-        // Slayer
-        slayerAction: string;
-        slayerActionDescription: string;
-        selectSlayer: string;
-        selectTarget: string;
-        confirmSlayerShot: string;
+    // Slayer
+    slayerAction: string
+    slayerActionDescription: string
+    selectSlayer: string
+    selectTarget: string
+    confirmSlayerShot: string
 
-        // Game Over
-        goodWins: string;
-        evilWins: string;
-        townVanquishedDemon: string;
-        demonConqueredTown: string;
-        finalRoles: string;
-        backToMainMenu: string;
+    // Game Over
+    goodWins: string
+    evilWins: string
+    townVanquishedDemon: string
+    demonConqueredTown: string
+    finalRoles: string
+    backToMainMenu: string
 
-        // History
-        gameHistory: string;
+    // History
+    gameHistory: string
 
-        // Washerwoman / Librarian shared
-        narratorSetup: string;
-        selectTwoPlayers: string;
-        selectWhichRoleToShow: string;
-        showToPlayer: string;
-        oneOfThemIsThe: string;
+    // Shared narrator keys
+    narratorSetup: string
+    selectTwoPlayers: string
+    selectWhichRoleToShow: string
+    showToPlayer: string
+    oneOfThemIsThe: string
 
-        // Washerwoman specific
-        mustIncludeTownsfolk: string;
-        washerwomanInfo: string;
-        oneOfTheseIsTheTownsfolk: string;
+    // Handback screen
+    handbackToNarrator: string
+    handbackDescription: string
+    narratorReady: string
 
-        // Librarian specific
-        mustIncludeOutsider: string;
-        librarianInfo: string;
-        oneOfTheseIsTheOutsider: string;
-        noOutsidersInGame: string;
-        noOutsidersMessage: string;
-        confirmNoOutsiders: string;
+    // Role Revelation
+    roleRevelation: string
+    roleRevelationDescription: string
+    tapToReveal: string
+    revealed: string
+    startFirstNight: string
+    skipRoleRevelation: string
+    revealAllFirst: string
 
-        // Investigator specific
-        mustIncludeMinion: string;
-        investigatorInfo: string;
-        oneOfTheseIsTheMinion: string;
+    // Night Dashboard
+    night: string
+    nightDashboard: string
+    nightDashboardDescription: string
+    nextAction: string
+    actionDone: string
+    actionSkipped: string
+    actionPending: string
+    allActionsComplete: string
+    proceedToDay: string
 
-        // Chef specific
-        chefInfo: string;
-        evilPairsCount: string;
-        evilPairsExplanation: string;
+    // Night Steps
+    nightSteps: string
+    stepConfigurePerceptions: string
+    stepShowResult: string
+    stepShowRole: string
+    stepNarratorSetup: string
+    stepChooseVictim: string
+    stepChoosePlayer: string
+    stepSelectPlayer: string
+    stepSelectPlayers: string
+    stepAssignRedHerring: string
+    stepSelectAndShow: string
+    stepChooseTarget: string
+    stepShowMinions: string
+    stepSelectBluffs: string
+    stepShowBluffs: string
+    stepSelectNewImp: string
+    stepChooseMaster: string
+    stepViewGrimoire: string
 
-        // Empath specific
-        empathInfo: string;
-        evilNeighborsCount: string;
-        evilNeighborsExplanation: string;
+    // Malfunction Config
+    stepConfigureMalfunction: string
+    playerIsMalfunctioning: string
+    chooseFalseNumber: string
+    chooseFalseResult: string
+    chooseFalseTarget: string
+    chooseFalseRole: string
+    malfunctionWarning: string
 
-        // Monk specific
-        monkInfo: string;
-        selectPlayerToProtect: string;
-        protectedForTheNight: string;
+    // Setup Actions
+    setupActions: string
+    setupActionsSubtitle: string
+    continueToRoleRevelation: string
 
-        // Soldier specific
-        soldierInfo: string;
-        permanentlyProtected: string;
+    // Perception Config
+    perceptionConfigTitle: string
+    perceptionConfigDescription: string
+    howShouldRegister: string
+    registerAsGood: string
+    registerAsEvil: string
+    actualRole: string
+    keepDefault: string
+  }
 
-        // Fortune Teller specific
-        fortuneTellerInfo: string;
-        selectTwoPlayersToCheck: string;
-        selectRedHerring: string;
-        redHerringInfo: string;
-        selectGoodPlayerAsRedHerring: string;
-        selectRandomRedHerring: string;
-        yesOneIsDemon: string;
-        noNeitherIsDemon: string;
-        fortuneTellerDemonDetected: string;
-        fortuneTellerNoDemon: string;
+  // Teams
+  teams: {
+    townsfolk: {
+      name: string
+      winCondition: string
+    }
+    outsider: {
+      name: string
+      winCondition: string
+    }
+    minion: {
+      name: string
+      winCondition: string
+    }
+    demon: {
+      name: string
+      winCondition: string
+    }
+  }
 
-        // Undertaker specific
-        undertakerInfo: string;
-        executedPlayerRole: string;
-        noExecutionToday: string;
+  // UI
+  ui: {
+    effects: string
+    seeRoleCard: string
+    editEffects: string
+    currentEffects: string
+    addEffect: string
+    noEffects: string
+  }
 
-        // Ravenkeeper specific
-        ravenkeeperInfo: string;
-        selectPlayerToSeeRole: string;
-        playerRoleIs: string;
+  // History messages
+  history: {
+    gameStarted: string
+    nightBegins: string
+    sunRises: string
+    diedInNight: string
+    dayBegins: string
+    learnedRole: string
+    noActionTonight: string
+    nominates: string
+    voteResult: string
+    votePassed: string
+    voteFailed: string
+    executed: string
+    goodWins: string
+    evilWins: string
+    effectAdded: string
+    effectRemoved: string
+    roleChanged: string
+    setupAction: string
+  }
 
-        // Handback screen
-        handbackToNarrator: string;
-        handbackDescription: string;
-        narratorReady: string;
-
-        // Role Revelation
-        roleRevelation: string;
-        roleRevelationDescription: string;
-        tapToReveal: string;
-        revealed: string;
-        startFirstNight: string;
-        skipRoleRevelation: string;
-        revealAllFirst: string;
-
-        // Night Dashboard
-        night: string;
-        nightDashboard: string;
-        nightDashboardDescription: string;
-        nextAction: string;
-        actionDone: string;
-        actionSkipped: string;
-        actionPending: string;
-        allActionsComplete: string;
-        proceedToDay: string;
-
-        // Night Steps
-        nightSteps: string;
-        stepConfigurePerceptions: string;
-        stepShowResult: string;
-        stepShowRole: string;
-        stepNarratorSetup: string;
-        stepChooseVictim: string;
-        stepChoosePlayer: string;
-        stepSelectPlayer: string;
-        stepSelectPlayers: string;
-        stepAssignRedHerring: string;
-        stepSelectAndShow: string;
-        stepChooseTarget: string;
-        stepShowMinions: string;
-        stepSelectBluffs: string;
-        stepShowBluffs: string;
-        stepSelectNewImp: string;
-
-        // Malfunction Config
-        stepConfigureMalfunction: string;
-        playerIsMalfunctioning: string;
-        chooseFalseNumber: string;
-        chooseFalseResult: string;
-        chooseFalseTarget: string;
-        chooseFalseRole: string;
-        malfunctionWarning: string;
-
-        // Imp self-kill
-        selectNewImpTitle: string;
-        selectNewImpDescription: string;
-        selectMinionToBecome: string;
-        confirmNewImp: string;
-
-        // Demon first night
-        demonMinionsTitle: string;
-        demonMinionsDescription: string;
-        theseAreYourMinions: string;
-        selectBluffsTitle: string;
-        selectBluffsDescription: string;
-        selectThreeBluffs: string;
-        bluffsSelected: string;
-        demonBluffsTitle: string;
-        demonBluffsDescription: string;
-        theseAreYourBluffs: string;
-
-        // Poisoner specific
-        poisonerInfo: string;
-        selectPlayerToPoison: string;
-
-        // Setup Actions
-        setupActions: string;
-        setupActionsSubtitle: string;
-        continueToRoleRevelation: string;
-
-        // Drunk setup
-        drunkSetupTitle: string;
-        drunkSetupDescription: string;
-        chooseBelievedRole: string;
-
-        // Butler specific
-        butlerInfo: string;
-        selectPlayerAsMaster: string;
-        stepChooseMaster: string;
-        butlerMasterLabel: string;
-        butlerVoteRestriction: string;
-
-        // Spy specific
-        stepViewGrimoire: string;
-        spyGrimoireTitle: string;
-        spyGrimoireDescription: string;
-        spyMalfunctionTitle: string;
-        spyMalfunctionDescription: string;
-
-        // Perception Config
-        perceptionConfigTitle: string;
-        perceptionConfigDescription: string;
-        howShouldRegister: string;
-        registerAsGood: string;
-        registerAsEvil: string;
-        actualRole: string;
-        keepDefault: string;
-    };
-
-    // Teams
-    teams: {
-        townsfolk: {
-            name: string;
-            winCondition: string;
-        };
-        outsider: {
-            name: string;
-            winCondition: string;
-        };
-        minion: {
-            name: string;
-            winCondition: string;
-        };
-        demon: {
-            name: string;
-            winCondition: string;
-        };
-    };
-
-    // Roles
-    roles: {
-        villager: {
-            name: string;
-            description: string;
-        };
-        imp: {
-            name: string;
-            description: string;
-            bounceTitle: string;
-            bounceDescription: string;
-            bounceOriginalLabel: string;
-            history: {
-                choseToKill: string;
-                failedToKill: string;
-                bounceRedirected: string;
-                shownMinionsAndBluffs: string;
-                selfKilled: string;
-                minionBecameImp: string;
-            };
-        };
-        washerwoman: {
-            name: string;
-            description: string;
-            history: {
-                discoveredTownsfolk: string;
-            };
-        };
-        librarian: {
-            name: string;
-            description: string;
-            history: {
-                discoveredOutsider: string;
-                noOutsiders: string;
-            };
-        };
-        investigator: {
-            name: string;
-            description: string;
-            history: {
-                discoveredMinion: string;
-            };
-        };
-        chef: {
-            name: string;
-            description: string;
-            history: {
-                sawEvilPairs: string;
-            };
-        };
-        empath: {
-            name: string;
-            description: string;
-            history: {
-                sawEvilNeighbors: string;
-            };
-        };
-        monk: {
-            name: string;
-            description: string;
-            history: {
-                protectedPlayer: string;
-            };
-        };
-        soldier: {
-            name: string;
-            description: string;
-        };
-        fortune_teller: {
-            name: string;
-            description: string;
-            history: {
-                sawDemon: string;
-                sawNoDemon: string;
-                redHerringAssigned: string;
-            };
-        };
-        undertaker: {
-            name: string;
-            description: string;
-            history: {
-                sawExecutedRole: string;
-                noExecution: string;
-            };
-        };
-        ravenkeeper: {
-            name: string;
-            description: string;
-            history: {
-                sawRole: string;
-            };
-        };
-        virgin: {
-            name: string;
-            description: string;
-            history: {
-                townsfolkExecuted: string;
-                lostPurity: string;
-            };
-        };
-        slayer: {
-            name: string;
-            description: string;
-            history: {
-                killedDemon: string;
-                missed: string;
-            };
-        };
-        mayor: {
-            name: string;
-            description: string;
-        };
-        saint: {
-            name: string;
-            description: string;
-        };
-        scarlet_woman: {
-            name: string;
-            description: string;
-            history: {
-                becameDemon: string;
-            };
-        };
-        recluse: {
-            name: string;
-            description: string;
-        };
-        poisoner: {
-            name: string;
-            description: string;
-            history: {
-                poisonedPlayer: string;
-            };
-        };
-        drunk: {
-            name: string;
-            description: string;
-        };
-        butler: {
-            name: string;
-            description: string;
-            history: {
-                choseMaster: string;
-            };
-        };
-        baron: {
-            name: string;
-            description: string;
-        };
-        spy: {
-            name: string;
-            description: string;
-            history: {
-                viewedGrimoire: string;
-            };
-        };
-    };
-
-    // Effects
-    effects: {
-        dead: {
-            name: string;
-            description: string;
-        };
-        used_dead_vote: {
-            name: string;
-            description: string;
-        };
-        safe: {
-            name: string;
-            description: string;
-        };
-        red_herring: {
-            name: string;
-            description: string;
-        };
-        pure: {
-            name: string;
-            description: string;
-        };
-        slayer_bullet: {
-            name: string;
-            description: string;
-        };
-        bounce: {
-            name: string;
-            description: string;
-        };
-        martyrdom: {
-            name: string;
-            description: string;
-        };
-        scarlet_woman: {
-            name: string;
-            description: string;
-        };
-        recluse_misregister: {
-            name: string;
-            description: string;
-        };
-        pending_role_reveal: {
-            name: string;
-            description: string;
-        };
-        poisoned: {
-            name: string;
-            description: string;
-        };
-        drunk: {
-            name: string;
-            description: string;
-        };
-        butler_master: {
-            name: string;
-            description: string;
-        };
-        spy_misregister: {
-            name: string;
-            description: string;
-        };
-    };
-
-    // UI
-    ui: {
-        effects: string;
-        seeRoleCard: string;
-        editEffects: string;
-        currentEffects: string;
-        addEffect: string;
-        noEffects: string;
-    };
-
-    // History messages
-    history: {
-        gameStarted: string;
-        nightBegins: string;
-        sunRises: string;
-        diedInNight: string;
-        dayBegins: string;
-        learnedRole: string;
-        noActionTonight: string;
-        nominates: string;
-        voteResult: string;
-        votePassed: string;
-        voteFailed: string;
-        executed: string;
-        goodWins: string;
-        evilWins: string;
-        effectAdded: string;
-        effectRemoved: string;
-        roleChanged: string;
-        setupAction: string;
-    };
-
-    // Scripts
-    scripts: {
-        "trouble-brewing": string;
-    };
-};
+  // Scripts
+  scripts: {
+    'trouble-brewing': string
+  }
+}

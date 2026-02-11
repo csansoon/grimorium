@@ -1,88 +1,88 @@
 import {
-    Game,
-    GameState,
-    HistoryEntry,
-    PlayerState,
-    generateId,
-    getCurrentState,
-    hasEffect,
-    getAlivePlayers,
-} from "./types";
-import { getRole } from "./roles";
-import { RoleDefinition, NightActionResult, EffectToAdd } from "./roles/types";
+  Game,
+  GameState,
+  HistoryEntry,
+  PlayerState,
+  generateId,
+  getCurrentState,
+  hasEffect,
+  getAlivePlayers,
+} from './types'
+import { getRole } from './roles'
+import { RoleDefinition, NightActionResult, EffectToAdd } from './roles/types'
 import {
-    resolveIntent,
-    applyPipelineChanges,
-    checkDynamicWinConditions,
-} from "./pipeline";
-import { NominateIntent, ExecuteIntent } from "./pipeline/types";
+  resolveIntent,
+  applyPipelineChanges,
+  checkDynamicWinConditions,
+} from './pipeline'
+import { NominateIntent, ExecuteIntent } from './pipeline/types'
 
 // ============================================================================
 // GAME CREATION
 // ============================================================================
 
 export type PlayerSetup = {
-    name: string;
-    roleId: string;
-};
+  name: string
+  roleId: string
+}
 
 export function createGame(name: string, players: PlayerSetup[]): Game {
-    const gameId = generateId();
+  const gameId = generateId()
 
-    const playerStates: PlayerState[] = players.map((p) => {
-        const role = getRole(p.roleId);
-        const effects: PlayerState["effects"] = [];
+  const playerStates: PlayerState[] = players.map((p) => {
+    const role = getRole(p.roleId)
+    const effects: PlayerState['effects'] = []
 
-        // Apply initial effects defined by the role
-        if (role?.initialEffects) {
-            for (const effect of role.initialEffects) {
-                effects.push({
-                    id: generateId(),
-                    type: effect.type,
-                    data: effect.data ?? {},
-                    expiresAt: effect.expiresAt ?? "never",
-                });
-            }
-        }
+    // Apply initial effects defined by the role
+    if (role?.initialEffects) {
+      for (const effect of role.initialEffects) {
+        effects.push({
+          id: generateId(),
+          type: effect.type,
+          data: effect.data ?? {},
+          expiresAt: effect.expiresAt ?? 'never',
+        })
+      }
+    }
 
-        return {
-            id: generateId(),
+    return {
+      id: generateId(),
+      name: p.name,
+      roleId: p.roleId,
+      effects,
+    }
+  })
+
+  const initialState: GameState = {
+    phase: 'setup',
+    round: 0,
+    players: playerStates,
+    winner: null,
+  }
+
+  const game: Game = {
+    id: gameId,
+    name,
+    createdAt: Date.now(),
+    history: [
+      {
+        id: generateId(),
+        timestamp: Date.now(),
+        type: 'game_created',
+        message: [{ type: 'i18n', key: 'history.gameStarted' }],
+        data: {
+          players: playerStates.map((p) => ({
+            id: p.id,
             name: p.name,
             roleId: p.roleId,
-            effects,
-        };
-    });
+          })),
+        },
+        stateAfter: initialState,
+      },
+    ],
+  }
 
-    const initialState: GameState = {
-        phase: "setup",
-        round: 0,
-        players: playerStates,
-        winner: null,
-    };
-
-    const game: Game = {
-        id: gameId,
-        name,
-        createdAt: Date.now(),
-        history: [
-            {
-                id: generateId(),
-                timestamp: Date.now(),
-                type: "game_created",
-                message: [{ type: "i18n", key: "history.gameStarted" }],
-                data: {
-                    players: playerStates.map((p) => ({
-                        id: p.id,
-                        name: p.name,
-                        roleId: p.roleId,
-                    })),
-                },
-                stateAfter: initialState,
-            },
-        ],
-    };
-
-    return game;
+  return game
 }
 
 // ============================================================================
@@ -90,132 +90,130 @@ export function createGame(name: string, players: PlayerSetup[]): Game {
 // ============================================================================
 
 function expireEffects(
-    state: GameState,
-    expirationType: "end_of_night" | "end_of_day",
+  state: GameState,
+  expirationType: 'end_of_night' | 'end_of_day',
 ): GameState {
-    return {
-        ...state,
-        players: state.players.map((player) => ({
-            ...player,
-            effects: player.effects.filter(
-                (e) => e.expiresAt !== expirationType,
-            ),
-        })),
-    };
+  return {
+    ...state,
+    players: state.players.map((player) => ({
+      ...player,
+      effects: player.effects.filter((e) => e.expiresAt !== expirationType),
+    })),
+  }
 }
 
 export function addHistoryEntry(
-    game: Game,
-    entry: Omit<HistoryEntry, "id" | "timestamp" | "stateAfter">,
-    stateUpdates?: Partial<GameState>,
-    addEffects?: Record<string, EffectToAdd[]>,
-    removeEffects?: Record<string, string[]>,
-    changeRoles?: Record<string, string>,
+  game: Game,
+  entry: Omit<HistoryEntry, 'id' | 'timestamp' | 'stateAfter'>,
+  stateUpdates?: Partial<GameState>,
+  addEffects?: Record<string, EffectToAdd[]>,
+  removeEffects?: Record<string, string[]>,
+  changeRoles?: Record<string, string>,
 ): Game {
-    const currentState = getCurrentState(game);
+  const currentState = getCurrentState(game)
 
-    // Apply state updates
-    let newState = { ...currentState, ...stateUpdates };
+  // Apply state updates
+  let newState = { ...currentState, ...stateUpdates }
 
-    // Apply effect and role changes
-    if (addEffects || removeEffects || changeRoles) {
-        newState = {
-            ...newState,
-            players: newState.players.map((player) => {
-                let effects = [...player.effects];
-                let roleId = player.roleId;
+  // Apply effect and role changes
+  if (addEffects || removeEffects || changeRoles) {
+    newState = {
+      ...newState,
+      players: newState.players.map((player) => {
+        let effects = [...player.effects]
+        let roleId = player.roleId
 
-                // Remove effects
-                if (removeEffects?.[player.id]) {
-                    effects = effects.filter(
-                        (e) => !removeEffects[player.id].includes(e.type),
-                    );
-                }
+        // Remove effects
+        if (removeEffects?.[player.id]) {
+          effects = effects.filter(
+            (e) => !removeEffects[player.id].includes(e.type),
+          )
+        }
 
-                // Add effects
-                if (addEffects?.[player.id]) {
-                    const newEffects = addEffects[player.id].map((e) => ({
-                        id: generateId(),
-                        type: e.type,
-                        data: e.data,
-                        expiresAt: e.expiresAt,
-                    }));
-                    effects = [...effects, ...newEffects];
-                }
+        // Add effects
+        if (addEffects?.[player.id]) {
+          const newEffects = addEffects[player.id].map((e) => ({
+            id: generateId(),
+            type: e.type,
+            data: e.data,
+            expiresAt: e.expiresAt,
+          }))
+          effects = [...effects, ...newEffects]
+        }
 
-                // Change role
-                if (changeRoles?.[player.id]) {
-                    roleId = changeRoles[player.id];
-                }
+        // Change role
+        if (changeRoles?.[player.id]) {
+          roleId = changeRoles[player.id]
+        }
 
-                return { ...player, effects, roleId };
-            }),
-        };
+        return { ...player, effects, roleId }
+      }),
     }
+  }
 
-    const historyEntry: HistoryEntry = {
-        id: generateId(),
-        timestamp: Date.now(),
-        type: entry.type,
-        message: entry.message,
-        data: entry.data,
-        stateAfter: newState,
-    };
+  const historyEntry: HistoryEntry = {
+    id: generateId(),
+    timestamp: Date.now(),
+    type: entry.type,
+    message: entry.message,
+    data: entry.data,
+    stateAfter: newState,
+  }
 
-    return {
-        ...game,
-        history: [...game.history, historyEntry],
-    };
+  return {
+    ...game,
+    history: [...game.history, historyEntry],
+  }
 }
 
 // ============================================================================
 // SETUP ACTIONS
 // ============================================================================
 
-import type { SetupActionResult } from "./roles/types";
+import type { SetupActionResult } from './roles/types'
 
 /**
  * Apply a setup action result to the game. Used for pre-revelation setup
  * (e.g., the Drunk choosing which Townsfolk role to believe they are).
  */
 export function applySetupAction(
-    game: Game,
-    playerId: string,
-    result: SetupActionResult,
+  game: Game,
+  playerId: string,
+  result: SetupActionResult,
 ): Game {
-    const state = getCurrentState(game);
-    const player = state.players.find((p) => p.id === playerId);
-    if (!player) return game;
+  const state = getCurrentState(game)
+  const player = state.players.find((p) => p.id === playerId)
+  if (!player) return game
 
-    const changeRoles = result.changeRole
-        ? { [playerId]: result.changeRole }
-        : undefined;
+  const changeRoles = result.changeRole
+    ? { [playerId]: result.changeRole }
+    : undefined
 
-    return addHistoryEntry(
-        game,
+  return addHistoryEntry(
+    game,
+    {
+      type: 'setup_action',
+      message: [
         {
-            type: "setup_action",
-            message: [
-                {
-                    type: "i18n",
-                    key: "history.setupAction",
-                    params: {
-                        player: playerId,
-                        role: result.changeRole ?? player.roleId,
-                    },
-                },
-            ],
-            data: {
-                playerId,
-                originalRole: player.roleId,
-                newRole: result.changeRole,
-            },
+          type: 'i18n',
+          key: 'history.setupAction',
+          params: {
+            player: playerId,
+            role: result.changeRole ?? player.roleId,
+          },
         },
-        undefined,
-        result.addEffects,
-        result.removeEffects,
-        changeRoles,
-    );
+      ],
+      data: {
+        playerId,
+        originalRole: player.roleId,
+        newRole: result.changeRole,
+      },
+    },
+    undefined,
+    result.addEffects,
+    result.removeEffects,
+    changeRoles,
+  )
 }
 
 // ============================================================================
@@ -227,126 +225,122 @@ export function applySetupAction(
  * When multiple players share the same role, they appear consecutively in player order.
  */
 function getPlayersWithNightRoles(
-    state: GameState,
+  state: GameState,
 ): { player: PlayerState; role: RoleDefinition }[] {
-    const result: { player: PlayerState; role: RoleDefinition }[] = [];
+  const result: { player: PlayerState; role: RoleDefinition }[] = []
 
-    for (const player of state.players) {
-        const role = getRole(player.roleId);
-        if (role && role.nightOrder !== null) {
-            result.push({ player, role });
-        }
+  for (const player of state.players) {
+    const role = getRole(player.roleId)
+    if (role && role.nightOrder !== null) {
+      result.push({ player, role })
     }
+  }
 
-    // Sort by nightOrder (stable sort preserves player order for ties)
-    result.sort((a, b) => (a.role.nightOrder ?? 0) - (b.role.nightOrder ?? 0));
+  // Sort by nightOrder (stable sort preserves player order for ties)
+  result.sort((a, b) => (a.role.nightOrder ?? 0) - (b.role.nightOrder ?? 0))
 
-    return result;
+  return result
 }
 
 export type GameStep =
-    | { type: "role_reveal"; playerId: string }
-    | { type: "night_action"; playerId: string; roleId: string }
-    | { type: "night_action_skip"; playerId: string; roleId: string }
-    | { type: "night_waiting" }
-    | { type: "day" }
-    | { type: "voting"; nomineeId: string }
-    | { type: "game_over"; winner: "townsfolk" | "demon" };
+  | { type: 'role_reveal'; playerId: string }
+  | { type: 'night_action'; playerId: string; roleId: string }
+  | { type: 'night_action_skip'; playerId: string; roleId: string }
+  | { type: 'night_waiting' }
+  | { type: 'day' }
+  | { type: 'voting'; nomineeId: string }
+  | { type: 'game_over'; winner: 'townsfolk' | 'demon' }
 
 export function getNextStep(game: Game): GameStep {
-    const state = getCurrentState(game);
+  const state = getCurrentState(game)
 
-    // Check win conditions first
-    const winResult = checkWinCondition(state, game);
-    if (winResult) {
-        return { type: "game_over", winner: winResult };
+  // Check win conditions first
+  const winResult = checkWinCondition(state, game)
+  if (winResult) {
+    return { type: 'game_over', winner: winResult }
+  }
+
+  if (state.phase === 'setup') {
+    // Find next player who hasn't seen their role
+    const revealedPlayers = game.history
+      .filter((e) => e.type === 'role_revealed')
+      .map((e) => e.data.playerId as string)
+
+    const nextPlayer = state.players.find(
+      (p) => !revealedPlayers.includes(p.id),
+    )
+
+    if (nextPlayer) {
+      return { type: 'role_reveal', playerId: nextPlayer.id }
     }
 
-    if (state.phase === "setup") {
-        // Find next player who hasn't seen their role
-        const revealedPlayers = game.history
-            .filter((e) => e.type === "role_revealed")
-            .map((e) => e.data.playerId as string);
+    return { type: 'night_waiting' }
+  }
 
-        const nextPlayer = state.players.find(
-            (p) => !revealedPlayers.includes(p.id),
-        );
+  if (state.phase === 'night') {
+    // Find which players have acted this night (tracked by playerId)
+    const nightStartIndex = findLastEventIndex(game, 'night_started')
+    const actedPlayerIds = new Set(
+      game.history
+        .slice(nightStartIndex + 1)
+        .filter((e) => e.type === 'night_action' || e.type === 'night_skipped')
+        .map((e) => e.data.playerId as string),
+    )
 
-        if (nextPlayer) {
-            return { type: "role_reveal", playerId: nextPlayer.id };
+    // Build a player-centric list sorted by nightOrder
+    const playersWithNightRoles = getPlayersWithNightRoles(state)
+
+    // Find next player that hasn't acted
+    for (const { player, role } of playersWithNightRoles) {
+      if (!actedPlayerIds.has(player.id)) {
+        if (role.shouldWake && !role.shouldWake(game, player)) {
+          return {
+            type: 'night_action_skip',
+            playerId: player.id,
+            roleId: role.id,
+          }
         }
-
-        return { type: "night_waiting" };
-    }
-
-    if (state.phase === "night") {
-        // Find which players have acted this night (tracked by playerId)
-        const nightStartIndex = findLastEventIndex(game, "night_started");
-        const actedPlayerIds = new Set(
-            game.history
-                .slice(nightStartIndex + 1)
-                .filter(
-                    (e) =>
-                        e.type === "night_action" ||
-                        e.type === "night_skipped",
-                )
-                .map((e) => e.data.playerId as string),
-        );
-
-        // Build a player-centric list sorted by nightOrder
-        const playersWithNightRoles = getPlayersWithNightRoles(state);
-
-        // Find next player that hasn't acted
-        for (const { player, role } of playersWithNightRoles) {
-            if (!actedPlayerIds.has(player.id)) {
-                if (role.shouldWake && !role.shouldWake(game, player)) {
-                    return {
-                        type: "night_action_skip",
-                        playerId: player.id,
-                        roleId: role.id,
-                    };
-                }
-                return {
-                    type: "night_action",
-                    playerId: player.id,
-                    roleId: role.id,
-                };
-            }
+        return {
+          type: 'night_action',
+          playerId: player.id,
+          roleId: role.id,
         }
-
-        return { type: "night_waiting" };
+      }
     }
 
-    if (state.phase === "day") {
-        return { type: "day" };
-    }
+    return { type: 'night_waiting' }
+  }
 
-    return { type: "day" };
+  if (state.phase === 'day') {
+    return { type: 'day' }
+  }
+
+  return { type: 'day' }
 }
 
 function findLastEventIndex(game: Game, eventType: string): number {
-    for (let i = game.history.length - 1; i >= 0; i--) {
-        if (game.history[i].type === eventType) {
-            return i;
-        }
+  for (let i = game.history.length - 1; i >= 0; i--) {
+    if (game.history[i].type === eventType) {
+      return i
     }
-    return -1;
+  }
+  return -1
 }
 
 /**
  * Check if an execution has already happened today.
  */
 export function hasExecutionToday(game: Game): boolean {
-    const dayStartIndex = findLastEventIndex(game, "day_started");
-    if (dayStartIndex === -1) return false;
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return false
 
-    for (let i = dayStartIndex + 1; i < game.history.length; i++) {
-        const entry = game.history[i];
-        if (entry.type === "execution" || entry.type === "virgin_execution") {
-            return true;
-        }
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    const entry = game.history[i]
+    if (entry.type === 'execution' || entry.type === 'virgin_execution') {
+      return true
     }
-    return false;
+  }
+  return false
 }
 
 // ============================================================================
@@ -354,111 +348,111 @@ export function hasExecutionToday(game: Game): boolean {
 // ============================================================================
 
 export function startNight(game: Game): Game {
-    const state = getCurrentState(game);
-    const newRound = state.phase === "setup" ? 1 : state.round + 1;
+  const state = getCurrentState(game)
+  const newRound = state.phase === 'setup' ? 1 : state.round + 1
 
-    // Expire effects that should end at end of day (e.g., Poisoner's poison)
-    const stateAfterExpiration = expireEffects(state, "end_of_day");
+  // Expire effects that should end at end of day (e.g., Poisoner's poison)
+  const stateAfterExpiration = expireEffects(state, 'end_of_day')
 
-    return addHistoryEntry(
-        game,
+  return addHistoryEntry(
+    game,
+    {
+      type: 'night_started',
+      message: [
         {
-            type: "night_started",
-            message: [
-                {
-                    type: "i18n",
-                    key: "history.nightBegins",
-                    params: { round: newRound },
-                },
-            ],
-            data: { round: newRound },
+          type: 'i18n',
+          key: 'history.nightBegins',
+          params: { round: newRound },
         },
-        {
-            phase: "night",
-            round: newRound,
-            players: stateAfterExpiration.players,
-        },
-    );
+      ],
+      data: { round: newRound },
+    },
+    {
+      phase: 'night',
+      round: newRound,
+      players: stateAfterExpiration.players,
+    },
+  )
 }
 
 export function startDay(game: Game): Game {
-    // Resolve night - add death announcement entries
-    let updatedGame = addHistoryEntry(game, {
-        type: "night_resolved",
-        message: [{ type: "i18n", key: "history.sunRises" }],
-        data: {},
-    });
+  // Resolve night - add death announcement entries
+  let updatedGame = addHistoryEntry(game, {
+    type: 'night_resolved',
+    message: [{ type: 'i18n', key: 'history.sunRises' }],
+    data: {},
+  })
 
-    // Find who died tonight
-    const nightStartIndex = findLastEventIndex(updatedGame, "night_started");
-    const deathEffects: string[] = [];
+  // Find who died tonight
+  const nightStartIndex = findLastEventIndex(updatedGame, 'night_started')
+  const deathEffects: string[] = []
 
-    for (let i = nightStartIndex + 1; i < updatedGame.history.length; i++) {
-        const entry = updatedGame.history[i];
-        if (entry.type === "night_action" && entry.data.action === "kill") {
-            deathEffects.push(entry.data.targetId as string);
-        }
+  for (let i = nightStartIndex + 1; i < updatedGame.history.length; i++) {
+    const entry = updatedGame.history[i]
+    if (entry.type === 'night_action' && entry.data.action === 'kill') {
+      deathEffects.push(entry.data.targetId as string)
     }
+  }
 
-    // Announce deaths
-    const currentState = getCurrentState(updatedGame);
-    for (const playerId of deathEffects) {
-        const player = currentState.players.find((p) => p.id === playerId);
-        if (player && hasEffect(player, "dead")) {
-            updatedGame = addHistoryEntry(updatedGame, {
-                type: "effect_added",
-                message: [
-                    {
-                        type: "i18n",
-                        key: "history.diedInNight",
-                        params: { player: player.id },
-                    },
-                ],
-                data: { playerId: player.id, effectType: "dead" },
-            });
-        }
+  // Announce deaths
+  const currentState = getCurrentState(updatedGame)
+  for (const playerId of deathEffects) {
+    const player = currentState.players.find((p) => p.id === playerId)
+    if (player && hasEffect(player, 'dead')) {
+      updatedGame = addHistoryEntry(updatedGame, {
+        type: 'effect_added',
+        message: [
+          {
+            type: 'i18n',
+            key: 'history.diedInNight',
+            params: { player: player.id },
+          },
+        ],
+        data: { playerId: player.id, effectType: 'dead' },
+      })
     }
+  }
 
-    // Expire effects that should end at end of night (e.g., Monk's protection)
-    const stateAfterExpiration = expireEffects(
-        getCurrentState(updatedGame),
-        "end_of_night",
-    );
+  // Expire effects that should end at end of night (e.g., Monk's protection)
+  const stateAfterExpiration = expireEffects(
+    getCurrentState(updatedGame),
+    'end_of_night',
+  )
 
-    // Transition to day with expired effects applied
-    return addHistoryEntry(
-        updatedGame,
+  // Transition to day with expired effects applied
+  return addHistoryEntry(
+    updatedGame,
+    {
+      type: 'day_started',
+      message: [
         {
-            type: "day_started",
-            message: [
-                {
-                    type: "i18n",
-                    key: "history.dayBegins",
-                    params: { round: currentState.round },
-                },
-            ],
-            data: { round: currentState.round },
+          type: 'i18n',
+          key: 'history.dayBegins',
+          params: { round: currentState.round },
         },
-        { phase: "day", players: stateAfterExpiration.players },
-    );
+      ],
+      data: { round: currentState.round },
+    },
+    { phase: 'day', players: stateAfterExpiration.players },
+  )
 }
 
 export function markRoleRevealed(game: Game, playerId: string): Game {
-    const state = getCurrentState(game);
-    const player = state.players.find((p) => p.id === playerId);
-    if (!player) return game;
+  const state = getCurrentState(game)
+  const player = state.players.find((p) => p.id === playerId)
+  if (!player) return game
 
-    return addHistoryEntry(game, {
-        type: "role_revealed",
-        message: [
-            {
-                type: "i18n",
-                key: "history.learnedRole",
-                params: { player: playerId, role: player.roleId },
-            },
-        ],
-        data: { playerId, roleId: player.roleId },
-    });
+  return addHistoryEntry(game, {
+    type: 'role_revealed',
+    message: [
+      {
+        type: 'i18n',
+        key: 'history.learnedRole',
+        params: { player: playerId, role: player.roleId },
+      },
+    ],
+    data: { playerId, roleId: player.roleId },
+  })
 }
 
 // markRoleChangeRevealed is no longer needed here — role change reveals
@@ -466,53 +460,53 @@ export function markRoleRevealed(game: Game, playerId: string): Game {
 // The follow-up's ActionComponent creates the role_change_revealed entry.
 
 export function applyNightAction(game: Game, result: NightActionResult): Game {
-    let updatedGame = game;
+  let updatedGame = game
 
-    // Apply direct entries and effects (not the intent — that's handled by the pipeline)
-    const directEntries = result.entries;
-    const directResult = {
-        entries: directEntries,
-        stateUpdates: result.stateUpdates,
-        addEffects: result.addEffects,
-        removeEffects: result.removeEffects,
-        changeRoles: result.changeRoles,
-    };
+  // Apply direct entries and effects (not the intent — that's handled by the pipeline)
+  const directEntries = result.entries
+  const directResult = {
+    entries: directEntries,
+    stateUpdates: result.stateUpdates,
+    addEffects: result.addEffects,
+    removeEffects: result.removeEffects,
+    changeRoles: result.changeRoles,
+  }
 
-    for (const entry of directResult.entries) {
-        updatedGame = addHistoryEntry(
-            updatedGame,
-            entry,
-            directResult.stateUpdates,
-            directResult.addEffects,
-            directResult.removeEffects,
-            directResult.changeRoles,
-        );
-        // Only apply state/effects/roles on first entry
-        directResult.stateUpdates = undefined;
-        directResult.addEffects = undefined;
-        directResult.removeEffects = undefined;
-        directResult.changeRoles = undefined;
-    }
+  for (const entry of directResult.entries) {
+    updatedGame = addHistoryEntry(
+      updatedGame,
+      entry,
+      directResult.stateUpdates,
+      directResult.addEffects,
+      directResult.removeEffects,
+      directResult.changeRoles,
+    )
+    // Only apply state/effects/roles on first entry
+    directResult.stateUpdates = undefined
+    directResult.addEffects = undefined
+    directResult.removeEffects = undefined
+    directResult.changeRoles = undefined
+  }
 
-    return updatedGame;
+  return updatedGame
 }
 
 export function skipNightAction(
-    game: Game,
-    roleId: string,
-    playerId: string,
+  game: Game,
+  roleId: string,
+  playerId: string,
 ): Game {
-    return addHistoryEntry(game, {
-        type: "night_skipped",
-        message: [
-            {
-                type: "i18n",
-                key: "history.noActionTonight",
-                params: { role: roleId },
-            },
-        ],
-        data: { roleId, playerId },
-    });
+  return addHistoryEntry(game, {
+    type: 'night_skipped',
+    message: [
+      {
+        type: 'i18n',
+        key: 'history.noActionTonight',
+        params: { role: roleId },
+      },
+    ],
+    data: { roleId, playerId },
+  })
 }
 
 // ============================================================================
@@ -525,31 +519,31 @@ export function skipNightAction(
  * like the Virgin's Pure effect.
  */
 export function nominate(
-    game: Game,
-    nominatorId: string,
-    nomineeId: string,
+  game: Game,
+  nominatorId: string,
+  nomineeId: string,
 ): Game {
-    const state = getCurrentState(game);
-    const nominator = state.players.find((p) => p.id === nominatorId);
-    const nominee = state.players.find((p) => p.id === nomineeId);
+  const state = getCurrentState(game)
+  const nominator = state.players.find((p) => p.id === nominatorId)
+  const nominee = state.players.find((p) => p.id === nomineeId)
 
-    if (!nominator || !nominee) return game;
+  if (!nominator || !nominee) return game
 
-    const intent: NominateIntent = {
-        type: "nominate",
-        nominatorId,
-        nomineeId,
-    };
+  const intent: NominateIntent = {
+    type: 'nominate',
+    nominatorId,
+    nomineeId,
+  }
 
-    const result = resolveIntent(intent, state, game);
+  const result = resolveIntent(intent, state, game)
 
-    // Nominations never require UI input, so result is always resolved or prevented
-    if (result.type === "needs_input") {
-        // This shouldn't happen, but handle gracefully
-        return game;
-    }
+  // Nominations never require UI input, so result is always resolved or prevented
+  if (result.type === 'needs_input') {
+    // This shouldn't happen, but handle gracefully
+    return game
+  }
 
-    return applyPipelineChanges(game, result.stateChanges);
+  return applyPipelineChanges(game, result.stateChanges)
 }
 
 // ============================================================================
@@ -557,80 +551,80 @@ export function nominate(
 // ============================================================================
 
 export function resolveVote(
-    game: Game,
-    nomineeId: string,
-    votesFor: string[],
-    votesAgainst: string[],
+  game: Game,
+  nomineeId: string,
+  votesFor: string[],
+  votesAgainst: string[],
 ): Game {
-    const state = getCurrentState(game);
-    const nominee = state.players.find((p) => p.id === nomineeId);
-    if (!nominee) return game;
+  const state = getCurrentState(game)
+  const nominee = state.players.find((p) => p.id === nomineeId)
+  if (!nominee) return game
 
-    const passed = votesFor.length > votesAgainst.length;
+  const passed = votesFor.length > votesAgainst.length
 
-    // Mark dead voters as having used their vote
-    const addEffects: Record<string, { type: string }[]> = {};
-    for (const voterId of votesFor) {
-        const voter = state.players.find((p) => p.id === voterId);
-        if (
-            voter &&
-            hasEffect(voter, "dead") &&
-            !hasEffect(voter, "used_dead_vote")
-        ) {
-            addEffects[voterId] = [{ type: "used_dead_vote" }];
-        }
+  // Mark dead voters as having used their vote
+  const addEffects: Record<string, { type: string }[]> = {}
+  for (const voterId of votesFor) {
+    const voter = state.players.find((p) => p.id === voterId)
+    if (
+      voter &&
+      hasEffect(voter, 'dead') &&
+      !hasEffect(voter, 'used_dead_vote')
+    ) {
+      addEffects[voterId] = [{ type: 'used_dead_vote' }]
     }
+  }
 
-    let updatedGame = addHistoryEntry(
-        game,
+  let updatedGame = addHistoryEntry(
+    game,
+    {
+      type: 'vote',
+      message: [
         {
-            type: "vote",
-            message: [
-                {
-                    type: "i18n",
-                    key: "history.voteResult",
-                    params: {
-                        player: nomineeId,
-                        for: votesFor.length,
-                        against: votesAgainst.length,
-                    },
-                },
-                {
-                    type: "i18n",
-                    key: passed ? "history.votePassed" : "history.voteFailed",
-                },
-            ],
-            data: { nomineeId, votesFor, votesAgainst, passed },
+          type: 'i18n',
+          key: 'history.voteResult',
+          params: {
+            player: nomineeId,
+            for: votesFor.length,
+            against: votesAgainst.length,
+          },
         },
-        { phase: "day" },
-        addEffects,
-    );
+        {
+          type: 'i18n',
+          key: passed ? 'history.votePassed' : 'history.voteFailed',
+        },
+      ],
+      data: { nomineeId, votesFor, votesAgainst, passed },
+    },
+    { phase: 'day' },
+    addEffects,
+  )
 
-    if (passed) {
-        // Route execution through the intent pipeline so effects can intercept
-        // (e.g., Scarlet Woman becoming the Demon when the Demon is executed)
-        const executeIntent: ExecuteIntent = {
-            type: "execute",
-            playerId: nomineeId,
-            cause: "execution",
-        };
-
-        const result = resolveIntent(
-            executeIntent,
-            getCurrentState(updatedGame),
-            updatedGame,
-        );
-
-        // Executions don't require UI input, so result is always resolved or prevented
-        if (result.type === "needs_input") {
-            // This shouldn't happen, but handle gracefully
-            return updatedGame;
-        }
-
-        updatedGame = applyPipelineChanges(updatedGame, result.stateChanges);
+  if (passed) {
+    // Route execution through the intent pipeline so effects can intercept
+    // (e.g., Scarlet Woman becoming the Demon when the Demon is executed)
+    const executeIntent: ExecuteIntent = {
+      type: 'execute',
+      playerId: nomineeId,
+      cause: 'execution',
     }
 
-    return updatedGame;
+    const result = resolveIntent(
+      executeIntent,
+      getCurrentState(updatedGame),
+      updatedGame,
+    )
+
+    // Executions don't require UI input, so result is always resolved or prevented
+    if (result.type === 'needs_input') {
+      // This shouldn't happen, but handle gracefully
+      return updatedGame
+    }
+
+    updatedGame = applyPipelineChanges(updatedGame, result.stateChanges)
+  }
+
+  return updatedGame
 }
 
 // ============================================================================
@@ -642,37 +636,37 @@ export function resolveVote(
  * Plus dynamic win conditions from effects and roles.
  */
 export function checkWinCondition(
-    state: GameState,
-    game?: Game,
-): "townsfolk" | "demon" | null {
-    const alivePlayers = getAlivePlayers(state);
-    const aliveDemons = alivePlayers.filter((p) => {
-        const role = getRole(p.roleId);
-        return role?.team === "demon";
-    });
+  state: GameState,
+  game?: Game,
+): 'townsfolk' | 'demon' | null {
+  const alivePlayers = getAlivePlayers(state)
+  const aliveDemons = alivePlayers.filter((p) => {
+    const role = getRole(p.roleId)
+    return role?.team === 'demon'
+  })
 
-    // Good wins if all demons are dead
-    if (aliveDemons.length === 0) {
-        return "townsfolk";
-    }
+  // Good wins if all demons are dead
+  if (aliveDemons.length === 0) {
+    return 'townsfolk'
+  }
 
-    // Evil wins if only 2 players remain (and one is a demon)
-    if (alivePlayers.length <= 2 && aliveDemons.length > 0) {
-        return "demon";
-    }
+  // Evil wins if only 2 players remain (and one is a demon)
+  if (alivePlayers.length <= 2 && aliveDemons.length > 0) {
+    return 'demon'
+  }
 
-    // Check dynamic win conditions from effects and roles
-    if (game) {
-        const dynamicResult = checkDynamicWinConditions(
-            state,
-            game,
-            ["after_execution", "after_state_change"],
-            getRole,
-        );
-        if (dynamicResult) return dynamicResult;
-    }
+  // Check dynamic win conditions from effects and roles
+  if (game) {
+    const dynamicResult = checkDynamicWinConditions(
+      state,
+      game,
+      ['after_execution', 'after_state_change'],
+      getRole,
+    )
+    if (dynamicResult) return dynamicResult
+  }
 
-    return null;
+  return null
 }
 
 /**
@@ -680,30 +674,27 @@ export function checkWinCondition(
  * Called when the narrator ends the day.
  */
 export function checkEndOfDayWinConditions(
-    state: GameState,
-    game: Game,
-): "townsfolk" | "demon" | null {
-    return checkDynamicWinConditions(state, game, ["end_of_day"], getRole);
+  state: GameState,
+  game: Game,
+): 'townsfolk' | 'demon' | null {
+  return checkDynamicWinConditions(state, game, ['end_of_day'], getRole)
 }
 
-export function endGame(game: Game, winner: "townsfolk" | "demon"): Game {
-    return addHistoryEntry(
-        game,
+export function endGame(game: Game, winner: 'townsfolk' | 'demon'): Game {
+  return addHistoryEntry(
+    game,
+    {
+      type: 'game_ended',
+      message: [
         {
-            type: "game_ended",
-            message: [
-                {
-                    type: "i18n",
-                    key:
-                        winner === "townsfolk"
-                            ? "history.goodWins"
-                            : "history.evilWins",
-                },
-            ],
-            data: { winner },
+          type: 'i18n',
+          key: winner === 'townsfolk' ? 'history.goodWins' : 'history.evilWins',
         },
-        { phase: "ended", winner },
-    );
+      ],
+      data: { winner },
+    },
+    { phase: 'ended', winner },
+  )
 }
 
 // ============================================================================
@@ -711,11 +702,11 @@ export function endGame(game: Game, winner: "townsfolk" | "demon"): Game {
 // ============================================================================
 
 export type NightRoleStatus = {
-    roleId: string;
-    playerId: string;
-    playerName: string;
-    status: "pending" | "done";
-};
+  roleId: string
+  playerId: string
+  playerName: string
+  status: 'pending' | 'done'
+}
 
 /**
  * Get the status of night roles that actually need to wake this night.
@@ -727,59 +718,56 @@ export type NightRoleStatus = {
  * pipeline module and merged by the NightDashboard UI.
  */
 export function getNightRolesStatus(game: Game): NightRoleStatus[] {
-    const state = getCurrentState(game);
+  const state = getCurrentState(game)
 
-    const nightStartIndex = findLastEventIndex(game, "night_started");
-    const actedEntries = game.history
-        .slice(nightStartIndex + 1)
-        .filter(
-            (e) => e.type === "night_action" || e.type === "night_skipped",
-        );
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  const actedEntries = game.history
+    .slice(nightStartIndex + 1)
+    .filter((e) => e.type === 'night_action' || e.type === 'night_skipped')
 
-    // Track acted players by playerId
-    const actedPlayerIds = new Map<string, "night_action" | "night_skipped">();
-    for (const entry of actedEntries) {
-        actedPlayerIds.set(
-            entry.data.playerId as string,
-            entry.type as "night_action" | "night_skipped",
-        );
+  // Track acted players by playerId
+  const actedPlayerIds = new Map<string, 'night_action' | 'night_skipped'>()
+  for (const entry of actedEntries) {
+    actedPlayerIds.set(
+      entry.data.playerId as string,
+      entry.type as 'night_action' | 'night_skipped',
+    )
+  }
+
+  // Build a player-centric list sorted by nightOrder
+  const playersWithNightRoles = getPlayersWithNightRoles(state)
+
+  const result: NightRoleStatus[] = []
+
+  for (const { player, role } of playersWithNightRoles) {
+    const actedType = actedPlayerIds.get(player.id)
+
+    if (actedType) {
+      // Already processed — only include if it actually acted (not skipped)
+      if (actedType === 'night_action') {
+        result.push({
+          roleId: role.id,
+          playerId: player.id,
+          playerName: player.name,
+          status: 'done',
+        })
+      }
+      // night_skipped entries are simply not included
+    } else {
+      // Not yet processed — only include if shouldWake passes
+      const shouldWake = !role.shouldWake || role.shouldWake(game, player)
+      if (shouldWake) {
+        result.push({
+          roleId: role.id,
+          playerId: player.id,
+          playerName: player.name,
+          status: 'pending',
+        })
+      }
     }
+  }
 
-    // Build a player-centric list sorted by nightOrder
-    const playersWithNightRoles = getPlayersWithNightRoles(state);
-
-    const result: NightRoleStatus[] = [];
-
-    for (const { player, role } of playersWithNightRoles) {
-        const actedType = actedPlayerIds.get(player.id);
-
-        if (actedType) {
-            // Already processed — only include if it actually acted (not skipped)
-            if (actedType === "night_action") {
-                result.push({
-                    roleId: role.id,
-                    playerId: player.id,
-                    playerName: player.name,
-                    status: "done",
-                });
-            }
-            // night_skipped entries are simply not included
-        } else {
-            // Not yet processed — only include if shouldWake passes
-            const shouldWake =
-                !role.shouldWake || role.shouldWake(game, player);
-            if (shouldWake) {
-                result.push({
-                    roleId: role.id,
-                    playerId: player.id,
-                    playerName: player.name,
-                    status: "pending",
-                });
-            }
-        }
-    }
-
-    return result;
+  return result
 }
 
 /**
@@ -788,20 +776,16 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
  * Stops when it hits a role that needs manual action or all are done.
  */
 export function processAutoSkips(game: Game): Game {
-    let updatedGame = game;
-    while (true) {
-        const step = getNextStep(updatedGame);
-        if (step.type === "night_action_skip") {
-            updatedGame = skipNightAction(
-                updatedGame,
-                step.roleId,
-                step.playerId,
-            );
-        } else {
-            break;
-        }
+  let updatedGame = game
+  while (true) {
+    const step = getNextStep(updatedGame)
+    if (step.type === 'night_action_skip') {
+      updatedGame = skipNightAction(updatedGame, step.roleId, step.playerId)
+    } else {
+      break
     }
-    return updatedGame;
+  }
+  return updatedGame
 }
 
 // ============================================================================
@@ -812,51 +796,51 @@ export function processAutoSkips(game: Game): Game {
  * Manually add an effect to a player (narrator action)
  */
 export function addEffectToPlayer(
-    game: Game,
-    playerId: string,
-    effectType: string,
+  game: Game,
+  playerId: string,
+  effectType: string,
 ): Game {
-    return addHistoryEntry(
-        game,
+  return addHistoryEntry(
+    game,
+    {
+      type: 'effect_added',
+      message: [
         {
-            type: "effect_added",
-            message: [
-                {
-                    type: "i18n",
-                    key: "history.effectAdded",
-                    params: { player: playerId, effect: effectType },
-                },
-            ],
-            data: { playerId, effectType, source: "narrator" },
+          type: 'i18n',
+          key: 'history.effectAdded',
+          params: { player: playerId, effect: effectType },
         },
-        undefined,
-        { [playerId]: [{ type: effectType, expiresAt: "never" }] },
-    );
+      ],
+      data: { playerId, effectType, source: 'narrator' },
+    },
+    undefined,
+    { [playerId]: [{ type: effectType, expiresAt: 'never' }] },
+  )
 }
 
 /**
  * Manually remove an effect from a player (narrator action)
  */
 export function removeEffectFromPlayer(
-    game: Game,
-    playerId: string,
-    effectType: string,
+  game: Game,
+  playerId: string,
+  effectType: string,
 ): Game {
-    return addHistoryEntry(
-        game,
+  return addHistoryEntry(
+    game,
+    {
+      type: 'effect_removed',
+      message: [
         {
-            type: "effect_removed",
-            message: [
-                {
-                    type: "i18n",
-                    key: "history.effectRemoved",
-                    params: { player: playerId, effect: effectType },
-                },
-            ],
-            data: { playerId, effectType, source: "narrator" },
+          type: 'i18n',
+          key: 'history.effectRemoved',
+          params: { player: playerId, effect: effectType },
         },
-        undefined,
-        undefined,
-        { [playerId]: [effectType] },
-    );
+      ],
+      data: { playerId, effectType, source: 'narrator' },
+    },
+    undefined,
+    undefined,
+    { [playerId]: [effectType] },
+  )
 }

@@ -1,5 +1,5 @@
-import { useSyncExternalStore, useCallback } from "react";
-import { router } from "../lib/router";
+import { useSyncExternalStore, useCallback } from 'react'
+import { router } from '../lib/router'
 
 /**
  * React hook for the client-side router.
@@ -8,10 +8,10 @@ import { router } from "../lib/router";
  * functions that update the URL without full page reloads.
  */
 export function useRouter() {
-    const path = useSyncExternalStore(router.subscribe, router.getPath);
+  const path = useSyncExternalStore(router.subscribe, router.getPath)
 
-    const navigate = useCallback((to: string) => router.navigate(to), []);
-    const replace = useCallback((to: string) => router.replace(to), []);
+  const navigate = useCallback((to: string) => router.navigate(to), [])
+  const replace = useCallback((to: string) => router.replace(to), [])
 
-    return { path, navigate, replace };
+  return { path, navigate, replace }
 }
