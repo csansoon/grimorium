@@ -70,7 +70,8 @@ export function PlayerPickerList({
     <div className='space-y-1.5'>
       {players.map((player) => {
         const isSelected = selected.includes(player.id)
-        const isDisabled = !isSelected && isAtMax
+        // When selectionCount === 1, allow tapping a different item to replace (radio behavior)
+        const isDisabled = !isSelected && isAtMax && selectionCount !== 1
         const role = getRole(player.roleId)
         const team = role ? getTeam(role.team) : null
         const isDead = hasEffect(player, 'dead')
