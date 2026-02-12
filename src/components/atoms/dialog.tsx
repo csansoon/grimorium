@@ -45,10 +45,18 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  // When true, the overlay fades via CSS transition instead of the
+  // keyframe animation — so it transitions from its current drag-dimmed
+  // opacity to 0 rather than flashing back to full opacity first.
+  const [dragDismissing, setDragDismissing] = useState(false)
   const bodyRef = useRef<HTMLDivElement | null>(null)
   const closeRef = useRef<HTMLButtonElement | null>(null)
 
   const dismiss = useCallback(() => {
+    // Switch the overlay to transition mode so it fades from its current
+    // opacity to 0 (CSS keyframe animations override inline styles, so
+    // the animate-overlay-out would flash it back to opacity 1 first).
+    setDragDismissing(true)
     // Just click close. The sheet stays at its current drag position via
     // the CSS `translate` property, which is independent of the `transform`
     // used by Radix's close animation. The close animation composes on top
@@ -66,6 +74,7 @@ const DialogContent = React.forwardRef<
     if (e.animationName === 'sheet-in') {
       setDragY(0)
       setIsDragging(false)
+      setDragDismissing(false)
     }
   }, [])
 
@@ -104,7 +113,7 @@ const DialogContent = React.forwardRef<
     },
   )
 
-  // Compute overlay opacity based on drag distance
+  // Compute overlay opacity based on drag distance (only during active drag).
   const overlayOpacity = dragY > 0 ? Math.max(0, 1 - dragY / 400) : undefined
 
   // Use CSS `translate` for drag offset — this is independent of `transform`
@@ -120,8 +129,21 @@ const DialogContent = React.forwardRef<
 
   return (
     <DialogPortal>
-      <DialogOverlay
-        style={overlayOpacity !== undefined ? { opacity: overlayOpacity } : undefined}
+      <DialogPrimitive.Overlay
+        className={cn(
+          'fixed inset-0 z-50 bg-black/40 backdrop-blur-sm',
+          // When drag-dismissing, skip the keyframe animation — it would
+          // flash the overlay back to opacity 1 (its first keyframe).
+          // Instead, we use a CSS transition to fade from current opacity to 0.
+          !dragDismissing && 'data-[state=open]:animate-overlay-in data-[state=closed]:animate-overlay-out',
+        )}
+        style={
+          dragDismissing
+            ? { opacity: 0, transition: 'opacity 200ms ease-out' }
+            : overlayOpacity !== undefined
+              ? { opacity: overlayOpacity }
+              : undefined
+        }
       />
       <DialogPrimitive.Content
         ref={ref}
