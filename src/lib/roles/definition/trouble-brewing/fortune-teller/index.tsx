@@ -37,9 +37,9 @@ registerRoleTranslations('fortune_teller', 'es', es)
 type Phase =
   | 'step_list'
   | 'red_herring_setup'
+  | 'select_players'
   | 'configure_malfunction'
-  | 'narrator_setup'
-  | 'player_view'
+  | 'show_result'
 
 const definition: RoleDefinition = {
   id: 'fortune_teller',
@@ -65,15 +65,20 @@ const definition: RoleDefinition = {
       },
     },
     {
+      id: 'select_players',
+      icon: 'users',
+      getLabel: (t) => t.game.stepSelectPlayers,
+    },
+    {
       id: 'configure_malfunction',
       icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
     },
     {
-      id: 'select_and_show',
+      id: 'show_result',
       icon: 'eye',
-      getLabel: (t) => t.game.stepSelectAndShow,
+      getLabel: (t) => t.game.stepShowResult,
     },
   ],
 
@@ -103,6 +108,7 @@ const definition: RoleDefinition = {
     )
     const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
     const [redHerringDone, setRedHerringDone] = useState(false)
+    const [selectPlayersDone, setSelectPlayersDone] = useState(false)
     const [malfunctionValue, setMalfunctionValue] = useState<boolean | null>(
       null,
     )
@@ -122,7 +128,7 @@ const definition: RoleDefinition = {
       return state.players.find((p) => p.id === playerId)?.name ?? 'Unknown'
     }
 
-    // Build steps
+    // Build steps: Assign Red Herring (cond.), Select players, Configure Malfunction (cond.), Show Result
     const steps: NightStep[] = useMemo(() => {
       const result: NightStep[] = []
 
@@ -135,6 +141,13 @@ const definition: RoleDefinition = {
         })
       }
 
+      result.push({
+        id: 'select_players',
+        icon: 'users',
+        label: t.game.stepSelectPlayers,
+        status: selectPlayersDone ? 'done' : 'pending',
+      })
+
       if (malfunctioning) {
         result.push({
           id: 'configure_malfunction',
@@ -145,9 +158,9 @@ const definition: RoleDefinition = {
       }
 
       result.push({
-        id: 'select_and_show',
+        id: 'show_result',
         icon: 'eye',
-        label: t.game.stepSelectAndShow,
+        label: t.game.stepShowResult,
         status: 'pending',
       })
 
@@ -155,6 +168,7 @@ const definition: RoleDefinition = {
     }, [
       needsRedHerringSetup,
       redHerringDone,
+      selectPlayersDone,
       malfunctioning,
       malfunctionConfigDone,
       t,
@@ -163,10 +177,12 @@ const definition: RoleDefinition = {
     const handleSelectStep = (stepId: string) => {
       if (stepId === 'red_herring_setup') {
         setPhase('red_herring_setup')
+      } else if (stepId === 'select_players') {
+        setPhase('select_players')
       } else if (stepId === 'configure_malfunction') {
         setPhase('configure_malfunction')
-      } else if (stepId === 'select_and_show') {
-        setPhase('narrator_setup')
+      } else if (stepId === 'show_result') {
+        setPhase('show_result')
       }
     }
 
@@ -199,9 +215,10 @@ const definition: RoleDefinition = {
       })
     }
 
-    const handleShowToPlayer = () => {
+    const handleSelectPlayersDone = () => {
       if (selectedPlayers.length !== 2) return
-      setPhase('player_view')
+      setSelectPlayersDone(true)
+      setPhase('step_list')
     }
 
     const handleComplete = () => {
@@ -371,15 +388,16 @@ const definition: RoleDefinition = {
       )
     }
 
-    // Phase: Narrator Setup - Select 2 players to check
-    if (phase === 'narrator_setup') {
+    // Phase: Select players - narrator picks 2 players to check
+    if (phase === 'select_players') {
       return (
         <NarratorSetupLayout
           icon='eye'
           roleName={getRoleName('fortune_teller', language)}
           playerName={getPlayerName(player.id)}
-          onShowToPlayer={handleShowToPlayer}
+          onShowToPlayer={handleSelectPlayersDone}
           showToPlayerDisabled={selectedPlayers.length !== 2}
+          showToPlayerLabel={t.common.confirm}
         >
           <StepSection
             step={1}
@@ -398,7 +416,7 @@ const definition: RoleDefinition = {
       )
     }
 
-    // Phase: Player View - Show the result
+    // Phase: Show Result - player-facing screen
     const player1 = state.players.find((p) => p.id === selectedPlayers[0])
     const player2 = state.players.find((p) => p.id === selectedPlayers[1])
 

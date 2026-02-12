@@ -153,8 +153,31 @@ describe('FortuneTeller', () => {
   })
 
   // ================================================================
-  // NIGHT STEPS — Red Herring setup skipped when malfunctioning
+  // NIGHT STEPS — 4 steps: Red Herring (cond.), Select players, Configure Malfunction (cond.), Show Result
   // ================================================================
+
+  describe('nightSteps structure', () => {
+    it('has 4 step definitions in correct order', () => {
+      const steps = definition.nightSteps!
+      expect(steps.map((s) => s.id)).toEqual([
+        'red_herring_setup',
+        'select_players',
+        'configure_malfunction',
+        'show_result',
+      ])
+    })
+
+    it('select_players and show_result have no condition (always appear)', () => {
+      const selectPlayers = definition.nightSteps!.find(
+        (s) => s.id === 'select_players',
+      )!
+      const showResult = definition.nightSteps!.find(
+        (s) => s.id === 'show_result',
+      )!
+      expect(selectPlayers.condition).toBeUndefined()
+      expect(showResult.condition).toBeUndefined()
+    })
+  })
 
   describe('nightSteps red_herring_setup condition', () => {
     const redHerringStep = definition.nightSteps!.find(

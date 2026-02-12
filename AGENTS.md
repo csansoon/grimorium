@@ -352,7 +352,7 @@ const steps: NightStep[] = useMemo(() => {
 | **Chef** | (1) Configure Perceptions (cond.), (2) Show Result | Perception config when ambiguous alignment players exist |
 | **Empath** | (1) Configure Perceptions (cond.), (2) Show Result | Scoped to alive neighbors only |
 | **Undertaker** | (1) Configure Perceptions (cond.), (2) Show Role | Scoped to the executed player |
-| **Fortune Teller** | (1) Assign Red Herring (cond.), (2) Select & Show | Red Herring step only on night 1 |
+| **Fortune Teller** | (1) Assign Red Herring (cond.), (2) Select players, (3) Configure Malfunction (cond.), (4) Show Result | Red Herring step only on night 1 |
 | **Ravenkeeper** | (1) Select Player, (2) Configure Perceptions (cond.), (3) Show Role | Perception step appears dynamically after player selection |
 | **Washerwoman** | (1) Narrator Setup | Single step (misregistration handled inline) |
 | **Librarian** | (1) Narrator Setup | Single step |
