@@ -57,6 +57,10 @@ pnpm test
 - **Tailwind CSS** + **Radix UI** — styling and accessible primitives
 - **PWA** — offline support, installable on mobile and desktop
 
+## Support
+
+[![Buy Me A Coffee](public/bmc-button.png)](https://buymeacoffee.com/csansoon)
+
 ## License
 
 MIT
