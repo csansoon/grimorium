@@ -60,6 +60,7 @@ const definition: RoleDefinition = {
   team: 'demon',
   icon: 'flameKindling',
   nightOrder: 30,
+  chaos: 30,
   shouldWake: (_game, player) => isAlive(player),
 
   nightSteps: [

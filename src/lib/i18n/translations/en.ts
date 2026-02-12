@@ -266,6 +266,23 @@ const en: Translations = {
 
   scripts: {
     'trouble-brewing': 'Trouble Brewing',
+    custom: 'Custom Game',
+    selectScript: 'Choose a Script',
+    selectScriptSubtitle: 'Select an edition to determine which roles are available',
+    enforceDistribution: 'Standard role distribution',
+    freeformSelection: 'Any roles, any distribution',
+    // Generator presets
+    generateRoles: 'Generate Roles',
+    simple: 'Simple',
+    simpleDescription: 'Straightforward roles, easy to learn',
+    interesting: 'Interesting',
+    interestingDescription: 'A balanced mix of complexity',
+    chaotic: 'Chaotic',
+    chaoticDescription: 'Maximum deception and surprises',
+    chaos: 'Chaos',
+    selectThisPool: 'Select',
+    regenerate: 'Regenerate',
+    orPickManually: 'or pick manually',
   },
 }
 

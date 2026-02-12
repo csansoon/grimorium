@@ -13,6 +13,7 @@ const definition: RoleDefinition = {
   team: 'townsfolk',
   icon: 'crosshair',
   nightOrder: null, // Doesn't wake at night - day ability
+  chaos: 30,
 
   // Slayer gets their bullet at game start (one-time use)
   initialEffects: [{ type: 'slayer_bullet', expiresAt: 'never' }],

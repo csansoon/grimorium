@@ -22,6 +22,7 @@ const definition: RoleDefinition = {
   team: 'minion',
   icon: 'rose',
   nightOrder: null, // Doesn't wake at night — passive ability
+  chaos: 50,
 
   // Scarlet Woman gets demon_successor effect at game start
   initialEffects: [{ type: 'demon_successor', expiresAt: 'never' }],

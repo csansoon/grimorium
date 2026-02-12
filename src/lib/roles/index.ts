@@ -50,39 +50,8 @@ export const ROLES: Record<RoleId, RoleDefinition> = {
   spy: Spy,
 }
 
-// Scripts define which roles are in each edition
-export type ScriptId = 'trouble-brewing'
-
-export const SCRIPTS: Record<ScriptId, { name: string; roles: RoleId[] }> = {
-  'trouble-brewing': {
-    name: 'Trouble Brewing',
-    roles: [
-      'washerwoman',
-      'librarian',
-      'investigator',
-      'chef',
-      'empath',
-      'fortune_teller',
-      'undertaker',
-      'monk',
-      'ravenkeeper',
-      'soldier',
-      'virgin',
-      'slayer',
-      'mayor',
-      'saint',
-      'recluse',
-      'villager',
-      'scarlet_woman',
-      'poisoner',
-      'drunk',
-      'butler',
-      'baron',
-      'spy',
-      'imp',
-    ],
-  },
-}
+// Re-export scripts module for backward compatibility
+export { SCRIPTS, type ScriptId } from '../scripts'
 
 // Get all roles sorted by night order (roles that wake at night)
 export function getNightOrderRoles(): RoleDefinition[] {
@@ -99,44 +68,10 @@ export function getAllRoles(): RoleDefinition[] {
   return Object.values(ROLES)
 }
 
-// ============================================================================
-// ROLE DISTRIBUTION RECOMMENDATION
-// ============================================================================
-
-export type RoleDistribution = {
-  townsfolk: number
-  outsider: number
-  minion: number
-  demon: number
-}
-
-/**
- * Returns the official BotC recommended role distribution for a given player count.
- * Based on the standard distribution table:
- * 5: 3/0/1/1, 6: 3/1/1/1, 7: 5/0/1/1, 8: 5/1/1/1, 9: 5/2/1/1,
- * 10: 7/0/2/1, 11: 7/1/2/1, 12: 7/2/2/1, 13: 9/0/3/1, etc.
- */
-export function getRecommendedDistribution(
-  playerCount: number,
-): RoleDistribution | null {
-  if (playerCount < 5) return null
-
-  const demon = 1
-  let minion: number
-  let outsider: number
-
-  if (playerCount <= 6) {
-    minion = 1
-    outsider = playerCount - 5
-  } else {
-    const k = Math.floor((playerCount - 7) / 3)
-    minion = 1 + k
-    outsider = (playerCount - 7) % 3
-  }
-
-  const townsfolk = playerCount - demon - minion - outsider
-
-  return { townsfolk, outsider, minion, demon }
-}
+// Re-export distribution helpers from scripts module for backward compatibility
+export {
+  getRecommendedDistribution,
+  type RoleDistribution,
+} from '../scripts'
 
 export * from './types'

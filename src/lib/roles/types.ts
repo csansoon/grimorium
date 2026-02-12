@@ -135,6 +135,14 @@ export type RoleDefinition = {
   // Night order - lower numbers wake first, null means doesn't wake at night
   nightOrder: number | null
 
+  // Chaos metric (0-100) — how much chaos this role introduces to the game.
+  // Used by the role pool generator to rank pools by complexity.
+  chaos: number
+
+  // Optional distribution modifier for game setup.
+  // E.g., Baron: { outsider: +2, townsfolk: -2 }
+  distributionModifier?: Partial<Record<TeamId, number>>
+
   // Optional function to check if this role should wake this night
   // Used for: first night only, skips first night, conditional abilities, etc.
   // If not provided, the role always wakes when it's their turn

@@ -267,6 +267,23 @@ const es: Translations = {
 
   scripts: {
     'trouble-brewing': 'Problemas en el Pueblo',
+    custom: 'Partida Personalizada',
+    selectScript: 'Elige un Guión',
+    selectScriptSubtitle: 'Selecciona una edición para determinar los roles disponibles',
+    enforceDistribution: 'Distribución estándar de roles',
+    freeformSelection: 'Cualquier rol, cualquier distribución',
+    // Generator presets
+    generateRoles: 'Generar Roles',
+    simple: 'Simple',
+    simpleDescription: 'Roles sencillos, fáciles de aprender',
+    interesting: 'Interesante',
+    interestingDescription: 'Una mezcla equilibrada de complejidad',
+    chaotic: 'Caótico',
+    chaoticDescription: 'Máximo engaño y sorpresas',
+    chaos: 'Caos',
+    selectThisPool: 'Seleccionar',
+    regenerate: 'Regenerar',
+    orPickManually: 'o elige manualmente',
   },
 }
 

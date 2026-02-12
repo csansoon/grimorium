@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { SCRIPTS, getRole } from '../../lib/roles'
+import { getRole } from '../../lib/roles'
+import { SCRIPTS } from '../../lib/scripts'
 import { RoleId } from '../../lib/roles/types'
 import { getTeam, TeamId } from '../../lib/teams'
 import { useI18n, getRoleName, getRoleDescription } from '../../lib/i18n'

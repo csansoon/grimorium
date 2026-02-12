@@ -268,5 +268,22 @@ export type Translations = {
   // Scripts
   scripts: {
     'trouble-brewing': string
+    custom: string
+    selectScript: string
+    selectScriptSubtitle: string
+    enforceDistribution: string
+    freeformSelection: string
+    // Generator presets
+    generateRoles: string
+    simple: string
+    simpleDescription: string
+    interesting: string
+    interestingDescription: string
+    chaotic: string
+    chaoticDescription: string
+    chaos: string
+    selectThisPool: string
+    regenerate: string
+    orPickManually: string
   }
 }

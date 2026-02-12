@@ -74,6 +74,7 @@ const definition: RoleDefinition = {
   team: 'townsfolk',
   icon: 'shovel',
   nightOrder: 40, // Wakes late, after deaths are resolved
+  chaos: 20,
 
   // Only wake if alive, not first night, AND there was an execution during the day
   shouldWake: (game, player) => {

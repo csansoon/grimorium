@@ -24,6 +24,8 @@ const definition: RoleDefinition = {
   team: 'minion',
   icon: 'hatTop',
   nightOrder: null, // Doesn't wake at night — passive ability
+  chaos: 40,
+  distributionModifier: { outsider: 2, townsfolk: -2 },
 
   RoleReveal: DefaultRoleReveal,
 

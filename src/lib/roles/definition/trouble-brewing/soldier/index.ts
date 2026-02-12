@@ -13,6 +13,7 @@ const definition: RoleDefinition = {
   team: 'townsfolk',
   icon: 'shield',
   nightOrder: null, // Soldier doesn't wake at night - passive ability
+  chaos: 15,
 
   // Soldier gets permanent Safe effect at game start
   initialEffects: [

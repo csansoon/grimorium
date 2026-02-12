@@ -13,6 +13,7 @@ const definition: RoleDefinition = {
   team: 'outsider',
   icon: 'candleHolderLit',
   nightOrder: null, // Doesn't wake at night — passive ability
+  chaos: 55,
 
   // Recluse gets misregister effect at game start (narrator configures perceiveAs data)
   // canRegisterAs is stored on the instance data so the generic effect works for both Recluse and Spy

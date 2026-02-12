@@ -42,6 +42,7 @@ const definition: RoleDefinition = {
   team: 'outsider',
   icon: 'conciergeBell',
   nightOrder: 35, // Late — the Butler's choice doesn't interact with other night abilities
+  chaos: 20,
 
   nightSteps: [
     {

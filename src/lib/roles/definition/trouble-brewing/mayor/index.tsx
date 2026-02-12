@@ -14,6 +14,7 @@ const definition: RoleDefinition = {
   team: 'townsfolk',
   icon: 'landmark',
   nightOrder: null, // Doesn't wake at night — passive ability
+  chaos: 45,
 
   // Mayor gets Deflect effect at game start (redirects Demon kills)
   initialEffects: [{ type: 'deflect', expiresAt: 'never' }],

@@ -9,6 +9,7 @@ import {
 import {
   MainMenu,
   PlayerEntry,
+  ScriptSelection,
   RoleSelection,
   RoleAssignment,
   GameScreen,
@@ -18,12 +19,19 @@ import { LanguageToggle } from './components/atoms'
 import { useRouter } from './hooks/useRouter'
 import { RoleId } from './lib/roles/types'
 import { getRole } from './lib/roles'
+import { ScriptId } from './lib/scripts'
 
 // Internal screens for the new-game wizard (not routed — stays on "/")
 type NewGameScreen =
   | { type: 'new_game_players' }
-  | { type: 'new_game_roles'; players: string[] }
-  | { type: 'new_game_assign'; players: string[]; selectedRoles: string[] }
+  | { type: 'new_game_script'; players: string[] }
+  | { type: 'new_game_roles'; players: string[]; scriptId: ScriptId }
+  | {
+      type: 'new_game_assign'
+      players: string[]
+      scriptId: ScriptId
+      selectedRoles: string[]
+    }
 
 function App() {
   const { path, navigate, replace } = useRouter()
@@ -76,11 +84,24 @@ function App() {
   }
 
   const handlePlayersNext = (players: string[]) => {
-    setNewGameScreen({ type: 'new_game_roles', players })
+    setNewGameScreen({ type: 'new_game_script', players })
   }
 
-  const handleRolesNext = (players: string[], selectedRoles: string[]) => {
-    setNewGameScreen({ type: 'new_game_assign', players, selectedRoles })
+  const handleScriptNext = (players: string[], scriptId: ScriptId) => {
+    setNewGameScreen({ type: 'new_game_roles', players, scriptId })
+  }
+
+  const handleRolesNext = (
+    players: string[],
+    scriptId: ScriptId,
+    selectedRoles: string[],
+  ) => {
+    setNewGameScreen({
+      type: 'new_game_assign',
+      players,
+      scriptId,
+      selectedRoles,
+    })
   }
 
   const handleStartGame = (
@@ -179,14 +200,35 @@ function App() {
             <PlayerEntry onNext={handlePlayersNext} onBack={handleBackToMenu} />
           )
 
+        case 'new_game_script':
+          return (
+            <ScriptSelection
+              players={newGameScreen.players}
+              onSelect={(scriptId) =>
+                handleScriptNext(newGameScreen.players, scriptId)
+              }
+              onBack={() => setNewGameScreen({ type: 'new_game_players' })}
+            />
+          )
+
         case 'new_game_roles':
           return (
             <RoleSelection
               players={newGameScreen.players}
+              scriptId={newGameScreen.scriptId}
               onNext={(selectedRoles) =>
-                handleRolesNext(newGameScreen.players, selectedRoles)
+                handleRolesNext(
+                  newGameScreen.players,
+                  newGameScreen.scriptId,
+                  selectedRoles,
+                )
               }
-              onBack={() => setNewGameScreen({ type: 'new_game_players' })}
+              onBack={() =>
+                setNewGameScreen({
+                  type: 'new_game_script',
+                  players: newGameScreen.players,
+                })
+              }
             />
           )
 
@@ -200,6 +242,7 @@ function App() {
                 setNewGameScreen({
                   type: 'new_game_roles',
                   players: newGameScreen.players,
+                  scriptId: newGameScreen.scriptId,
                 })
               }
             />

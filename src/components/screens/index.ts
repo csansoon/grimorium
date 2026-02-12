@@ -1,5 +1,6 @@
 export { MainMenu } from './MainMenu'
 export { PlayerEntry } from './PlayerEntry'
+export { ScriptSelection } from './ScriptSelection'
 export { RoleSelection } from './RoleSelection'
 export { RoleAssignment } from './RoleAssignment'
 export { GameScreen } from './GameScreen'
