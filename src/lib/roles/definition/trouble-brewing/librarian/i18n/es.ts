@@ -13,6 +13,7 @@ const es = {
   noOutsidersMessage:
     'No hay Forasteros en esta partida. ¡Esta es información valiosa!',
   confirmNoOutsiders: 'Mostrar al Jugador',
+  showNoOutsiders: 'Mostrar "Sin Forasteros"',
 
   // History
   history: {

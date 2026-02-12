@@ -16,17 +16,23 @@ import {
   CardLink,
 } from '../../../../../components/items/TeamBackground'
 import {
+  NightActionLayout,
   NarratorSetupLayout,
   NightStepListLayout,
   PlayerFacingScreen,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
-import { StepSection, AlertBox } from '../../../../../components/items'
+import {
+  StepSection,
+  AlertBox,
+  InfoBox,
+  RoleRevealBadge,
+} from '../../../../../components/items'
 import {
   PlayerPickerList,
   RolePickerGrid,
 } from '../../../../../components/inputs'
-import { Icon } from '../../../../../components/atoms'
+import { Button, Icon } from '../../../../../components/atoms'
 import { perceive, canRegisterAsTeam } from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
 
@@ -41,6 +47,7 @@ type Phase =
   | 'select_players'
   | 'configure_malfunction'
   | 'show_results'
+  | 'no_minions_view'
 
 const definition: RoleDefinition = {
   id: 'investigator',
@@ -88,6 +95,12 @@ const definition: RoleDefinition = {
     // All defined minion roles (for malfunction role picker)
     const minionRoles = getAllRoles().filter((r) => r.team === 'minion')
 
+    // Check if any minions exist among other players (for healthy flow)
+    const hasMinions = otherPlayers.some((p) => {
+      const perception = perceive(p, player, 'team', state)
+      return perception.team === 'minion' || canRegisterAsTeam(p, 'minion')
+    })
+
     // Players that register or could register as minion (for healthy flow)
     const minionsInSelection = selectedPlayers.filter((playerId) => {
       const p = state.players.find((pl) => pl.id === playerId)
@@ -95,6 +108,36 @@ const definition: RoleDefinition = {
       const perception = perceive(p, player, 'team', state)
       return perception.team === 'minion' || canRegisterAsTeam(p, 'minion')
     })
+
+    // Build flat unique role list with player mapping for role picker
+    const minionRoleOptions = (() => {
+      const roleToPlayers = new Map<string, string[]>()
+      const roles: RoleDefinition[] = []
+      const seen = new Set<string>()
+      for (const pid of minionsInSelection) {
+        const p = state.players.find((pl) => pl.id === pid)
+        if (!p) continue
+        const pTeam = perceive(p, player, 'team', state)
+        const pRoles =
+          pTeam.team === 'minion'
+            ? (() => {
+                const rp = perceive(p, player, 'role', state)
+                const r = getRole(rp.roleId)
+                return r ? [r] : []
+              })()
+            : minionRoles
+        for (const role of pRoles) {
+          if (!roleToPlayers.has(role.id)) roleToPlayers.set(role.id, [])
+          if (!roleToPlayers.get(role.id)!.includes(pid))
+            roleToPlayers.get(role.id)!.push(pid)
+          if (!seen.has(role.id)) {
+            seen.add(role.id)
+            roles.push(role)
+          }
+        }
+      }
+      return { roles, roleToPlayers }
+    })()
 
     // Healthy flow: can proceed when 2 players selected + minion identified + role selected
     const canCompleteHealthySetup =
@@ -125,8 +168,13 @@ const definition: RoleDefinition = {
     }
 
     const handleSelectRole = (playerId: string, roleId: string) => {
-      setSelectedMinion(playerId)
-      setSelectedRoleId(roleId)
+      if (selectedRoleId === roleId) {
+        setSelectedMinion(null)
+        setSelectedRoleId(null)
+      } else {
+        setSelectedMinion(playerId)
+        setSelectedRoleId(roleId)
+      }
     }
 
     const handleMalfunctionSelectRole = (roleId: string) => {
@@ -149,6 +197,29 @@ const definition: RoleDefinition = {
       if (!selectedMinion) setSelectedMinion(selectedPlayers[0])
       setMalfunctionConfigDone(true)
       setPhase('step_list')
+    }
+
+    const handleCompleteNoMinions = () => {
+      onComplete({
+        entries: [
+          {
+            type: 'night_action',
+            message: [
+              {
+                type: 'i18n',
+                key: 'roles.investigator.history.noMinions',
+                params: { player: player.id },
+              },
+            ],
+            data: {
+              roleId: 'investigator',
+              playerId: player.id,
+              action: 'no_minions',
+              ...(malfunctioning ? { malfunctioned: true } : {}),
+            },
+          },
+        ],
+      })
     }
 
     const handleComplete = () => {
@@ -247,6 +318,29 @@ const definition: RoleDefinition = {
     }
 
     // ================================================================
+    // Phase: Select Players (healthy, no minions among other players)
+    // ================================================================
+    if (phase === 'select_players' && !malfunctioning && !hasMinions) {
+      return (
+        <NarratorSetupLayout
+          icon='search'
+          roleName={getLocalRoleName('investigator')}
+          playerName={getPlayerName(player.id)}
+          onShowToPlayer={() => setPhase('no_minions_view')}
+          showToPlayerLabel={roleT.confirmNoMinions}
+        >
+          <div className='flex-1 flex items-center justify-center'>
+            <InfoBox
+              icon='search'
+              title={roleT.noMinionsInGame}
+              description={roleT.noMinionsMessage}
+            />
+          </div>
+        </NarratorSetupLayout>
+      )
+    }
+
+    // ================================================================
     // Phase: Select Players (healthy — with constraints + role picking)
     // ================================================================
     if (phase === 'select_players' && !malfunctioning) {
@@ -275,52 +369,18 @@ const definition: RoleDefinition = {
 
           {selectedPlayers.length === 2 && minionsInSelection.length > 0 && (
             <StepSection step={2} label={t.game.selectWhichRoleToShow}>
-              {minionsInSelection.map((playerId) => {
-                const p = state.players.find((pl) => pl.id === playerId)
-                if (!p) return null
-                const pPerception = perceive(p, player, 'team', state)
-
-                // Determine available roles for this player
-                const availableRoles =
-                  pPerception.team === 'minion'
-                    ? (() => {
-                        const rolePerception = perceive(
-                          p,
-                          player,
-                          'role',
-                          state,
-                        )
-                        const perceivedRole = getRole(rolePerception.roleId)
-                        return perceivedRole ? [perceivedRole] : []
-                      })()
-                    : minionRoles
-
-                const currentSelected =
-                  selectedMinion === playerId && selectedRoleId
-                    ? [selectedRoleId]
-                    : []
-
-                return (
-                  <div key={playerId} className='mb-3'>
-                    <div className='text-xs font-medium text-parchment-400 mb-1.5 ml-1'>
-                      <Icon
-                        name='user'
-                        size='xs'
-                        className='inline mr-1 text-parchment-500'
-                      />
-                      {p.name}
-                    </div>
-                    <RolePickerGrid
-                      roles={availableRoles}
-                      state={state}
-                      selected={currentSelected}
-                      onSelect={(roleId) => handleSelectRole(playerId, roleId)}
-                      selectionCount={1}
-                      colorMode='team'
-                    />
-                  </div>
-                )
-              })}
+              <RolePickerGrid
+                roles={minionRoleOptions.roles}
+                state={state}
+                selected={selectedRoleId ? [selectedRoleId] : []}
+                onSelect={(roleId) => {
+                  const pids =
+                    minionRoleOptions.roleToPlayers.get(roleId)
+                  if (pids?.[0]) handleSelectRole(pids[0], roleId)
+                }}
+                selectionCount={1}
+                colorMode='team'
+              />
             </StepSection>
           )}
 
@@ -374,6 +434,15 @@ const definition: RoleDefinition = {
               variant='blue'
             />
           </StepSection>
+
+          <div className='mt-4 pt-4 border-t border-parchment-700/30 text-center'>
+            <button
+              onClick={() => setPhase('no_minions_view')}
+              className='text-sm text-amber-400 hover:text-amber-300 underline underline-offset-2'
+            >
+              {roleT.showNoMinions}
+            </button>
+          </div>
         </NarratorSetupLayout>
       )
     }
@@ -419,6 +488,36 @@ const definition: RoleDefinition = {
             />
           </StepSection>
         </NarratorSetupLayout>
+      )
+    }
+
+    // ================================================================
+    // Phase: No Minions View (player-facing)
+    // ================================================================
+    if (phase === 'no_minions_view') {
+      return (
+        <PlayerFacingScreen>
+          <NightActionLayout
+            player={player}
+            title={roleT.investigatorInfo}
+            description={roleT.noMinionsMessage}
+          >
+            <RoleRevealBadge
+              icon='sparkles'
+              roleName={roleT.noMinionsInGame}
+            />
+
+            <Button
+              onClick={handleCompleteNoMinions}
+              fullWidth
+              size='lg'
+              variant='night'
+            >
+              <Icon name='check' size='md' className='mr-2' />
+              {t.common.iUnderstandMyRole}
+            </Button>
+          </NightActionLayout>
+        </PlayerFacingScreen>
       )
     }
 

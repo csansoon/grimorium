@@ -112,6 +112,36 @@ const definition: RoleDefinition = {
       return perception.team === 'outsider' || canRegisterAsTeam(p, 'outsider')
     })
 
+    // Build flat unique role list with player mapping for role picker
+    const outsiderRoleOptions = (() => {
+      const roleToPlayers = new Map<string, string[]>()
+      const roles: RoleDefinition[] = []
+      const seen = new Set<string>()
+      for (const pid of outsidersInSelection) {
+        const p = state.players.find((pl) => pl.id === pid)
+        if (!p) continue
+        const pTeam = perceive(p, player, 'team', state)
+        const pRoles =
+          pTeam.team === 'outsider'
+            ? (() => {
+                const rp = perceive(p, player, 'role', state)
+                const r = getRole(rp.roleId)
+                return r ? [r] : []
+              })()
+            : outsiderRoles
+        for (const role of pRoles) {
+          if (!roleToPlayers.has(role.id)) roleToPlayers.set(role.id, [])
+          if (!roleToPlayers.get(role.id)!.includes(pid))
+            roleToPlayers.get(role.id)!.push(pid)
+          if (!seen.has(role.id)) {
+            seen.add(role.id)
+            roles.push(role)
+          }
+        }
+      }
+      return { roles, roleToPlayers }
+    })()
+
     // Healthy flow: can proceed when 2 players selected + outsider identified + role selected
     const canCompleteHealthySetup =
       selectedPlayers.length === 2 &&
@@ -141,8 +171,13 @@ const definition: RoleDefinition = {
     }
 
     const handleSelectRole = (playerId: string, roleId: string) => {
-      setSelectedOutsider(playerId)
-      setSelectedRoleId(roleId)
+      if (selectedRoleId === roleId) {
+        setSelectedOutsider(null)
+        setSelectedRoleId(null)
+      } else {
+        setSelectedOutsider(playerId)
+        setSelectedRoleId(roleId)
+      }
     }
 
     const handleMalfunctionSelectRole = (roleId: string) => {
@@ -342,52 +377,18 @@ const definition: RoleDefinition = {
 
           {selectedPlayers.length === 2 && outsidersInSelection.length > 0 && (
             <StepSection step={2} label={t.game.selectWhichRoleToShow}>
-              {outsidersInSelection.map((playerId) => {
-                const p = state.players.find((pl) => pl.id === playerId)
-                if (!p) return null
-                const pPerception = perceive(p, player, 'team', state)
-
-                // Determine available roles for this player
-                const availableRoles =
-                  pPerception.team === 'outsider'
-                    ? (() => {
-                        const rolePerception = perceive(
-                          p,
-                          player,
-                          'role',
-                          state,
-                        )
-                        const perceivedRole = getRole(rolePerception.roleId)
-                        return perceivedRole ? [perceivedRole] : []
-                      })()
-                    : outsiderRoles
-
-                const currentSelected =
-                  selectedOutsider === playerId && selectedRoleId
-                    ? [selectedRoleId]
-                    : []
-
-                return (
-                  <div key={playerId} className='mb-3'>
-                    <div className='text-xs font-medium text-parchment-400 mb-1.5 ml-1'>
-                      <Icon
-                        name='user'
-                        size='xs'
-                        className='inline mr-1 text-parchment-500'
-                      />
-                      {p.name}
-                    </div>
-                    <RolePickerGrid
-                      roles={availableRoles}
-                      state={state}
-                      selected={currentSelected}
-                      onSelect={(roleId) => handleSelectRole(playerId, roleId)}
-                      selectionCount={1}
-                      colorMode='team'
-                    />
-                  </div>
-                )
-              })}
+              <RolePickerGrid
+                roles={outsiderRoleOptions.roles}
+                state={state}
+                selected={selectedRoleId ? [selectedRoleId] : []}
+                onSelect={(roleId) => {
+                  const pids =
+                    outsiderRoleOptions.roleToPlayers.get(roleId)
+                  if (pids?.[0]) handleSelectRole(pids[0], roleId)
+                }}
+                selectionCount={1}
+                colorMode='team'
+              />
             </StepSection>
           )}
 
@@ -442,6 +443,15 @@ const definition: RoleDefinition = {
               variant='blue'
             />
           </StepSection>
+
+          <div className='mt-4 pt-4 border-t border-parchment-700/30 text-center'>
+            <button
+              onClick={() => setPhase('no_outsiders_view')}
+              className='text-sm text-amber-400 hover:text-amber-300 underline underline-offset-2'
+            >
+              {roleT.showNoOutsiders}
+            </button>
+          </div>
         </NarratorSetupLayout>
       )
     }

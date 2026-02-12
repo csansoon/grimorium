@@ -12,6 +12,7 @@ const en = {
   noOutsidersMessage:
     'There are no Outsiders in this game. This is valuable information!',
   confirmNoOutsiders: 'Show to Player',
+  showNoOutsiders: 'Show "No Outsiders" instead',
 
   // History
   history: {
