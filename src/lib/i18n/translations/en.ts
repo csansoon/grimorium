@@ -210,6 +210,44 @@ const en: Translations = {
     registerAsEvil: 'Evil',
     actualRole: 'Actual: {role}',
     keepDefault: 'Default (no change)',
+
+    // Dawn Screen
+    dawnTitle: 'Dawn',
+    dawnNoDeaths: 'No one died last night',
+    dawnDeathAnnouncement: '{player} is dead',
+    continueToDay: 'Continue to Day',
+
+    // Night Summary (on Day Phase)
+    nightSummary: 'Night {round} Summary',
+    noDeathsLastNight: 'No one died',
+
+    // Quick Vote
+    quickVote: 'Quick Count',
+    detailedVote: 'Detailed',
+    forCount: 'For votes',
+    againstCount: 'Against votes',
+
+    // Night Dashboard review
+    actionSummary: 'Action Summary',
+    noActionRecorded: 'No action recorded',
+
+    // Role Revelation narrator hint
+    roleRevelationNarratorHint:
+      'Only you can see this screen. Tap a player, then hand the device to them to reveal their role.',
+
+    // Nomination tracking
+    alreadyNominated: 'Already nominated today',
+
+    // Hand device interstitial
+    handDeviceTo: 'Hand the device to {player}',
+    tapWhenReady: 'Tap when ready to show',
+
+    // Audience indicators
+    audienceNarrator: 'Storyteller',
+    audiencePlayerChoice: 'Wake player',
+    audiencePlayerReveal: 'Show to player',
+    storytellerDecision: 'This is your decision as Storyteller',
+    wakePlayerPrompt: 'Wake {player} and ask them to choose',
   },
 
   teams: {

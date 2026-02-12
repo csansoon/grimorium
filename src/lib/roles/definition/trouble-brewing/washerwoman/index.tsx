@@ -63,17 +63,20 @@ const definition: RoleDefinition = {
       id: 'select_players',
       icon: 'shirt',
       getLabel: (t) => t.game.stepSelectPlayers,
+      audience: 'narrator',
     },
     {
       id: 'configure_malfunction',
       icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
+      audience: 'narrator',
     },
     {
       id: 'show_results',
       icon: 'shirt',
       getLabel: (t) => t.game.stepShowResult,
+      audience: 'player_reveal',
     },
   ],
 
@@ -278,6 +281,7 @@ const definition: RoleDefinition = {
         icon: 'shirt',
         label: t.game.stepSelectPlayers,
         status: selectPlayersDone ? 'done' : 'pending',
+        audience: 'narrator' as const,
       })
 
       if (malfunctioning) {
@@ -286,6 +290,7 @@ const definition: RoleDefinition = {
           icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -294,6 +299,7 @@ const definition: RoleDefinition = {
         icon: 'shirt',
         label: t.game.stepShowResult,
         status: 'pending',
+        audience: 'player_reveal' as const,
       })
 
       return result
@@ -327,6 +333,7 @@ const definition: RoleDefinition = {
     if (phase === 'select_players' && !malfunctioning && !hasTownsfolk) {
       return (
         <NarratorSetupLayout
+          audience='narrator'
           icon='shirt'
           roleName={getLocalRoleName('washerwoman')}
           playerName={getPlayerName(player.id)}
@@ -350,6 +357,7 @@ const definition: RoleDefinition = {
     if (phase === 'select_players' && !malfunctioning) {
       return (
         <NarratorSetupLayout
+          audience='narrator'
           icon='shirt'
           roleName={getLocalRoleName('washerwoman')}
           playerName={getPlayerName(player.id)}
@@ -402,6 +410,7 @@ const definition: RoleDefinition = {
     if (phase === 'select_players' && malfunctioning) {
       return (
         <NarratorSetupLayout
+          audience='narrator'
           icon='shirt'
           roleName={getLocalRoleName('washerwoman')}
           playerName={getPlayerName(player.id)}
@@ -501,7 +510,7 @@ const definition: RoleDefinition = {
     // ================================================================
     if (phase === 'no_townsfolk_view') {
       return (
-        <PlayerFacingScreen>
+        <PlayerFacingScreen playerName={player.name}>
           <NightActionLayout
             player={player}
             title={roleT.washerwomanInfo}
@@ -539,7 +548,7 @@ const definition: RoleDefinition = {
     const shownTeam = getTeam(shownTeamId)
 
     return (
-      <PlayerFacingScreen>
+      <PlayerFacingScreen playerName={player.name}>
         <TeamBackground teamId={shownTeamId}>
           <div
             className={`text-center text-sm mb-5 max-w-sm mx-auto ${shownTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80'}`}

@@ -55,6 +55,7 @@ const definition: RoleDefinition = {
       icon: 'swords',
       getLabel: (t) => t.game.stepShowEvilTeam,
       condition: (_game, _player, state) => state.round === 1,
+      audience: 'player_reveal',
     },
   ],
 
@@ -99,6 +100,7 @@ const definition: RoleDefinition = {
           icon: 'swords',
           label: t.game.stepShowEvilTeam,
           status: 'pending',
+          audience: 'player_reveal' as const,
         },
       ]
 
@@ -119,7 +121,7 @@ const definition: RoleDefinition = {
     // ================================================================
 
     return (
-      <PlayerFacingScreen>
+      <PlayerFacingScreen playerName={player.name}>
         <NightActionLayout
           player={player}
           title={roleT.evilTeamTitle}

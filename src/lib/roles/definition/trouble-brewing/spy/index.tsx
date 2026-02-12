@@ -69,11 +69,13 @@ const definition: RoleDefinition = {
       icon: 'swords',
       getLabel: (t) => t.game.stepShowEvilTeam,
       condition: (_game, _player, state) => state.round === 1,
+      audience: 'player_reveal',
     },
     {
       id: 'view_grimoire',
       icon: 'bookUser',
       getLabel: (t) => t.game.stepViewGrimoire,
+      audience: 'player_reveal',
     },
   ],
 
@@ -124,6 +126,7 @@ const definition: RoleDefinition = {
           icon: 'swords',
           label: t.game.stepShowEvilTeam,
           status: showEvilTeamDone ? 'done' : 'pending',
+          audience: 'player_reveal' as const,
         })
       }
 
@@ -132,6 +135,7 @@ const definition: RoleDefinition = {
         icon: 'bookUser',
         label: t.game.stepViewGrimoire,
         status: 'pending',
+        audience: 'player_reveal' as const,
       })
 
       return (
@@ -152,7 +156,7 @@ const definition: RoleDefinition = {
 
     if (phase === 'show_evil_team') {
       return (
-        <PlayerFacingScreen>
+        <PlayerFacingScreen playerName={player.name}>
           <NightActionLayout
             player={player}
             title={roleT.evilTeamTitle}
@@ -189,7 +193,7 @@ const definition: RoleDefinition = {
 
     if (malfunctioning) {
       return (
-        <PlayerFacingScreen>
+        <PlayerFacingScreen playerName={player.name}>
           <NightActionLayout
             player={player}
             title={roleT.spyMalfunctionTitle}
@@ -219,7 +223,7 @@ const definition: RoleDefinition = {
     // ================================================================
 
     return (
-      <PlayerFacingScreen>
+      <PlayerFacingScreen playerName={player.name}>
         <NightActionLayout
           player={player}
           title={roleT.spyGrimoireTitle}

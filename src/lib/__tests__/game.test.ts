@@ -380,7 +380,7 @@ describe('resolveVote', () => {
     const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
 
     // 3 for, 1 against => passes (3 > 1)
-    const updated = resolveVote(game, 'p5', ['p1', 'p2', 'p3'], ['p4'])
+    const updated = resolveVote(game, 'p5', 3, 1, ['p1', 'p2', 'p3'], ['p4'])
     const state = getCurrentState(updated)
     expect(state.phase).toBe('day')
 
@@ -396,7 +396,7 @@ describe('resolveVote', () => {
     const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
 
     // 1 for, 0 against => passes (1 > 0)
-    const updated = resolveVote(game, 'p5', ['p1'], [])
+    const updated = resolveVote(game, 'p5', 1, 0, ['p1'], [])
     const state = getCurrentState(updated)
 
     const p5 = state.players.find((p) => p.id === 'p5')!
@@ -408,7 +408,7 @@ describe('resolveVote', () => {
     const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
 
     // 1 for, 3 against => fails (1 < 3)
-    const updated = resolveVote(game, 'p5', ['p1'], ['p2', 'p3', 'p4'])
+    const updated = resolveVote(game, 'p5', 1, 3, ['p1'], ['p2', 'p3', 'p4'])
     const state = getCurrentState(updated)
     expect(state.phase).toBe('day')
 
@@ -424,7 +424,7 @@ describe('resolveVote', () => {
     const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
 
     // 2 for, 2 against => fails (tie, not strictly more)
-    const updated = resolveVote(game, 'p5', ['p1', 'p2'], ['p3', 'p4'])
+    const updated = resolveVote(game, 'p5', 2, 2, ['p1', 'p2'], ['p3', 'p4'])
     const state = getCurrentState(updated)
 
     const p5 = state.players.find((p) => p.id === 'p5')!
@@ -439,7 +439,7 @@ describe('resolveVote', () => {
     const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
 
     // 0 for, 0 against => fails (0 is not > 0)
-    const updated = resolveVote(game, 'p5', [], [])
+    const updated = resolveVote(game, 'p5', 0, 0, [], [])
     const state = getCurrentState(updated)
 
     const p5 = state.players.find((p) => p.id === 'p5')!
@@ -453,7 +453,7 @@ describe('resolveVote', () => {
     const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
 
     // Dead player p1 votes for
-    const updated = resolveVote(game, 'p5', ['p1', 'p2', 'p3', 'p4'], [])
+    const updated = resolveVote(game, 'p5', 4, 0, ['p1', 'p2', 'p3', 'p4'], [])
     const state = getCurrentState(updated)
 
     const p1 = state.players.find((p) => p.id === 'p1')!

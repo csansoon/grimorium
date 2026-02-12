@@ -64,22 +64,26 @@ const definition: RoleDefinition = {
         )
         return isFirstNight && !hasRedHerring && !isMalfunctioning(player)
       },
+      audience: 'narrator',
     },
     {
       id: 'select_players',
       icon: 'users',
       getLabel: (t) => t.game.stepSelectPlayers,
+      audience: 'player_choice',
     },
     {
       id: 'configure_malfunction',
       icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
+      audience: 'narrator',
     },
     {
       id: 'show_result',
       icon: 'eye',
       getLabel: (t) => t.game.stepShowResult,
+      audience: 'player_reveal',
     },
   ],
 
@@ -139,6 +143,7 @@ const definition: RoleDefinition = {
           icon: 'fish',
           label: t.game.stepAssignRedHerring,
           status: redHerringDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -147,6 +152,7 @@ const definition: RoleDefinition = {
         icon: 'users',
         label: t.game.stepSelectPlayers,
         status: selectPlayersDone ? 'done' : 'pending',
+        audience: 'player_choice' as const,
       })
 
       if (malfunctioning) {
@@ -155,6 +161,7 @@ const definition: RoleDefinition = {
           icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -163,6 +170,7 @@ const definition: RoleDefinition = {
         icon: 'eye',
         label: t.game.stepShowResult,
         status: 'pending',
+        audience: 'player_reveal' as const,
       })
 
       return result
@@ -340,6 +348,7 @@ const definition: RoleDefinition = {
         <NarratorSetupLayout
           icon='eye'
           roleName={getRoleName('fortune_teller', language)}
+          audience='narrator'
           playerName={getPlayerName(player.id)}
           onShowToPlayer={handleConfirmRedHerring}
           showToPlayerDisabled={!selectedRedHerring}
@@ -395,6 +404,7 @@ const definition: RoleDefinition = {
         <NarratorSetupLayout
           icon='eye'
           roleName={getRoleName('fortune_teller', language)}
+          audience='player_choice'
           playerName={getPlayerName(player.id)}
           onShowToPlayer={handleSelectPlayersDone}
           showToPlayerDisabled={selectedPlayers.length !== 2}
@@ -439,7 +449,7 @@ const definition: RoleDefinition = {
     const resultTeam = displaySawDemon ? 'demon' : 'townsfolk'
 
     return (
-      <PlayerFacingScreen>
+      <PlayerFacingScreen playerName={player.name}>
         <TeamBackground teamId={resultTeam}>
           <OracleCard
             icon='eye'

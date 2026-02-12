@@ -34,6 +34,12 @@ type PlayerPickerListProps = {
    * - "red": evil/aggressive actions (Imp kill, nominations, Slayer)
    */
   variant?: 'red' | 'blue'
+
+  /**
+   * Optional annotations to show per player (e.g., "Already nominated today").
+   * Maps playerId to annotation text.
+   */
+  annotations?: Record<string, string>
 }
 
 const variantStyles = {
@@ -55,6 +61,7 @@ export function PlayerPickerList({
   onSelect,
   selectionCount = 1,
   variant = 'blue',
+  annotations,
 }: PlayerPickerListProps) {
   const { t, language } = useI18n()
   const styles = variantStyles[variant]
@@ -145,6 +152,12 @@ export function PlayerPickerList({
                 {/* Effect icons */}
                 <EffectIcons player={player} />
               </div>
+              {/* Annotation */}
+              {annotations?.[player.id] && (
+                <div className='text-xs text-parchment-600 mt-0.5 italic'>
+                  {annotations[player.id]}
+                </div>
+              )}
             </div>
 
             {/* Selection indicator */}

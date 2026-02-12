@@ -96,6 +96,7 @@ const definition: RoleDefinition = {
       icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
+      audience: 'narrator',
     },
     {
       id: 'configure_perceptions',
@@ -105,11 +106,13 @@ const definition: RoleDefinition = {
         !isMalfunctioning(player) &&
         getAmbiguousPlayers(state.players.filter(isAlive), 'alignment').length >
           0,
+      audience: 'narrator',
     },
     {
       id: 'show_result',
       icon: 'chefHat',
       getLabel: (t) => t.game.stepShowResult,
+      audience: 'player_reveal',
     },
   ],
 
@@ -154,6 +157,7 @@ const definition: RoleDefinition = {
           icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -163,6 +167,7 @@ const definition: RoleDefinition = {
           icon: 'hatGlasses',
           label: t.game.stepConfigurePerceptions,
           status: perceptionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -171,6 +176,7 @@ const definition: RoleDefinition = {
         icon: 'chefHat',
         label: t.game.stepShowResult,
         status: 'pending',
+        audience: 'player_reveal' as const,
       })
 
       return result
@@ -306,7 +312,7 @@ const definition: RoleDefinition = {
     const resultTeam = displayedEvilPairs > 0 ? 'minion' : 'townsfolk'
 
     return (
-      <PlayerFacingScreen>
+      <PlayerFacingScreen playerName={player.name}>
         <TeamBackground teamId={resultTeam}>
           <OracleCard
             icon='chefHat'

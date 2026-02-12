@@ -8,11 +8,17 @@ import { PlayerPickerList } from '../inputs'
 
 type Props = {
   state: GameState
+  nominatorsToday?: Set<string>
   onNominate: (nominatorId: string, nomineeId: string) => void
   onBack: () => void
 }
 
-export function NominationScreen({ state, onNominate, onBack }: Props) {
+export function NominationScreen({
+  state,
+  nominatorsToday,
+  onNominate,
+  onBack,
+}: Props) {
   const { t } = useI18n()
   const [nominator, setNominator] = useState<string | null>(null)
   const [nominee, setNominee] = useState<string | null>(null)
@@ -37,6 +43,18 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
   }
 
   const canNominate = nominator && nominee
+
+  // Build annotations for players who already nominated today
+  const nominatorAnnotations = useMemo(() => {
+    if (!nominatorsToday || nominatorsToday.size === 0) return undefined
+    const annotations: Record<string, string> = {}
+    for (const player of alivePlayers) {
+      if (nominatorsToday.has(player.id)) {
+        annotations[player.id] = t.game.alreadyNominated
+      }
+    }
+    return Object.keys(annotations).length > 0 ? annotations : undefined
+  }, [nominatorsToday, alivePlayers, t])
 
   return (
     <div className='min-h-app bg-gradient-to-b from-red-950 via-grimoire-blood to-grimoire-darker flex flex-col'>
@@ -66,6 +84,7 @@ export function NominationScreen({ state, onNominate, onBack }: Props) {
             onSelect={handleSelectNominator}
             selectionCount={1}
             variant='red'
+            annotations={nominatorAnnotations}
           />
         </div>
 

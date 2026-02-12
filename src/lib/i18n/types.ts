@@ -211,6 +211,43 @@ export type Translations = {
     registerAsEvil: string
     actualRole: string
     keepDefault: string
+
+    // Dawn Screen
+    dawnTitle: string
+    dawnNoDeaths: string
+    dawnDeathAnnouncement: string
+    continueToDay: string
+
+    // Night Summary (on Day Phase)
+    nightSummary: string
+    noDeathsLastNight: string
+
+    // Quick Vote
+    quickVote: string
+    detailedVote: string
+    forCount: string
+    againstCount: string
+
+    // Night Dashboard review
+    actionSummary: string
+    noActionRecorded: string
+
+    // Role Revelation narrator hint
+    roleRevelationNarratorHint: string
+
+    // Nomination tracking
+    alreadyNominated: string
+
+    // Hand device interstitial
+    handDeviceTo: string
+    tapWhenReady: string
+
+    // Audience indicators
+    audienceNarrator: string
+    audiencePlayerChoice: string
+    audiencePlayerReveal: string
+    storytellerDecision: string
+    wakePlayerPrompt: string
   }
 
   // Teams

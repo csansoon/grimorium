@@ -3,6 +3,7 @@ import {
   GameState,
   HistoryEntry,
   PlayerState,
+  RichMessage,
   generateId,
   getCurrentState,
   hasEffect,
@@ -553,25 +554,29 @@ export function nominate(
 export function resolveVote(
   game: Game,
   nomineeId: string,
-  votesFor: string[],
-  votesAgainst: string[],
+  votesForCount: number,
+  votesAgainstCount: number,
+  votesForIds?: string[],
+  votesAgainstIds?: string[],
 ): Game {
   const state = getCurrentState(game)
   const nominee = state.players.find((p) => p.id === nomineeId)
   if (!nominee) return game
 
-  const passed = votesFor.length > votesAgainst.length
+  const passed = votesForCount > votesAgainstCount
 
-  // Mark dead voters as having used their vote
+  // Mark dead voters as having used their vote (only when detailed IDs available)
   const addEffects: Record<string, { type: string }[]> = {}
-  for (const voterId of votesFor) {
-    const voter = state.players.find((p) => p.id === voterId)
-    if (
-      voter &&
-      hasEffect(voter, 'dead') &&
-      !hasEffect(voter, 'used_dead_vote')
-    ) {
-      addEffects[voterId] = [{ type: 'used_dead_vote' }]
+  if (votesForIds) {
+    for (const voterId of votesForIds) {
+      const voter = state.players.find((p) => p.id === voterId)
+      if (
+        voter &&
+        hasEffect(voter, 'dead') &&
+        !hasEffect(voter, 'used_dead_vote')
+      ) {
+        addEffects[voterId] = [{ type: 'used_dead_vote' }]
+      }
     }
   }
 
@@ -585,8 +590,8 @@ export function resolveVote(
           key: 'history.voteResult',
           params: {
             player: nomineeId,
-            for: votesFor.length,
-            against: votesAgainst.length,
+            for: votesForCount,
+            against: votesAgainstCount,
           },
         },
         {
@@ -594,7 +599,14 @@ export function resolveVote(
           key: passed ? 'history.votePassed' : 'history.voteFailed',
         },
       ],
-      data: { nomineeId, votesFor, votesAgainst, passed },
+      data: {
+        nomineeId,
+        votesFor: votesForIds ?? [],
+        votesAgainst: votesAgainstIds ?? [],
+        votesForCount,
+        votesAgainstCount,
+        passed,
+      },
     },
     { phase: 'day' },
     addEffects,
@@ -695,6 +707,72 @@ export function endGame(game: Game, winner: 'townsfolk' | 'demon'): Game {
     },
     { phase: 'ended', winner },
   )
+}
+
+// ============================================================================
+// QUERY HELPERS
+// ============================================================================
+
+/**
+ * Get the player IDs of players who died during the last night.
+ * Scans history from the last night_resolved to day_started for death entries.
+ */
+export function getLastNightDeaths(game: Game): string[] {
+  const nightResolvedIndex = findLastEventIndex(game, 'night_resolved')
+  if (nightResolvedIndex === -1) return []
+
+  const deaths: string[] = []
+  for (let i = nightResolvedIndex + 1; i < game.history.length; i++) {
+    const entry = game.history[i]
+    if (entry.type === 'day_started') break
+    if (
+      entry.type === 'effect_added' &&
+      entry.data.effectType === 'dead' &&
+      entry.data.source !== 'narrator'
+    ) {
+      deaths.push(entry.data.playerId as string)
+    }
+  }
+  return deaths
+}
+
+/**
+ * Get the set of player IDs who have nominated today.
+ */
+export function getNominatorsToday(game: Game): Set<string> {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return new Set()
+  const ids = new Set<string>()
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    if (game.history[i].type === 'nomination') {
+      ids.add(game.history[i].data.nominatorId as string)
+    }
+  }
+  return ids
+}
+
+/**
+ * Get history messages for a player's night action this night.
+ * Used for reviewing completed actions in the Night Dashboard.
+ */
+export function getNightActionSummary(
+  game: Game,
+  playerId: string,
+): RichMessage[] {
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  if (nightStartIndex === -1) return []
+
+  const messages: RichMessage[] = []
+  for (let i = nightStartIndex + 1; i < game.history.length; i++) {
+    const entry = game.history[i]
+    if (
+      entry.type === 'night_action' &&
+      entry.data.playerId === playerId
+    ) {
+      messages.push(entry.message)
+    }
+  }
+  return messages
 }
 
 // ============================================================================

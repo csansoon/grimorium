@@ -93,11 +93,13 @@ const definition: RoleDefinition = {
       id: 'select_player',
       icon: 'user',
       getLabel: (t) => t.game.stepSelectPlayer,
+      audience: 'player_choice',
     },
     {
       id: 'show_role',
       icon: 'birdHouse',
       getLabel: (t) => t.game.stepShowRole,
+      audience: 'player_reveal',
     },
   ],
 
@@ -145,6 +147,7 @@ const definition: RoleDefinition = {
           icon: 'user',
           label: t.game.stepSelectPlayer,
           status: selectPlayerDone ? 'done' : 'pending',
+          audience: 'player_choice' as const,
         },
       ]
 
@@ -154,6 +157,7 @@ const definition: RoleDefinition = {
           icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -163,6 +167,7 @@ const definition: RoleDefinition = {
           icon: 'eye',
           label: t.game.stepConfigurePerceptions,
           status: perceptionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -171,6 +176,7 @@ const definition: RoleDefinition = {
         icon: 'birdHouse',
         label: t.game.stepShowRole,
         status: 'pending',
+        audience: 'player_reveal' as const,
       })
 
       return result
@@ -299,6 +305,7 @@ const definition: RoleDefinition = {
           player={player}
           title={roleT.ravenkeeperInfo}
           description={roleT.selectPlayerToSeeRole}
+          audience="player_choice"
         >
           <div className='mb-6'>
             <PlayerPickerList
@@ -361,7 +368,7 @@ const definition: RoleDefinition = {
     const shownTeam = getTeam(shownTeamId)
 
     return (
-      <PlayerFacingScreen>
+      <PlayerFacingScreen playerName={player.name}>
         <TeamBackground teamId={shownTeamId}>
           <p
             className={cn(

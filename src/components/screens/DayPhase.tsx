@@ -1,15 +1,23 @@
+import { useState } from 'react'
 import { GameState, PlayerState } from '../../lib/types'
 import { AvailableDayAction } from '../../lib/pipeline/types'
-import { useI18n } from '../../lib/i18n'
-import { Button, Icon, BackButton } from '../atoms'
+import { useI18n, interpolate } from '../../lib/i18n'
+import { Button, Icon } from '../atoms'
 import { Grimoire } from '../items/Grimoire'
 import { MysticDivider } from '../items'
 import { ScreenFooter } from '../layouts/ScreenFooter'
+import { cn } from '../../lib/utils'
+
+type NightSummary = {
+  deaths: string[]
+  round: number
+}
 
 type Props = {
   state: GameState
   canNominate: boolean
   dayActions: AvailableDayAction[]
+  nightSummary?: NightSummary
   onNominate: () => void
   onDayAction: (action: AvailableDayAction) => void
   onEndDay: () => void
@@ -23,6 +31,7 @@ export function DayPhase({
   state,
   canNominate,
   dayActions,
+  nightSummary,
   onNominate,
   onDayAction,
   onEndDay,
@@ -32,18 +41,28 @@ export function DayPhase({
   onOpenGrimoirePlayer,
 }: Props) {
   const { t } = useI18n()
+  const [summaryExpanded, setSummaryExpanded] = useState(true)
+  const [grimoireExpanded, setGrimoireExpanded] = useState(false)
+
+  const deadPlayers = nightSummary
+    ? nightSummary.deaths
+        .map((id) => state.players.find((p) => p.id === id))
+        .filter(Boolean)
+    : []
 
   return (
     <div className='min-h-app bg-gradient-to-b from-orange-950 via-amber-950 to-grimoire-dark flex flex-col'>
       {/* Header */}
       <div className='bg-gradient-to-b from-amber-900/50 to-transparent px-4 py-4'>
         <div className='max-w-lg mx-auto'>
-          {/* Back button row */}
+          {/* Menu button row */}
           <div className='flex items-center mb-4'>
-            <BackButton onClick={onMainMenu} />
-            <span className='text-parchment-500 text-xs ml-1'>
-              {t.common.mainMenu}
-            </span>
+            <button
+              onClick={onMainMenu}
+              className='p-3 -ml-3 text-parchment-500 hover:text-parchment-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center'
+            >
+              <Icon name='menu' size='md' />
+            </button>
           </div>
 
           {/* Title section */}
@@ -67,30 +86,64 @@ export function DayPhase({
 
       {/* Content */}
       <div className='flex-1 px-4 pb-4 max-w-lg mx-auto w-full overflow-y-auto'>
-        {/* Grimoire Section */}
+        {/* Night Summary Section (collapsible, default expanded) */}
+        {nightSummary && (
+          <div className='mb-6'>
+            <button
+              onClick={() => setSummaryExpanded(!summaryExpanded)}
+              className='w-full flex items-center gap-2 mb-2 px-1 group'
+            >
+              <Icon name='moon' size='sm' className='text-indigo-400' />
+              <span className='font-tarot text-sm text-parchment-100 tracking-wider uppercase flex-1 text-left'>
+                {interpolate(t.game.nightSummary, {
+                  round: nightSummary.round,
+                })}
+              </span>
+              <Icon
+                name={summaryExpanded ? 'chevronUp' : 'chevronDown'}
+                size='sm'
+                className='text-parchment-500 group-hover:text-parchment-300 transition-colors'
+              />
+            </button>
+            {summaryExpanded && (
+              <div className='bg-indigo-950/30 rounded-xl border border-indigo-500/20 p-3'>
+                {deadPlayers.length === 0 ? (
+                  <p className='text-parchment-400 text-sm text-center py-2'>
+                    {t.game.noDeathsLastNight}
+                  </p>
+                ) : (
+                  <div className='space-y-2'>
+                    {deadPlayers.map((player) =>
+                      player ? (
+                        <div
+                          key={player.id}
+                          className='flex items-center gap-2 text-sm'
+                        >
+                          <Icon
+                            name='skull'
+                            size='sm'
+                            className='text-red-400'
+                          />
+                          <span className='text-parchment-200'>
+                            {player.name}
+                          </span>
+                          <span className='text-red-400/70 text-xs'>
+                            {interpolate(t.game.dawnDeathAnnouncement, {
+                              player: player.name,
+                            })}
+                          </span>
+                        </div>
+                      ) : null,
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Daytime Actions (primary section — above Grimoire) */}
         <div className='mb-6'>
-          <div className='flex items-center gap-2 mb-3 px-1'>
-            <Icon name='bookUser' size='sm' className='text-mystic-gold' />
-            <span className='font-tarot text-sm text-parchment-100 tracking-wider uppercase'>
-              {t.game.grimoire}
-            </span>
-          </div>
-          <div className='bg-white/5 rounded-xl border border-white/10 overflow-hidden'>
-            <Grimoire
-              state={state}
-              compact
-              onPlayerSelect={onOpenGrimoirePlayer}
-              onShowRoleCard={onShowRoleCard}
-              onEditEffects={onEditEffects}
-            />
-          </div>
-        </div>
-
-        {/* Divider */}
-        <MysticDivider className='mb-6' />
-
-        {/* Daytime Actions */}
-        <div>
           <div className='flex items-center gap-2 mb-3 px-1'>
             <Icon name='swords' size='sm' className='text-red-400' />
             <span className='font-tarot text-sm text-parchment-100 tracking-wider uppercase'>
@@ -172,6 +225,43 @@ export function DayPhase({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Divider */}
+        <MysticDivider className='mb-6' />
+
+        {/* Grimoire Section (collapsible, default collapsed) */}
+        <div className='mb-6'>
+          <button
+            onClick={() => setGrimoireExpanded(!grimoireExpanded)}
+            className='w-full flex items-center gap-2 mb-2 px-1 group'
+          >
+            <Icon name='bookUser' size='sm' className='text-mystic-gold' />
+            <span className='font-tarot text-sm text-parchment-100 tracking-wider uppercase flex-1 text-left'>
+              {t.game.grimoire}
+            </span>
+            <Icon
+              name={grimoireExpanded ? 'chevronUp' : 'chevronDown'}
+              size='sm'
+              className={cn(
+                'transition-colors',
+                grimoireExpanded
+                  ? 'text-parchment-400'
+                  : 'text-parchment-500 group-hover:text-parchment-300',
+              )}
+            />
+          </button>
+          {grimoireExpanded && (
+            <div className='bg-white/5 rounded-xl border border-white/10 overflow-hidden'>
+              <Grimoire
+                state={state}
+                compact
+                onPlayerSelect={onOpenGrimoirePlayer}
+                onShowRoleCard={onShowRoleCard}
+                onEditEffects={onEditEffects}
+              />
+            </div>
+          )}
         </div>
       </div>
 

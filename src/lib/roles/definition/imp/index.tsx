@@ -74,24 +74,28 @@ const definition: RoleDefinition = {
       icon: 'users',
       getLabel: (t) => t.game.stepShowMinions,
       condition: (_game, _player, state) => state.round === 1,
+      audience: 'player_reveal',
     },
     {
       id: 'select_bluffs',
       icon: 'shuffle',
       getLabel: (t) => t.game.stepSelectBluffs,
       condition: (_game, _player, state) => state.round === 1,
+      audience: 'narrator',
     },
     {
       id: 'show_bluffs',
       icon: 'eye',
       getLabel: (t) => t.game.stepShowBluffs,
       condition: (_game, _player, state) => state.round === 1,
+      audience: 'player_reveal',
     },
     {
       id: 'choose_victim',
       icon: 'flameKindling',
       getLabel: (t) => t.game.stepChooseVictim,
       condition: (_game, _player, state) => state.round > 1,
+      audience: 'player_choice',
     },
     // select_new_imp is NOT declared here — it's a dynamic runtime step
     // that only appears after the Imp selects themselves as a target.
@@ -171,18 +175,21 @@ const definition: RoleDefinition = {
             icon: 'users',
             label: t.game.stepShowMinions,
             status: showMinionsDone ? 'done' : 'pending',
+            audience: 'player_reveal' as const,
           },
           {
             id: 'select_bluffs',
             icon: 'shuffle',
             label: t.game.stepSelectBluffs,
             status: selectBluffsDone ? 'done' : 'pending',
+            audience: 'narrator' as const,
           },
           {
             id: 'show_bluffs',
             icon: 'eye',
             label: t.game.stepShowBluffs,
             status: 'pending',
+            audience: 'player_reveal' as const,
           },
         ]
       }
@@ -193,6 +200,7 @@ const definition: RoleDefinition = {
           icon: 'flameKindling',
           label: t.game.stepChooseVictim,
           status: chooseVictimDone ? 'done' : 'pending',
+          audience: 'player_choice' as const,
         },
       ]
 
@@ -416,7 +424,7 @@ const definition: RoleDefinition = {
 
     if (phase === 'show_minions') {
       return (
-        <PlayerFacingScreen>
+        <PlayerFacingScreen playerName={player.name}>
           <NightActionLayout
             player={player}
             title={roleT.demonMinionsTitle}
@@ -460,6 +468,7 @@ const definition: RoleDefinition = {
           icon='flameKindling'
           roleName={getRoleName('imp', language)}
           playerName={player.name}
+          audience="narrator"
           onShowToPlayer={() => {
             setSelectBluffsDone(true)
             setPhase('step_list')
@@ -505,7 +514,7 @@ const definition: RoleDefinition = {
       const bluffRoles = selectedBluffs.map((id) => getRole(id)).filter(Boolean)
 
       return (
-        <PlayerFacingScreen>
+        <PlayerFacingScreen playerName={player.name}>
           <NightActionLayout
             player={player}
             title={roleT.demonBluffsTitle}
@@ -616,6 +625,7 @@ const definition: RoleDefinition = {
         player={player}
         title={t.game.choosePlayerToKill}
         description={t.game.selectVictim}
+        audience="player_choice"
       >
         <div className='mb-6'>
           <PlayerPickerList

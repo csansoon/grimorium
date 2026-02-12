@@ -3,6 +3,7 @@ import { Icon } from '../atoms'
 import { IconName } from '../atoms/icon'
 import { cn } from '../../lib/utils'
 import { useI18n } from '../../lib/i18n'
+import type { NightStepAudience } from '../../lib/roles/types'
 
 // ============================================================================
 // STEP TYPE
@@ -13,6 +14,7 @@ export type NightStep = {
   icon: IconName
   label: string
   status: 'pending' | 'done' | 'active'
+  audience?: NightStepAudience
 }
 
 // ============================================================================
@@ -27,6 +29,32 @@ type Props = {
   steps: NightStep[]
   onSelectStep: (stepId: string) => void
   children?: ReactNode
+}
+
+// ============================================================================
+// AUDIENCE BADGE HELPERS
+// ============================================================================
+
+function getAudienceIcon(audience: NightStepAudience): IconName {
+  switch (audience) {
+    case 'narrator':
+      return 'eye'
+    case 'player_choice':
+      return 'userRound'
+    case 'player_reveal':
+      return 'smartphone'
+  }
+}
+
+function getAudienceColor(audience: NightStepAudience, isActive: boolean) {
+  switch (audience) {
+    case 'narrator':
+      return isActive ? 'text-blue-400/80' : 'text-blue-400/50'
+    case 'player_choice':
+      return isActive ? 'text-amber-400/90' : 'text-amber-400/50'
+    case 'player_reveal':
+      return isActive ? 'text-emerald-400/80' : 'text-emerald-400/50'
+  }
 }
 
 // ============================================================================
@@ -106,6 +134,14 @@ export function NightStepListLayout({
           {steps.map((step, index) => {
             const isNext = index === nextPendingIndex
             const isDone = step.status === 'done'
+            const audience = step.audience ?? 'narrator'
+
+            const audienceLabel =
+              audience === 'narrator'
+                ? t.game.audienceNarrator
+                : audience === 'player_choice'
+                  ? t.game.audiencePlayerChoice
+                  : t.game.audiencePlayerReveal
 
             return (
               <button
@@ -166,7 +202,7 @@ export function NightStepListLayout({
                   />
                 </div>
 
-                {/* Label */}
+                {/* Label + Audience Badge */}
                 <div className='flex-1 min-w-0'>
                   <div
                     className={cn(
@@ -179,6 +215,17 @@ export function NightStepListLayout({
                     )}
                   >
                     {step.label}
+                  </div>
+                  <div
+                    className={cn(
+                      'flex items-center gap-1 mt-0.5',
+                      getAudienceColor(audience, isNext || isDone),
+                    )}
+                  >
+                    <Icon name={getAudienceIcon(audience)} size='xs' />
+                    <span className='text-[10px] uppercase tracking-wider'>
+                      {audienceLabel}
+                    </span>
                   </div>
                 </div>
 

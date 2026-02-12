@@ -90,6 +90,7 @@ const definition: RoleDefinition = {
       icon: 'flask',
       getLabel: (t) => t.game.stepConfigureMalfunction,
       condition: (_game, player) => isMalfunctioning(player),
+      audience: 'narrator',
     },
     {
       id: 'configure_perceptions',
@@ -105,11 +106,13 @@ const definition: RoleDefinition = {
         if (!executedPlayer) return false
         return getAmbiguousPlayers([executedPlayer], 'role').length > 0
       },
+      audience: 'narrator',
     },
     {
       id: 'show_role',
       icon: 'shovel',
       getLabel: (t) => t.game.stepShowRole,
+      audience: 'player_reveal',
     },
   ],
 
@@ -158,6 +161,7 @@ const definition: RoleDefinition = {
           icon: 'flask',
           label: t.game.stepConfigureMalfunction,
           status: malfunctionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -167,6 +171,7 @@ const definition: RoleDefinition = {
           icon: 'hatGlasses',
           label: t.game.stepConfigurePerceptions,
           status: perceptionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
         })
       }
 
@@ -175,6 +180,7 @@ const definition: RoleDefinition = {
         icon: 'shovel',
         label: t.game.stepShowRole,
         status: 'pending',
+        audience: 'player_reveal' as const,
       })
 
       return result
@@ -324,7 +330,7 @@ const definition: RoleDefinition = {
     const shownTeam = getTeam(shownTeamId)
 
     return (
-      <PlayerFacingScreen>
+      <PlayerFacingScreen playerName={player.name}>
         <TeamBackground teamId={shownTeamId}>
           <p
             className={cn(

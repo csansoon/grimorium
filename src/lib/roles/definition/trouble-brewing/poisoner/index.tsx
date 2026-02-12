@@ -53,12 +53,14 @@ const definition: RoleDefinition = {
       icon: 'swords',
       getLabel: (t) => t.game.stepShowEvilTeam,
       condition: (_game, _player, state) => state.round === 1,
+      audience: 'player_reveal',
     },
     {
       id: 'choose_target',
       icon: 'flask',
       getLabel: (t) => t.game.stepChooseTarget,
       condition: (_game, _player, state) => state.round > 1,
+      audience: 'player_choice',
     },
   ],
 
@@ -151,6 +153,7 @@ const definition: RoleDefinition = {
           icon: 'swords',
           label: t.game.stepShowEvilTeam,
           status: 'pending',
+          audience: 'player_reveal' as const,
         })
       } else {
         steps.push({
@@ -158,6 +161,7 @@ const definition: RoleDefinition = {
           icon: 'flask',
           label: t.game.stepChooseTarget,
           status: 'pending',
+          audience: 'player_choice' as const,
         })
       }
 
@@ -179,7 +183,7 @@ const definition: RoleDefinition = {
 
     if (phase === 'show_evil_team') {
       return (
-        <PlayerFacingScreen>
+        <PlayerFacingScreen playerName={player.name}>
           <NightActionLayout
             player={player}
             title={roleT.evilTeamTitle}
@@ -216,6 +220,7 @@ const definition: RoleDefinition = {
         player={player}
         title={roleT.info}
         description={roleT.selectPlayerToPoison}
+        audience="player_choice"
       >
         <div className='mb-6'>
           <PlayerPickerList

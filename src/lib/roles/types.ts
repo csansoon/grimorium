@@ -66,12 +66,21 @@ export type RoleRevealProps = {
  * Declarative metadata for a step in a role's night action flow.
  * Used by NightStepListLayout to render the step list landing page.
  */
+export type NightStepAudience = 'narrator' | 'player_choice' | 'player_reveal'
+
 export type NightStepDefinition = {
   id: string
   icon: IconName
   getLabel: (t: Translations) => string
   /** If provided, this step is only shown when the condition returns true. */
   condition?: (game: Game, player: PlayerState, state: GameState) => boolean
+  /**
+   * Who this step is for:
+   * - `narrator` — Storyteller makes a decision (default if omitted)
+   * - `player_choice` — Player decides (tells ST verbally), ST uses screen
+   * - `player_reveal` — Player sees the screen (HandDeviceScreen interstitial)
+   */
+  audience?: NightStepAudience
 }
 
 // ============================================================================

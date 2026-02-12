@@ -21,6 +21,8 @@ import {
   updateEffectData,
   processAutoSkips,
   applySetupAction,
+  getLastNightDeaths,
+  getNominatorsToday,
 } from '../../lib/game'
 import {
   resolveIntent,
@@ -49,8 +51,10 @@ import { Icon, LanguagePicker } from '../atoms'
 import { NightActionResult, SetupActionResult } from '../../lib/roles/types'
 import type { FC } from 'react'
 import { SetupActionsScreen } from './SetupActionsScreen'
+import { DawnScreen } from './DawnScreen'
 import { PlayerFacingContext } from '../context/PlayerFacingContext'
 import { PlayerFacingScreen } from '../layouts/PlayerFacingScreen'
+import { HandDeviceScreen } from '../layouts/HandDeviceScreen'
 
 type Props = {
   initialGame: Game
@@ -65,6 +69,7 @@ type Screen =
   | { type: 'night_dashboard' }
   | { type: 'night_action'; playerId: string; roleId: string }
   | { type: 'night_follow_up'; followUp: AvailableNightFollowUp }
+  | { type: 'dawn'; deaths: string[]; round: number }
   | { type: 'day' }
   | { type: 'nomination' }
   | { type: 'day_action'; action: AvailableDayAction }
@@ -91,6 +96,9 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     intent: import('../../lib/pipeline/types').Intent
     onResult: (result: unknown) => void
   } | null>(null)
+
+  // Hand-device interstitial state for role revelation
+  const [showingRoleReady, setShowingRoleReady] = useState(false)
 
   // Player-facing state — set by PlayerFacingScreen wrapper inside NightAction components
   const [isPlayerFacing, setIsPlayerFacing] = useState(false)
@@ -147,6 +155,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   // ========================================================================
 
   const handleRevealRole = (playerId: string) => {
+    setShowingRoleReady(false) // Reset interstitial
     setScreen({ type: 'showing_role', playerId })
   }
 
@@ -277,8 +286,13 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       updateGame(finalGame)
       setScreen({ type: 'game_over' })
     } else {
-      setScreen({ type: 'day' })
+      const deaths = getLastNightDeaths(newGame)
+      setScreen({ type: 'dawn', deaths, round: state.round })
     }
+  }
+
+  const handleDawnContinue = () => {
+    setScreen({ type: 'day' })
   }
 
   // ========================================================================
@@ -309,10 +323,22 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     }
   }
 
-  const handleVoteComplete = (votesFor: string[], votesAgainst: string[]) => {
+  const handleVoteComplete = (
+    votesForCount: number,
+    votesAgainstCount: number,
+    votesForIds?: string[],
+    votesAgainstIds?: string[],
+  ) => {
     if (screen.type !== 'voting') return
 
-    const newGame = resolveVote(game, screen.nomineeId, votesFor, votesAgainst)
+    const newGame = resolveVote(
+      game,
+      screen.nomineeId,
+      votesForCount,
+      votesAgainstCount,
+      votesForIds,
+      votesAgainstIds,
+    )
     updateGame(newGame)
 
     const winner = checkWinCondition(getCurrentState(newGame), newGame)
@@ -504,6 +530,15 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         const role = getRole(player.roleId)
         if (!role) return null
 
+        if (!showingRoleReady) {
+          return (
+            <HandDeviceScreen
+              playerName={player.name}
+              onReady={() => setShowingRoleReady(true)}
+            />
+          )
+        }
+
         return (
           <PlayerFacingScreen>
             <role.RoleReveal
@@ -569,15 +604,27 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         )
       }
 
+      case 'dawn':
+        return (
+          <DawnScreen
+            state={state}
+            deaths={screen.deaths}
+            round={screen.round}
+            onContinue={handleDawnContinue}
+          />
+        )
+
       case 'day': {
         // Collect available day actions from active effects
         const dayActions = getAvailableDayActions(state, t)
+        const deaths = getLastNightDeaths(game)
 
         return (
         <DayPhase
           state={state}
           canNominate={!hasExecutionToday(game)}
           dayActions={dayActions}
+          nightSummary={{ deaths, round: state.round - 1 || state.round }}
           onNominate={handleOpenNomination}
           onDayAction={handleOpenDayAction}
           onEndDay={handleEndDay}
@@ -636,6 +683,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         return (
           <NominationScreen
             state={state}
+            nominatorsToday={getNominatorsToday(game)}
             onNominate={handleNominate}
             onBack={handleBackFromNomination}
           />

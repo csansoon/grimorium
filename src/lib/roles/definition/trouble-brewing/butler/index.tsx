@@ -49,6 +49,7 @@ const definition: RoleDefinition = {
       id: 'choose_master',
       icon: 'conciergeBell',
       getLabel: (t) => t.game.stepChooseMaster,
+      audience: 'player_choice',
     },
   ],
 
@@ -126,6 +127,7 @@ const definition: RoleDefinition = {
           icon: 'handHeart',
           label: t.game.stepChooseMaster,
           status: 'pending',
+          audience: 'player_choice' as const,
         },
       ]
 
@@ -145,6 +147,7 @@ const definition: RoleDefinition = {
         player={player}
         title={roleT.info}
         description={roleT.selectPlayerAsMaster}
+        audience="player_choice"
       >
         <div className='mb-6'>
           <PlayerPickerList

@@ -1,12 +1,24 @@
-import { useMemo } from 'react'
-import { Game, GameState, PlayerState } from '../../lib/types'
+import { useMemo, useState } from 'react'
+import { Game, GameState, PlayerState, RichMessage } from '../../lib/types'
 import { getRole } from '../../lib/roles'
 import { getTeam } from '../../lib/teams'
-import { getNightRolesStatus, NightRoleStatus } from '../../lib/game'
+import {
+  getNightRolesStatus,
+  getNightActionSummary,
+  NightRoleStatus,
+} from '../../lib/game'
 import { getAvailableNightFollowUps } from '../../lib/pipeline'
 import { AvailableNightFollowUp } from '../../lib/pipeline/types'
 import { useI18n, getRoleName } from '../../lib/i18n'
-import { Button, Icon, BackButton } from '../atoms'
+import { Button, Icon } from '../atoms'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+} from '../atoms'
+import { RichMessage as RichMessageDisplay } from '../items/RichMessage'
 import { Grimoire } from '../items/Grimoire'
 import { MysticDivider } from '../items'
 import { ScreenFooter } from '../layouts/ScreenFooter'
@@ -48,6 +60,8 @@ export function NightDashboard({
   onOpenGrimoirePlayer,
 }: Props) {
   const { t } = useI18n()
+  const [grimoireExpanded, setGrimoireExpanded] = useState(false)
+  const [reviewPlayerId, setReviewPlayerId] = useState<string | null>(null)
 
   // Collect night actions and follow-ups separately, then merge
   const items: NightDashboardItem[] = useMemo(() => {
@@ -75,17 +89,29 @@ export function NightDashboard({
   })
   const allDone = nextPendingIndex === -1
 
+  // Review dialog data
+  const reviewMessages: RichMessage[] = useMemo(() => {
+    if (!reviewPlayerId) return []
+    return getNightActionSummary(game, reviewPlayerId)
+  }, [game, reviewPlayerId])
+
+  const reviewPlayer = reviewPlayerId
+    ? state.players.find((p) => p.id === reviewPlayerId)
+    : null
+
   return (
     <div className='min-h-app bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex flex-col'>
       {/* Header */}
       <div className='bg-gradient-to-b from-indigo-900/50 to-transparent px-4 py-4'>
         <div className='max-w-lg mx-auto'>
-          {/* Back button row */}
+          {/* Menu button row */}
           <div className='flex items-center mb-4'>
-            <BackButton onClick={onMainMenu} />
-            <span className='text-parchment-500 text-xs ml-1'>
-              {t.common.mainMenu}
-            </span>
+            <button
+              onClick={onMainMenu}
+              className='p-3 -ml-3 text-parchment-500 hover:text-parchment-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center'
+            >
+              <Icon name='menu' size='md' />
+            </button>
           </div>
 
           {/* Title section */}
@@ -124,6 +150,7 @@ export function NightDashboard({
                   onOpen={() =>
                     onOpenNightAction(item.data.playerId, item.data.roleId)
                   }
+                  onReview={() => setReviewPlayerId(item.data.playerId)}
                 />
               ) : (
                 <NightFollowUpRow
@@ -149,23 +176,38 @@ export function NightDashboard({
 
         <MysticDivider className='mb-6' />
 
-        {/* Grimoire Section */}
+        {/* Grimoire Section (collapsible, default collapsed) */}
         <div className='mb-6'>
-          <div className='flex items-center gap-2 mb-3 px-1'>
+          <button
+            onClick={() => setGrimoireExpanded(!grimoireExpanded)}
+            className='w-full flex items-center gap-2 mb-2 px-1 group'
+          >
             <Icon name='scrollText' size='sm' className='text-mystic-gold' />
-            <span className='font-tarot text-sm text-parchment-100 tracking-wider uppercase'>
+            <span className='font-tarot text-sm text-parchment-100 tracking-wider uppercase flex-1 text-left'>
               {t.game.grimoire}
             </span>
-          </div>
-          <div className='bg-white/5 rounded-xl border border-white/10 overflow-hidden'>
-            <Grimoire
-              state={state}
-              compact
-              onPlayerSelect={onOpenGrimoirePlayer}
-              onShowRoleCard={onShowRoleCard}
-              onEditEffects={onEditEffects}
+            <Icon
+              name={grimoireExpanded ? 'chevronUp' : 'chevronDown'}
+              size='sm'
+              className={cn(
+                'transition-colors',
+                grimoireExpanded
+                  ? 'text-parchment-400'
+                  : 'text-parchment-500 group-hover:text-parchment-300',
+              )}
             />
-          </div>
+          </button>
+          {grimoireExpanded && (
+            <div className='bg-white/5 rounded-xl border border-white/10 overflow-hidden'>
+              <Grimoire
+                state={state}
+                compact
+                onPlayerSelect={onOpenGrimoirePlayer}
+                onShowRoleCard={onShowRoleCard}
+                onEditEffects={onEditEffects}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -182,6 +224,43 @@ export function NightDashboard({
           {t.game.proceedToDay}
         </Button>
       </ScreenFooter>
+
+      {/* Review Action Summary Dialog */}
+      <Dialog
+        open={reviewPlayerId !== null}
+        onOpenChange={(open) => {
+          if (!open) setReviewPlayerId(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.game.actionSummary}</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            {reviewPlayer && (
+              <p className='text-parchment-300 text-sm mb-3 font-medium'>
+                {reviewPlayer.name}
+              </p>
+            )}
+            {reviewMessages.length === 0 ? (
+              <p className='text-parchment-500 text-sm'>
+                {t.game.noActionRecorded}
+              </p>
+            ) : (
+              <div className='space-y-2'>
+                {reviewMessages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className='text-parchment-300 text-sm bg-white/5 rounded-lg p-3'
+                  >
+                    <RichMessageDisplay message={msg} state={state} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -195,11 +274,13 @@ function NightActionRow({
   index,
   isNext,
   onOpen,
+  onReview,
 }: {
   roleStatus: NightRoleStatus
   index: number
   isNext: boolean
   onOpen: () => void
+  onReview: () => void
 }) {
   const { language } = useI18n()
   const role = getRole(roleStatus.roleId)
@@ -221,6 +302,7 @@ function NightActionRow({
       sublabel={roleStatus.playerName}
       isEvil={team?.isEvil}
       onOpen={onOpen}
+      onReview={onReview}
     />
   )
 }
@@ -268,6 +350,7 @@ function DashboardRow({
   isEvil,
   isFollowUp,
   onOpen,
+  onReview,
 }: {
   index: number
   isNext: boolean
@@ -278,8 +361,18 @@ function DashboardRow({
   isEvil?: boolean
   isFollowUp?: boolean
   onOpen: () => void
+  onReview?: () => void
 }) {
   const { t } = useI18n()
+
+  const isClickable = isNext || isDone
+  const handleClick = () => {
+    if (isNext) {
+      onOpen()
+    } else if (isDone && onReview) {
+      onReview()
+    }
+  }
 
   const getStatusBadge = () => {
     if (isDone) {
@@ -307,8 +400,8 @@ function DashboardRow({
 
   return (
     <button
-      onClick={isNext ? onOpen : undefined}
-      disabled={!isNext}
+      onClick={isClickable ? handleClick : undefined}
+      disabled={!isClickable}
       className={cn(
         'w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left',
         isNext
@@ -316,7 +409,7 @@ function DashboardRow({
             ? 'bg-purple-900/30 border border-purple-500/40 hover:bg-purple-900/50 cursor-pointer'
             : 'bg-indigo-900/30 border border-indigo-500/40 hover:bg-indigo-900/50 cursor-pointer'
           : isDone
-            ? 'bg-white/3 opacity-70'
+            ? 'bg-white/3 opacity-70 hover:opacity-90 cursor-pointer'
             : 'bg-white/2 opacity-50',
       )}
     >

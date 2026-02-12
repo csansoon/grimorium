@@ -69,6 +69,10 @@ export function RoleRevelationScreen({
             <p className='text-parchment-500 text-xs mt-1'>
               {revealedCount} / {state.players.length}
             </p>
+            <p className='text-parchment-600 text-xs mt-3 flex items-center justify-center gap-1.5'>
+              <Icon name='eye' size='xs' className='flex-shrink-0' />
+              <span>{t.game.roleRevelationNarratorHint}</span>
+            </p>
           </div>
         </div>
       </div>
