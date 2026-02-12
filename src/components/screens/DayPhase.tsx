@@ -16,6 +16,7 @@ type Props = {
   onMainMenu: () => void
   onShowRoleCard?: (player: PlayerState) => void
   onEditEffects?: (player: PlayerState) => void
+  onOpenGrimoirePlayer?: (player: PlayerState) => void
 }
 
 export function DayPhase({
@@ -28,6 +29,7 @@ export function DayPhase({
   onMainMenu,
   onShowRoleCard,
   onEditEffects,
+  onOpenGrimoirePlayer,
 }: Props) {
   const { t } = useI18n()
 
@@ -77,6 +79,7 @@ export function DayPhase({
             <Grimoire
               state={state}
               compact
+              onPlayerSelect={onOpenGrimoirePlayer}
               onShowRoleCard={onShowRoleCard}
               onEditEffects={onEditEffects}
             />

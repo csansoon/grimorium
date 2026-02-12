@@ -44,8 +44,7 @@ import { NominationScreen } from './NominationScreen'
 import { VotingPhase } from './VotingPhase'
 import { GameOver } from './GameOver'
 import { HistoryView } from './HistoryView'
-import { GrimoireModal } from '../items/GrimoireModal'
-import { EditEffectsModal } from '../items/EditEffectsModal'
+import { GrimoireModal, type GrimoireIntent } from '../items/GrimoireModal'
 import { Icon, LanguageToggle } from '../atoms'
 import { NightActionResult, SetupActionResult } from '../../lib/roles/types'
 import type { FC } from 'react'
@@ -82,8 +81,9 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   )
   const [showHistory, setShowHistory] = useState(false)
   const [showGrimoire, setShowGrimoire] = useState(false)
-  const [editEffectsPlayer, setEditEffectsPlayer] =
-    useState<PlayerState | null>(null)
+  const [grimoireIntent, setGrimoireIntent] = useState<GrimoireIntent>({
+    view: 'list',
+  })
 
   // Pipeline UI state — shown when an intent needs narrator input mid-resolution
   const [pipelineUI, setPipelineUI] = useState<{
@@ -401,7 +401,8 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   // ========================================================================
 
   const handleOpenEditEffects = (player: PlayerState) => {
-    setEditEffectsPlayer(player)
+    setGrimoireIntent({ view: 'edit_effects', player })
+    setShowGrimoire(true)
   }
 
   const handleAddEffect = (
@@ -411,21 +412,11 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   ) => {
     const newGame = addEffectToPlayer(game, playerId, effectType, data)
     updateGame(newGame)
-    const updatedState = getCurrentState(newGame)
-    const updatedPlayer = updatedState.players.find((p) => p.id === playerId)
-    if (updatedPlayer) {
-      setEditEffectsPlayer(updatedPlayer)
-    }
   }
 
   const handleRemoveEffect = (playerId: string, effectType: string) => {
     const newGame = removeEffectFromPlayer(game, playerId, effectType)
     updateGame(newGame)
-    const updatedState = getCurrentState(newGame)
-    const updatedPlayer = updatedState.players.find((p) => p.id === playerId)
-    if (updatedPlayer) {
-      setEditEffectsPlayer(updatedPlayer)
-    }
   }
 
   const handleUpdateEffect = (
@@ -435,11 +426,6 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   ) => {
     const newGame = updateEffectData(game, playerId, effectType, data)
     updateGame(newGame)
-    const updatedState = getCurrentState(newGame)
-    const updatedPlayer = updatedState.players.find((p) => p.id === playerId)
-    if (updatedPlayer) {
-      setEditEffectsPlayer(updatedPlayer)
-    }
   }
 
   const handleShowRoleCard = (player: PlayerState) => {
@@ -530,16 +516,20 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
       case 'night_dashboard':
         return (
-          <NightDashboard
-            game={game}
-            state={state}
-            onOpenNightAction={handleOpenNightAction}
-            onOpenNightFollowUp={handleOpenNightFollowUp}
-            onStartDay={handleStartDay}
-            onMainMenu={onMainMenu}
-            onShowRoleCard={handleShowRoleCard}
-            onEditEffects={handleOpenEditEffects}
-          />
+        <NightDashboard
+          game={game}
+          state={state}
+          onOpenNightAction={handleOpenNightAction}
+          onOpenNightFollowUp={handleOpenNightFollowUp}
+          onStartDay={handleStartDay}
+          onMainMenu={onMainMenu}
+          onShowRoleCard={handleShowRoleCard}
+          onEditEffects={handleOpenEditEffects}
+          onOpenGrimoirePlayer={(player) => {
+            setGrimoireIntent({ view: 'player_detail', player })
+            setShowGrimoire(true)
+          }}
+        />
         )
 
       case 'night_follow_up': {
@@ -580,17 +570,21 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         const dayActions = getAvailableDayActions(state, t)
 
         return (
-          <DayPhase
-            state={state}
-            canNominate={!hasExecutionToday(game)}
-            dayActions={dayActions}
-            onNominate={handleOpenNomination}
-            onDayAction={handleOpenDayAction}
-            onEndDay={handleEndDay}
-            onMainMenu={onMainMenu}
-            onShowRoleCard={handleShowRoleCard}
-            onEditEffects={handleOpenEditEffects}
-          />
+        <DayPhase
+          state={state}
+          canNominate={!hasExecutionToday(game)}
+          dayActions={dayActions}
+          onNominate={handleOpenNomination}
+          onDayAction={handleOpenDayAction}
+          onEndDay={handleEndDay}
+          onMainMenu={onMainMenu}
+          onShowRoleCard={handleShowRoleCard}
+          onEditEffects={handleOpenEditEffects}
+          onOpenGrimoirePlayer={(player) => {
+            setGrimoireIntent({ view: 'player_detail', player })
+            setShowGrimoire(true)
+          }}
+        />
         )
       }
 
@@ -691,7 +685,10 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       {showFloatingButtons && (
         <div className='fixed bottom-4 right-4 flex flex-col gap-2'>
           <button
-            onClick={() => setShowGrimoire(true)}
+            onClick={() => {
+              setGrimoireIntent({ view: 'list' })
+              setShowGrimoire(true)
+            }}
             className='w-12 h-12 rounded-full bg-grimoire-dark/90 border border-mystic-gold/30 text-mystic-gold flex items-center justify-center shadow-lg hover:bg-grimoire-dark hover:border-mystic-gold/50 transition-colors'
             title={t.game.grimoire}
           >
@@ -708,21 +705,13 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         </div>
       )}
 
-      {/* Grimoire Modal */}
+      {/* Grimoire Modal — unified player list, detail, edit effects, effect config */}
       <GrimoireModal
         state={state}
         open={showGrimoire}
         onClose={() => setShowGrimoire(false)}
+        intent={grimoireIntent}
         onShowRoleCard={handleShowRoleCard}
-        onEditEffects={handleOpenEditEffects}
-      />
-
-      {/* Edit Effects Modal */}
-      <EditEffectsModal
-        player={editEffectsPlayer}
-        state={state}
-        open={editEffectsPlayer !== null}
-        onClose={() => setEditEffectsPlayer(null)}
         onAddEffect={handleAddEffect}
         onRemoveEffect={handleRemoveEffect}
         onUpdateEffect={handleUpdateEffect}

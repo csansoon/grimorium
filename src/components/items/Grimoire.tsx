@@ -12,6 +12,8 @@ import { getEffect, getEffectType, EFFECT_TYPE_BADGE_VARIANT } from '../../lib/e
 type Props = {
   state: GameState
   compact?: boolean
+  /** When provided, tapping a player calls this instead of opening PlayerDetailModal */
+  onPlayerSelect?: (player: PlayerState) => void
   onShowRoleCard?: (player: PlayerState) => void
   onEditEffects?: (player: PlayerState) => void
 }
@@ -86,10 +88,19 @@ function PlayerRow({
 export function Grimoire({
   state,
   compact = false,
+  onPlayerSelect,
   onShowRoleCard,
   onEditEffects,
 }: Props) {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerState | null>(null)
+
+  const handlePlayerClick = (player: PlayerState) => {
+    if (onPlayerSelect) {
+      onPlayerSelect(player)
+    } else {
+      setSelectedPlayer(player)
+    }
+  }
 
   return (
     <>
@@ -98,19 +109,21 @@ export function Grimoire({
           <PlayerRow
             key={player.id}
             player={player}
-            onClick={() => setSelectedPlayer(player)}
+            onClick={() => handlePlayerClick(player)}
           />
         ))}
       </div>
 
-      {/* Player Detail Modal */}
-      <PlayerDetailModal
-        player={selectedPlayer}
-        open={selectedPlayer !== null}
-        onClose={() => setSelectedPlayer(null)}
-        onShowRoleCard={onShowRoleCard}
-        onEditEffects={onEditEffects}
-      />
+      {/* Player Detail Modal — only when not using onPlayerSelect (embedded flow) */}
+      {!onPlayerSelect && (
+        <PlayerDetailModal
+          player={selectedPlayer}
+          open={selectedPlayer !== null}
+          onClose={() => setSelectedPlayer(null)}
+          onShowRoleCard={onShowRoleCard}
+          onEditEffects={onEditEffects}
+        />
+      )}
     </>
   )
 }

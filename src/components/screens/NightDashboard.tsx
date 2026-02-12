@@ -33,6 +33,7 @@ type Props = {
   onMainMenu: () => void
   onShowRoleCard?: (player: PlayerState) => void
   onEditEffects?: (player: PlayerState) => void
+  onOpenGrimoirePlayer?: (player: PlayerState) => void
 }
 
 export function NightDashboard({
@@ -44,6 +45,7 @@ export function NightDashboard({
   onMainMenu,
   onShowRoleCard,
   onEditEffects,
+  onOpenGrimoirePlayer,
 }: Props) {
   const { t } = useI18n()
 
@@ -159,6 +161,7 @@ export function NightDashboard({
             <Grimoire
               state={state}
               compact
+              onPlayerSelect={onOpenGrimoirePlayer}
               onShowRoleCard={onShowRoleCard}
               onEditEffects={onEditEffects}
             />
