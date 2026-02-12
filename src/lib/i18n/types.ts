@@ -25,6 +25,7 @@ export type Translations = {
   mainMenu: {
     title: string
     subtitle: string
+    tapToOpen: string
     continueGame: string
     newGame: string
     startFreshGame: string

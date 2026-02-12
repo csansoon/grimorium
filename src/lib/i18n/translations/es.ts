@@ -23,10 +23,11 @@ const es: Translations = {
   mainMenu: {
     title: 'El Grimorio',
     subtitle: 'Compañero del Narrador de Blood on the Clocktower',
+    tapToOpen: 'Toca para abrir',
     continueGame: 'Continuar Partida',
     newGame: 'Nueva Partida',
     startFreshGame: 'Comenzar una nueva partida',
-    rolesLibrary: 'Roles',
+    rolesLibrary: 'Biblioteca de Roles',
     browseAllRoles: 'Explorar todas las cartas de rol',
     previousGames: 'Partidas Anteriores',
     completed: 'Completada',

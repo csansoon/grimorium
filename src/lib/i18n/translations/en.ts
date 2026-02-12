@@ -23,10 +23,11 @@ const en: Translations = {
   mainMenu: {
     title: 'The Grimoire',
     subtitle: 'Storyteller Companion for Blood on the Clocktower',
+    tapToOpen: 'Tap to open',
     continueGame: 'Continue Game',
     newGame: 'New Game',
     startFreshGame: 'Start a fresh game',
-    rolesLibrary: 'Roles',
+    rolesLibrary: 'Roles Library',
     browseAllRoles: 'Browse all role cards',
     previousGames: 'Previous Games',
     completed: 'Completed',
