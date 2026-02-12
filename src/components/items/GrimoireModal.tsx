@@ -51,8 +51,8 @@ type GrimoireView =
 
 
 export type GrimoireIntent =
-  | { view: 'list' }
-  | { view: 'player_detail'; player: PlayerState }
+  | { view: 'list'; readOnly?: boolean }
+  | { view: 'player_detail'; player: PlayerState; readOnly?: boolean }
   | { view: 'edit_effects'; player: PlayerState }
 
 type Props = {
@@ -154,7 +154,10 @@ export function GrimoireModal({
     }
   }
 
-  const showBackButton = view.type !== 'list'
+  // No back button when opening directly to a player (from inline Grimoire or Spy)
+  const isDirectPlayerOpen =
+    intent.view === 'player_detail' && view.type === 'player_detail'
+  const showBackButton = view.type !== 'list' && !isDirectPlayerOpen
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleClose()}>
@@ -190,6 +193,9 @@ export function GrimoireModal({
           {view.type === 'player_detail' && (
             <PlayerDetailContent
               player={view.player}
+              showEditEffects={
+                !('readOnly' in intent && intent.readOnly === true)
+              }
               onShowRoleCard={() => {
                 handleClose()
                 onShowRoleCard?.(view.player)
@@ -250,10 +256,12 @@ export function GrimoireModal({
 
 function PlayerDetailContent({
   player,
+  showEditEffects = true,
   onShowRoleCard,
   onEditEffects,
 }: {
   player: PlayerState
+  showEditEffects?: boolean
   onShowRoleCard: () => void
   onEditEffects: () => void
 }) {
@@ -416,15 +424,17 @@ function PlayerDetailContent({
             {t.ui.seeRoleCard}
           </Button>
         )}
-        <Button
-          onClick={onEditEffects}
-          fullWidth
-          variant='outline'
-          className='border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/20'
-        >
-          <Icon name='sparkles' size='md' className='mr-2' />
-          {t.ui.editEffects}
-        </Button>
+        {showEditEffects && (
+          <Button
+            onClick={onEditEffects}
+            fullWidth
+            variant='outline'
+            className='border-cyan-500/30 text-cyan-400 hover:bg-cyan-900/20'
+          >
+            <Icon name='sparkles' size='md' className='mr-2' />
+            {t.ui.editEffects}
+          </Button>
+        )}
       </div>
     </div>
   )

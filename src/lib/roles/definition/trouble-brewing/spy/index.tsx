@@ -1,20 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { RoleDefinition } from '../../../types'
 import {
   useI18n,
   registerRoleTranslations,
   getRoleName,
   getRoleTranslations,
-  getEffectName,
 } from '../../../../i18n'
-import { getRole } from '../../../index'
-import { getTeam } from '../../../../teams'
-import {
-  isMalfunctioning,
-  getEffect,
-  getEffectType,
-  EFFECT_TYPE_BADGE_VARIANT,
-} from '../../../../effects'
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import {
   NightActionLayout,
@@ -22,10 +13,10 @@ import {
   PlayerFacingScreen,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
-import { Button, Icon, Badge } from '../../../../../components/atoms'
-import { MysticDivider } from '../../../../../components/items'
-import { isAlive, hasEffect } from '../../../../types'
-import { cn } from '../../../../../lib/utils'
+import { Button, Icon } from '../../../../../components/atoms'
+import { Grimoire } from '../../../../../components/items/Grimoire'
+import { isAlive } from '../../../../types'
+import { isMalfunctioning } from '../../../../effects'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -83,15 +74,13 @@ const definition: RoleDefinition = {
 
   RoleReveal: DefaultRoleReveal,
 
-  NightAction: ({ state, player, onComplete }) => {
+  NightAction: ({ state, player, onComplete, onOpenGrimoire }) => {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
 
     const malfunctioning = isMalfunctioning(player)
 
     const roleT = getRoleTranslations('spy', language)
-
-    const getLocalRoleName = (roleId: string) => getRoleName(roleId, language)
 
     const handleComplete = () => {
       onComplete({
@@ -174,6 +163,7 @@ const definition: RoleDefinition = {
 
     // ================================================================
     // RENDER: View Grimoire (player-facing)
+    // Uses shared Grimoire; when a player is tapped, opens modal (read-only, no Edit effects)
     // ================================================================
 
     return (
@@ -183,26 +173,20 @@ const definition: RoleDefinition = {
           title={roleT.spyGrimoireTitle}
           description={roleT.spyGrimoireDescription}
         >
-          <div className='space-y-1 mb-6'>
-            {state.players.map((p) => (
-              <SpyGrimoireRow
-                key={p.id}
-                player={p}
-                getLocalRoleName={getLocalRoleName}
-                language={language}
-                t={t}
-              />
-            ))}
+          <div className='mb-6'>
+            <Grimoire
+              state={state}
+              onPlayerSelect={(p) =>
+                onOpenGrimoire?.({ view: 'player_detail', player: p }, true)
+              }
+            />
           </div>
-
-          <MysticDivider />
 
           <Button
             onClick={handleComplete}
             fullWidth
             size='lg'
             variant='evil'
-            className='mt-4'
           >
             <Icon name='check' size='md' className='mr-2' />
             {t.common.iUnderstandMyRole}
@@ -211,118 +195,6 @@ const definition: RoleDefinition = {
       </PlayerFacingScreen>
     )
   },
-}
-
-// ============================================================================
-// Spy Grimoire Row — shows each player's true role and effects
-// ============================================================================
-
-function SpyGrimoireRow({
-  player,
-  getLocalRoleName,
-  language,
-  t,
-}: {
-  player: import('../../../../types').PlayerState
-  getLocalRoleName: (roleId: string) => string
-  language: import('../../../../i18n').Language
-  t: ReturnType<typeof useI18n>['t']
-}) {
-  const role = getRole(player.roleId)
-  const team = role ? getTeam(role.team) : null
-  const isDead = hasEffect(player, 'dead')
-  const isEvil = team?.isEvil ?? false
-
-  // Collect meaningful effects (skip dead — shown visually)
-  const visibleEffects = useMemo(() => {
-    return player.effects
-      .filter((e) => e.type !== 'dead' && e.type !== 'used_dead_vote')
-      .map((e) => {
-        const def = getEffect(e.type)
-        const effectType = getEffectType(e, def)
-        const variant = EFFECT_TYPE_BADGE_VARIANT[effectType]
-        return {
-          type: e.type,
-          name: getEffectName(e.type, language),
-          variant,
-        }
-      })
-  }, [player.effects, language])
-
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-3 p-3 rounded-lg',
-        isDead
-          ? 'bg-parchment-500/5 opacity-60'
-          : isEvil
-            ? 'bg-red-900/20 border border-red-700/30'
-            : 'bg-indigo-900/20 border border-indigo-700/30',
-      )}
-    >
-      {/* Role Icon */}
-      <div
-        className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 border',
-          isDead
-            ? 'bg-parchment-500/10 border-parchment-500/20'
-            : isEvil
-              ? 'bg-red-900/30 border-red-600/30'
-              : 'bg-indigo-500/10 border-indigo-400/30',
-        )}
-      >
-        {isDead ? (
-          <Icon name='skull' size='md' className='text-parchment-500' />
-        ) : role ? (
-          <Icon name={role.icon} size='md' className={team?.colors.text} />
-        ) : (
-          <Icon name='user' size='md' className='text-parchment-400' />
-        )}
-      </div>
-
-      {/* Player Info */}
-      <div className='flex-1 min-w-0'>
-        <div className='flex items-center gap-2'>
-          <span
-            className={cn(
-              'font-medium text-sm',
-              isDead ? 'text-parchment-500 line-through' : 'text-parchment-100',
-            )}
-          >
-            {player.name}
-          </span>
-          {visibleEffects.map((effect) => (
-            <Badge
-              key={effect.type}
-              variant={effect.variant}
-              className='px-1.5 py-0.5 text-[10px]'
-            >
-              {effect.name}
-            </Badge>
-          ))}
-        </div>
-        {role && (
-          <span
-            className={cn(
-              'text-xs',
-              isDead
-                ? 'text-parchment-600'
-                : isEvil
-                  ? 'text-red-400/70'
-                  : 'text-indigo-400/70',
-            )}
-          >
-            {getLocalRoleName(player.roleId)}
-            {team && (
-              <span className='text-parchment-600 ml-1'>
-                ({t.teams[role.team]?.name ?? role.team})
-              </span>
-            )}
-          </span>
-        )}
-      </div>
-    </div>
-  )
 }
 
 export default definition

@@ -561,6 +561,10 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             state={state}
             player={player}
             onComplete={handleNightActionComplete}
+            onOpenGrimoire={(intent, readOnly) => {
+              setGrimoireIntent({ ...intent, readOnly })
+              setShowGrimoire(true)
+            }}
           />
         )
       }

@@ -18,11 +18,20 @@ export type EffectToAdd = {
 // NIGHT ACTION PROPS
 // ============================================================================
 
+export type GrimoireIntentForNightAction =
+  | { view: 'list'; readOnly?: boolean }
+  | { view: 'player_detail'; player: PlayerState; readOnly?: boolean }
+
 export type NightActionProps = {
   game: Game
   state: GameState
   player: PlayerState
   onComplete: (result: NightActionResult) => void
+  /** Optional: open the Grimoire modal (e.g. for Spy's read-only view) */
+  onOpenGrimoire?: (
+    intent: GrimoireIntentForNightAction,
+    readOnly?: boolean,
+  ) => void
 }
 
 export type NightActionResult = {
