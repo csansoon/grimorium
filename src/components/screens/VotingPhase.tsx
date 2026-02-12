@@ -46,7 +46,7 @@ export function VotingPhase({
   const { t, language } = useI18n()
   const butlerT = getRoleTranslations('butler', language)
   const nominee = state.players.find((p) => p.id === nomineeId)
-  const [mode, setMode] = useState<VoteMode>('quick')
+  const [mode, setMode] = useState<VoteMode>('detailed')
 
   const canPlayerVote = (player: PlayerState): boolean => {
     // Check all effects for voting restrictions
@@ -198,17 +198,6 @@ export function VotingPhase({
       <div className='px-4 py-3 max-w-lg mx-auto w-full'>
         <div className='flex rounded-lg bg-white/5 border border-white/10 p-0.5'>
           <button
-            onClick={() => setMode('quick')}
-            className={cn(
-              'flex-1 py-2 text-xs font-medium rounded-md transition-all text-center',
-              mode === 'quick'
-                ? 'bg-red-900/60 text-parchment-100 border border-red-500/40'
-                : 'text-parchment-500 hover:text-parchment-300',
-            )}
-          >
-            {t.game.quickVote}
-          </button>
-          <button
             onClick={() => setMode('detailed')}
             className={cn(
               'flex-1 py-2 text-xs font-medium rounded-md transition-all text-center',
@@ -218,6 +207,17 @@ export function VotingPhase({
             )}
           >
             {t.game.detailedVote}
+          </button>
+          <button
+            onClick={() => setMode('quick')}
+            className={cn(
+              'flex-1 py-2 text-xs font-medium rounded-md transition-all text-center',
+              mode === 'quick'
+                ? 'bg-red-900/60 text-parchment-100 border border-red-500/40'
+                : 'text-parchment-500 hover:text-parchment-300',
+            )}
+          >
+            {t.game.quickVote}
           </button>
         </div>
       </div>

@@ -379,6 +379,7 @@ function applyPlayerChanges(
           id: generateId(),
           type: e.type,
           data: e.data,
+          sourcePlayerId: e.sourcePlayerId,
           expiresAt: e.expiresAt,
         }))
         effects = [...effects, ...newEffects]

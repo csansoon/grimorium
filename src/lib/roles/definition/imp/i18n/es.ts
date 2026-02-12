@@ -9,6 +9,10 @@ const es = {
     'El Demonio eligió a {target}, pero su asesinato fue deflectado. Elige quién muere en su lugar.',
   deflectOriginalLabel: 'objetivo original',
 
+  // Role change reveal
+  roleChangedDescription:
+    'Ahora eres el Diablo. Cada noche, elegirás un jugador para matar.',
+
   // Self-kill conversion
   selectNewImpTitle: 'Seleccionar Nuevo Diablo',
   selectNewImpDescription:

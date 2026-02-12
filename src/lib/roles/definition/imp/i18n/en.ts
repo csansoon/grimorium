@@ -9,6 +9,10 @@ const en = {
     'The Demon targeted {target}, but their kill was deflected. Choose who dies instead.',
   deflectOriginalLabel: 'original target',
 
+  // Role change reveal
+  roleChangedDescription:
+    'You are now the Imp. Each night, you will choose a player to kill.',
+
   // Self-kill conversion
   selectNewImpTitle: 'Select New Imp',
   selectNewImpDescription:

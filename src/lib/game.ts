@@ -137,6 +137,7 @@ export function addHistoryEntry(
             id: generateId(),
             type: e.type,
             data: e.data,
+            sourcePlayerId: e.sourcePlayerId,
             expiresAt: e.expiresAt,
           }))
           effects = [...effects, ...newEffects]
@@ -765,10 +766,7 @@ export function getNightActionSummary(
   const messages: RichMessage[] = []
   for (let i = nightStartIndex + 1; i < game.history.length; i++) {
     const entry = game.history[i]
-    if (
-      entry.type === 'night_action' &&
-      entry.data.playerId === playerId
-    ) {
+    if (entry.type === 'night_action' && entry.data.playerId === playerId) {
       messages.push(entry.message)
     }
   }

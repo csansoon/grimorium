@@ -11,6 +11,7 @@ import { Translations } from '../i18n/types'
 export type EffectToAdd = {
   type: string
   data?: Record<string, unknown>
+  sourcePlayerId?: string
   expiresAt?: 'end_of_night' | 'end_of_day' | 'never'
 }
 

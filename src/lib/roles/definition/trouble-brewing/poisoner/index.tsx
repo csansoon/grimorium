@@ -110,6 +110,7 @@ const definition: RoleDefinition = {
           [target.id]: [
             {
               type: 'poisoned',
+              sourcePlayerId: player.id,
               data: { source: 'poisoner' },
               expiresAt: 'end_of_day',
             },
@@ -220,7 +221,7 @@ const definition: RoleDefinition = {
         player={player}
         title={roleT.info}
         description={roleT.selectPlayerToPoison}
-        audience="player_choice"
+        audience='player_choice'
       >
         <div className='mb-6'>
           <PlayerPickerList
