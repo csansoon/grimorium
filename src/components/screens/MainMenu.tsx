@@ -6,6 +6,7 @@ import {
 import { useI18n } from '../../lib/i18n'
 import { Icon } from '../atoms'
 import { MysticDivider } from '../items'
+import { cn } from '../../lib/utils'
 
 type Props = {
   onNewGame: () => void
@@ -60,7 +61,7 @@ export function MainMenu({
             </div>
           </div>
 
-          <h1 className='font-tarot text-4xl font-bold text-parchment-100 tracking-widest-xl uppercase mb-3'>
+          <h1 className='font-tarot text-3xl sm:text-4xl font-bold text-parchment-100 tracking-widest-xl uppercase mb-3'>
             {t.mainMenu.title}
           </h1>
           <p className='text-parchment-400 text-sm tracking-wider'>
@@ -151,36 +152,32 @@ export function MainMenu({
                 {t.mainMenu.previousGames}
               </span>
             </div>
-            <div className='space-y-1 max-h-48 overflow-y-auto'>
+            <div className='space-y-1'>
               {games.map((game) => (
                 <button
                   key={game.id}
                   onClick={() => onLoadGame(game.id)}
-                  className='w-full py-3 px-4 text-left hover:bg-white/5 rounded-lg transition-colors group'
+                  className='w-full py-3 px-4 text-left hover:bg-white/5 rounded-lg transition-colors group min-h-[44px]'
                 >
-                  <div className='flex justify-between items-center'>
-                    <div className='flex items-center gap-3'>
-                      <Icon
-                        name={game.phase === 'ended' ? 'checkCircle' : 'circle'}
-                        size='sm'
-                        className={
-                          game.phase === 'ended'
-                            ? 'text-green-500/70'
-                            : 'text-parchment-500'
-                        }
-                      />
-                      <div>
-                        <div className='text-parchment-200 group-hover:text-parchment-100'>
-                          {game.name}
-                        </div>
-                        <div className='text-xs text-parchment-500'>
-                          {game.playerCount} {t.common.players.toLowerCase()} •{' '}
-                          {formatPhase(game)}
-                        </div>
+                  <div className='flex items-start gap-3'>
+                    <Icon
+                      name={game.phase === 'ended' ? 'checkCircle' : 'circle'}
+                      size='sm'
+                      className={cn(
+                        'mt-0.5 shrink-0',
+                        game.phase === 'ended'
+                          ? 'text-green-500/70'
+                          : 'text-parchment-500',
+                      )}
+                    />
+                    <div className='flex-1 min-w-0'>
+                      <div className='text-parchment-200 group-hover:text-parchment-100 truncate'>
+                        {game.name}
                       </div>
-                    </div>
-                    <div className='text-xs text-parchment-500'>
-                      {formatDate(game.createdAt)}
+                      <div className='text-xs text-parchment-500'>
+                        {game.playerCount} {t.common.players.toLowerCase()} •{' '}
+                        {formatPhase(game)} • {formatDate(game.createdAt)}
+                      </div>
                     </div>
                   </div>
                 </button>

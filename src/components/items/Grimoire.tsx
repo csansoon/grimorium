@@ -7,7 +7,11 @@ import { Icon, Badge, IconName } from '../atoms'
 import { PlayerDetailModal } from './PlayerDetailModal'
 import { PlayerRoleIcon, filterVisibleEffects } from './PlayerRoleIcon'
 import { cn } from '../../lib/utils'
-import { getEffect, getEffectType, EFFECT_TYPE_BADGE_VARIANT } from '../../lib/effects'
+import {
+  getEffect,
+  getEffectType,
+  EFFECT_TYPE_BADGE_VARIANT,
+} from '../../lib/effects'
 
 type Props = {
   state: GameState
@@ -69,8 +73,8 @@ function PlayerRow({
             {player.name}
           </div>
           {effectBadges.map(({ id, icon, variant }) => (
-            <Badge key={id} variant={variant} className='px-1'>
-              <Icon name={icon} size='xs' />
+            <Badge key={id} variant={variant} className='px-1.5 py-0.5'>
+              <Icon name={icon} size='sm' />
             </Badge>
           ))}
         </div>

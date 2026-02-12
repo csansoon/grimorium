@@ -195,18 +195,18 @@ export function EditEffectsModal({
                           {hasConfig && (
                             <Button
                               onClick={() => handleEditEffect(effectInstance)}
-                              size='sm'
+                              size='icon'
                               variant='ghost'
-                              className='text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/20'
+                              className='text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/20 min-w-[44px] min-h-[44px]'
                             >
                               <Icon name='pencil' size='sm' />
                             </Button>
                           )}
                           <Button
                             onClick={() => handleRemoveEffect(effectInstance.type)}
-                            size='sm'
+                            size='icon'
                             variant='ghost'
-                            className='text-red-400 hover:text-red-300 hover:bg-red-900/20'
+                            className='text-red-400 hover:text-red-300 hover:bg-red-900/20 min-w-[44px] min-h-[44px]'
                           >
                             <Icon name='minus' size='sm' />
                           </Button>
@@ -236,7 +236,7 @@ export function EditEffectsModal({
                 {t.ui.addEffect}
               </span>
             </div>
-            <div className='grid grid-cols-2 gap-2'>
+            <div className='space-y-1.5'>
               {allEffects.map((effect) => {
                 const effectName = getEffectName(effect.id)
                 const alreadyHas = hasEffect(player, effect.id)
@@ -247,15 +247,15 @@ export function EditEffectsModal({
                     key={effect.id}
                     onClick={() => handleAddEffect(effect)}
                     disabled={alreadyHas}
-                    className={`flex items-center gap-2 p-3 rounded-lg border transition-colors text-left ${
+                    className={`flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-lg border transition-colors text-left w-full ${
                       alreadyHas
                         ? 'bg-white/5 border-white/5 opacity-40 cursor-not-allowed'
-                        : 'bg-white/5 border-white/10 hover:border-green-500/50 hover:bg-green-900/20'
+                        : 'bg-white/5 border-white/10 hover:border-green-500/50 hover:bg-green-900/20 active:bg-green-900/30'
                     }`}
                   >
                     <Icon
                       name={effect.icon}
-                      size='sm'
+                      size='md'
                       className={
                         alreadyHas ? 'text-parchment-500' : 'text-parchment-300'
                       }

@@ -49,7 +49,6 @@ type GrimoireView =
       effectInstance?: EffectInstance
     }
 
-
 export type GrimoireIntent =
   | { view: 'list'; readOnly?: boolean }
   | { view: 'player_detail'; player: PlayerState; readOnly?: boolean }
@@ -61,7 +60,11 @@ type Props = {
   onClose: () => void
   intent?: GrimoireIntent
   onShowRoleCard?: (player: PlayerState) => void
-  onAddEffect: (playerId: string, effectType: string, data?: Record<string, unknown>) => void
+  onAddEffect: (
+    playerId: string,
+    effectType: string,
+    data?: Record<string, unknown>,
+  ) => void
   onRemoveEffect: (playerId: string, effectType: string) => void
   onUpdateEffect: (
     playerId: string,
@@ -209,7 +212,9 @@ export function GrimoireModal({
               player={getPlayer(state, view.player.id) ?? view.player}
               onAddEffect={onAddEffect}
               onRemoveEffect={onRemoveEffect}
-              onBack={() => setView({ type: 'player_detail', player: view.player })}
+              onBack={() =>
+                setView({ type: 'player_detail', player: view.player })
+              }
               onOpenConfig={(effectDef, mode, effectInstance) =>
                 setView({
                   type: 'effect_config',
@@ -233,11 +238,7 @@ export function GrimoireModal({
                 if (view.mode === 'add') {
                   onAddEffect(view.player.id, view.effectDef.id, data)
                 } else if (view.effectInstance) {
-                  onUpdateEffect(
-                    view.player.id,
-                    view.effectInstance.type,
-                    data,
-                  )
+                  onUpdateEffect(view.player.id, view.effectInstance.type, data)
                 }
                 setView({ type: 'edit_effects', player: view.player })
               }}
@@ -450,7 +451,11 @@ function EditEffectsContent({
   onOpenConfig,
 }: {
   player: PlayerState
-  onAddEffect: (playerId: string, effectType: string, data?: Record<string, unknown>) => void
+  onAddEffect: (
+    playerId: string,
+    effectType: string,
+    data?: Record<string, unknown>,
+  ) => void
   onRemoveEffect: (playerId: string, effectType: string) => void
   onBack: () => void
   onOpenConfig: (
@@ -481,9 +486,7 @@ function EditEffectsContent({
 
   return (
     <div className='space-y-6'>
-      <p className='text-parchment-400 text-sm text-center'>
-        {player.name}
-      </p>
+      <p className='text-parchment-400 text-sm text-center'>{player.name}</p>
 
       <div>
         <div className='flex items-center gap-2 mb-3'>
@@ -493,9 +496,7 @@ function EditEffectsContent({
           </span>
         </div>
         {currentEffectTypes.length === 0 ? (
-          <p className='text-parchment-500 text-sm italic'>
-            {t.ui.noEffects}
-          </p>
+          <p className='text-parchment-500 text-sm italic'>{t.ui.noEffects}</p>
         ) : (
           <div className='space-y-2'>
             {player.effects.map((effectInstance, index) => {
@@ -526,18 +527,20 @@ function EditEffectsContent({
                       {hasConfig && (
                         <Button
                           onClick={() => handleEditEffect(effectInstance)}
-                          size='sm'
+                          size='icon'
                           variant='ghost'
-                          className='text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/20'
+                          className='text-cyan-400 hover:text-cyan-300 hover:bg-cyan-900/20 min-w-[44px] min-h-[44px]'
                         >
                           <Icon name='pencil' size='sm' />
                         </Button>
                       )}
                       <Button
-                        onClick={() => onRemoveEffect(player.id, effectInstance.type)}
-                        size='sm'
+                        onClick={() =>
+                          onRemoveEffect(player.id, effectInstance.type)
+                        }
+                        size='icon'
                         variant='ghost'
-                        className='text-red-400 hover:text-red-300 hover:bg-red-900/20'
+                        className='text-red-400 hover:text-red-300 hover:bg-red-900/20 min-w-[44px] min-h-[44px]'
                       >
                         <Icon name='minus' size='sm' />
                       </Button>
@@ -565,7 +568,7 @@ function EditEffectsContent({
             {t.ui.addEffect}
           </span>
         </div>
-        <div className='grid grid-cols-2 gap-2'>
+        <div className='space-y-1.5'>
           {allEffects.map((effect) => {
             const effectName = getEffectName(effect.id)
             const alreadyHas = hasEffect(player, effect.id)
@@ -577,7 +580,7 @@ function EditEffectsContent({
                 onClick={() => handleAddEffect(effect)}
                 disabled={alreadyHas}
                 className={cn(
-                  'flex items-center gap-2 p-3 rounded-lg border transition-colors text-left',
+                  'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg border transition-colors text-left min-h-[44px]',
                   alreadyHas
                     ? 'bg-white/5 border-white/5 opacity-40 cursor-not-allowed'
                     : 'bg-white/5 border-white/10 hover:border-green-500/50 hover:bg-green-900/20',
@@ -585,7 +588,7 @@ function EditEffectsContent({
               >
                 <Icon
                   name={effect.icon}
-                  size='sm'
+                  size='md'
                   className={
                     alreadyHas ? 'text-parchment-500' : 'text-parchment-300'
                   }
@@ -599,7 +602,11 @@ function EditEffectsContent({
                   {effectName}
                 </span>
                 {hasConfig && !alreadyHas && (
-                  <Icon name='settings' size='xs' className='text-parchment-500' />
+                  <Icon
+                    name='settings'
+                    size='xs'
+                    className='text-parchment-500'
+                  />
                 )}
               </button>
             )

@@ -113,7 +113,7 @@ export function NightDashboard({
               {t.game.nightDashboard}
             </span>
           </div>
-          <div className='space-y-1'>
+          <div className='space-y-2'>
             {items.map((item, index) =>
               item.type === 'night_action' ? (
                 <NightActionRow

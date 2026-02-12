@@ -205,35 +205,44 @@ export function VotingPhase({
                   <button
                     onClick={() => handleVote(player.id, 'for')}
                     className={cn(
-                      'flex-1 py-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 active:scale-[0.95]',
+                      'flex-1 py-2.5 rounded-lg text-xs font-medium transition-all flex flex-col items-center justify-center gap-0.5 active:scale-[0.95] min-h-[48px]',
                       currentVote === 'for'
                         ? 'bg-green-600 text-white'
                         : 'bg-white/5 text-parchment-400 hover:bg-white/10',
                     )}
                   >
                     <Icon name='thumbsUp' size='sm' />
+                    <span className='text-[10px] leading-tight'>
+                      {t.game.votesFor}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleVote(player.id, 'against')}
                     className={cn(
-                      'flex-1 py-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 active:scale-[0.95]',
+                      'flex-1 py-2.5 rounded-lg text-xs font-medium transition-all flex flex-col items-center justify-center gap-0.5 active:scale-[0.95] min-h-[48px]',
                       currentVote === 'against'
                         ? 'bg-red-600 text-white'
                         : 'bg-white/5 text-parchment-400 hover:bg-white/10',
                     )}
                   >
                     <Icon name='thumbsDown' size='sm' />
+                    <span className='text-[10px] leading-tight'>
+                      {t.game.votesAgainst}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleVote(player.id, 'abstain')}
                     className={cn(
-                      'flex-1 py-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 active:scale-[0.95]',
+                      'flex-1 py-2.5 rounded-lg text-xs font-medium transition-all flex flex-col items-center justify-center gap-0.5 active:scale-[0.95] min-h-[48px]',
                       currentVote === 'abstain'
                         ? 'bg-parchment-500 text-grimoire-dark'
                         : 'bg-white/5 text-parchment-400 hover:bg-white/10',
                     )}
                   >
                     <Icon name='minus' size='sm' />
+                    <span className='text-[10px] leading-tight'>
+                      {t.game.abstain}
+                    </span>
                   </button>
                 </div>
               </div>

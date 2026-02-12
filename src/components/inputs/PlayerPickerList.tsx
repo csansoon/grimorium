@@ -67,7 +67,7 @@ export function PlayerPickerList({
   const getRoleName = (roleId: string) => getRegistryRoleName(roleId, language)
 
   return (
-    <div className='space-y-1.5'>
+    <div className='space-y-2'>
       {players.map((player) => {
         const isSelected = selected.includes(player.id)
         // When selectionCount === 1, allow tapping a different item to replace (radio behavior)
@@ -125,17 +125,19 @@ export function PlayerPickerList({
               <div className='flex items-center gap-1.5 mt-0.5'>
                 {role && team && (
                   <>
-                    <span className={cn('text-[11px]', team.colors.text)}>
+                    <span className={cn('text-xs', team.colors.text)}>
                       {getRoleName(role.id)}
                     </span>
                     <span className='text-parchment-600'>&middot;</span>
                     <span
                       className={cn(
-                        'text-[11px]',
+                        'text-xs',
                         team.isEvil ? 'text-red-400/70' : 'text-blue-300/70',
                       )}
                     >
-                      {team.isEvil ? t.game.registerAsEvil : t.game.registerAsGood}
+                      {team.isEvil
+                        ? t.game.registerAsEvil
+                        : t.game.registerAsGood}
                     </span>
                   </>
                 )}

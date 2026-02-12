@@ -4,7 +4,7 @@ import { SCRIPTS } from '../../lib/scripts'
 import { RoleId } from '../../lib/roles/types'
 import { getTeam, TeamId } from '../../lib/teams'
 import { useI18n, getRoleName, getRoleDescription } from '../../lib/i18n'
-import { Icon } from '../atoms'
+import { Icon, BackButton } from '../atoms'
 import { RoleCard } from '../items/RoleCard'
 import { TeamBackground, CardLink } from '../items/TeamBackground'
 import { MysticDivider } from '../items'
@@ -71,24 +71,24 @@ export function RolesLibrary({
         <button
           onClick={goToPrev}
           className={cn(
-            'absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-colors',
+            'absolute left-1 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors',
             selectedTeam.isEvil
               ? 'text-red-400/50 hover:text-red-300 hover:bg-red-900/20'
               : 'text-parchment-400/50 hover:text-parchment-200 hover:bg-white/10',
           )}
         >
-          <Icon name='chevronLeft' size='lg' />
+          <Icon name='chevronLeft' size='xl' />
         </button>
         <button
           onClick={goToNext}
           className={cn(
-            'absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-colors',
+            'absolute right-1 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors',
             selectedTeam.isEvil
               ? 'text-red-400/50 hover:text-red-300 hover:bg-red-900/20'
               : 'text-parchment-400/50 hover:text-parchment-200 hover:bg-white/10',
           )}
         >
-          <Icon name='chevronRight' size='lg' />
+          <Icon name='chevronRight' size='xl' />
         </button>
 
         <RoleCard roleId={selectedRoleId} />
@@ -104,12 +104,7 @@ export function RolesLibrary({
       {/* Header */}
       <div className='px-4 pt-6 pb-4'>
         <div className='flex items-center gap-3 mb-4'>
-          <button
-            onClick={onBack}
-            className='w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-parchment-400 hover:bg-white/10 transition-colors'
-          >
-            <Icon name='arrowLeft' size='md' />
-          </button>
+          <BackButton onClick={onBack} />
           <div>
             <h1 className='font-tarot text-xl text-parchment-100 tracking-wider uppercase'>
               {t.mainMenu.rolesLibrary}

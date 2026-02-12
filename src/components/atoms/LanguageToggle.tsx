@@ -33,7 +33,7 @@ export function LanguageToggle({ variant = 'button', className = '' }: Props) {
   return (
     <button
       onClick={toggleLanguage}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-mystic-gold/30 text-mystic-gold/70 hover:text-mystic-gold hover:border-mystic-gold/50 transition-colors text-sm ${className}`}
+      className={`flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-full border border-mystic-gold/30 text-mystic-gold/70 hover:text-mystic-gold hover:border-mystic-gold/50 transition-colors text-sm ${className}`}
     >
       <Icon name='globe' size='sm' />
       {LANGUAGE_LABELS[language]}

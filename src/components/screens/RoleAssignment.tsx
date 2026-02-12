@@ -170,9 +170,9 @@ export function RoleAssignment({
           </div>
 
           {/* Players list */}
-          <div className='flex items-center gap-2 mb-2'>
-            <Icon name='users' size='sm' className='text-parchment-500' />
-            <span className='text-xs text-parchment-400'>
+          <div className='flex items-start gap-2 mb-2'>
+            <Icon name='users' size='sm' className='text-parchment-500 mt-0.5 flex-shrink-0' />
+            <span className='text-xs text-parchment-400 line-clamp-2'>
               {players.join(', ')}
             </span>
           </div>
@@ -279,7 +279,7 @@ export function RoleAssignment({
                     {isExpanded && (
                       <div className='px-3 pb-3 pt-0'>
                         <div className='border-t border-white/10 pt-3'>
-                          <div className='flex flex-wrap gap-1.5'>
+                          <div className='flex flex-wrap gap-2'>
                             {/* Random option */}
                             <button
                               type='button'
@@ -288,7 +288,7 @@ export function RoleAssignment({
                                 setExpandedPlayer(null)
                               }}
                               className={cn(
-                                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors border',
+                                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors border min-h-[36px]',
                                 !currentRole
                                   ? 'bg-mystic-gold/20 border-mystic-gold/40 text-mystic-gold'
                                   : 'bg-white/5 border-white/20 text-parchment-400 hover:bg-white/10',
@@ -314,7 +314,7 @@ export function RoleAssignment({
                                     setExpandedPlayer(null)
                                   }}
                                   className={cn(
-                                    'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-colors border',
+                                    'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors border min-h-[36px]',
                                     isAssigned
                                       ? cn(
                                           rTeam.colors.badge,

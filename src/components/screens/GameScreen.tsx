@@ -687,7 +687,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
       {/* Floating Action Buttons */}
       {showFloatingButtons && (
-        <div className='fixed bottom-4 right-4 flex flex-col gap-2'>
+        <div className='fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 flex flex-col gap-2'>
           <button
             onClick={() => {
               setGrimoireIntent({ view: 'list' })

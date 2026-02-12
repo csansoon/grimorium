@@ -158,9 +158,7 @@ export function PlayerEntry({ onNext, onBack }: Props) {
   }
 
   const updatePlayer = (index: number, name: string) => {
-    setPlayers((prev) =>
-      prev.map((p, i) => (i === index ? { ...p, name } : p)),
-    )
+    setPlayers((prev) => prev.map((p, i) => (i === index ? { ...p, name } : p)))
   }
 
   const removePlayer = (index: number) => {
@@ -231,7 +229,7 @@ export function PlayerEntry({ onNext, onBack }: Props) {
               {/* Drag handle */}
               <div
                 {...bindDrag(index)}
-                className='flex items-center justify-center w-8 shrink-0 py-3 text-parchment-500/40 hover:text-parchment-400 cursor-grab active:cursor-grabbing touch-none select-none'
+                className='flex items-center justify-center w-11 min-h-[44px] shrink-0 py-3 text-parchment-500/40 hover:text-parchment-400 cursor-grab active:cursor-grabbing touch-none select-none'
               >
                 <Icon name='gripVertical' size='md' />
               </div>

@@ -99,7 +99,7 @@ export function RoleRevelationScreen({
         {!allRevealed && (
           <button
             onClick={onStartNight}
-            className='w-full mt-3 text-center text-parchment-600 text-xs hover:text-parchment-400 transition-colors'
+            className='w-full mt-2 py-2 text-center text-parchment-600 text-xs hover:text-parchment-400 transition-colors min-h-[44px] flex items-center justify-center'
           >
             {t.game.skipRoleRevelation}
           </button>

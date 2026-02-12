@@ -175,7 +175,7 @@ const DialogContent = React.forwardRef<
         </DialogContentInner>
         <DialogPrimitive.Close
           ref={closeRef}
-          className='absolute right-4 top-4 p-2 rounded-full text-parchment-400 hover:text-parchment-100 hover:bg-white/10 active:bg-white/20 transition-colors'
+          className='absolute right-3 top-3 p-3 rounded-full text-parchment-400 hover:text-parchment-100 hover:bg-white/10 active:bg-white/20 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center'
         >
           <Icon name='x' size='md' />
           <span className='sr-only'>Close</span>
