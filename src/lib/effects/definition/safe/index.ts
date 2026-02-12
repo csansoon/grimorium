@@ -10,7 +10,7 @@ registerEffectTranslations('safe', 'es', es)
 
 const safeHandler: IntentHandler = {
   intentType: 'kill',
-  priority: 10, // After bounce (5) so redirected kills can still be blocked
+  priority: 10, // After deflect (5) so redirected kills can still be blocked
   appliesTo: (intent, effectPlayer) => {
     return intent.type === 'kill' && intent.targetId === effectPlayer.id
   },

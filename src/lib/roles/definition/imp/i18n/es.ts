@@ -3,11 +3,11 @@ const es = {
   description:
     'Cada noche*, elige un jugador: muere. Si te matas a ti mismo, un Secuaz se convierte en el Diablillo.',
 
-  // BounceRedirectUI
-  bounceTitle: '¡Asesinato Redirigido!',
-  bounceDescription:
-    'El Demonio eligió a {target}, pero su asesinato rebotó. Elige quién muere en su lugar.',
-  bounceOriginalLabel: 'objetivo original',
+  // DeflectRedirectUI
+  deflectTitle: '¡Asesinato Redirigido!',
+  deflectDescription:
+    'El Demonio eligió a {target}, pero su asesinato fue deflectado. Elige quién muere en su lugar.',
+  deflectOriginalLabel: 'objetivo original',
 
   // Self-kill conversion
   selectNewImpTitle: 'Seleccionar Nuevo Diablillo',
@@ -36,8 +36,8 @@ const es = {
   history: {
     choseToKill: '{player} eligió matar a {target}',
     failedToKill: '{player} intentó matar a {target}, pero estaba protegido/a',
-    bounceRedirected:
-      '{player} eligió a {target}, pero el asesinato fue redirigido a {redirect}',
+    deflectRedirected:
+      '{player} eligió a {target}, pero el asesinato fue deflectado a {redirect}',
     shownMinionsAndBluffs:
       '{player} vio a sus Secuaces y recibió faroles: ',
     selfKilled: '{player} (Diablillo) eligió matarse a sí mismo/a',

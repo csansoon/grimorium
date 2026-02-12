@@ -150,9 +150,9 @@ describe('handler behavior', () => {
   })
 
   it('request_ui pauses pipeline and returns needs_input', () => {
-    // Bounce effect on the targeted player — UI is requested
+    // Deflect effect on the targeted player — UI is requested
     const players = [
-      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
       makePlayer({ id: 'p2', roleId: 'imp' }),
       makePlayer({ id: 'p3', roleId: 'villager' }),
     ]
@@ -176,7 +176,7 @@ describe('handler behavior', () => {
 
   it('request_ui resume continues pipeline', () => {
     const players = [
-      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
       makePlayer({ id: 'p2', roleId: 'imp' }),
       makePlayer({ id: 'p3', roleId: 'villager' }),
     ]
@@ -205,9 +205,9 @@ describe('handler behavior', () => {
   })
 
   it('redirect restarts pipeline with new intent', () => {
-    // Bounce on p1, safe on p3 — kill bounces to p3, safe prevents it
+    // Deflect on p1, safe on p3 — kill deflects to p3, safe prevents it
     const players = [
-      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
       makePlayer({ id: 'p2', roleId: 'imp' }),
       addEffectTo(makePlayer({ id: 'p3', roleId: 'soldier' }), 'safe'),
     ]
@@ -221,7 +221,7 @@ describe('handler behavior', () => {
       cause: 'demon',
     }
 
-    // First: needs_input for bounce
+    // First: needs_input for deflect
     const result = resolveIntent(intent, state, game)
     expect(result.type).toBe('needs_input')
     if (result.type === 'needs_input') {
@@ -272,12 +272,12 @@ describe('mergeStateChanges', () => {
     }
     const b: StateChanges = {
       entries: [],
-      removeEffects: { p1: ['pure'], p2: ['bounce'] },
+      removeEffects: { p1: ['pure'], p2: ['deflect'] },
     }
 
     const merged = mergeStateChanges(a, b)
     expect(merged.removeEffects!['p1']).toEqual(['safe', 'pure'])
-    expect(merged.removeEffects!['p2']).toEqual(['bounce'])
+    expect(merged.removeEffects!['p2']).toEqual(['deflect'])
   })
 
   it('returns target unchanged when source is undefined', () => {

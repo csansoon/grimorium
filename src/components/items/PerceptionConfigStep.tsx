@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { GameState, PlayerState } from '../../lib/types'
 import { getRole } from '../../lib/roles'
-import { getEffect } from '../../lib/effects'
+import { getEffect, resolveCanRegisterAs } from '../../lib/effects'
 import {
   useI18n,
   getRoleName as getRegistryRoleName,
@@ -104,15 +104,14 @@ export function PerceptionConfigStep({
           // Find the effect that grants misregistration for display
           const misregisterEffect = player.effects.find((e) => {
             const def = getEffect(e.type)
-            if (!def?.canRegisterAs) return false
-            if (context === 'alignment' && def.canRegisterAs.alignments?.length)
+            const canReg = resolveCanRegisterAs(e, def)
+            if (!canReg) return false
+            if (context === 'alignment' && canReg.alignments?.length)
               return true
-            if (context === 'team' && def.canRegisterAs.teams?.length)
-              return true
+            if (context === 'team' && canReg.teams?.length) return true
             if (
               context === 'role' &&
-              (def.canRegisterAs.teams?.length ||
-                def.canRegisterAs.alignments?.length)
+              (canReg.teams?.length || canReg.alignments?.length)
             )
               return true
             return false

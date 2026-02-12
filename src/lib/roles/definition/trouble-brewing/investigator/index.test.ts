@@ -126,14 +126,20 @@ describe('Investigator', () => {
       expect(perception.team).toBe('minion') // false positive
     })
 
-    it('Recluse with recluse_misregister can register as minion', () => {
+    it('Recluse with misregister can register as minion', () => {
       const investigator = makePlayer({
         id: 'p1',
         roleId: 'investigator',
       })
       const recluse = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'recluse' }),
-        'recluse_misregister',
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['minion', 'demon'],
+            alignments: ['evil'],
+          },
+        },
       )
       const state = makeState({ players: [investigator, recluse] })
 
@@ -141,7 +147,7 @@ describe('Investigator', () => {
       const perception = perceive(recluse, investigator, 'team', state)
       expect(perception.team).toBe('outsider')
 
-      // But canRegisterAsTeam returns true (declared by the effect)
+      // But canRegisterAsTeam returns true (declared by instance data)
       expect(canRegisterAsTeam(recluse, 'minion')).toBe(true)
       expect(canRegisterAsTeam(recluse, 'demon')).toBe(true)
     })
@@ -153,8 +159,14 @@ describe('Investigator', () => {
       })
       const recluse = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'recluse' }),
-        'recluse_misregister',
-        { perceiveAs: { team: 'minion', alignment: 'evil' } },
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['minion', 'demon'],
+            alignments: ['evil'],
+          },
+          perceiveAs: { team: 'minion', alignment: 'evil' },
+        },
       )
       const state = makeState({ players: [investigator, recluse] })
 

@@ -15,8 +15,8 @@ const definition: RoleDefinition = {
   icon: 'landmark',
   nightOrder: null, // Doesn't wake at night — passive ability
 
-  // Mayor gets Bounce effect at game start (redirects Demon kills)
-  initialEffects: [{ type: 'bounce', expiresAt: 'never' }],
+  // Mayor gets Deflect effect at game start (redirects Demon kills)
+  initialEffects: [{ type: 'deflect', expiresAt: 'never' }],
 
   // Mayor's peaceful victory: 3 alive, no execution today, Mayor alive
   winConditions: [

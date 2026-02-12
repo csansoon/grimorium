@@ -6,10 +6,10 @@ import { PlayerPickerList } from '../inputs'
 import { Button, Icon } from '../atoms'
 
 /**
- * Pipeline UI component shown when a kill is redirected by the Bounce effect.
+ * Pipeline UI component shown when a kill is redirected by the Deflect effect.
  * The narrator selects a new target for the kill (or keeps the original).
  */
-export function BounceRedirectUI({
+export function DeflectRedirectUI({
   state,
   intent,
   onComplete,
@@ -35,10 +35,10 @@ export function BounceRedirectUI({
             <Icon name='trendingUpDown' size='2xl' className='text-amber-400' />
           </div>
           <h2 className='font-tarot text-xl text-parchment-100 tracking-wider uppercase mb-2'>
-            {impT.bounceTitle}
+            {impT.deflectTitle}
           </h2>
           <p className='text-parchment-400 text-sm'>
-            {interpolate(impT.bounceDescription, {
+            {interpolate(impT.deflectDescription, {
               target: originalTarget?.name ?? '?',
             })}
           </p>

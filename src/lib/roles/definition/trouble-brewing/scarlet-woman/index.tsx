@@ -14,7 +14,7 @@ registerRoleTranslations('scarlet_woman', 'es', es)
  * If there are 5 or more players alive and the Demon dies,
  * the Scarlet Woman becomes the Demon.
  *
- * This is a passive role. All behavior is on the `scarlet_woman` effect,
+ * This is a passive role. All behavior is on the `demon_successor` effect,
  * which intercepts kill and execute intents targeting Demons.
  */
 const definition: RoleDefinition = {
@@ -23,8 +23,8 @@ const definition: RoleDefinition = {
   icon: 'rose',
   nightOrder: null, // Doesn't wake at night — passive ability
 
-  // Scarlet Woman gets her effect at game start
-  initialEffects: [{ type: 'scarlet_woman', expiresAt: 'never' }],
+  // Scarlet Woman gets demon_successor effect at game start
+  initialEffects: [{ type: 'demon_successor', expiresAt: 'never' }],
 
   RoleReveal: DefaultRoleReveal,
 

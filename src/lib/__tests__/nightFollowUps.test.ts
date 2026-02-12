@@ -249,16 +249,16 @@ describe('getNightRolesStatus', () => {
 // Integration: Scarlet Woman handler adds pending_role_reveal effect
 // ============================================================================
 
-describe('Scarlet Woman → pending_role_reveal integration', () => {
-  it('Scarlet Woman handler adds pending_role_reveal when Demon dies', async () => {
-    // Use the real ScarletWoman effect
-    const { default: swDef } =
-      await import('../effects/definition/scarlet-woman')
-    const handler = swDef.handlers![0]
+describe('Demon Successor → pending_role_reveal integration', () => {
+  it('Demon Successor handler adds pending_role_reveal when Demon dies', async () => {
+    // Use the real DemonSuccessor effect
+    const { default: successorDef } =
+      await import('../effects/definition/demon-successor')
+    const handler = successorDef.handlers![0]
 
     const demon = makePlayer({ id: 'demon', roleId: 'imp' })
     let sw = makePlayer({ id: 'sw', roleId: 'scarlet_woman' })
-    sw = addEffectTo(sw, 'scarlet_woman')
+    sw = addEffectTo(sw, 'demon_successor')
     const others = Array.from({ length: 4 }, (_, i) =>
       makePlayer({ id: `p${i}`, roleId: 'villager' }),
     )
@@ -285,9 +285,9 @@ describe('Scarlet Woman → pending_role_reveal integration', () => {
         sw: [{ type: 'pending_role_reveal', expiresAt: 'never' }],
       })
 
-      // Removes scarlet_woman
+      // Removes demon_successor
       expect(result.stateChanges?.removeEffects).toEqual({
-        sw: ['scarlet_woman'],
+        sw: ['demon_successor'],
       })
 
       // The pending_role_reveal effect should produce a follow-up

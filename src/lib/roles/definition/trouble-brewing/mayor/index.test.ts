@@ -151,15 +151,15 @@ describe('Mayor', () => {
   })
 
   // ================================================================
-  // BOUNCE (handled by Bounce effect — see Bounce.test.ts)
+  // DEFLECT (handled by Deflect effect — see Deflect.test.ts)
   // ================================================================
 
-  describe('bounce ability', () => {
-    it('declares bounce as an initial effect', () => {
+  describe('deflect ability', () => {
+    it('declares deflect as an initial effect', () => {
       expect(definition.initialEffects).toBeDefined()
-      expect(definition.initialEffects!.some((e) => e.type === 'bounce')).toBe(
-        true,
-      )
+      expect(
+        definition.initialEffects!.some((e) => e.type === 'deflect'),
+      ).toBe(true)
     })
   })
 })

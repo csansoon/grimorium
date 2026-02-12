@@ -11,31 +11,31 @@ import {
 
 beforeEach(() => resetPlayerCounter())
 
-describe('ScarletWoman effect', () => {
+describe('DemonSuccessor effect', () => {
   const handler = definition.handlers![0]
 
-  // Helper to create a standard 5+ player state with an alive SW
+  // Helper to create a standard 5+ player state with an alive successor
   function makeScenario(overrides?: {
     aliveCount?: number
-    swDead?: boolean
+    successorDead?: boolean
     targetRole?: string
   }) {
     const {
       aliveCount = 6,
-      swDead = false,
+      successorDead = false,
       targetRole = 'imp',
     } = overrides ?? {}
 
     const demon = makePlayer({ id: 'demon', roleId: targetRole })
     let sw = makePlayer({ id: 'sw', roleId: 'scarlet_woman' })
-    sw = addEffectTo(sw, 'scarlet_woman')
-    if (swDead) {
+    sw = addEffectTo(sw, 'demon_successor')
+    if (successorDead) {
       sw = addEffectTo(sw, 'dead')
     }
 
     const others: ReturnType<typeof makePlayer>[] = []
     // Need enough alive players (demon + sw + others = aliveCount)
-    const othersNeeded = aliveCount - (swDead ? 1 : 2) // demon is alive, sw may or may not be
+    const othersNeeded = aliveCount - (successorDead ? 1 : 2) // demon is alive, sw may or may not be
     for (let i = 0; i < othersNeeded; i++) {
       others.push(makePlayer({ id: `p${i}`, roleId: 'villager' }))
     }
@@ -103,7 +103,7 @@ describe('ScarletWoman effect', () => {
     it('does not apply when the target is not a Demon', () => {
       const villager = makePlayer({ id: 'victim', roleId: 'villager' })
       let sw = makePlayer({ id: 'sw', roleId: 'scarlet_woman' })
-      sw = addEffectTo(sw, 'scarlet_woman')
+      sw = addEffectTo(sw, 'demon_successor')
       const others = Array.from({ length: 4 }, (_, i) =>
         makePlayer({ id: `p${i}`, roleId: 'villager' }),
       )
@@ -121,8 +121,11 @@ describe('ScarletWoman effect', () => {
       expect(handler.appliesTo(intent, sw, state)).toBe(false)
     })
 
-    it('does not apply when the Scarlet Woman is dead', () => {
-      const { sw, state } = makeScenario({ aliveCount: 6, swDead: true })
+    it('does not apply when the successor is dead', () => {
+      const { sw, state } = makeScenario({
+        aliveCount: 6,
+        successorDead: true,
+      })
       const intent: ExecuteIntent = {
         type: 'execute',
         playerId: 'demon',
@@ -132,10 +135,10 @@ describe('ScarletWoman effect', () => {
       expect(handler.appliesTo(intent, sw, state)).toBe(false)
     })
 
-    it('does not apply when the Scarlet Woman is the target', () => {
-      // Edge case: if the SW somehow becomes a Demon and is killed
+    it('does not apply when the successor is the target', () => {
+      // Edge case: if the successor somehow becomes a Demon and is killed
       let swDemon = makePlayer({ id: 'sw', roleId: 'imp' })
-      swDemon = addEffectTo(swDemon, 'scarlet_woman')
+      swDemon = addEffectTo(swDemon, 'demon_successor')
       const others = Array.from({ length: 5 }, (_, i) =>
         makePlayer({ id: `p${i}`, roleId: 'villager' }),
       )
@@ -171,7 +174,7 @@ describe('ScarletWoman effect', () => {
       expect(result.action).toBe('allow')
     })
 
-    it("changes the Scarlet Woman's role to the Demon's role", () => {
+    it("changes the successor's role to the Demon's role", () => {
       const { sw, state, game } = makeScenario({ aliveCount: 6 })
       const intent: ExecuteIntent = {
         type: 'execute',
@@ -185,7 +188,7 @@ describe('ScarletWoman effect', () => {
       }
     })
 
-    it('removes the scarlet_woman effect and adds pending_role_reveal', () => {
+    it('removes the demon_successor effect and adds pending_role_reveal', () => {
       const { sw, state, game } = makeScenario({ aliveCount: 6 })
       const intent: ExecuteIntent = {
         type: 'execute',
@@ -196,7 +199,7 @@ describe('ScarletWoman effect', () => {
       const result = handler.handle(intent, sw, state, game)
       if (result.action === 'allow') {
         expect(result.stateChanges?.removeEffects).toEqual({
-          sw: ['scarlet_woman'],
+          sw: ['demon_successor'],
         })
         expect(result.stateChanges?.addEffects).toEqual({
           sw: [{ type: 'pending_role_reveal', expiresAt: 'never' }],
@@ -225,7 +228,7 @@ describe('ScarletWoman effect', () => {
     })
 
     it('inherits the specific Demon role (not hardcoded to imp)', () => {
-      // If there were a different demon type, SW should become that
+      // If there were a different demon type, successor should become that
       const { sw, state, game } = makeScenario({
         aliveCount: 6,
         targetRole: 'imp', // Currently only imp exists, but the handler is generic

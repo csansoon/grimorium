@@ -1,3 +1,4 @@
+import { FC } from 'react'
 import { IconName } from '../../components/atoms/icon'
 import { EffectInstance, GameState, PlayerState } from '../types'
 import { TeamId } from '../teams'
@@ -16,15 +17,14 @@ export type EffectId =
   | 'red_herring'
   | 'pure'
   | 'slayer_bullet'
-  | 'bounce'
+  | 'deflect'
   | 'martyrdom'
-  | 'scarlet_woman'
-  | 'recluse_misregister'
+  | 'demon_successor'
+  | 'misregister'
   | 'pending_role_reveal'
   | 'poisoned'
   | 'drunk'
   | 'butler_master'
-  | 'spy_misregister'
 
 /**
  * Semantic type of an effect for badge styling.
@@ -83,6 +83,11 @@ export type EffectDefinition = {
   // Declares that a player with this effect could register as these teams
   // and/or alignments. Used by narrator-setup UIs (e.g. Investigator) to
   // allow these players as valid picks even when perceiveAs isn't configured.
+  //
+  // Can also be provided per-instance via `EffectInstance.data.canRegisterAs`.
+  // Instance data takes precedence over the definition value. This allows
+  // a single generic effect (e.g., `misregister`) to be configured differently
+  // for different roles (Recluse vs Spy).
   canRegisterAs?: {
     teams?: TeamId[]
     alignments?: ('good' | 'evil')[]
@@ -98,4 +103,21 @@ export type EffectDefinition = {
    * Use when the same effect can have different types based on context.
    */
   getType?: (instance: EffectInstance) => EffectType
+
+  /**
+   * Custom description component for this effect.
+   * When provided, `PlayerDetailModal` renders this instead of the static i18n
+   * description string. This allows rich rendering with Badges for teams,
+   * alignments, roles, etc. — matching the quality of history RichMessages.
+   *
+   * Falls back to the static i18n description when not provided.
+   */
+  Description?: FC<EffectDescriptionProps>
+}
+
+export type EffectDescriptionProps = {
+  /** The effect instance with its data */
+  instance: EffectInstance
+  /** Current language code */
+  language: string
 }

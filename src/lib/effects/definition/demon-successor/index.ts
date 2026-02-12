@@ -11,22 +11,22 @@ import { registerEffectTranslations } from '../../../i18n'
 import en from './i18n/en'
 import es from './i18n/es'
 
-registerEffectTranslations('scarlet_woman', 'en', en)
-registerEffectTranslations('scarlet_woman', 'es', es)
+registerEffectTranslations('demon_successor', 'en', en)
+registerEffectTranslations('demon_successor', 'es', es)
 
 /**
- * Scarlet Woman effect handler.
+ * Demon Successor effect handler.
  *
  * When the Demon dies (via kill or execution) and there are 5 or more
- * alive non-Traveller players, the Scarlet Woman becomes the Demon.
+ * alive non-Traveller players, the player with this effect becomes the Demon.
  * The handler allows the kill/execution to proceed but piggybacks
  * a role change onto the state changes.
  *
  * Priority 15: runs AFTER protection handlers (Safe at 10) so that
  * if the kill is prevented, this handler never executes. If the kill
- * is allowed, the Scarlet Woman transforms.
+ * is allowed, the successor transforms.
  */
-const scarletWomanHandler: IntentHandler = {
+const demonSuccessorHandler: IntentHandler = {
   intentType: ['kill', 'execute'],
   priority: 15,
   appliesTo: (intent, effectPlayer, state) => {
@@ -46,10 +46,10 @@ const scarletWomanHandler: IntentHandler = {
     const targetRole = getRole(target.roleId)
     if (targetRole?.team !== 'demon') return false
 
-    // The Scarlet Woman (effect holder) must be alive
+    // The successor (effect holder) must be alive
     if (hasEffect(effectPlayer, 'dead')) return false
 
-    // The Scarlet Woman must not be the target themselves
+    // The successor must not be the target themselves
     if (effectPlayer.id === targetId) return false
 
     // 5+ alive players (Travellers don't count — none exist yet)
@@ -57,7 +57,7 @@ const scarletWomanHandler: IntentHandler = {
     return aliveCount >= 5
   },
   handle: (intent, effectPlayer, state) => {
-    // Determine the demon's role so the SW inherits it
+    // Determine the demon's role so the successor inherits it
     let targetId: string
     if (intent.type === 'kill') {
       targetId = (intent as KillIntent).targetId
@@ -99,7 +99,7 @@ const scarletWomanHandler: IntentHandler = {
           ],
         },
         removeEffects: {
-          [effectPlayer.id]: ['scarlet_woman'],
+          [effectPlayer.id]: ['demon_successor'],
         },
       },
     }
@@ -107,10 +107,10 @@ const scarletWomanHandler: IntentHandler = {
 }
 
 const definition: EffectDefinition = {
-  id: 'scarlet_woman',
-  icon: 'sparkles',
+  id: 'demon_successor',
+  icon: 'crown',
   defaultType: 'passive',
-  handlers: [scarletWomanHandler],
+  handlers: [demonSuccessorHandler],
 }
 
 export default definition

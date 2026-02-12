@@ -94,14 +94,22 @@ describe('Spy', () => {
   })
 
   // ================================================================
-  // PERCEPTION — Spy's misregistration via spy_misregister effect
+  // PERCEPTION — Spy's misregistration via misregister effect
   // ================================================================
 
-  describe('perception integration (spy_misregister)', () => {
+  describe('perception integration (misregister)', () => {
+    const spyData = {
+      canRegisterAs: {
+        teams: ['townsfolk', 'outsider'],
+        alignments: ['good'],
+      },
+    }
+
     it('is detected by getAmbiguousPlayers for alignment context', () => {
       const spy = addEffectTo(
         makePlayer({ id: 's1', roleId: 'spy' }),
-        'spy_misregister',
+        'misregister',
+        spyData,
       )
       const villager = makePlayer({ id: 'v1', roleId: 'villager' })
 
@@ -113,7 +121,8 @@ describe('Spy', () => {
     it('is detected by getAmbiguousPlayers for team context', () => {
       const spy = addEffectTo(
         makePlayer({ id: 's1', roleId: 'spy' }),
-        'spy_misregister',
+        'misregister',
+        spyData,
       )
       const villager = makePlayer({ id: 'v1', roleId: 'villager' })
 
@@ -125,7 +134,8 @@ describe('Spy', () => {
     it('is detected by getAmbiguousPlayers for role context', () => {
       const spy = addEffectTo(
         makePlayer({ id: 's1', roleId: 'spy' }),
-        'spy_misregister',
+        'misregister',
+        spyData,
       )
 
       const ambiguous = getAmbiguousPlayers([spy], 'role')
@@ -135,7 +145,8 @@ describe('Spy', () => {
     it('canRegisterAsTeam returns true for townsfolk and outsider', () => {
       const spy = addEffectTo(
         makePlayer({ id: 's1', roleId: 'spy' }),
-        'spy_misregister',
+        'misregister',
+        spyData,
       )
 
       expect(canRegisterAsTeam(spy, 'townsfolk')).toBe(true)
@@ -147,7 +158,8 @@ describe('Spy', () => {
     it('canRegisterAsAlignment returns true for good', () => {
       const spy = addEffectTo(
         makePlayer({ id: 's1', roleId: 'spy' }),
-        'spy_misregister',
+        'misregister',
+        spyData,
       )
 
       expect(canRegisterAsAlignment(spy, 'good')).toBe(true)
@@ -160,10 +172,15 @@ describe('Spy', () => {
   // ================================================================
 
   describe('initialEffects', () => {
-    it('has spy_misregister as initial effect', () => {
-      expect(definition.initialEffects).toEqual([
-        { type: 'spy_misregister', expiresAt: 'never' },
-      ])
+    it('has misregister as initial effect with canRegisterAs data', () => {
+      expect(definition.initialEffects).toBeDefined()
+      expect(definition.initialEffects![0].type).toBe('misregister')
+      expect(definition.initialEffects![0].data).toEqual({
+        canRegisterAs: {
+          teams: ['townsfolk', 'outsider'],
+          alignments: ['good'],
+        },
+      })
     })
   })
 })

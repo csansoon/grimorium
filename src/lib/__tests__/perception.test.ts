@@ -335,18 +335,20 @@ describe('canRegisterAsTeam', () => {
     expect(canRegisterAsTeam(player, 'minion')).toBe(false)
   })
 
-  it('returns true for a player with recluse_misregister for minion team', () => {
+  it('returns true for a player with misregister for minion team (via instance data)', () => {
     const player = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     expect(canRegisterAsTeam(player, 'minion')).toBe(true)
   })
 
-  it('returns true for a player with recluse_misregister for demon team', () => {
+  it('returns true for a player with misregister for demon team (via instance data)', () => {
     const player = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     expect(canRegisterAsTeam(player, 'demon')).toBe(true)
   })
@@ -354,7 +356,8 @@ describe('canRegisterAsTeam', () => {
   it('returns false for a team not declared in canRegisterAs', () => {
     const player = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     expect(canRegisterAsTeam(player, 'townsfolk')).toBe(false)
   })
@@ -393,10 +396,11 @@ describe('canRegisterAsAlignment', () => {
     expect(canRegisterAsAlignment(player, 'evil')).toBe(false)
   })
 
-  it('returns true for a player with recluse_misregister for evil alignment', () => {
+  it('returns true for a player with misregister for evil alignment (via instance data)', () => {
     const player = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     expect(canRegisterAsAlignment(player, 'evil')).toBe(true)
   })
@@ -404,7 +408,8 @@ describe('canRegisterAsAlignment', () => {
   it('returns false for an alignment not declared in canRegisterAs', () => {
     const player = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     expect(canRegisterAsAlignment(player, 'good')).toBe(false)
   })
@@ -441,7 +446,8 @@ describe('getAmbiguousPlayers', () => {
   it('returns players with alignment misregistration for alignment context', () => {
     const recluse = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     const villager = makePlayer({ id: 'p2', roleId: 'villager' })
 
@@ -453,7 +459,8 @@ describe('getAmbiguousPlayers', () => {
   it('returns players with team misregistration for team context', () => {
     const recluse = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     const villager = makePlayer({ id: 'p2', roleId: 'villager' })
 
@@ -471,7 +478,8 @@ describe('getAmbiguousPlayers', () => {
 
     const player1 = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     const player2 = addEffectTo(
       makePlayer({ id: 'p2', roleId: 'imp' }),
@@ -517,7 +525,8 @@ describe('applyPerceptionOverrides', () => {
   it('injects perceiveAs data into canRegisterAs effects', () => {
     const recluse = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     const state = makeState({ players: [recluse] })
 
@@ -525,10 +534,10 @@ describe('applyPerceptionOverrides', () => {
       p1: { alignment: 'evil' },
     })
 
-    // The recluse_misregister effect should now have perceiveAs data
+    // The misregister effect should now have perceiveAs data
     const overriddenPlayer = overridden.players.find((p) => p.id === 'p1')!
     const misregisterEffect = overriddenPlayer.effects.find(
-      (e) => e.type === 'recluse_misregister',
+      (e) => e.type === 'misregister',
     )!
     expect(misregisterEffect.data?.perceiveAs).toEqual({
       alignment: 'evil',
@@ -539,7 +548,13 @@ describe('applyPerceptionOverrides', () => {
     const player = addEffectTo(
       addEffectTo(
         makePlayer({ id: 'p1', roleId: 'recluse' }),
-        'recluse_misregister',
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['minion', 'demon'],
+            alignments: ['evil'],
+          },
+        },
       ),
       'safe',
     )
@@ -557,7 +572,8 @@ describe('applyPerceptionOverrides', () => {
   it('does not modify players without overrides', () => {
     const recluse = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     const villager = makePlayer({ id: 'p2', roleId: 'villager' })
     const state = makeState({ players: [recluse, villager] })
@@ -573,7 +589,8 @@ describe('applyPerceptionOverrides', () => {
   it('integrates with perceive() to change perception results', () => {
     const recluse = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'recluse' }),
-      'recluse_misregister',
+      'misregister',
+      { canRegisterAs: { teams: ['minion', 'demon'], alignments: ['evil'] } },
     )
     const observer = makePlayer({ id: 'p2', roleId: 'chef' })
     const state = makeState({ players: [recluse, observer] })

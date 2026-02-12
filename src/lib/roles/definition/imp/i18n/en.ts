@@ -3,11 +3,11 @@ const en = {
   description:
     'Each night*, choose a player: they die. If you kill yourself, a Minion becomes the Imp.',
 
-  // BounceRedirectUI
-  bounceTitle: 'Kill Redirected!',
-  bounceDescription:
-    'The Demon targeted {target}, but their kill bounced. Choose who dies instead.',
-  bounceOriginalLabel: 'original target',
+  // DeflectRedirectUI
+  deflectTitle: 'Kill Redirected!',
+  deflectDescription:
+    'The Demon targeted {target}, but their kill was deflected. Choose who dies instead.',
+  deflectOriginalLabel: 'original target',
 
   // Self-kill conversion
   selectNewImpTitle: 'Select New Imp',
@@ -36,8 +36,8 @@ const en = {
   history: {
     choseToKill: '{player} chose to kill {target}',
     failedToKill: '{player} tried to kill {target}, but they were protected',
-    bounceRedirected:
-      '{player} targeted {target}, but the kill was redirected to {redirect}',
+    deflectRedirected:
+      '{player} targeted {target}, but the kill was deflected to {redirect}',
     shownMinionsAndBluffs:
       '{player} was shown their Minions and given bluffs: ',
     selfKilled: '{player} (Imp) chose to kill themselves',

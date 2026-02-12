@@ -73,13 +73,13 @@ describe('Safe effect', () => {
 })
 
 // ============================================================================
-// BOUNCE EFFECT (kill redirect)
+// DEFLECT EFFECT (kill redirect)
 // ============================================================================
 
-describe('Bounce effect', () => {
-  it('returns needs_input when kill targets player with bounce', () => {
+describe('Deflect effect', () => {
+  it('returns needs_input when kill targets player with deflect', () => {
     const players = [
-      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
       makePlayer({ id: 'p2', roleId: 'imp' }),
       makePlayer({ id: 'p3', roleId: 'villager' }),
     ]
@@ -99,7 +99,7 @@ describe('Bounce effect', () => {
 
   it('redirects kill to new target after resume', () => {
     const players = [
-      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
       makePlayer({ id: 'p2', roleId: 'imp' }),
       makePlayer({ id: 'p3', roleId: 'villager' }),
     ]
@@ -136,7 +136,7 @@ describe('Bounce effect', () => {
 
   it('allows kill on original target if narrator chooses same target', () => {
     const players = [
-      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
       makePlayer({ id: 'p2', roleId: 'imp' }),
     ]
     const state = makeState({ phase: 'night', round: 2, players })
@@ -163,10 +163,10 @@ describe('Bounce effect', () => {
     }
   })
 
-  it('bounce runs before safe (priority 5 < 10)', () => {
-    // Bounce on p1, safe on p3 — kill bounces to p3, then safe prevents it
+  it('deflect runs before safe (priority 5 < 10)', () => {
+    // Deflect on p1, safe on p3 — kill deflects to p3, then safe prevents it
     const players = [
-      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
       makePlayer({ id: 'p2', roleId: 'imp' }),
       addEffectTo(makePlayer({ id: 'p3', roleId: 'soldier' }), 'safe'),
     ]
@@ -181,7 +181,7 @@ describe('Bounce effect', () => {
     }
 
     const result = resolveIntent(intent, state, game)
-    expect(result.type).toBe('needs_input') // Bounce fires first
+    expect(result.type).toBe('needs_input') // Deflect fires first
     if (result.type === 'needs_input') {
       const afterResume = result.resume('p3') // Redirect to safe player
       expect(afterResume.type).toBe('prevented') // Safe prevents it
@@ -419,11 +419,11 @@ describe('Malfunction — handler bypass', () => {
     }
   })
 
-  it('bounce handler is bypassed when the mayor is poisoned', () => {
-    // Poisoned mayor with bounce — kill goes through without redirect
+  it('deflect handler is bypassed when the mayor is poisoned', () => {
+    // Poisoned mayor with deflect — kill goes through without redirect
     const players = [
       addEffectTo(
-        addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'bounce'),
+        addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'deflect'),
         'poisoned',
       ),
       makePlayer({ id: 'p2', roleId: 'imp' }),
@@ -439,7 +439,7 @@ describe('Malfunction — handler bypass', () => {
     }
 
     const result = resolveIntent(intent, state, game)
-    // Should resolve directly (no needs_input from bounce)
+    // Should resolve directly (no needs_input from deflect)
     expect(result.type).toBe('resolved')
     if (result.type === 'resolved') {
       expect(result.stateChanges.addEffects?.['p1']).toBeDefined()

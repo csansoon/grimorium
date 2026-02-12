@@ -1,6 +1,6 @@
 import { GameState, PlayerState, EffectInstance } from '../types'
 import { getRole } from '../roles/index'
-import { getEffect } from '../effects'
+import { getEffect, resolveCanRegisterAs } from '../effects'
 import { isEvilTeam, TeamId } from '../teams'
 import { Perception, PerceptionContext } from './types'
 
@@ -79,7 +79,8 @@ export function perceive(
 export function canRegisterAsTeam(player: PlayerState, team: TeamId): boolean {
   for (const effectInstance of player.effects) {
     const effectDef = getEffect(effectInstance.type)
-    if (effectDef?.canRegisterAs?.teams?.includes(team)) return true
+    const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)
+    if (canRegisterAs?.teams?.includes(team)) return true
   }
   return false
 }
@@ -99,7 +100,8 @@ export function canRegisterAsAlignment(
 ): boolean {
   for (const effectInstance of player.effects) {
     const effectDef = getEffect(effectInstance.type)
-    if (effectDef?.canRegisterAs?.alignments?.includes(alignment)) return true
+    const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)
+    if (canRegisterAs?.alignments?.includes(alignment)) return true
   }
   return false
 }
@@ -123,15 +125,14 @@ export function getAmbiguousPlayers(
   return players.filter((player) => {
     for (const effectInstance of player.effects) {
       const effectDef = getEffect(effectInstance.type)
-      if (!effectDef?.canRegisterAs) continue
-      if (context === 'alignment' && effectDef.canRegisterAs.alignments?.length)
+      const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)
+      if (!canRegisterAs) continue
+      if (context === 'alignment' && canRegisterAs.alignments?.length)
         return true
-      if (context === 'team' && effectDef.canRegisterAs.teams?.length)
-        return true
+      if (context === 'team' && canRegisterAs.teams?.length) return true
       if (
         context === 'role' &&
-        (effectDef.canRegisterAs.teams?.length ||
-          effectDef.canRegisterAs.alignments?.length)
+        (canRegisterAs.teams?.length || canRegisterAs.alignments?.length)
       )
         return true
     }
@@ -163,11 +164,13 @@ export function applyPerceptionOverrides(
       const override = overrides[player.id]
       if (!override) return player
 
-      // Find effects that declare canRegisterAs and inject perceiveAs data
+      // Find effects that declare canRegisterAs (on definition or instance)
+      // and inject perceiveAs data
       const updatedEffects: EffectInstance[] = player.effects.map(
         (effectInstance) => {
           const effectDef = getEffect(effectInstance.type)
-          if (!effectDef?.canRegisterAs) return effectInstance
+          const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)
+          if (!canRegisterAs) return effectInstance
 
           return {
             ...effectInstance,

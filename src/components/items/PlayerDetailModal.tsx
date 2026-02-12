@@ -1,7 +1,11 @@
 import { PlayerState, hasEffect } from '../../lib/types'
 import { getRole } from '../../lib/roles'
 import { getTeam, TeamId } from '../../lib/teams'
-import { getEffect, getEffectType, EFFECT_TYPE_BADGE_VARIANT } from '../../lib/effects'
+import {
+  getEffect,
+  getEffectType,
+  EFFECT_TYPE_BADGE_VARIANT,
+} from '../../lib/effects'
 import {
   useI18n,
   getRoleName as getRegistryRoleName,
@@ -143,6 +147,7 @@ export function PlayerDetailModal({
                     )
                     const effectType = getEffectType(effectInstance, effect)
                     const badgeVariant = EFFECT_TYPE_BADGE_VARIANT[effectType]
+                    const DescriptionComponent = effect?.Description
 
                     return (
                       <div
@@ -150,13 +155,28 @@ export function PlayerDetailModal({
                         className='bg-white/5 rounded-lg p-3 border border-white/10'
                       >
                         <div className='flex items-center gap-2'>
-                          {effect && <Icon name={effect.icon} size='xs' />}
-                          <Badge variant={badgeVariant}>{effectName}</Badge>
+                          {effect && (
+                            <Badge variant={badgeVariant}>
+                              <Icon name={effect.icon} size='xs' />
+                            </Badge>
+                          )}
+                          <span className='text-parchment-400 text-xs font-bold'>
+                            {effectName}
+                          </span>
                         </div>
-                        {effectDescription && (
-                          <p className='text-parchment-400 text-xs mt-2'>
-                            {effectDescription}
-                          </p>
+                        {DescriptionComponent ? (
+                          <div className='text-parchment-400 text-xs mt-2 leading-relaxed'>
+                            <DescriptionComponent
+                              instance={effectInstance}
+                              language={language}
+                            />
+                          </div>
+                        ) : (
+                          effectDescription && (
+                            <p className='text-parchment-400 text-xs mt-2'>
+                              {effectDescription}
+                            </p>
+                          )
                         )}
                       </div>
                     )

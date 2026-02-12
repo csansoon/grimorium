@@ -15,7 +15,19 @@ const definition: RoleDefinition = {
   nightOrder: null, // Doesn't wake at night — passive ability
 
   // Recluse gets misregister effect at game start (narrator configures perceiveAs data)
-  initialEffects: [{ type: 'recluse_misregister', expiresAt: 'never' }],
+  // canRegisterAs is stored on the instance data so the generic effect works for both Recluse and Spy
+  initialEffects: [
+    {
+      type: 'misregister',
+      expiresAt: 'never',
+      data: {
+        canRegisterAs: {
+          teams: ['minion', 'demon'],
+          alignments: ['evil'],
+        },
+      },
+    },
+  ],
 
   RoleReveal: DefaultRoleReveal,
 

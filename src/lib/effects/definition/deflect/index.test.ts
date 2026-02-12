@@ -11,7 +11,7 @@ import {
 
 beforeEach(() => resetPlayerCounter())
 
-describe('Bounce effect', () => {
+describe('Deflect effect', () => {
   const handler = definition.handlers![0]
 
   // ================================================================
@@ -19,10 +19,10 @@ describe('Bounce effect', () => {
   // ================================================================
 
   describe('appliesTo', () => {
-    it('applies when the kill targets the player with bounce', () => {
+    it('applies when the kill targets the player with deflect', () => {
       const mayor = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'mayor' }),
-        'bounce',
+        'deflect',
       )
       const state = makeState({ players: [mayor] })
       const intent: KillIntent = {
@@ -38,7 +38,7 @@ describe('Bounce effect', () => {
     it('does not apply when a different player is targeted', () => {
       const mayor = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'mayor' }),
-        'bounce',
+        'deflect',
       )
       const state = makeState({ players: [mayor] })
       const intent: KillIntent = {
@@ -60,7 +60,7 @@ describe('Bounce effect', () => {
     it('requests UI (narrator chooses redirect target)', () => {
       const mayor = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'mayor' }),
-        'bounce',
+        'deflect',
       )
       const state = makeState({ players: [mayor] })
       const game = makeGame(state)
@@ -78,7 +78,7 @@ describe('Bounce effect', () => {
     it('provides a resume function', () => {
       const mayor = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'mayor' }),
-        'bounce',
+        'deflect',
       )
       const state = makeState({ players: [mayor] })
       const game = makeGame(state)
@@ -105,7 +105,7 @@ describe('Bounce effect', () => {
     it('redirects the kill to a new target', () => {
       const mayor = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'mayor' }),
-        'bounce',
+        'deflect',
       )
       const state = makeState({ players: [mayor] })
       const game = makeGame(state)
@@ -129,7 +129,7 @@ describe('Bounce effect', () => {
     it('generates a redirect history entry', () => {
       const mayor = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'mayor' }),
-        'bounce',
+        'deflect',
       )
       const state = makeState({ players: [mayor] })
       const game = makeGame(state)
@@ -160,14 +160,14 @@ describe('Bounce effect', () => {
   })
 
   // ================================================================
-  // RESUME — SAME TARGET (narrator ignores bounce)
+  // RESUME — SAME TARGET (narrator ignores deflect)
   // ================================================================
 
   describe('resume (same target)', () => {
     it('allows the kill if narrator selects the original target', () => {
       const mayor = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'mayor' }),
-        'bounce',
+        'deflect',
       )
       const state = makeState({ players: [mayor] })
       const game = makeGame(state)
@@ -192,7 +192,7 @@ describe('Bounce effect', () => {
 
   describe('priority', () => {
     it('has lower priority than safe (runs before safe)', () => {
-      // Bounce priority 5, Safe priority 10 — lower number runs first
+      // Deflect priority 5, Safe priority 10 — lower number runs first
       expect(handler.priority).toBe(5)
     })
   })

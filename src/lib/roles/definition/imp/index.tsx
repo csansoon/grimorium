@@ -51,7 +51,7 @@ type Phase =
  * entirely (no kill intent emitted), so passive effects like Scarlet Woman
  * do NOT trigger — it is always the narrator's choice.
  *
- * All other effect interactions (Safe protection, Bounce redirect) are
+ * All other effect interactions (Safe protection, Deflect redirect) are
  * handled by the pipeline through effect handlers. The Imp has zero
  * knowledge of other roles.
  */

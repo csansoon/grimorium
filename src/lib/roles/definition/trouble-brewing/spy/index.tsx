@@ -45,7 +45,7 @@ type Phase = 'step_list' | 'view_grimoire'
  * all players, their true roles, and their active effects. This is a
  * player-facing screen (the narrator hands the device to the Spy).
  *
- * Misregistration is handled by the `spy_misregister` effect applied
+ * Misregistration is handled by the `misregister` effect applied
  * at game start. Information roles automatically detect the Spy via
  * `getAmbiguousPlayers()` and offer narrator perception configuration.
  *
@@ -60,7 +60,18 @@ const definition: RoleDefinition = {
 
   shouldWake: (_game, player) => isAlive(player),
 
-  initialEffects: [{ type: 'spy_misregister', expiresAt: 'never' }],
+  initialEffects: [
+    {
+      type: 'misregister',
+      expiresAt: 'never',
+      data: {
+        canRegisterAs: {
+          teams: ['townsfolk', 'outsider'],
+          alignments: ['good'],
+        },
+      },
+    },
+  ],
 
   nightSteps: [
     {
