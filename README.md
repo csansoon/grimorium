@@ -2,13 +2,17 @@
 
 > Every Storyteller needs a Grimoire.
 
+<p align="center">
+  <img src="public/og-image.png" alt="The Grimoire" width="600">
+</p>
+
 <a href="https://buymeacoffee.com/csansoon"><img src="public/bmc-button.png" alt="Buy Me A Coffee" width="200"></a>
 
-A companion app for **Blood on the Clocktower** that handles the clockwork so you can focus on the story.
+A companion app for **[Blood on the Clocktower](https://wiki.bloodontheclocktower.com/Main_Page)** that handles the clockwork so you can focus on the story.
 
 The Grimoire walks you through every phase of the game — role revelation, night actions, day discussion, nominations, voting, and game-over — so you never lose track of what happens next.
 
-**Currently supports:** Trouble Brewing
+**Currently supports:** [Trouble Brewing](https://wiki.bloodontheclocktower.com/Trouble_Brewing)
 
 ## Features
 
