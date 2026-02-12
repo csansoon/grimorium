@@ -285,5 +285,10 @@ export type Translations = {
     selectThisPool: string
     regenerate: string
     orPickManually: string
+    generate: string
+    manual: string
+    useThisPool: string
+    presetApplied: string
+    rolesSelected: string
   }
 }

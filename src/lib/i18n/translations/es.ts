@@ -284,6 +284,11 @@ const es: Translations = {
     selectThisPool: 'Seleccionar',
     regenerate: 'Regenerar',
     orPickManually: 'o elige manualmente',
+    generate: 'Generar',
+    manual: 'Manual',
+    useThisPool: 'Usar Este Pool',
+    presetApplied: '{preset} aplicado',
+    rolesSelected: '{count} roles seleccionados',
   },
 }
 

@@ -183,12 +183,7 @@ const definition: RoleDefinition = {
             />
           </div>
 
-          <Button
-            onClick={handleComplete}
-            fullWidth
-            size='lg'
-            variant='evil'
-          >
+          <Button onClick={handleComplete} fullWidth size='lg' variant='evil'>
             <Icon name='check' size='md' className='mr-2' />
             {t.common.iUnderstandMyRole}
           </Button>

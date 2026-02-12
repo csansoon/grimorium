@@ -68,12 +68,21 @@ export default {
           from: { opacity: '1' },
           to: { opacity: '0' },
         },
+        'toast-in': {
+          from: { opacity: '0', transform: 'translateY(-8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'toast-out': {
+          from: { opacity: '1', transform: 'translateY(0)' },
+          to: { opacity: '0', transform: 'translateY(-8px)' },
+        },
       },
       animation: {
         'sheet-in': 'sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
         'sheet-out': 'sheet-out 0.2s cubic-bezier(0.32, 0.72, 0, 1)',
         'overlay-in': 'overlay-in 0.3s ease-out',
         'overlay-out': 'overlay-out 0.2s ease-out',
+        'toast-in': 'toast-in 0.3s ease-out',
       },
     },
   },
