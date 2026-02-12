@@ -113,7 +113,8 @@ export function NightStepListLayout({
                 onClick={isNext ? () => onSelectStep(step.id) : undefined}
                 disabled={!isNext}
                 className={cn(
-                  'w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left',
+                  'w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left',
+                  isNext && 'active:scale-[0.98] active:brightness-90',
                   isNext
                     ? isEvil
                       ? 'bg-red-900/30 border border-red-500/40 hover:bg-red-900/50 cursor-pointer'

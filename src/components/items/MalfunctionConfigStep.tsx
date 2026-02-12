@@ -98,7 +98,7 @@ function NumberPicker({ numberRange, onComplete }: NumberProps) {
         <button
           onClick={() => setValue(Math.max(numberRange.min, value - 1))}
           disabled={value <= numberRange.min}
-          className='w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-parchment-200 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
+          className='w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-parchment-200 hover:bg-white/20 active:scale-[0.92] active:bg-white/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all'
         >
           <Icon name='minus' size='md' />
         </button>
@@ -110,7 +110,7 @@ function NumberPicker({ numberRange, onComplete }: NumberProps) {
         <button
           onClick={() => setValue(Math.min(numberRange.max, value + 1))}
           disabled={value >= numberRange.max}
-          className='w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-parchment-200 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
+          className='w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-parchment-200 hover:bg-white/20 active:scale-[0.92] active:bg-white/25 disabled:opacity-30 disabled:cursor-not-allowed transition-all'
         >
           <Icon name='plus' size='md' />
         </button>
@@ -147,7 +147,7 @@ function BooleanPicker({ trueLabel, falseLabel, onComplete }: BooleanProps) {
         <button
           onClick={() => setSelected(true)}
           className={cn(
-            'w-full p-4 rounded-lg border text-sm font-medium transition-colors text-left',
+            'w-full p-4 rounded-lg border text-sm font-medium transition-all text-left active:scale-[0.98]',
             selected === true
               ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-300'
               : 'bg-white/5 border-white/10 text-parchment-400 hover:bg-white/10',
@@ -159,7 +159,7 @@ function BooleanPicker({ trueLabel, falseLabel, onComplete }: BooleanProps) {
         <button
           onClick={() => setSelected(false)}
           className={cn(
-            'w-full p-4 rounded-lg border text-sm font-medium transition-colors text-left',
+            'w-full p-4 rounded-lg border text-sm font-medium transition-all text-left active:scale-[0.98]',
             selected === false
               ? 'bg-red-900/40 border-red-500/50 text-red-300'
               : 'bg-white/5 border-white/10 text-parchment-400 hover:bg-white/10',

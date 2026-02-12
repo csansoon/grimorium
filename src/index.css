@@ -31,6 +31,14 @@
     padding: 0;
     /* Prevent pull-to-refresh and overscroll */
     overscroll-behavior: none;
+    /* Remove default tap highlight on touch devices */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch feedback for all interactive elements */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 }
 

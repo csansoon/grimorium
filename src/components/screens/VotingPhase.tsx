@@ -205,7 +205,7 @@ export function VotingPhase({
                   <button
                     onClick={() => handleVote(player.id, 'for')}
                     className={cn(
-                      'flex-1 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1',
+                      'flex-1 py-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 active:scale-[0.95]',
                       currentVote === 'for'
                         ? 'bg-green-600 text-white'
                         : 'bg-white/5 text-parchment-400 hover:bg-white/10',
@@ -216,7 +216,7 @@ export function VotingPhase({
                   <button
                     onClick={() => handleVote(player.id, 'against')}
                     className={cn(
-                      'flex-1 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1',
+                      'flex-1 py-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 active:scale-[0.95]',
                       currentVote === 'against'
                         ? 'bg-red-600 text-white'
                         : 'bg-white/5 text-parchment-400 hover:bg-white/10',
@@ -227,7 +227,7 @@ export function VotingPhase({
                   <button
                     onClick={() => handleVote(player.id, 'abstain')}
                     className={cn(
-                      'flex-1 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1',
+                      'flex-1 py-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1 active:scale-[0.95]',
                       currentVote === 'abstain'
                         ? 'bg-parchment-500 text-grimoire-dark'
                         : 'bg-white/5 text-parchment-400 hover:bg-white/10',

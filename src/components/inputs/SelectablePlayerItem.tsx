@@ -30,6 +30,7 @@ export function SelectablePlayerItem({
       disabled={isDisabled}
       className={cn(
         'w-full p-3 rounded-lg border flex items-center justify-between transition-all',
+        'active:scale-[0.98] active:brightness-90',
         isSelected
           ? 'bg-blue-900/40 border-blue-500/50'
           : isDisabled

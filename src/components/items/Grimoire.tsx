@@ -48,8 +48,8 @@ function PlayerRow({
       key={player.id}
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left',
-        'hover:bg-white/5 active:bg-white/10',
+        'w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left',
+        'hover:bg-white/5 active:bg-white/10 active:scale-[0.98]',
         isDead ? 'opacity-60' : '',
       )}
     >

@@ -82,6 +82,7 @@ export function PlayerSelector({
             onClick={() => onSelect(player.id)}
             className={cn(
               'w-full p-4 rounded-lg text-left transition-all duration-200 flex items-center justify-between border',
+              'active:scale-[0.98] active:brightness-90',
               isSelected
                 ? styles.selected
                 : 'bg-white/5 border-white/10 hover:bg-white/10',

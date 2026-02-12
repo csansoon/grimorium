@@ -51,6 +51,30 @@ export default {
         'tarot': '0 0 0 1px rgba(212, 175, 55, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3)',
         'tarot-glow': '0 0 20px rgba(212, 175, 55, 0.2)',
       },
+      keyframes: {
+        'sheet-in': {
+          from: { transform: 'translateY(100%)' },
+          to: { transform: 'translateY(0)' },
+        },
+        'sheet-out': {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(100%)' },
+        },
+        'overlay-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'overlay-out': {
+          from: { opacity: '1' },
+          to: { opacity: '0' },
+        },
+      },
+      animation: {
+        'sheet-in': 'sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
+        'sheet-out': 'sheet-out 0.2s cubic-bezier(0.32, 0.72, 0, 1)',
+        'overlay-in': 'overlay-in 0.3s ease-out',
+        'overlay-out': 'overlay-out 0.2s ease-out',
+      },
     },
   },
   plugins: [
