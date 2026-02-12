@@ -58,7 +58,7 @@ type Phase =
 const definition: RoleDefinition = {
   id: 'imp',
   team: 'demon',
-  icon: 'skull',
+  icon: 'flameKindling',
   nightOrder: 30,
   shouldWake: (_game, player) => isAlive(player),
 
@@ -83,7 +83,7 @@ const definition: RoleDefinition = {
     },
     {
       id: 'choose_victim',
-      icon: 'skull',
+      icon: 'flameKindling',
       getLabel: (t) => t.game.stepChooseVictim,
       condition: (_game, _player, state) => state.round > 1,
     },
@@ -184,7 +184,7 @@ const definition: RoleDefinition = {
       const result: NightStep[] = [
         {
           id: 'choose_victim',
-          icon: 'skull',
+          icon: 'flameKindling',
           label: t.game.stepChooseVictim,
           status: chooseVictimDone ? 'done' : 'pending',
         },
@@ -394,7 +394,7 @@ const definition: RoleDefinition = {
     if (phase === 'step_list') {
       return (
         <NightStepListLayout
-          icon='skull'
+          icon='flameKindling'
           roleName={getRoleName('imp', language)}
           playerName={player.name}
           isEvil
@@ -476,7 +476,7 @@ const definition: RoleDefinition = {
     if (phase === 'select_bluffs') {
       return (
         <NarratorSetupLayout
-          icon='skull'
+          icon='flameKindling'
           roleName={getRoleName('imp', language)}
           playerName={player.name}
           onShowToPlayer={() => {
@@ -585,7 +585,7 @@ const definition: RoleDefinition = {
     if (phase === 'select_new_imp') {
       return (
         <NarratorSetupLayout
-          icon='skull'
+          icon='flameKindling'
           roleName={getRoleName('imp', language)}
           playerName={player.name}
           onShowToPlayer={handleConfirmNewImp}
@@ -641,7 +641,7 @@ const definition: RoleDefinition = {
           size='lg'
           variant='evil'
         >
-          <Icon name='skull' size='md' className='mr-2' />
+          <Icon name='flameKindling' size='md' className='mr-2' />
           {t.game.confirmKill}
         </Button>
       </NightActionLayout>
