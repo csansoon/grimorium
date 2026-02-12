@@ -2,6 +2,8 @@
 
 > Every Storyteller needs a Grimoire.
 
+<a href="https://buymeacoffee.com/csansoon"><img src="public/bmc-button.png" alt="Buy Me A Coffee" width="200"></a>
+
 A companion app for **Blood on the Clocktower** that handles the clockwork so you can focus on the story.
 
 The Grimoire walks you through every phase of the game — role revelation, night actions, day discussion, nominations, voting, and game-over — so you never lose track of what happens next.
@@ -18,48 +20,6 @@ The Grimoire walks you through every phase of the game — role revelation, nigh
 - Win condition detection for both core and special conditions
 - Works offline as an installable PWA — no internet needed at the table
 - English and Spanish localization
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- pnpm
-
-### Install Dependencies
-
-```bash
-pnpm install
-```
-
-### Development
-
-```bash
-pnpm dev
-```
-
-### Build for Production
-
-```bash
-pnpm build
-```
-
-### Run Tests
-
-```bash
-pnpm test
-```
-
-## Tech Stack
-
-- **React 18** + **TypeScript**
-- **Vite** — fast builds and HMR
-- **Tailwind CSS** + **Radix UI** — styling and accessible primitives
-- **PWA** — offline support, installable on mobile and desktop
-
-## Support
-
-[![Buy Me A Coffee](public/bmc-button.png)](https://buymeacoffee.com/csansoon)
 
 ## License
 
