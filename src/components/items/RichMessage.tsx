@@ -96,7 +96,7 @@ export function RichMessage({ message, state }: Props) {
   // Render a player badge with their role icon
   const renderPlayerBadge = (playerId: string, key: string | number) => {
     const player = getPlayer(state, playerId)
-    if (!player) return <span key={key}>[Unknown Player]</span>
+    if (!player) return <span key={key}>{t.ui.unknownPlayer}</span>
     const role = getRole(player.roleId)
     return (
       <Badge
@@ -113,7 +113,7 @@ export function RichMessage({ message, state }: Props) {
   // Render a role badge
   const renderRoleBadge = (roleId: string, key: string | number) => {
     const role = getRole(roleId)
-    if (!role) return <span key={key}>[Unknown Role]</span>
+    if (!role) return <span key={key}>{t.ui.unknownRole}</span>
     const teamVariant = role.team as
       | 'townsfolk'
       | 'outsider'

@@ -126,7 +126,7 @@ const definition: RoleDefinition = {
     const otherPlayers = state.players.filter((p) => p.id !== player.id)
 
     const getPlayerName = (playerId: string) => {
-      return state.players.find((p) => p.id === playerId)?.name ?? 'Unknown'
+      return state.players.find((p) => p.id === playerId)?.name ?? t.ui.unknown
     }
 
     // Build steps: Assign Red Herring (cond.), Select players, Configure Malfunction (cond.), Show Result

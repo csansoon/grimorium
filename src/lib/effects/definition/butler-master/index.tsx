@@ -37,7 +37,7 @@ function ButlerMasterConfigEditor({
   return (
     <div className='space-y-4'>
       <p className='text-parchment-300 text-xs font-bold uppercase tracking-wider'>
-        {(t.configSelectMaster as string) ?? 'Select the Master'}
+        {t.configSelectMaster as string}
       </p>
       <div className='space-y-1 max-h-48 overflow-y-auto'>
         {players.map((p) => {
@@ -67,7 +67,7 @@ function ButlerMasterConfigEditor({
 
       <div className='flex gap-2 pt-2'>
         <Button onClick={onCancel} variant='ghost' className='flex-1'>
-          {(t.configCancel as string) ?? 'Cancel'}
+          {t.configCancel as string}
         </Button>
         <Button
           onClick={handleSave}
@@ -75,7 +75,7 @@ function ButlerMasterConfigEditor({
           className='flex-1'
           disabled={!selectedMasterId}
         >
-          {(t.configSave as string) ?? 'Save'}
+          {t.configSave as string}
         </Button>
       </div>
     </div>

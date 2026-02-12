@@ -185,6 +185,7 @@ export type Translations = {
     stepChooseMaster: string
     stepViewGrimoire: string
     stepShowEvilTeam: string
+    noEvilTeammates: string
 
     // Malfunction Config
     stepConfigureMalfunction: string
@@ -240,6 +241,12 @@ export type Translations = {
     currentEffects: string
     addEffect: string
     noEffects: string
+    close: string
+    narrator: string
+    unknown: string
+    unknownPlayer: string
+    unknownRole: string
+    unknownRoleId: string
   }
 
   // History messages

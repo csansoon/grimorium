@@ -2,6 +2,7 @@ import { getRole } from '../../../lib/roles'
 import { getTeam, TeamId } from '../../../lib/teams'
 import {
   useI18n,
+  interpolate,
   getRoleName as getRegistryRoleName,
   getRoleDescription as getRegistryRoleDescription,
 } from '../../../lib/i18n'
@@ -39,7 +40,7 @@ export function RoleCard({ roleId }: Props) {
   if (!role) {
     return (
       <p className='text-red-400 font-tarot text-center p-4'>
-        Unknown role: {roleId}
+        {interpolate(t.ui.unknownRoleId, { roleId })}
       </p>
     )
   }

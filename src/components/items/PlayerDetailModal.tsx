@@ -53,7 +53,7 @@ export function PlayerDetailModal({
 
   const teamId = role?.team as TeamId | undefined
 
-  const roleName = role ? getRegistryRoleName(role.id, language) : 'Unknown'
+  const roleName = role ? getRegistryRoleName(role.id, language) : t.ui.unknown
   const roleDescription = role
     ? getRegistryRoleDescription(role.id, language)
     : ''

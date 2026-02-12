@@ -182,6 +182,7 @@ const es: Translations = {
     stepChooseMaster: 'Elegir Amo',
     stepViewGrimoire: 'Ver Grimorio',
     stepShowEvilTeam: 'Tu Equipo Malvado',
+    noEvilTeammates: 'No hay compañeros malvados en juego',
 
     // Malfunction Config
     stepConfigureMalfunction: 'Configurar Mal Funcionamiento',
@@ -241,6 +242,12 @@ const es: Translations = {
     currentEffects: 'Efectos Actuales',
     addEffect: 'Añadir Efecto',
     noEffects: 'Sin efectos',
+    close: 'Cerrar',
+    narrator: 'Narrador',
+    unknown: 'Desconocido',
+    unknownPlayer: '[Jugador Desconocido]',
+    unknownRole: '[Rol Desconocido]',
+    unknownRoleId: 'Rol desconocido: {roleId}',
   },
 
   history: {

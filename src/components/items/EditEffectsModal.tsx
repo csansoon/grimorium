@@ -113,8 +113,8 @@ export function EditEffectsModal({
             </div>
             <DialogTitle>
               {isEditing
-                ? (t.ui.editEffectConfig ?? 'Edit Effect')
-                : (t.ui.addEffect ?? 'Add Effect')}
+                ? t.ui.editEffectConfig
+                : t.ui.addEffect}
             </DialogTitle>
             <p className='text-parchment-400 text-sm text-center mt-1'>
               {effectName} — {player.name}

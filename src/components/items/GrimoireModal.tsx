@@ -152,8 +152,8 @@ export function GrimoireModal({
         return t.ui.editEffects
       case 'effect_config':
         return view.mode === 'add'
-          ? (t.ui.addEffect ?? 'Add Effect')
-          : (t.ui.editEffectConfig ?? 'Edit Effect')
+          ? t.ui.addEffect
+          : t.ui.editEffectConfig
     }
   }
 
@@ -274,7 +274,7 @@ function PlayerDetailContent({
   const isEvil = team?.isEvil ?? false
 
   const teamId = role?.team as TeamId | undefined
-  const roleName = role ? getRegistryRoleName(role.id, language) : 'Unknown'
+  const roleName = role ? getRegistryRoleName(role.id, language) : t.ui.unknown
   const roleDescription = role
     ? getRegistryRoleDescription(role.id, language)
     : ''

@@ -118,7 +118,7 @@ function MisregisterConfigEditor({
       {/* Alignments */}
       <div>
         <p className='text-parchment-300 text-xs font-bold uppercase tracking-wider mb-2'>
-          {(t.configAlignments as string) ?? 'Alignments'}
+          {t.configAlignments as string}
         </p>
         <div className='flex gap-2'>
           {ALL_ALIGNMENTS.map((alignment) => {
@@ -149,7 +149,7 @@ function MisregisterConfigEditor({
       {/* Teams */}
       <div>
         <p className='text-parchment-300 text-xs font-bold uppercase tracking-wider mb-2'>
-          {(t.configTeams as string) ?? 'Teams'}
+          {t.configTeams as string}
         </p>
         <div className='grid grid-cols-2 gap-2'>
           {ALL_TEAMS.map((team) => {
@@ -180,7 +180,7 @@ function MisregisterConfigEditor({
       {/* Buttons */}
       <div className='flex gap-2 pt-2'>
         <Button onClick={onCancel} variant='ghost' className='flex-1'>
-          {(t.configCancel as string) ?? 'Cancel'}
+          {t.configCancel as string}
         </Button>
         <Button
           onClick={handleSave}
@@ -188,7 +188,7 @@ function MisregisterConfigEditor({
           className='flex-1'
           disabled={!hasSelection}
         >
-          {(t.configSave as string) ?? 'Save'}
+          {t.configSave as string}
         </Button>
       </div>
     </div>

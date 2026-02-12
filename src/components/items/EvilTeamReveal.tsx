@@ -79,7 +79,7 @@ export function EvilTeamReveal({
   if (teamMembers.length === 0) {
     return (
       <div className='text-center p-4 text-parchment-500'>
-        No evil teammates in play
+        {t.game.noEvilTeammates}
       </div>
     )
   }

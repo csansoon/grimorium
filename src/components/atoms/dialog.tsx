@@ -3,6 +3,7 @@ import { useRef, useState, useCallback } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useDrag } from '@use-gesture/react'
 import { cn } from '../../lib/utils'
+import { useI18n } from '../../lib/i18n'
 import { Icon } from './icon'
 
 const Dialog = DialogPrimitive.Root
@@ -43,6 +44,7 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
+  const { t } = useI18n()
   const [dragY, setDragY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   // When true, the overlay fades via CSS transition instead of the
@@ -178,7 +180,7 @@ const DialogContent = React.forwardRef<
           className='absolute right-3 top-3 p-3 rounded-full text-parchment-400 hover:text-parchment-100 hover:bg-white/10 active:bg-white/20 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center'
         >
           <Icon name='x' size='md' />
-          <span className='sr-only'>Close</span>
+          <span className='sr-only'>{t.ui.close}</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
     </DialogPortal>

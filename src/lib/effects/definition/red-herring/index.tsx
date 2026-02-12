@@ -36,8 +36,7 @@ function RedHerringConfigEditor({
   return (
     <div className='space-y-4'>
       <p className='text-parchment-300 text-xs font-bold uppercase tracking-wider'>
-        {(t.configSelectFortuneTeller as string) ??
-          'Select the Fortune Teller'}
+        {t.configSelectFortuneTeller as string}
       </p>
       <div className='space-y-1 max-h-48 overflow-y-auto'>
         {players.map((p) => {
@@ -65,7 +64,7 @@ function RedHerringConfigEditor({
 
       <div className='flex gap-2 pt-2'>
         <Button onClick={onCancel} variant='ghost' className='flex-1'>
-          {(t.configCancel as string) ?? 'Cancel'}
+          {t.configCancel as string}
         </Button>
         <Button
           onClick={handleSave}
@@ -73,7 +72,7 @@ function RedHerringConfigEditor({
           className='flex-1'
           disabled={!selectedPlayerId}
         >
-          {(t.configSave as string) ?? 'Save'}
+          {t.configSave as string}
         </Button>
       </div>
     </div>

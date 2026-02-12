@@ -181,6 +181,7 @@ const en: Translations = {
     stepChooseMaster: 'Choose Master',
     stepViewGrimoire: 'View Grimoire',
     stepShowEvilTeam: 'Your Evil Team',
+    noEvilTeammates: 'No evil teammates in play',
 
     // Malfunction Config
     stepConfigureMalfunction: 'Configure Malfunction',
@@ -240,6 +241,12 @@ const en: Translations = {
     currentEffects: 'Current Effects',
     addEffect: 'Add Effect',
     noEffects: 'No effects',
+    close: 'Close',
+    narrator: 'Narrator',
+    unknown: 'Unknown',
+    unknownPlayer: '[Unknown Player]',
+    unknownRole: '[Unknown Role]',
+    unknownRoleId: 'Unknown role: {roleId}',
   },
 
   history: {

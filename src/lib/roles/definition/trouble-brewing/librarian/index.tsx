@@ -270,7 +270,7 @@ const definition: RoleDefinition = {
     const getLocalRoleName = (roleId: string) => getRoleName(roleId, language)
 
     const getPlayerName = (playerId: string) => {
-      return state.players.find((p) => p.id === playerId)?.name ?? 'Unknown'
+      return state.players.find((p) => p.id === playerId)?.name ?? t.ui.unknown
     }
 
     // Build steps

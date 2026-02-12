@@ -19,7 +19,7 @@ export function NarratorPrompt({
 }: Props) {
   const { t, language } = useI18n()
   const role = getRole(player.roleId)
-  const roleName = role ? getRoleName(role.id, language) : 'Unknown'
+  const roleName = role ? getRoleName(role.id, language) : t.ui.unknown
 
   const isRoleReveal = action === 'role_reveal'
   const isRoleChange = action === 'role_change'
@@ -69,7 +69,7 @@ export function NarratorPrompt({
 
           {/* Narrator label */}
           <p className='text-parchment-500 text-xs tracking-widest uppercase mb-2'>
-            Narrator
+            {t.ui.narrator}
           </p>
 
           {/* Message */}
