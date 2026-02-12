@@ -18,6 +18,7 @@ import {
   hasExecutionToday,
   addEffectToPlayer,
   removeEffectFromPlayer,
+  updateEffectData,
   processAutoSkips,
   applySetupAction,
 } from '../../lib/game'
@@ -403,8 +404,12 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     setEditEffectsPlayer(player)
   }
 
-  const handleAddEffect = (playerId: string, effectType: string) => {
-    const newGame = addEffectToPlayer(game, playerId, effectType)
+  const handleAddEffect = (
+    playerId: string,
+    effectType: string,
+    data?: Record<string, unknown>,
+  ) => {
+    const newGame = addEffectToPlayer(game, playerId, effectType, data)
     updateGame(newGame)
     const updatedState = getCurrentState(newGame)
     const updatedPlayer = updatedState.players.find((p) => p.id === playerId)
@@ -415,6 +420,20 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
   const handleRemoveEffect = (playerId: string, effectType: string) => {
     const newGame = removeEffectFromPlayer(game, playerId, effectType)
+    updateGame(newGame)
+    const updatedState = getCurrentState(newGame)
+    const updatedPlayer = updatedState.players.find((p) => p.id === playerId)
+    if (updatedPlayer) {
+      setEditEffectsPlayer(updatedPlayer)
+    }
+  }
+
+  const handleUpdateEffect = (
+    playerId: string,
+    effectType: string,
+    data: Record<string, unknown>,
+  ) => {
+    const newGame = updateEffectData(game, playerId, effectType, data)
     updateGame(newGame)
     const updatedState = getCurrentState(newGame)
     const updatedPlayer = updatedState.players.find((p) => p.id === playerId)
@@ -701,10 +720,12 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       {/* Edit Effects Modal */}
       <EditEffectsModal
         player={editEffectsPlayer}
+        state={state}
         open={editEffectsPlayer !== null}
         onClose={() => setEditEffectsPlayer(null)}
         onAddEffect={handleAddEffect}
         onRemoveEffect={handleRemoveEffect}
+        onUpdateEffect={handleUpdateEffect}
       />
     </div>
   )

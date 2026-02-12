@@ -9,6 +9,10 @@ const en = {
   team_outsider: 'Outsider',
   team_minion: 'Minion',
   team_demon: 'Demon',
+  configAlignments: 'Alignments',
+  configTeams: 'Teams',
+  configCancel: 'Cancel',
+  configSave: 'Save',
 } as const
 
 export default en

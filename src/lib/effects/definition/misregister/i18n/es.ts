@@ -9,6 +9,10 @@ const es = {
   team_outsider: 'Forastero',
   team_minion: 'Secuaz',
   team_demon: 'Demonio',
+  configAlignments: 'Alineamientos',
+  configTeams: 'Equipos',
+  configCancel: 'Cancelar',
+  configSave: 'Guardar',
 } as const
 
 export default es

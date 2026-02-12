@@ -113,6 +113,16 @@ export type EffectDefinition = {
    * Falls back to the static i18n description when not provided.
    */
   Description?: FC<EffectDescriptionProps>
+
+  /**
+   * Optional configuration editor for this effect.
+   * When provided, the EditEffectsModal will show this component when:
+   * - Adding a new instance of this effect (data is undefined)
+   * - Editing an existing instance (data is the current instance data)
+   *
+   * Effects without a ConfigEditor are added/removed with no configuration.
+   */
+  ConfigEditor?: FC<EffectConfigEditorProps>
 }
 
 export type EffectDescriptionProps = {
@@ -120,4 +130,24 @@ export type EffectDescriptionProps = {
   instance: EffectInstance
   /** Current language code */
   language: string
+}
+
+/**
+ * Props for an effect's configuration editor.
+ * Rendered inside `EditEffectsModal` when adding a new effect that needs
+ * configuration, or when editing an existing effect's data.
+ */
+export type EffectConfigEditorProps = {
+  /** Current data (undefined when creating a new effect, populated when editing) */
+  data: Record<string, unknown> | undefined
+  /** Current game state — for player lists, role lists, etc. */
+  state: GameState
+  /** The player this effect is being added to / edited on */
+  playerId: string
+  /** Current language code */
+  language: string
+  /** Called when the narrator confirms the configuration */
+  onSave: (data: Record<string, unknown>) => void
+  /** Called when the narrator cancels */
+  onCancel: () => void
 }

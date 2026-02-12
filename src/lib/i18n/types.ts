@@ -235,6 +235,7 @@ export type Translations = {
     effects: string
     seeRoleCard: string
     editEffects: string
+    editEffectConfig: string
     currentEffects: string
     addEffect: string
     noEffects: string
@@ -258,6 +259,7 @@ export type Translations = {
     goodWins: string
     evilWins: string
     effectAdded: string
+    effectUpdated: string
     effectRemoved: string
     roleChanged: string
     setupAction: string

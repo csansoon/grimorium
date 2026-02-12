@@ -799,6 +799,7 @@ export function addEffectToPlayer(
   game: Game,
   playerId: string,
   effectType: string,
+  data?: Record<string, unknown>,
 ): Game {
   return addHistoryEntry(
     game,
@@ -814,8 +815,56 @@ export function addEffectToPlayer(
       data: { playerId, effectType, source: 'narrator' },
     },
     undefined,
-    { [playerId]: [{ type: effectType, expiresAt: 'never' }] },
+    { [playerId]: [{ type: effectType, data, expiresAt: 'never' }] },
   )
+}
+
+/**
+ * Manually update the data of an existing effect instance on a player (narrator action).
+ * Finds the first effect of the given type and replaces its data.
+ */
+export function updateEffectData(
+  game: Game,
+  playerId: string,
+  effectType: string,
+  data: Record<string, unknown>,
+): Game {
+  const currentState = getCurrentState(game)
+  const player = currentState.players.find((p) => p.id === playerId)
+  if (!player) return game
+
+  const hasTargetEffect = player.effects.some((e) => e.type === effectType)
+  if (!hasTargetEffect) return game
+
+  // Update the first matching effect instance's data
+  const updatedPlayers = currentState.players.map((p) => {
+    if (p.id !== playerId) return p
+    let found = false
+    return {
+      ...p,
+      effects: p.effects.map((e) => {
+        if (!found && e.type === effectType) {
+          found = true
+          return { ...e, data: { ...e.data, ...data } }
+        }
+        return e
+      }),
+    }
+  })
+
+  const historyEntry: Omit<HistoryEntry, 'id' | 'timestamp' | 'stateAfter'> = {
+    type: 'effect_added',
+    message: [
+      {
+        type: 'i18n',
+        key: 'history.effectUpdated',
+        params: { player: playerId, effect: effectType },
+      },
+    ],
+    data: { playerId, effectType, source: 'narrator', action: 'update' },
+  }
+
+  return addHistoryEntry(game, historyEntry, { players: updatedPlayers })
 }
 
 /**
