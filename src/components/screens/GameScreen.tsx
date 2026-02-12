@@ -45,7 +45,7 @@ import { VotingPhase } from './VotingPhase'
 import { GameOver } from './GameOver'
 import { HistoryView } from './HistoryView'
 import { GrimoireModal, type GrimoireIntent } from '../items/GrimoireModal'
-import { Icon, LanguageToggle } from '../atoms'
+import { Icon, LanguagePicker } from '../atoms'
 import { NightActionResult, SetupActionResult } from '../../lib/roles/types'
 import type { FC } from 'react'
 import { SetupActionsScreen } from './SetupActionsScreen'
@@ -452,7 +452,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       <div className='relative'>
         <HistoryView game={game} onClose={() => setShowHistory(false)} />
         <div className='fixed top-4 right-4 z-50'>
-          <LanguageToggle variant='floating' />
+          <LanguagePicker variant='floating' />
         </div>
       </div>
     )
@@ -682,7 +682,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
       {/* Floating Language Toggle */}
       <div className='fixed top-4 right-4 z-50'>
-        <LanguageToggle variant='floating' />
+        <LanguagePicker variant='floating' />
       </div>
 
       {/* Floating Action Buttons */}

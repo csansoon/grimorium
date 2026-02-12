@@ -76,6 +76,14 @@ export default {
           from: { opacity: '1', transform: 'translateY(0)' },
           to: { opacity: '0', transform: 'translateY(-8px)' },
         },
+        'popover-in': {
+          from: { opacity: '0', transform: 'scale(0.95) translateY(-4px)' },
+          to: { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        'popover-out': {
+          from: { opacity: '1', transform: 'scale(1) translateY(0)' },
+          to: { opacity: '0', transform: 'scale(0.95) translateY(-4px)' },
+        },
       },
       animation: {
         'sheet-in': 'sheet-in 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
@@ -83,6 +91,8 @@ export default {
         'overlay-in': 'overlay-in 0.3s ease-out',
         'overlay-out': 'overlay-out 0.2s ease-out',
         'toast-in': 'toast-in 0.3s ease-out',
+        'popover-in': 'popover-in 0.15s ease-out',
+        'popover-out': 'popover-out 0.1s ease-in',
       },
     },
   },

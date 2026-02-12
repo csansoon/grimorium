@@ -12,19 +12,35 @@ import es from './translations/es'
 
 const TRANSLATIONS: Record<Language, Translations> = { en, es }
 
+export type LanguageOption = {
+  code: Language
+  nativeName: string
+}
+
+export const LANGUAGES: LanguageOption[] = [
+  { code: 'en', nativeName: 'English' },
+  { code: 'es', nativeName: 'Español' },
+]
+
+const VALID_CODES = new Set<string>(LANGUAGES.map((l) => l.code))
+
 const STORAGE_KEY = 'grimoire_language'
+
+function isValidLanguage(value: string): value is Language {
+  return VALID_CODES.has(value)
+}
 
 function getInitialLanguage(): Language {
   // Check localStorage first
   const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored === 'en' || stored === 'es') {
+  if (stored && isValidLanguage(stored)) {
     return stored
   }
 
   // Check browser language
   const browserLang = navigator.language.slice(0, 2)
-  if (browserLang === 'es') {
-    return 'es'
+  if (isValidLanguage(browserLang)) {
+    return browserLang
   }
 
   return 'en'

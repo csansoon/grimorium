@@ -21,7 +21,7 @@ const es: Translations = {
   },
 
   mainMenu: {
-    title: 'Grimoire',
+    title: 'Grimorio',
     subtitle: 'Asistente de Narrador para Blood on the Clocktower',
     continueGame: 'Continuar Partida',
     newGame: 'Nueva Partida',
@@ -82,7 +82,7 @@ const es: Translations = {
     selectVictim: 'Selecciona tu víctima para esta noche.',
     confirmKill: 'Confirmar Asesinato',
 
-    grimoire: 'Grimoire',
+    grimoire: 'Grimorio',
     daytimeActions: 'Acciones de Día',
     accusePlayerDescription: 'Acusa a un jugador y ponlo a votación',
     executionAlreadyHappened: 'Ya ha habido una ejecución hoy',

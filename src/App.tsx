@@ -15,7 +15,7 @@ import {
   GameScreen,
   RolesLibrary,
 } from './components/screens'
-import { LanguageToggle } from './components/atoms'
+import { LanguagePicker } from './components/atoms'
 import { useRouter } from './hooks/useRouter'
 import { RoleId } from './lib/roles/types'
 import { getRole } from './lib/roles'
@@ -175,7 +175,7 @@ function App() {
           onDeselectRole={() => navigate('/roles')}
         />
         <div className='fixed top-4 right-4 z-50'>
-          <LanguageToggle variant='floating' />
+          <LanguagePicker variant='floating' />
         </div>
       </div>
     )
@@ -265,7 +265,7 @@ function App() {
     <div className='relative'>
       {renderHome()}
       <div className='fixed top-4 right-4 z-50'>
-        <LanguageToggle variant='floating' />
+        <LanguagePicker variant='floating' />
       </div>
     </div>
   )

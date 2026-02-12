@@ -21,5 +21,5 @@ export {
   DialogDescription,
   DialogBody,
 } from './dialog'
-export { LanguageToggle } from './LanguageToggle'
+export { LanguagePicker } from './LanguagePicker'
 export { BackButton } from './BackButton'
