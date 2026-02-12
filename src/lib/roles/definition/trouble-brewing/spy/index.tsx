@@ -7,6 +7,7 @@ import {
   getRoleTranslations,
 } from '../../../../i18n'
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
+import { EvilTeamReveal } from '../../../../../components/items/EvilTeamReveal'
 import {
   NightActionLayout,
   NightStepListLayout,
@@ -24,21 +25,18 @@ import es from './i18n/es'
 registerRoleTranslations('spy', 'en', en)
 registerRoleTranslations('spy', 'es', es)
 
-type Phase = 'step_list' | 'view_grimoire'
+type Phase = 'step_list' | 'show_evil_team' | 'view_grimoire'
 
 /**
  * The Spy — Minion role.
  *
- * Each night, you may look at the Grimoire. You might register as good
- * & as a Townsfolk or Outsider, even if you are dead.
+ * First night: Shown the evil team (other Minions + Demon), then views
+ * the Grimoire.
  *
- * Night action: The Spy views the Grimoire — a read-only view showing
- * all players, their true roles, and their active effects. This is a
- * player-facing screen (the narrator hands the device to the Spy).
+ * Subsequent nights: Views the Grimoire only.
  *
- * Misregistration is handled by the `misregister` effect applied
- * at game start. Information roles automatically detect the Spy via
- * `getAmbiguousPlayers()` and offer narrator perception configuration.
+ * You might register as good & as a Townsfolk or Outsider, even if you
+ * are dead. Misregistration is handled by the `misregister` effect.
  *
  * When malfunctioning (Poisoned/Drunk), the Spy does NOT see the
  * Grimoire. The narrator handles deception manually.
@@ -67,6 +65,12 @@ const definition: RoleDefinition = {
 
   nightSteps: [
     {
+      id: 'show_evil_team',
+      icon: 'swords',
+      getLabel: (t) => t.game.stepShowEvilTeam,
+      condition: (_game, _player, state) => state.round === 1,
+    },
+    {
       id: 'view_grimoire',
       icon: 'bookUser',
       getLabel: (t) => t.game.stepViewGrimoire,
@@ -78,9 +82,10 @@ const definition: RoleDefinition = {
   NightAction: ({ state, player, onComplete, onOpenGrimoire }) => {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
+    const [showEvilTeamDone, setShowEvilTeamDone] = useState(false)
 
+    const isFirstNight = state.round === 1
     const malfunctioning = isMalfunctioning(player)
-
     const roleT = getRoleTranslations('spy', language)
 
     const handleComplete = () => {
@@ -111,14 +116,23 @@ const definition: RoleDefinition = {
     // ================================================================
 
     if (phase === 'step_list') {
-      const steps: NightStep[] = [
-        {
-          id: 'view_grimoire',
-          icon: 'bookUser',
-          label: t.game.stepViewGrimoire,
-          status: 'pending',
-        },
-      ]
+      const steps: NightStep[] = []
+
+      if (isFirstNight) {
+        steps.push({
+          id: 'show_evil_team',
+          icon: 'swords',
+          label: t.game.stepShowEvilTeam,
+          status: showEvilTeamDone ? 'done' : 'pending',
+        })
+      }
+
+      steps.push({
+        id: 'view_grimoire',
+        icon: 'bookUser',
+        label: t.game.stepViewGrimoire,
+        status: 'pending',
+      })
 
       return (
         <NightStepListLayout
@@ -127,8 +141,45 @@ const definition: RoleDefinition = {
           playerName={player.name}
           isEvil
           steps={steps}
-          onSelectStep={() => setPhase('view_grimoire')}
+          onSelectStep={(stepId) => setPhase(stepId as Phase)}
         />
+      )
+    }
+
+    // ================================================================
+    // RENDER: Show Evil Team (first night, player-facing)
+    // ================================================================
+
+    if (phase === 'show_evil_team') {
+      return (
+        <PlayerFacingScreen>
+          <NightActionLayout
+            player={player}
+            title={roleT.evilTeamTitle}
+            description={roleT.evilTeamDescription}
+          >
+            <div className='mb-6'>
+              <EvilTeamReveal
+                state={state}
+                viewer={player}
+                viewerType='minion'
+              />
+            </div>
+
+            <Button
+              onClick={() => {
+                setShowEvilTeamDone(true)
+                setPhase('step_list')
+              }}
+              fullWidth
+              size='lg'
+              variant='evil'
+            >
+              <Icon name='check' size='md' className='mr-2' />
+              {t.common.continue}
+            </Button>
+          </NightActionLayout>
+        </PlayerFacingScreen>
       )
     }
 

@@ -10,6 +10,10 @@ const en = {
   spyMalfunctionDescription:
     'The Spy is malfunctioning — do not show the real Grimoire.',
 
+  // First night: evil team
+  evilTeamTitle: 'Your Evil Team',
+  evilTeamDescription: 'These are your fellow evil players.',
+
   // History
   history: {
     viewedGrimoire: '{player} looked at the Grimoire',

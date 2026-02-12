@@ -16,7 +16,7 @@ describe('Poisoner', () => {
   // ================================================================
 
   describe('shouldWake', () => {
-    it('does not wake on the first night', () => {
+    it('wakes on the first night (to see evil team info)', () => {
       const player = makePlayer({ id: 'p1', roleId: 'poisoner' })
       const game = makeGameWithHistory(
         [
@@ -28,7 +28,7 @@ describe('Poisoner', () => {
         ],
         makeState({ round: 1, players: [player] }),
       )
-      expect(definition.shouldWake!(game, player)).toBe(false)
+      expect(definition.shouldWake!(game, player)).toBe(true)
     })
 
     it('wakes on subsequent nights when alive', () => {

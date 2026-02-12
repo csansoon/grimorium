@@ -6,6 +6,7 @@ import {
   useI18n,
   registerRoleTranslations,
   getRoleName,
+  getRoleDescription,
   getRoleTranslations,
 } from '../../../i18n'
 import { getRole, getAllRoles } from '../../index'
@@ -19,7 +20,11 @@ import {
 } from '../../../../components/layouts'
 import type { NightStep } from '../../../../components/layouts'
 import { PlayerPickerList, RolePickerGrid } from '../../../../components/inputs'
-import { StepSection, MysticDivider } from '../../../../components/items'
+import {
+  StepSection,
+  MysticDivider,
+  EvilTeamReveal,
+} from '../../../../components/items'
 import { Button, Icon } from '../../../../components/atoms'
 
 import en from './i18n/en'
@@ -417,40 +422,15 @@ const definition: RoleDefinition = {
             title={roleT.demonMinionsTitle}
             description={roleT.demonMinionsDescription}
           >
-            <div className='space-y-3 mb-6'>
-              <p className='text-sm text-red-300/70 text-center font-medium mb-2'>
+            <div className='mb-6'>
+              <p className='text-sm text-red-300/70 text-center font-medium mb-3'>
                 {roleT.theseAreYourMinions}
               </p>
-              {minionPlayers.map((p) => {
-                const role = getRole(p.roleId)
-                return (
-                  <div
-                    key={p.id}
-                    className='p-4 rounded-lg bg-red-900/30 border border-red-700/40 flex items-center gap-3'
-                  >
-                    <div className='w-10 h-10 rounded-full bg-red-800/40 border border-red-600/30 flex items-center justify-center'>
-                      <Icon
-                        name={role?.icon ?? 'user'}
-                        size='md'
-                        className='text-red-300'
-                      />
-                    </div>
-                    <div>
-                      <div className='text-parchment-100 font-medium'>
-                        {p.name}
-                      </div>
-                      <div className='text-xs text-red-400/70'>
-                        {getRoleName(p.roleId, language)}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-              {minionPlayers.length === 0 && (
-                <div className='text-center p-4 text-parchment-500'>
-                  No Minions in play
-                </div>
-              )}
+              <EvilTeamReveal
+                state={state}
+                viewer={player}
+                viewerType='demon'
+              />
             </div>
 
             <Button
@@ -531,35 +511,47 @@ const definition: RoleDefinition = {
             title={roleT.demonBluffsTitle}
             description={roleT.demonBluffsDescription}
           >
-            <div className='space-y-3 mb-6'>
-              <p className='text-sm text-red-300/70 text-center font-medium mb-2'>
+            <div className='mb-6'>
+              <p className='text-sm text-red-300/70 text-center font-medium mb-3'>
                 {roleT.theseAreYourBluffs}
               </p>
-              {bluffRoles.map((role) => {
-                if (!role) return null
-                return (
-                  <div
-                    key={role.id}
-                    className='p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-blue-900/30 border border-indigo-600/30 flex items-center gap-3'
-                  >
-                    <div className='w-10 h-10 rounded-full bg-indigo-800/40 border border-indigo-500/30 flex items-center justify-center'>
-                      <Icon
-                        name={role.icon}
-                        size='md'
-                        className='text-indigo-300'
-                      />
-                    </div>
-                    <div>
-                      <div className='text-parchment-100 font-medium'>
-                        {getRoleName(role.id, language)}
+              <div className='grid grid-cols-1 gap-3'>
+                {bluffRoles.map((role) => {
+                  if (!role) return null
+                  const desc = getRoleDescription(role.id, language)
+                  return (
+                    <div
+                      key={role.id}
+                      className='rounded-xl border-2 border-indigo-500/30 bg-gradient-to-b from-indigo-900/30 to-blue-900/20 p-4'
+                      style={{
+                        boxShadow:
+                          '0 0 16px rgba(99,102,241,0.15), inset 0 1px 0 rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      <div className='flex items-start gap-3'>
+                        {/* Role icon medallion */}
+                        <div className='w-10 h-10 rounded-full bg-indigo-800/40 border border-indigo-500/30 flex items-center justify-center flex-shrink-0'>
+                          <Icon
+                            name={role.icon}
+                            size='md'
+                            className='text-indigo-300'
+                          />
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                          <div className='text-parchment-100 font-tarot tracking-wider uppercase text-sm'>
+                            {getRoleName(role.id, language)}
+                          </div>
+                          {desc && (
+                            <p className='text-xs text-parchment-400 mt-1 leading-snug'>
+                              {desc}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className='text-xs text-indigo-400/70'>
-                        {t.teams[role.team]?.name ?? role.team}
-                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
 
             <MysticDivider />

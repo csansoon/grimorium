@@ -19,38 +19,35 @@ import { Button, Icon } from '../../../../../components/atoms'
 import en from './i18n/en'
 import es from './i18n/es'
 
-registerRoleTranslations('scarlet_woman', 'en', en)
-registerRoleTranslations('scarlet_woman', 'es', es)
+registerRoleTranslations('baron', 'en', en)
+registerRoleTranslations('baron', 'es', es)
 
 type Phase = 'step_list' | 'show_evil_team'
 
 /**
- * Scarlet Woman — Minion role.
+ * Baron — Minion role.
  *
- * If there are 5 or more players alive and the Demon dies,
- * the Scarlet Woman becomes the Demon.
+ * There are extra Outsiders in play. [+2 Outsiders]
  *
- * This is a mostly passive role. The demon-succession behavior is on the
- * `demon_successor` effect, which intercepts kill and execute intents
- * targeting Demons.
+ * The Baron's ability only affects the game setup — when the Baron is
+ * in play, the narrator should include 2 extra Outsiders (replacing
+ * 2 Townsfolk) in the role distribution.
  *
  * First night: Shown the evil team (other Minions + Demon).
  * Subsequent nights: Does not wake.
  */
 const definition: RoleDefinition = {
-  id: 'scarlet_woman',
+  id: 'baron',
   team: 'minion',
-  icon: 'rose',
+  icon: 'hatTop',
   nightOrder: 4, // Very early — just show info, before action roles
-  chaos: 50,
+  chaos: 40,
+  distributionModifier: { outsider: 2, townsfolk: -2 },
 
   shouldWake: (game) => {
     const state = game.history.at(-1)?.stateAfter
     return state?.round === 1
   },
-
-  // Scarlet Woman gets demon_successor effect at game start
-  initialEffects: [{ type: 'demon_successor', expiresAt: 'never' }],
 
   nightSteps: [
     {
@@ -67,7 +64,7 @@ const definition: RoleDefinition = {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
 
-    const roleT = getRoleTranslations('scarlet_woman', language)
+    const roleT = getRoleTranslations('baron', language)
 
     const handleComplete = () => {
       onComplete({
@@ -77,12 +74,12 @@ const definition: RoleDefinition = {
             message: [
               {
                 type: 'i18n',
-                key: 'roles.scarlet_woman.history.shownEvilTeam',
+                key: 'roles.baron.history.shownEvilTeam',
                 params: { player: player.id },
               },
             ],
             data: {
-              roleId: 'scarlet_woman',
+              roleId: 'baron',
               playerId: player.id,
               action: 'first_night_info',
             },
@@ -107,8 +104,8 @@ const definition: RoleDefinition = {
 
       return (
         <NightStepListLayout
-          icon='rose'
-          roleName={getRoleName('scarlet_woman', language)}
+          icon='hatTop'
+          roleName={getRoleName('baron', language)}
           playerName={player.name}
           isEvil
           steps={steps}

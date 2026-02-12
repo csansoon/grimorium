@@ -10,6 +10,10 @@ const es = {
   spyMalfunctionDescription:
     'El Espía está fallando — no muestres el Grimorio real.',
 
+  // First night: evil team
+  evilTeamTitle: 'Tu Equipo Malvado',
+  evilTeamDescription: 'Estos son tus compañeros malvados.',
+
   // History
   history: {
     viewedGrimoire: '{player} miró el Grimorio',

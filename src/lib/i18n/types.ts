@@ -184,6 +184,7 @@ export type Translations = {
     stepSelectNewImp: string
     stepChooseMaster: string
     stepViewGrimoire: string
+    stepShowEvilTeam: string
 
     // Malfunction Config
     stepConfigureMalfunction: string

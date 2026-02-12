@@ -180,6 +180,7 @@ const en: Translations = {
     stepSelectNewImp: 'Select New Imp',
     stepChooseMaster: 'Choose Master',
     stepViewGrimoire: 'View Grimoire',
+    stepShowEvilTeam: 'Your Evil Team',
 
     // Malfunction Config
     stepConfigureMalfunction: 'Configure Malfunction',

@@ -181,6 +181,7 @@ const es: Translations = {
     stepSelectNewImp: 'Seleccionar Nuevo Imp',
     stepChooseMaster: 'Elegir Amo',
     stepViewGrimoire: 'Ver Grimorio',
+    stepShowEvilTeam: 'Tu Equipo Malvado',
 
     // Malfunction Config
     stepConfigureMalfunction: 'Configurar Mal Funcionamiento',

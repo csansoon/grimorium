@@ -7,9 +7,14 @@ const en = {
   selectPlayerToPoison:
     'Select a player to poison tonight. Their ability will malfunction.',
 
+  // First night: evil team
+  evilTeamTitle: 'Your Evil Team',
+  evilTeamDescription: 'These are your fellow evil players.',
+
   // History
   history: {
     poisonedPlayer: '{player} poisoned {target}',
+    shownEvilTeam: '{player} was shown the evil team',
   },
 } as const
 

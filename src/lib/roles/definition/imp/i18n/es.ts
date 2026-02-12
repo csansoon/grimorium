@@ -1,7 +1,7 @@
 const es = {
-  name: 'Diablillo',
+  name: 'Diablo',
   description:
-    'Cada noche*, elige un jugador: muere. Si te matas a ti mismo, un Secuaz se convierte en el Diablillo.',
+    'Cada noche*, elige un jugador: muere. Si te matas a ti mismo, un Secuaz se convierte en el Diablo.',
 
   // DeflectRedirectUI
   deflectTitle: '¡Asesinato Redirigido!',
@@ -10,11 +10,11 @@ const es = {
   deflectOriginalLabel: 'objetivo original',
 
   // Self-kill conversion
-  selectNewImpTitle: 'Seleccionar Nuevo Diablillo',
+  selectNewImpTitle: 'Seleccionar Nuevo Diablo',
   selectNewImpDescription:
-    'El Diablillo se mató a sí mismo. Elige qué Secuaz vivo se convierte en el nuevo Diablillo.',
-  selectMinionToBecome: 'Selecciona un Secuaz para convertirse en el Diablillo',
-  confirmNewImp: 'Confirmar Nuevo Diablillo',
+    'El Diablo se mató a sí mismo. Elige qué Secuaz vivo se convierte en el nuevo Diablo.',
+  selectMinionToBecome: 'Selecciona un Secuaz para convertirse en el Diablo',
+  confirmNewImp: 'Confirmar Nuevo Diablo',
 
   // First night: minions
   demonMinionsTitle: 'Tus Secuaces',
@@ -38,10 +38,9 @@ const es = {
     failedToKill: '{player} intentó matar a {target}, pero estaba protegido/a',
     deflectRedirected:
       '{player} eligió a {target}, pero el asesinato fue deflectado a {redirect}',
-    shownMinionsAndBluffs:
-      '{player} vio a sus Secuaces y recibió faroles: ',
-    selfKilled: '{player} (Diablillo) eligió matarse a sí mismo/a',
-    minionBecameImp: '{player} se convirtió en el nuevo Diablillo',
+    shownMinionsAndBluffs: '{player} vio a sus Secuaces y recibió faroles: ',
+    selfKilled: '{player} (Diablo) eligió matarse a sí mismo/a',
+    minionBecameImp: '{player} se convirtió en el nuevo Diablo',
   },
 } as const
 
