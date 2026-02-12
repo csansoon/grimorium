@@ -1,6 +1,6 @@
-# Grimoire — Agent Manual
+# The Grimoire — Agent Manual
 
-This is a **Blood on the Clocktower** narrator companion app built with React 18, TypeScript, Vite, Tailwind CSS, and Radix UI. It guides the narrator through all game phases — role revelation, night actions, day discussion, nominations, voting, and game-over. The narrator controls the device at all times and shows the screen to players when needed (no device passing).
+This is a **Blood on the Clocktower** storyteller companion app built with React 18, TypeScript, Vite, Tailwind CSS, and Radix UI. It guides the storyteller through all game phases — role revelation, night actions, day discussion, nominations, voting, and game-over. The storyteller controls the device at all times and shows the screen to players when needed (no device passing).
 
 This document explains every system in the codebase, how they interconnect, and the patterns you must follow when implementing new features.
 

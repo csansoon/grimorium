@@ -21,8 +21,8 @@ const es: Translations = {
   },
 
   mainMenu: {
-    title: 'Grimorio',
-    subtitle: 'Asistente de Narrador para Blood on the Clocktower',
+    title: 'El Grimorio',
+    subtitle: 'Compañero del Narrador de Blood on the Clocktower',
     continueGame: 'Continuar Partida',
     newGame: 'Nueva Partida',
     startFreshGame: 'Comenzar una nueva partida',

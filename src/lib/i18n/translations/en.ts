@@ -21,8 +21,8 @@ const en: Translations = {
   },
 
   mainMenu: {
-    title: 'Grimoire',
-    subtitle: 'Blood on the Clocktower Narrator Companion',
+    title: 'The Grimoire',
+    subtitle: 'Storyteller Companion for Blood on the Clocktower',
     continueGame: 'Continue Game',
     newGame: 'New Game',
     startFreshGame: 'Start a fresh game',

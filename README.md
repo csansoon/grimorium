@@ -1,17 +1,30 @@
-# Grimoire
+# The Grimoire
 
-A Progressive Web App built with Vite, React, TypeScript, and Tailwind CSS.
+> Every Storyteller needs a Grimoire.
+
+A companion app for **Blood on the Clocktower** that handles the clockwork so you can focus on the story.
+
+The Grimoire walks you through every phase of the game — role revelation, night actions, day discussion, nominations, voting, and game-over — so you never lose track of what happens next.
+
+**Currently supports:** Trouble Brewing
 
 ## Features
 
-- ⚡️ Vite for fast development and optimized builds
-- ⚛️ React 18 with TypeScript
-- 🎨 Tailwind CSS for styling
-- 📱 PWA support with offline capability
-- 🔥 Hot Module Replacement (HMR)
-- 📦 Optimized production build
+- Step-by-step night phase guidance for every role
+- Full player state tracking — roles, effects, and abilities
+- Handles complex interactions automatically — kills, protections, redirects, and more
+- Supports perception and deception mechanics (Recluse, Drunk, Poisoner...)
+- Day phase with nominations, voting, and day abilities
+- Win condition detection for both core and special conditions
+- Works offline as an installable PWA — no internet needed at the table
+- English and Spanish localization
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm
 
 ### Install Dependencies
 
@@ -25,86 +38,25 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
 ### Build for Production
 
 ```bash
 pnpm build
 ```
 
-### Preview Production Build
+### Run Tests
 
 ```bash
-pnpm preview
+pnpm test
 ```
-
-### Type Check
-
-```bash
-pnpm tc
-```
-
-## PWA Features
-
-This app is configured as a Progressive Web App with:
-- Service Worker for offline support
-- Automatic updates
-- Installable on mobile and desktop
-- App manifest for native-like experience
 
 ## Tech Stack
 
-- **Vite** - Next generation frontend tooling
-- **React** - A JavaScript library for building user interfaces
-- **TypeScript** - Typed superset of JavaScript
-- **Tailwind CSS** - Utility-first CSS framework
-- **vite-plugin-pwa** - Zero-config PWA plugin for Vite
-
-## Project Structure
-
-```
-grimoire/
-├── src/
-│   ├── App.tsx          # Main app component
-│   ├── main.tsx         # Application entry point
-│   ├── index.css        # Global styles with Tailwind directives
-│   └── vite-env.d.ts    # Vite type definitions
-├── index.html           # HTML entry point
-├── vite.config.ts       # Vite configuration
-├── tailwind.config.js   # Tailwind CSS configuration
-├── postcss.config.js    # PostCSS configuration
-├── tsconfig.json        # TypeScript configuration
-└── package.json         # Project dependencies and scripts
-```
-
-## Plan:
- - First, build a prototype with three simple roles:
-    - Priest (can select one player to be protected from the Imp during this night)
-    - Imp (selects a player to die each night)
-    - Villager (can select one player to see its role)
-  This prototype should have the following mechanics and features:
-    - Game creation
-    - Game state persisted in local storage
-    - Game runs based on state changes
-    - Night phase
-    - End conditions
-
- - Then, actual UI components that get dynamically rendered based on the roles, effects and overall game state.
-    This may require creating a component library.
-
- - After a prototype is built, we can start adding actual roles and Effects.
-    First, we should add only roles with simple scripts that run only on the night phase.
-
- - After that, we can start building a day phase:
-    - Voting mechanics
-    - Actions that can be done from some roles during the day phase (like Hunter's)
-
- - Finally, think how to implement some of the hardest roles and effects. Leave to the end:
-    - Poisoined (Effect)
-    - Drunk (Role)
+- **React 18** + **TypeScript**
+- **Vite** — fast builds and HMR
+- **Tailwind CSS** + **Radix UI** — styling and accessible primitives
+- **PWA** — offline support, installable on mobile and desktop
 
 ## License
 
 MIT
-
