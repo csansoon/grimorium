@@ -22,7 +22,7 @@ const es: Translations = {
 
   mainMenu: {
     title: 'El Grimorio',
-    subtitle: 'Compañero del Narrador de Blood on the Clocktower',
+    subtitle: 'Compañero del Cuentacuentos de Blood on the Clocktower',
     tapToOpen: 'Toca para abrir',
     continueGame: 'Continuar Partida',
     newGame: 'Nueva Partida',
@@ -130,17 +130,17 @@ const es: Translations = {
     gameHistory: 'Historial de Partida',
 
     // Shared narrator keys
-    narratorSetup: 'Configuración del Narrador',
+    narratorSetup: 'Configuración del Cuentacuentos',
     selectTwoPlayers: 'Selecciona 2 jugadores para mostrar',
     selectWhichRoleToShow: 'Selecciona qué rol revelar',
     showToPlayer: 'Mostrar al Jugador',
     oneOfThemIsThe: 'Uno de ellos es el/la...',
 
     // Handback screen
-    handbackToNarrator: 'Devolver al Narrador',
+    handbackToNarrator: 'Devolver al Cuentacuentos',
     handbackDescription:
-      'Por favor, devuelve el dispositivo al Narrador antes de continuar.',
-    narratorReady: 'Narrador Listo',
+      'Por favor, devuelve el dispositivo al Cuentacuentos antes de continuar.',
+    narratorReady: 'Cuentacuentos Listo',
 
     // Role Revelation
     roleRevelation: 'Revelación de Roles',
@@ -168,7 +168,7 @@ const es: Translations = {
     stepConfigurePerceptions: 'Configurar Percepciones',
     stepShowResult: 'Mostrar Resultado',
     stepShowRole: 'Mostrar Rol',
-    stepNarratorSetup: 'Configuración del Narrador',
+    stepNarratorSetup: 'Configuración del Cuentacuentos',
     stepChooseVictim: 'Elegir Víctima',
     stepChoosePlayer: 'Elegir Jugador',
     stepSelectPlayer: 'Seleccionar Jugador',
@@ -198,7 +198,7 @@ const es: Translations = {
     // Setup Actions
     setupActions: 'Acciones de Configuración',
     setupActionsSubtitle:
-      'Configura los roles que necesitan preparación del narrador antes de comenzar',
+      'Configura los roles que necesitan preparación del cuentacuentos antes de comenzar',
     allSetupActionsComplete: 'Todas las acciones de configuración completadas',
     continueToRoleRevelation: 'Continuar a Revelación de Roles',
 
@@ -244,10 +244,10 @@ const es: Translations = {
     tapWhenReady: 'Toca cuando estés listo para mostrar',
 
     // Audience indicators
-    audienceNarrator: 'Narrador',
+    audienceNarrator: 'Cuentacuentos',
     audiencePlayerChoice: 'Despertar jugador',
     audiencePlayerReveal: 'Mostrar al jugador',
-    storytellerDecision: 'Esta es tu decisión como Narrador',
+    storytellerDecision: 'Esta es tu decisión como Cuentacuentos',
     wakePlayerPrompt: 'Despierta a {player} y pídele que elija',
   },
 
@@ -282,7 +282,7 @@ const es: Translations = {
     addEffect: 'Añadir Efecto',
     noEffects: 'Sin efectos',
     close: 'Cerrar',
-    narrator: 'Narrador',
+    narrator: 'Cuentacuentos',
     unknown: 'Desconocido',
     unknownPlayer: '[Jugador Desconocido]',
     unknownRole: '[Rol Desconocido]',
@@ -305,9 +305,9 @@ const es: Translations = {
     executed: '{player} ha sido ejecutado/a',
     goodWins: '¡El Bien gana! El Demonio ha sido derrotado.',
     evilWins: '¡El Mal gana! El pueblo ha caído.',
-    effectAdded: 'El Narrador añadió {effect} a {player}',
-    effectUpdated: 'El Narrador actualizó {effect} en {player}',
-    effectRemoved: 'El Narrador eliminó {effect} de {player}',
+    effectAdded: 'El Cuentacuentos añadió {effect} a {player}',
+    effectUpdated: 'El Cuentacuentos actualizó {effect} en {player}',
+    effectRemoved: 'El Cuentacuentos eliminó {effect} de {player}',
     roleChanged: '{player} se convirtió en el/la {role}',
     setupAction: 'Configuración: {player} configurado como {role}',
   },
@@ -316,7 +316,8 @@ const es: Translations = {
     'trouble-brewing': 'Problemas en el Pueblo',
     custom: 'Partida Personalizada',
     selectScript: 'Elige un Guión',
-    selectScriptSubtitle: 'Selecciona una edición para determinar los roles disponibles',
+    selectScriptSubtitle:
+      'Selecciona una edición para determinar los roles disponibles',
     enforceDistribution: 'Distribución estándar de roles',
     freeformSelection: 'Cualquier rol, cualquier distribución',
     // Generator presets

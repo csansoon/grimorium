@@ -22,7 +22,7 @@ const en: Translations = {
 
   mainMenu: {
     title: 'The Grimoire',
-    subtitle: 'Storyteller Companion for Blood on the Clocktower',
+    subtitle: 'Every Storyteller needs a Grimoire.',
     tapToOpen: 'Tap to open',
     continueGame: 'Continue Game',
     newGame: 'New Game',
@@ -130,17 +130,17 @@ const en: Translations = {
     gameHistory: 'Game History',
 
     // Shared narrator keys
-    narratorSetup: 'Narrator Setup',
+    narratorSetup: 'Storyteller Setup',
     selectTwoPlayers: 'Select 2 players to show',
     selectWhichRoleToShow: 'Select which role to reveal',
     showToPlayer: 'Show to Player',
     oneOfThemIsThe: 'One of them is the...',
 
     // Handback screen
-    handbackToNarrator: 'Hand back to Narrator',
+    handbackToNarrator: 'Hand back to Storyteller',
     handbackDescription:
-      'Please return the device to the Narrator before continuing.',
-    narratorReady: 'Narrator Ready',
+      'Please return the device to the Storyteller before continuing.',
+    narratorReady: 'Storyteller Ready',
 
     // Role Revelation
     roleRevelation: 'Role Revelation',
@@ -167,7 +167,7 @@ const en: Translations = {
     stepConfigurePerceptions: 'Configure Perceptions',
     stepShowResult: 'Show Result',
     stepShowRole: 'Show Role',
-    stepNarratorSetup: 'Narrator Setup',
+    stepNarratorSetup: 'Storyteller Setup',
     stepChooseVictim: 'Choose Victim',
     stepChoosePlayer: 'Choose Player',
     stepSelectPlayer: 'Select Player',
@@ -197,7 +197,7 @@ const en: Translations = {
     // Setup Actions
     setupActions: 'Setup Actions',
     setupActionsSubtitle:
-      'Configure roles that need narrator setup before the game begins',
+      'Configure roles that need storyteller setup before the game begins',
     allSetupActionsComplete: 'All setup actions complete',
     continueToRoleRevelation: 'Continue to Role Revelation',
 
@@ -304,9 +304,9 @@ const en: Translations = {
     executed: '{player} has been executed',
     goodWins: 'Good wins! The Demon has been defeated.',
     evilWins: 'Evil wins! The town has fallen.',
-    effectAdded: 'Narrator added {effect} to {player}',
-    effectUpdated: 'Narrator updated {effect} on {player}',
-    effectRemoved: 'Narrator removed {effect} from {player}',
+    effectAdded: 'Storyteller added {effect} to {player}',
+    effectUpdated: 'Storyteller updated {effect} on {player}',
+    effectRemoved: 'Storyteller removed {effect} from {player}',
     roleChanged: '{player} became the {role}',
     setupAction: 'Setup: {player} configured as {role}',
   },
@@ -315,7 +315,8 @@ const en: Translations = {
     'trouble-brewing': 'Trouble Brewing',
     custom: 'Custom Game',
     selectScript: 'Choose a Script',
-    selectScriptSubtitle: 'Select an edition to determine which roles are available',
+    selectScriptSubtitle:
+      'Select an edition to determine which roles are available',
     enforceDistribution: 'Standard role distribution',
     freeformSelection: 'Any roles, any distribution',
     // Generator presets
