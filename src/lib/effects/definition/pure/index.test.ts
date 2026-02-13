@@ -152,6 +152,69 @@ describe('Pure effect', () => {
   })
 
   // ================================================================
+  // HANDLER — DRUNK NOMINATOR (perceived as Outsider, not Townsfolk)
+  // ================================================================
+
+  describe('drunk (believing townsfolk) nominates virgin', () => {
+    it('allows the nomination (drunk is an outsider, not townsfolk)', () => {
+      // Drunk's roleId was changed to "chef" during setup, but they have the drunk effect
+      const nominator = addEffectTo(
+        makePlayer({ id: 'p1', roleId: 'chef' }),
+        'drunk',
+        { actualRole: 'drunk' },
+      )
+      const virgin = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'virgin' }),
+        'pure',
+      )
+      const state = makeState({
+        phase: 'day',
+        round: 1,
+        players: [nominator, virgin],
+      })
+      const game = makeGame(state)
+      const intent: NominateIntent = {
+        type: 'nominate',
+        nominatorId: 'p1',
+        nomineeId: 'p2',
+      }
+
+      const result = handler.handle(intent, virgin, state, game)
+      expect(result.action).toBe('allow')
+    })
+
+    it('spends purity without killing the drunk nominator', () => {
+      const nominator = addEffectTo(
+        makePlayer({ id: 'p1', roleId: 'chef' }),
+        'drunk',
+        { actualRole: 'drunk' },
+      )
+      const virgin = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'virgin' }),
+        'pure',
+      )
+      const state = makeState({
+        phase: 'day',
+        round: 1,
+        players: [nominator, virgin],
+      })
+      const game = makeGame(state)
+      const intent: NominateIntent = {
+        type: 'nominate',
+        nominatorId: 'p1',
+        nomineeId: 'p2',
+      }
+
+      const result = handler.handle(intent, virgin, state, game)
+      if (result.action === 'allow') {
+        expect(result.stateChanges?.removeEffects?.['p2']).toContain('pure')
+        expect(result.stateChanges?.addEffects?.['p1']).toBeUndefined()
+        expect(result.stateChanges?.entries?.[0].type).toBe('virgin_spent')
+      }
+    })
+  })
+
+  // ================================================================
   // HANDLER — NON-TOWNSFOLK NOMINATOR (allow, spend purity)
   // ================================================================
 
