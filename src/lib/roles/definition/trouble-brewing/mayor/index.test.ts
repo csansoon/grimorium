@@ -127,6 +127,31 @@ describe('Mayor', () => {
       expect(winCheck.check(state, game)).toBeNull()
     })
 
+    it('does not trigger when the only alive "mayor" is a malfunctioning Drunk', () => {
+      const players = [
+        // Real Mayor is dead
+        addEffectTo(makePlayer({ id: 'p1', roleId: 'mayor' }), 'dead'),
+        // Drunk-as-Mayor: roleId changed to 'mayor' during setup, has drunk effect
+        addEffectTo(makePlayer({ id: 'p2', roleId: 'mayor' }), 'drunk'),
+        makePlayer({ id: 'p3', roleId: 'villager' }),
+        makePlayer({ id: 'p4', roleId: 'imp' }),
+      ]
+      // 3 alive: p2 (Drunk-as-Mayor), p3, p4
+      const state = makeState({ phase: 'day', round: 2, players })
+      const game = makeGameWithHistory(
+        [
+          {
+            type: 'day_started',
+            data: { round: 2 },
+            stateOverrides: { phase: 'day', round: 2 },
+          },
+        ],
+        state,
+      )
+
+      expect(winCheck.check(state, game)).toBeNull()
+    })
+
     it('does not trigger when virgin_execution happened today', () => {
       const players = [
         makePlayer({ id: 'p1', roleId: 'mayor' }),

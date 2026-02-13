@@ -1,6 +1,7 @@
 import { RoleDefinition } from '../../../types'
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import { getAlivePlayers } from '../../../../types'
+import { isMalfunctioning } from '../../../../effects'
 import { registerRoleTranslations } from '../../../../i18n'
 
 import en from './i18n/en'
@@ -38,8 +39,12 @@ const definition: RoleDefinition = {
           }
         }
 
-        // Check if any alive player is the Mayor
-        const hasAliveMayor = alivePlayers.some((p) => p.roleId === 'mayor')
+        // Check if any alive, non-malfunctioning player is the Mayor
+        // (A Drunk-as-Mayor has roleId 'mayor' but is malfunctioning,
+        // so they shouldn't count for the peaceful victory)
+        const hasAliveMayor = alivePlayers.some(
+          (p) => p.roleId === 'mayor' && !isMalfunctioning(p),
+        )
         if (!hasAliveMayor) return null
 
         return 'townsfolk'
