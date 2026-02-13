@@ -29,8 +29,9 @@ type Phase = 'step_list' | 'show_evil_team' | 'choose_target'
 /**
  * The Poisoner — Minion role.
  *
- * First night: Shown the evil team (other Minions + Demon).
- * No poison action on the first night.
+ * First night: Shown the evil team (other Minions + Demon), then
+ * chooses a player to poison. The poison is active from Night 1,
+ * which is crucial — it can make info roles give wrong results.
  *
  * Subsequent nights: chooses a player to poison.
  * The poisoned effect expires at "end_of_day" — it lasts through
@@ -59,7 +60,6 @@ const definition: RoleDefinition = {
       id: 'choose_target',
       icon: 'flask',
       getLabel: (t) => t.game.stepChooseTarget,
-      condition: (_game, _player, state) => state.round > 1,
       audience: 'player_choice',
     },
   ],
@@ -70,6 +70,7 @@ const definition: RoleDefinition = {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
     const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
+    const [showEvilTeamDone, setShowEvilTeamDone] = useState(false)
 
     const isFirstNight = state.round === 1
     const roleT = getRoleTranslations('poisoner', language)
@@ -84,28 +85,49 @@ const definition: RoleDefinition = {
       const target = state.players.find((p) => p.id === selectedTarget)
       if (!target) return
 
-      onComplete({
-        entries: [
+      const entries = []
+
+      // On first night, include the evil team reveal history entry
+      if (isFirstNight) {
+        entries.push({
+          type: 'night_action' as const,
+          message: [
+            {
+              type: 'i18n' as const,
+              key: 'roles.poisoner.history.shownEvilTeam',
+              params: { player: player.id },
+            },
+          ],
+          data: {
+            roleId: 'poisoner',
+            playerId: player.id,
+            action: 'first_night_info',
+          },
+        })
+      }
+
+      entries.push({
+        type: 'night_action' as const,
+        message: [
           {
-            type: 'night_action',
-            message: [
-              {
-                type: 'i18n',
-                key: 'roles.poisoner.history.poisonedPlayer',
-                params: {
-                  player: player.id,
-                  target: target.id,
-                },
-              },
-            ],
-            data: {
-              roleId: 'poisoner',
-              playerId: player.id,
-              action: 'poison',
-              targetId: target.id,
+            type: 'i18n' as const,
+            key: 'roles.poisoner.history.poisonedPlayer',
+            params: {
+              player: player.id,
+              target: target.id,
             },
           },
         ],
+        data: {
+          roleId: 'poisoner',
+          playerId: player.id,
+          action: 'poison',
+          targetId: target.id,
+        },
+      })
+
+      onComplete({
+        entries,
         addEffects: {
           [target.id]: [
             {
@@ -116,28 +138,6 @@ const definition: RoleDefinition = {
             },
           ],
         },
-      })
-    }
-
-    const handleFirstNightComplete = () => {
-      onComplete({
-        entries: [
-          {
-            type: 'night_action',
-            message: [
-              {
-                type: 'i18n',
-                key: 'roles.poisoner.history.shownEvilTeam',
-                params: { player: player.id },
-              },
-            ],
-            data: {
-              roleId: 'poisoner',
-              playerId: player.id,
-              action: 'first_night_info',
-            },
-          },
-        ],
       })
     }
 
@@ -153,18 +153,18 @@ const definition: RoleDefinition = {
           id: 'show_evil_team',
           icon: 'swords',
           label: t.game.stepShowEvilTeam,
-          status: 'pending',
+          status: showEvilTeamDone ? 'done' : 'pending',
           audience: 'player_reveal' as const,
         })
-      } else {
-        steps.push({
-          id: 'choose_target',
-          icon: 'flask',
-          label: t.game.stepChooseTarget,
-          status: 'pending',
-          audience: 'player_choice' as const,
-        })
       }
+
+      steps.push({
+        id: 'choose_target',
+        icon: 'flask',
+        label: t.game.stepChooseTarget,
+        status: 'pending',
+        audience: 'player_choice' as const,
+      })
 
       return (
         <NightStepListLayout
@@ -199,7 +199,10 @@ const definition: RoleDefinition = {
             </div>
 
             <Button
-              onClick={handleFirstNightComplete}
+              onClick={() => {
+                setShowEvilTeamDone(true)
+                setPhase('step_list')
+              }}
               fullWidth
               size='lg'
               variant='evil'
@@ -213,7 +216,7 @@ const definition: RoleDefinition = {
     }
 
     // ================================================================
-    // RENDER: Choose Target (subsequent nights)
+    // RENDER: Choose Target (every night)
     // ================================================================
 
     return (
