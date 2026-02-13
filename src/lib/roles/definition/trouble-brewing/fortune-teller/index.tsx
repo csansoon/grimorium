@@ -1,5 +1,9 @@
 import { useState, useMemo } from 'react'
-import { RoleDefinition, NightActionResult } from '../../../types'
+import {
+  RoleDefinition,
+  NightActionResult,
+  SetupActionProps,
+} from '../../../types'
 import { getRole } from '../../../index'
 import { isAlive } from '../../../../types'
 import {
@@ -36,10 +40,112 @@ registerRoleTranslations('fortune_teller', 'es', es)
 
 type Phase =
   | 'step_list'
-  | 'red_herring_setup'
   | 'select_players'
   | 'configure_malfunction'
   | 'show_result'
+
+function FortuneTellerSetupAction({
+  player,
+  state,
+  onComplete,
+}: SetupActionProps) {
+  const { t, language } = useI18n()
+  const roleT = getRoleTranslations('fortune_teller', language)
+  const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(
+    null,
+  )
+
+  // Get good players for Red Herring selection (exclude the Fortune Teller)
+  const goodPlayers = state.players.filter((p) => {
+    if (p.id === player.id) return false
+    const role = getRole(p.roleId)
+    return role?.team === 'townsfolk' || role?.team === 'outsider'
+  })
+
+  const handleSelectRandom = () => {
+    if (goodPlayers.length === 0) return
+    const randomIndex = Math.floor(Math.random() * goodPlayers.length)
+    setSelectedRedHerring(goodPlayers[randomIndex].id)
+  }
+
+  const handleConfirm = () => {
+    if (!selectedRedHerring) return
+    onComplete({
+      addEffects: {
+        [selectedRedHerring]: [
+          {
+            type: 'red_herring',
+            data: { fortuneTellerId: player.id },
+            expiresAt: 'never',
+          },
+        ],
+      },
+    })
+  }
+
+  return (
+    <div className='min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col'>
+      {/* Header */}
+      <div className='sticky top-0 z-10 bg-grimoire-dark/95 backdrop-blur-sm border-b border-mystic-gold/20 px-4 py-3'>
+        <div className='flex items-center gap-3 max-w-lg mx-auto'>
+          <div className='w-10 h-10 rounded-full bg-amber-900/30 border border-amber-700/50 flex items-center justify-center'>
+            <Icon name='eye' size='md' className='text-amber-400' />
+          </div>
+          <div>
+            <h1 className='font-tarot text-lg text-parchment-100 tracking-wider uppercase'>
+              {roleT.redHerringSetupTitle}
+            </h1>
+            <p className='text-xs text-parchment-500'>{player.name}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className='flex-1 px-4 py-4 max-w-lg mx-auto w-full overflow-y-auto'>
+        <div className='rounded-xl border border-amber-700/30 bg-amber-900/10 p-4 mb-4'>
+          <p className='text-sm text-parchment-300'>{roleT.redHerringInfo}</p>
+        </div>
+
+        <div className='flex justify-center mb-4'>
+          <Button variant='secondary' onClick={handleSelectRandom}>
+            <Icon name='shuffle' size='sm' className='mr-2' />
+            {roleT.selectRandomRedHerring}
+          </Button>
+        </div>
+
+        <h3 className='text-sm font-medium text-parchment-400 uppercase tracking-wider mb-3'>
+          {roleT.selectGoodPlayerAsRedHerring}
+        </h3>
+
+        <div className='mb-6'>
+          <PlayerPickerList
+            players={goodPlayers}
+            selected={selectedRedHerring ? [selectedRedHerring] : []}
+            onSelect={setSelectedRedHerring}
+            selectionCount={1}
+            variant='blue'
+          />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className='sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t border-mystic-gold/20 px-4 py-3'>
+        <div className='max-w-lg mx-auto'>
+          <Button
+            onClick={handleConfirm}
+            disabled={!selectedRedHerring}
+            fullWidth
+            size='lg'
+            variant='gold'
+          >
+            <Icon name='check' size='md' className='mr-2' />
+            {t.common.confirm}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const definition: RoleDefinition = {
   id: 'fortune_teller',
@@ -50,22 +156,6 @@ const definition: RoleDefinition = {
   shouldWake: (_game, player) => isAlive(player),
 
   nightSteps: [
-    {
-      id: 'red_herring_setup',
-      icon: 'fish',
-      getLabel: (t) => t.game.stepAssignRedHerring,
-      condition: (_game, player, state) => {
-        const isFirstNight = state.round === 1
-        const hasRedHerring = state.players.some((p) =>
-          p.effects.some(
-            (e) =>
-              e.type === 'red_herring' && e.data?.fortuneTellerId === player.id,
-          ),
-        )
-        return isFirstNight && !hasRedHerring && !isMalfunctioning(player)
-      },
-      audience: 'narrator',
-    },
     {
       id: 'select_players',
       icon: 'users',
@@ -87,6 +177,8 @@ const definition: RoleDefinition = {
     },
   ],
 
+  SetupAction: FortuneTellerSetupAction,
+
   RoleReveal: DefaultRoleReveal,
 
   NightAction: ({ state, player, onComplete }) => {
@@ -94,37 +186,15 @@ const definition: RoleDefinition = {
 
     const roleT = getRoleTranslations('fortune_teller', language)
 
-    // Check if this Fortune Teller already has a Red Herring assigned
-    const hasRedHerring = state.players.some((p) =>
-      p.effects.some(
-        (e) =>
-          e.type === 'red_herring' && e.data?.fortuneTellerId === player.id,
-      ),
-    )
-
-    const isFirstNight = state.round === 1
     const malfunctioning = isMalfunctioning(player)
-    const needsRedHerringSetup =
-      isFirstNight && !hasRedHerring && !malfunctioning
 
     const [phase, setPhase] = useState<Phase>('step_list')
-    const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(
-      null,
-    )
     const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
-    const [redHerringDone, setRedHerringDone] = useState(false)
     const [selectPlayersDone, setSelectPlayersDone] = useState(false)
     const [malfunctionValue, setMalfunctionValue] = useState<boolean | null>(
       null,
     )
     const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
-
-    // Get good players for Red Herring selection
-    const goodPlayers = state.players.filter((p) => {
-      if (p.id === player.id) return false
-      const role = getRole(p.roleId)
-      return role?.team === 'townsfolk' || role?.team === 'outsider'
-    })
 
     // Get all other players for the nightly check
     const otherPlayers = state.players.filter((p) => p.id !== player.id)
@@ -133,19 +203,9 @@ const definition: RoleDefinition = {
       return state.players.find((p) => p.id === playerId)?.name ?? t.ui.unknown
     }
 
-    // Build steps: Assign Red Herring (cond.), Select players, Configure Malfunction (cond.), Show Result
+    // Build steps: Select players, Configure Malfunction (cond.), Show Result
     const steps: NightStep[] = useMemo(() => {
       const result: NightStep[] = []
-
-      if (needsRedHerringSetup) {
-        result.push({
-          id: 'red_herring_setup',
-          icon: 'fish',
-          label: t.game.stepAssignRedHerring,
-          status: redHerringDone ? 'done' : 'pending',
-          audience: 'narrator' as const,
-        })
-      }
 
       result.push({
         id: 'select_players',
@@ -174,19 +234,10 @@ const definition: RoleDefinition = {
       })
 
       return result
-    }, [
-      needsRedHerringSetup,
-      redHerringDone,
-      selectPlayersDone,
-      malfunctioning,
-      malfunctionConfigDone,
-      t,
-    ])
+    }, [selectPlayersDone, malfunctioning, malfunctionConfigDone, t])
 
     const handleSelectStep = (stepId: string) => {
-      if (stepId === 'red_herring_setup') {
-        setPhase('red_herring_setup')
-      } else if (stepId === 'select_players') {
+      if (stepId === 'select_players') {
         setPhase('select_players')
       } else if (stepId === 'configure_malfunction') {
         setPhase('configure_malfunction')
@@ -198,18 +249,6 @@ const definition: RoleDefinition = {
     const handleMalfunctionComplete = (value: boolean) => {
       setMalfunctionValue(value)
       setMalfunctionConfigDone(true)
-      setPhase('step_list')
-    }
-
-    const handleSelectRandomRedHerring = () => {
-      if (goodPlayers.length === 0) return
-      const randomIndex = Math.floor(Math.random() * goodPlayers.length)
-      setSelectedRedHerring(goodPlayers[randomIndex].id)
-    }
-
-    const handleConfirmRedHerring = () => {
-      if (!selectedRedHerring) return
-      setRedHerringDone(true)
       setPhase('step_list')
     }
 
@@ -240,9 +279,7 @@ const definition: RoleDefinition = {
       // Check if either selected player registers as a Demon
       const registersDemon = (p: typeof player1) => {
         const perception = perceive(p, player, 'role', state)
-        if (perception.team === 'demon') return true
-        if (selectedRedHerring === p.id) return true
-        return false
+        return perception.team === 'demon'
       }
 
       const calculatedSawDemon =
@@ -252,34 +289,6 @@ const definition: RoleDefinition = {
         malfunctionValue !== null ? malfunctionValue : calculatedSawDemon
 
       const entries: NightActionResult['entries'] = []
-
-      // If we just assigned a Red Herring, log it first
-      if (needsRedHerringSetup && selectedRedHerring) {
-        const redHerringPlayer = state.players.find(
-          (p) => p.id === selectedRedHerring,
-        )
-        if (redHerringPlayer) {
-          entries.push({
-            type: 'night_action',
-            message: [
-              {
-                type: 'i18n',
-                key: 'roles.fortune_teller.history.redHerringAssigned',
-                params: {
-                  redHerring: redHerringPlayer.id,
-                  player: player.id,
-                },
-              },
-            ],
-            data: {
-              roleId: 'fortune_teller',
-              playerId: player.id,
-              action: 'assign_red_herring',
-              redHerringId: selectedRedHerring,
-            },
-          })
-        }
-      }
 
       // Log the check result
       entries.push({
@@ -312,21 +321,7 @@ const definition: RoleDefinition = {
         },
       })
 
-      onComplete({
-        entries,
-        addEffects:
-          needsRedHerringSetup && selectedRedHerring
-            ? {
-                [selectedRedHerring]: [
-                  {
-                    type: 'red_herring',
-                    data: { fortuneTellerId: player.id },
-                    expiresAt: 'never',
-                  },
-                ],
-              }
-            : undefined,
-      })
+      onComplete({ entries })
     }
 
     // Phase: Step List
@@ -339,47 +334,6 @@ const definition: RoleDefinition = {
           steps={steps}
           onSelectStep={handleSelectStep}
         />
-      )
-    }
-
-    // Phase: Red Herring Setup
-    if (phase === 'red_herring_setup') {
-      return (
-        <NarratorSetupLayout
-          icon='eye'
-          roleName={getRoleName('fortune_teller', language)}
-          audience='narrator'
-          playerName={getPlayerName(player.id)}
-          onShowToPlayer={handleConfirmRedHerring}
-          showToPlayerDisabled={!selectedRedHerring}
-          showToPlayerLabel={t.common.confirm}
-        >
-          <div className='text-center mb-4'>
-            <h3 className='text-lg font-semibold text-amber-200'>
-              {roleT.selectRedHerring}
-            </h3>
-            <p className='text-sm text-stone-400 mt-1'>
-              {roleT.redHerringInfo}
-            </p>
-          </div>
-
-          <div className='flex justify-center mb-4'>
-            <Button variant='secondary' onClick={handleSelectRandomRedHerring}>
-              <Icon name='shuffle' size='sm' className='mr-2' />
-              {roleT.selectRandomRedHerring}
-            </Button>
-          </div>
-
-          <StepSection step={1} label={roleT.selectGoodPlayerAsRedHerring}>
-            <PlayerPickerList
-              players={goodPlayers}
-              selected={selectedRedHerring ? [selectedRedHerring] : []}
-              onSelect={setSelectedRedHerring}
-              selectionCount={1}
-              variant='blue'
-            />
-          </StepSection>
-        </NarratorSetupLayout>
       )
     }
 
@@ -435,9 +389,7 @@ const definition: RoleDefinition = {
     const registersDemon = (p: typeof player1) => {
       if (!p) return false
       const perception = perceive(p, player, 'role', state)
-      if (perception.team === 'demon') return true
-      if (selectedRedHerring === p.id) return true
-      return false
+      return perception.team === 'demon'
     }
 
     const displaySawDemon =

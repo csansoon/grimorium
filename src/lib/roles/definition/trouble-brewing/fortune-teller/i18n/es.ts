@@ -3,6 +3,9 @@ const es = {
   description:
     'Cada noche, elige 2 jugadores: descubres si alguno es un Demonio. Hay un jugador bueno que se registra como Demonio para ti.',
 
+  // SetupAction UI
+  redHerringSetupTitle: 'Configuración de Pista Falsa',
+
   // NightAction UI
   fortuneTellerInfo: 'Tu Visión',
   selectTwoPlayersToCheck:

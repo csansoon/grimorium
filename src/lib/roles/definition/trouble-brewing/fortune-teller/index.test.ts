@@ -153,14 +153,23 @@ describe('FortuneTeller', () => {
   })
 
   // ================================================================
-  // NIGHT STEPS — 4 steps: Red Herring (cond.), Select players, Configure Malfunction (cond.), Show Result
+  // SETUP ACTION — Red Herring is assigned before role revelation
+  // ================================================================
+
+  describe('SetupAction', () => {
+    it('has a SetupAction for Red Herring assignment', () => {
+      expect(definition.SetupAction).toBeDefined()
+    })
+  })
+
+  // ================================================================
+  // NIGHT STEPS — 3 steps: Select players, Configure Malfunction (cond.), Show Result
   // ================================================================
 
   describe('nightSteps structure', () => {
-    it('has 4 step definitions in correct order', () => {
+    it('has 3 step definitions in correct order', () => {
       const steps = definition.nightSteps!
       expect(steps.map((s) => s.id)).toEqual([
-        'red_herring_setup',
         'select_players',
         'configure_malfunction',
         'show_result',
@@ -177,57 +186,12 @@ describe('FortuneTeller', () => {
       expect(selectPlayers.condition).toBeUndefined()
       expect(showResult.condition).toBeUndefined()
     })
-  })
 
-  describe('nightSteps red_herring_setup condition', () => {
-    const redHerringStep = definition.nightSteps!.find(
-      (s) => s.id === 'red_herring_setup',
-    )!
-
-    it('shows red herring setup on night 1 when healthy', () => {
-      const ft = makePlayer({ id: 'p1', roleId: 'fortune_teller' })
-      const state = makeState({ round: 1, players: [ft] })
-      const game = makeGameWithHistory([], state)
-      expect(redHerringStep.condition!(game, ft, state)).toBe(true)
-    })
-
-    it('skips red herring setup when player is malfunctioning (drunk)', () => {
-      const ft = addEffectTo(
-        makePlayer({ id: 'p1', roleId: 'fortune_teller' }),
-        'drunk',
+    it('does not include a red_herring_setup night step', () => {
+      const redHerringStep = definition.nightSteps!.find(
+        (s) => s.id === 'red_herring_setup',
       )
-      const state = makeState({ round: 1, players: [ft] })
-      const game = makeGameWithHistory([], state)
-      expect(redHerringStep.condition!(game, ft, state)).toBe(false)
-    })
-
-    it('skips red herring setup when player is malfunctioning (poisoned)', () => {
-      const ft = addEffectTo(
-        makePlayer({ id: 'p1', roleId: 'fortune_teller' }),
-        'poisoned',
-      )
-      const state = makeState({ round: 1, players: [ft] })
-      const game = makeGameWithHistory([], state)
-      expect(redHerringStep.condition!(game, ft, state)).toBe(false)
-    })
-
-    it('skips red herring setup on subsequent nights', () => {
-      const ft = makePlayer({ id: 'p1', roleId: 'fortune_teller' })
-      const state = makeState({ round: 2, players: [ft] })
-      const game = makeGameWithHistory([], state)
-      expect(redHerringStep.condition!(game, ft, state)).toBe(false)
-    })
-
-    it('skips red herring setup when already assigned', () => {
-      const ft = makePlayer({ id: 'p1', roleId: 'fortune_teller' })
-      const herring = addEffectTo(
-        makePlayer({ id: 'p2', roleId: 'villager' }),
-        'red_herring',
-        { fortuneTellerId: 'p1' },
-      )
-      const state = makeState({ round: 1, players: [ft, herring] })
-      const game = makeGameWithHistory([], state)
-      expect(redHerringStep.condition!(game, ft, state)).toBe(false)
+      expect(redHerringStep).toBeUndefined()
     })
   })
 

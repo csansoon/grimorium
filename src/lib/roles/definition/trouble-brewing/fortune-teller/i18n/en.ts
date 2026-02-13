@@ -3,6 +3,9 @@ const en = {
   description:
     'Each night, choose 2 players: you learn if either is a Demon. There is a good player that registers as a Demon to you.',
 
+  // SetupAction UI
+  redHerringSetupTitle: 'Red Herring Setup',
+
   // NightAction UI
   fortuneTellerInfo: 'Your Vision',
   selectTwoPlayersToCheck: 'Select 2 players to check for Demons.',
