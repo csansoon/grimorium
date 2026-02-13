@@ -22,6 +22,7 @@ import type { NightStep } from '../../../../../components/layouts'
 import {
   StepSection,
   MalfunctionConfigStep,
+  PerceptionConfigStep,
   OracleCard,
   VisionReveal,
   TeamBackground,
@@ -29,8 +30,13 @@ import {
 } from '../../../../../components/items'
 import { PlayerPickerList } from '../../../../../components/inputs'
 import { Button, Icon } from '../../../../../components/atoms'
-import { perceive } from '../../../../pipeline'
+import {
+  perceive,
+  getAmbiguousPlayers,
+  applyPerceptionOverrides,
+} from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
+import { Perception } from '../../../../pipeline/types'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -41,6 +47,7 @@ registerRoleTranslations('fortune_teller', 'es', es)
 type Phase =
   | 'step_list'
   | 'select_players'
+  | 'configure_perceptions'
   | 'configure_malfunction'
   | 'show_result'
 
@@ -195,15 +202,33 @@ const definition: RoleDefinition = {
       null,
     )
     const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
+    const [perceptionOverrides, setPerceptionOverrides] = useState<
+      Record<string, Partial<Perception>>
+    >({})
+    const [perceptionConfigDone, setPerceptionConfigDone] = useState(false)
 
     // Get all other players for the nightly check
     const otherPlayers = state.players.filter((p) => p.id !== player.id)
+
+    // Check if selected players include ambiguous players for "role" perception (only when NOT malfunctioning)
+    const selectedPlayerObjects = useMemo(
+      () => state.players.filter((p) => selectedPlayers.includes(p.id)),
+      [selectedPlayers, state.players],
+    )
+    const ambiguousPlayers = useMemo(
+      () =>
+        !malfunctioning && selectPlayersDone
+          ? getAmbiguousPlayers(selectedPlayerObjects, 'role')
+          : [],
+      [selectedPlayerObjects, malfunctioning, selectPlayersDone],
+    )
+    const needsPerceptionConfig = ambiguousPlayers.length > 0
 
     const getPlayerName = (playerId: string) => {
       return state.players.find((p) => p.id === playerId)?.name ?? t.ui.unknown
     }
 
-    // Build steps: Select players, Configure Malfunction (cond.), Show Result
+    // Build steps: Select players, Configure Perceptions (cond.), Configure Malfunction (cond.), Show Result
     const steps: NightStep[] = useMemo(() => {
       const result: NightStep[] = []
 
@@ -214,6 +239,16 @@ const definition: RoleDefinition = {
         status: selectPlayersDone ? 'done' : 'pending',
         audience: 'player_choice' as const,
       })
+
+      if (selectPlayersDone && needsPerceptionConfig) {
+        result.push({
+          id: 'configure_perceptions',
+          icon: 'hatGlasses',
+          label: t.game.stepConfigurePerceptions,
+          status: perceptionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
+        })
+      }
 
       if (malfunctioning) {
         result.push({
@@ -234,11 +269,13 @@ const definition: RoleDefinition = {
       })
 
       return result
-    }, [selectPlayersDone, malfunctioning, malfunctionConfigDone, t])
+    }, [selectPlayersDone, needsPerceptionConfig, perceptionConfigDone, malfunctioning, malfunctionConfigDone, t])
 
     const handleSelectStep = (stepId: string) => {
       if (stepId === 'select_players') {
         setPhase('select_players')
+      } else if (stepId === 'configure_perceptions') {
+        setPhase('configure_perceptions')
       } else if (stepId === 'configure_malfunction') {
         setPhase('configure_malfunction')
       } else if (stepId === 'show_result') {
@@ -249,6 +286,14 @@ const definition: RoleDefinition = {
     const handleMalfunctionComplete = (value: boolean) => {
       setMalfunctionValue(value)
       setMalfunctionConfigDone(true)
+      setPhase('step_list')
+    }
+
+    const handlePerceptionComplete = (
+      overrides: Record<string, Partial<Perception>>,
+    ) => {
+      setPerceptionOverrides(overrides)
+      setPerceptionConfigDone(true)
       setPhase('step_list')
     }
 
@@ -269,16 +314,29 @@ const definition: RoleDefinition = {
       setPhase('step_list')
     }
 
+    // Apply perception overrides for result calculation
+    const effectiveState = useMemo(
+      () => applyPerceptionOverrides(state, perceptionOverrides),
+      [state, perceptionOverrides],
+    )
+
     const handleComplete = () => {
       if (selectedPlayers.length !== 2) return
 
-      const player1 = state.players.find((p) => p.id === selectedPlayers[0])
-      const player2 = state.players.find((p) => p.id === selectedPlayers[1])
+      const player1 = effectiveState.players.find(
+        (p) => p.id === selectedPlayers[0],
+      )
+      const player2 = effectiveState.players.find(
+        (p) => p.id === selectedPlayers[1],
+      )
       if (!player1 || !player2) return
+
+      const effectiveObserver =
+        effectiveState.players.find((p) => p.id === player.id) ?? player
 
       // Check if either selected player registers as a Demon
       const registersDemon = (p: typeof player1) => {
-        const perception = perceive(p, player, 'role', state)
+        const perception = perceive(p, effectiveObserver, 'role', effectiveState)
         return perception.team === 'demon'
       }
 
@@ -318,6 +376,10 @@ const definition: RoleDefinition = {
                 actualResult: calculatedSawDemon ? 'yes' : 'no',
               }
             : {}),
+          perceptionOverrides:
+            Object.keys(perceptionOverrides).length > 0
+              ? perceptionOverrides
+              : undefined,
         },
       })
 
@@ -352,6 +414,21 @@ const definition: RoleDefinition = {
       )
     }
 
+    // Phase: Configure Perceptions
+    if (phase === 'configure_perceptions') {
+      return (
+        <PerceptionConfigStep
+          ambiguousPlayers={ambiguousPlayers}
+          context='role'
+          state={state}
+          roleIcon='eye'
+          roleName={getRoleName('fortune_teller', language)}
+          playerName={player.name}
+          onComplete={handlePerceptionComplete}
+        />
+      )
+    }
+
     // Phase: Select players - narrator picks 2 players to check
     if (phase === 'select_players') {
       return (
@@ -382,13 +459,19 @@ const definition: RoleDefinition = {
     }
 
     // Phase: Show Result - player-facing screen
-    const player1 = state.players.find((p) => p.id === selectedPlayers[0])
-    const player2 = state.players.find((p) => p.id === selectedPlayers[1])
+    const player1 = effectiveState.players.find(
+      (p) => p.id === selectedPlayers[0],
+    )
+    const player2 = effectiveState.players.find(
+      (p) => p.id === selectedPlayers[1],
+    )
+    const effectiveObserver =
+      effectiveState.players.find((p) => p.id === player.id) ?? player
 
     // Calculate result for display
     const registersDemon = (p: typeof player1) => {
       if (!p) return false
-      const perception = perceive(p, player, 'role', state)
+      const perception = perceive(p, effectiveObserver, 'role', effectiveState)
       return perception.team === 'demon'
     }
 

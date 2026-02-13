@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import definition from '.'
-import { perceive } from '../../../../pipeline/perception'
+import {
+  perceive,
+  getAmbiguousPlayers,
+  applyPerceptionOverrides,
+} from '../../../../pipeline/perception'
 import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
@@ -211,6 +215,142 @@ describe('FortuneTeller', () => {
 
       const perception = perceive(herring, ft, 'role', state)
       expect(perception.team).toBe('demon')
+    })
+  })
+
+  // ================================================================
+  // PERCEPTION CONFIGURATION — ambiguous players trigger PerceptionConfigStep
+  // ================================================================
+
+  describe('perception configuration for ambiguous players', () => {
+    it('detects ambiguous players among selected targets via getAmbiguousPlayers', () => {
+      testEffects['can_register_demon'] = {
+        id: 'can_register_demon' as EffectId,
+        icon: 'user',
+        canRegisterAs: {
+          teams: ['minion', 'demon'],
+          alignments: ['evil'],
+        },
+        perceptionModifiers: [
+          {
+            context: ['alignment', 'team', 'role'],
+            modify: (p, _target, _observer, _state, effectData) => {
+              const overrides = effectData?.perceiveAs as
+                | Partial<typeof p>
+                | undefined
+              if (!overrides) return p
+              return { ...p, ...overrides }
+            },
+          },
+        ],
+      }
+
+      const recluse = addEffectTo(
+        makePlayer({ id: 'p1', roleId: 'villager' }),
+        'can_register_demon',
+      )
+      const villager = makePlayer({ id: 'p2', roleId: 'villager' })
+
+      const ambiguous = getAmbiguousPlayers([recluse, villager], 'role')
+      expect(ambiguous).toHaveLength(1)
+      expect(ambiguous[0].id).toBe('p1')
+    })
+
+    it('returns no ambiguous players when none have canRegisterAs effects', () => {
+      const villager1 = makePlayer({ id: 'p1', roleId: 'villager' })
+      const villager2 = makePlayer({ id: 'p2', roleId: 'villager' })
+
+      const ambiguous = getAmbiguousPlayers([villager1, villager2], 'role')
+      expect(ambiguous).toHaveLength(0)
+    })
+
+    it('applyPerceptionOverrides makes ambiguous player register as demon for perceive()', () => {
+      testEffects['can_register_demon'] = {
+        id: 'can_register_demon' as EffectId,
+        icon: 'user',
+        canRegisterAs: {
+          teams: ['minion', 'demon'],
+          alignments: ['evil'],
+        },
+        perceptionModifiers: [
+          {
+            context: ['alignment', 'team', 'role'],
+            modify: (p, _target, _observer, _state, effectData) => {
+              const overrides = effectData?.perceiveAs as
+                | Partial<typeof p>
+                | undefined
+              if (!overrides) return p
+              return { ...p, ...overrides }
+            },
+          },
+        ],
+      }
+
+      const ft = makePlayer({ id: 'p1', roleId: 'fortune_teller' })
+      const recluse = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'villager' }),
+        'can_register_demon',
+      )
+      const state = makeState({ players: [ft, recluse] })
+
+      // Without overrides, recluse registers as their default (townsfolk)
+      const defaultPerception = perceive(recluse, ft, 'role', state)
+      expect(defaultPerception.team).toBe('townsfolk')
+
+      // With overrides, recluse registers as demon
+      const overrides = { [recluse.id]: { team: 'demon' as const } }
+      const effectiveState = applyPerceptionOverrides(state, overrides)
+      const effectiveRecluse = effectiveState.players.find(
+        (p) => p.id === recluse.id,
+      )!
+      const effectiveFt = effectiveState.players.find(
+        (p) => p.id === ft.id,
+      )!
+      const overriddenPerception = perceive(
+        effectiveRecluse,
+        effectiveFt,
+        'role',
+        effectiveState,
+      )
+      expect(overriddenPerception.team).toBe('demon')
+    })
+
+    it('only scopes ambiguity check to selected players, not all players', () => {
+      testEffects['can_register_demon'] = {
+        id: 'can_register_demon' as EffectId,
+        icon: 'user',
+        canRegisterAs: {
+          teams: ['minion', 'demon'],
+          alignments: ['evil'],
+        },
+        perceptionModifiers: [
+          {
+            context: ['alignment', 'team', 'role'],
+            modify: (p, _target, _observer, _state, effectData) => {
+              const overrides = effectData?.perceiveAs as
+                | Partial<typeof p>
+                | undefined
+              if (!overrides) return p
+              return { ...p, ...overrides }
+            },
+          },
+        ],
+      }
+
+      const recluse = addEffectTo(
+        makePlayer({ id: 'p1', roleId: 'villager' }),
+        'can_register_demon',
+      )
+      const villager1 = makePlayer({ id: 'p2', roleId: 'villager' })
+      const villager2 = makePlayer({ id: 'p3', roleId: 'villager' })
+
+      // When recluse is NOT one of the selected players, no ambiguity
+      const noAmbiguity = getAmbiguousPlayers([villager1, villager2], 'role')
+      expect(noAmbiguity).toHaveLength(0)
+
+      // When recluse IS one of the selected players, ambiguity detected
+      const withAmbiguity = getAmbiguousPlayers([recluse, villager1], 'role')
+      expect(withAmbiguity).toHaveLength(1)
     })
   })
 })
