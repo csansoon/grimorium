@@ -40,32 +40,36 @@ import es from './i18n/es'
 registerRoleTranslations('ravenkeeper', 'en', en)
 registerRoleTranslations('ravenkeeper', 'es', es)
 
-// Helper to check if a player was killed this night
+// Helper to check if a player was actually killed this night.
+// Compares the player's state at night start vs now — if they gained
+// the "dead" effect since the night began, they were killed this night.
+// This correctly ignores prevented kills (e.g., Monk protection).
 function wasKilledThisNight(game: Game, playerId: string): boolean {
-  let nightStartIndex = -1
-
+  // Find the night_started entry
+  let nightStartEntry = null
   for (let i = game.history.length - 1; i >= 0; i--) {
-    const entry = game.history[i]
-    if (entry.type === 'night_started') {
-      nightStartIndex = i
+    if (game.history[i].type === 'night_started') {
+      nightStartEntry = game.history[i]
       break
     }
   }
+  if (!nightStartEntry) return false
 
-  if (nightStartIndex !== -1) {
-    for (let i = nightStartIndex; i < game.history.length; i++) {
-      const entry = game.history[i]
-      if (
-        entry.type === 'night_action' &&
-        entry.data.action === 'kill' &&
-        entry.data.targetId === playerId
-      ) {
-        return true
-      }
-    }
-  }
+  // Check if player was alive at night start
+  const playerAtNightStart = nightStartEntry.stateAfter.players.find(
+    (p) => p.id === playerId,
+  )
+  if (!playerAtNightStart) return false
+  const wasAlive = !playerAtNightStart.effects.some((e) => e.type === 'dead')
+  if (!wasAlive) return false
 
-  return false
+  // Check if player is dead now
+  const currentState = game.history.at(-1)?.stateAfter
+  if (!currentState) return false
+  const playerNow = currentState.players.find((p) => p.id === playerId)
+  if (!playerNow) return false
+
+  return playerNow.effects.some((e) => e.type === 'dead')
 }
 
 type Phase =

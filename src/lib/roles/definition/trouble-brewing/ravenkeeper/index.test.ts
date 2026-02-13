@@ -68,6 +68,7 @@ describe('Ravenkeeper', () => {
 
     it('wakes when killed this night (after round 1)', () => {
       const player = makePlayer({ id: 'p1', roleId: 'ravenkeeper' })
+      const deadPlayer = addEffectTo(player, 'dead')
       const game = makeGameWithHistory(
         [
           {
@@ -83,6 +84,7 @@ describe('Ravenkeeper', () => {
               roleId: 'imp',
               playerId: 'p2',
             },
+            stateOverrides: { players: [deadPlayer] },
           },
         ],
         makeState({ round: 2, players: [player] }),
@@ -92,6 +94,8 @@ describe('Ravenkeeper', () => {
 
     it('does not wake if a different player was killed', () => {
       const player = makePlayer({ id: 'p1', roleId: 'ravenkeeper' })
+      const other = makePlayer({ id: 'p3', roleId: 'villager' })
+      const deadOther = addEffectTo(other, 'dead')
       const game = makeGameWithHistory(
         [
           {
@@ -107,11 +111,54 @@ describe('Ravenkeeper', () => {
               roleId: 'imp',
               playerId: 'p2',
             },
+            stateOverrides: { players: [player, deadOther] },
+          },
+        ],
+        makeState({ round: 2, players: [player, other] }),
+      )
+      expect(definition.shouldWake!(game, player)).toBe(false)
+    })
+
+    it('does not wake when kill was prevented (e.g., Monk protection)', () => {
+      const player = makePlayer({ id: 'p1', roleId: 'ravenkeeper' })
+      const game = makeGameWithHistory(
+        [
+          {
+            type: 'night_started',
+            data: { round: 2 },
+            stateOverrides: { round: 2 },
+          },
+          {
+            // Imp attempted to kill, but the kill was prevented — player stays alive
+            type: 'night_action',
+            data: {
+              action: 'kill',
+              targetId: 'p1',
+              roleId: 'imp',
+              playerId: 'p2',
+            },
+            // No state change: player does NOT gain dead effect
           },
         ],
         makeState({ round: 2, players: [player] }),
       )
       expect(definition.shouldWake!(game, player)).toBe(false)
+    })
+
+    it('does not wake if already dead at the start of the night', () => {
+      const player = makePlayer({ id: 'p1', roleId: 'ravenkeeper' })
+      const deadPlayer = addEffectTo(player, 'dead')
+      const game = makeGameWithHistory(
+        [
+          {
+            type: 'night_started',
+            data: { round: 3 },
+            stateOverrides: { round: 3 },
+          },
+        ],
+        makeState({ round: 3, players: [deadPlayer] }),
+      )
+      expect(definition.shouldWake!(game, deadPlayer)).toBe(false)
     })
   })
 
