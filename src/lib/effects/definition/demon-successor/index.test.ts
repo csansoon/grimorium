@@ -135,6 +135,18 @@ describe('DemonSuccessor effect', () => {
       expect(handler.appliesTo(intent, sw, state)).toBe(false)
     })
 
+    it('does not apply for voluntary Imp self-kill (imp_self_kill cause)', () => {
+      const { sw, state } = makeScenario({ aliveCount: 6 })
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'demon',
+        targetId: 'demon',
+        cause: 'imp_self_kill',
+      }
+
+      expect(handler.appliesTo(intent, sw, state)).toBe(false)
+    })
+
     it('does not apply when the successor is the target', () => {
       // Edge case: if the successor somehow becomes a Demon and is killed
       let swDemon = makePlayer({ id: 'sw', roleId: 'imp' })

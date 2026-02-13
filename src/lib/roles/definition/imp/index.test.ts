@@ -128,7 +128,7 @@ describe('Imp', () => {
       )
     })
 
-    it('does not declare select_new_imp in nightSteps (it is a dynamic runtime step)', () => {
+    it('does not declare select_new_imp in nightSteps (handled by imp_starpass_pending effect via pipeline)', () => {
       const steps = definition.nightSteps!
       const selectNewImp = steps.find((s) => s.id === 'select_new_imp')
       expect(selectNewImp).toBeUndefined()

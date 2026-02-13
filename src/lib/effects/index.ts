@@ -15,6 +15,7 @@ import PendingRoleReveal from './definition/pending-role-reveal'
 import Poisoned from './definition/poisoned'
 import Drunk from './definition/drunk'
 import ButlerMaster from './definition/butler-master'
+import ImpStarpassPending from './definition/imp-starpass-pending'
 
 export const EFFECTS: Record<EffectId, EffectDefinition> = {
   dead: Dead,
@@ -31,6 +32,7 @@ export const EFFECTS: Record<EffectId, EffectDefinition> = {
   poisoned: Poisoned,
   drunk: Drunk,
   butler_master: ButlerMaster,
+  imp_starpass_pending: ImpStarpassPending,
 }
 
 export function getEffect(effectId: string): EffectDefinition | undefined {
