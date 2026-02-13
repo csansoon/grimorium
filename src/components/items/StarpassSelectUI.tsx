@@ -10,11 +10,8 @@ import { Button, Icon } from '../atoms'
  * Pipeline UI component shown when the Imp self-kills with alive minions.
  * The narrator selects which Minion becomes the new Imp.
  */
-export function StarpassSelectUI({
-  state,
-  onComplete,
-}: PipelineInputProps) {
-  const { t, language } = useI18n()
+export function StarpassSelectUI({ state, onComplete }: PipelineInputProps) {
+  const { language } = useI18n()
   const impT = getRoleTranslations('imp', language)
   const [selectedMinion, setSelectedMinion] = useState<string | null>(null)
 
