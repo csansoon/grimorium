@@ -77,5 +77,12 @@ export function resolveRoleAssignments(
     }
   }
 
+  // Re-sort to preserve original player order (the steps above may have
+  // inserted the demon-guaranteed player before remaining players)
+  const playerOrder = new Map(players.map((name, i) => [name, i]))
+  finalAssignments.sort(
+    (a, b) => (playerOrder.get(a.name) ?? 0) - (playerOrder.get(b.name) ?? 0),
+  )
+
   return finalAssignments
 }

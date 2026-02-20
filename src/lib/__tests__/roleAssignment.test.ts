@@ -107,6 +107,19 @@ describe('resolveRoleAssignments', () => {
       }
     })
 
+    it('preserves original player order in the result', () => {
+      const roles = ['villager', 'chef', 'monk', 'saint', 'imp']
+      for (let i = 0; i < 50; i++) {
+        const result = resolveRoleAssignments({
+          players: players5,
+          selectedRoles: roles,
+          manualAssignments: noManual,
+        })
+        const names = result.map((a) => a.name)
+        expect(names).toEqual(players5)
+      }
+    })
+
     it('each player gets exactly one role', () => {
       const roles = ['villager', 'chef', 'monk', 'saint', 'imp']
       const result = resolveRoleAssignments({
