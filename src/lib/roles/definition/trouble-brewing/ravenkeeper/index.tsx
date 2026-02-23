@@ -14,12 +14,12 @@ import { RoleCard } from '../../../../../components/items/RoleCard'
 import { PerceptionConfigStep } from '../../../../../components/items'
 import {
   TeamBackground,
-  CardLink,
 } from '../../../../../components/items/TeamBackground'
 import {
   NightActionLayout,
   NightStepListLayout,
   PlayerFacingScreen,
+  HandbackCardLink,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import { PlayerPickerList } from '../../../../../components/inputs'
@@ -385,9 +385,9 @@ const definition: RoleDefinition = {
 
           <RoleCard roleId={displayedRoleId} />
 
-          <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
+          <HandbackCardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
             {t.common.continue}
-          </CardLink>
+          </HandbackCardLink>
         </TeamBackground>
       </PlayerFacingScreen>
     )

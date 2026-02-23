@@ -136,11 +136,11 @@ const en: Translations = {
     showToPlayer: 'Show to Player',
     oneOfThemIsThe: 'One of them is the...',
 
-    // Handback screen
-    handbackToNarrator: 'Hand back to Storyteller',
-    handbackDescription:
-      'Please return the device to the Storyteller before continuing.',
-    narratorReady: 'Storyteller Ready',
+    // Return device interstitial
+    returnDeviceToNarrator: 'Return the device to the Storyteller',
+    returnDeviceDescription:
+      'Please hand the device back before continuing.',
+    returnDeviceReady: 'Storyteller Ready',
 
     // Role Revelation
     roleRevelation: 'Role Revelation',

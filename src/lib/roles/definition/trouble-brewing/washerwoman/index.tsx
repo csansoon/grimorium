@@ -13,13 +13,14 @@ import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleRe
 import { RoleCard } from '../../../../../components/items/RoleCard'
 import {
   TeamBackground,
-  CardLink,
 } from '../../../../../components/items/TeamBackground'
 import {
   NightActionLayout,
   NarratorSetupLayout,
   NightStepListLayout,
   PlayerFacingScreen,
+  HandbackCardLink,
+  HandbackButton,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
@@ -32,7 +33,7 @@ import {
   PlayerPickerList,
   RolePickerGrid,
 } from '../../../../../components/inputs'
-import { Button, Icon } from '../../../../../components/atoms'
+import { Icon } from '../../../../../components/atoms'
 import { perceive, canRegisterAsTeam } from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
 
@@ -521,7 +522,7 @@ const definition: RoleDefinition = {
               roleName={roleT.noTownsfolkInGame}
             />
 
-            <Button
+            <HandbackButton
               onClick={handleCompleteNoTownsfolk}
               fullWidth
               size='lg'
@@ -529,7 +530,7 @@ const definition: RoleDefinition = {
             >
               <Icon name='check' size='md' className='mr-2' />
               {t.common.iUnderstandMyRole}
-            </Button>
+            </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
       )
@@ -574,9 +575,9 @@ const definition: RoleDefinition = {
 
           <RoleCard roleId={selectedRoleId} />
 
-          <CardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
+          <HandbackCardLink onClick={handleComplete} isEvil={shownTeam.isEvil}>
             {t.common.continue}
-          </CardLink>
+          </HandbackCardLink>
         </TeamBackground>
       </PlayerFacingScreen>
     )

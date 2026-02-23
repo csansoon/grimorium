@@ -27,6 +27,9 @@ import {
   RoleCard,
 } from '../../../../components/items'
 import { Button, Icon } from '../../../../components/atoms'
+import {
+  HandbackButton,
+} from '../../../../components/layouts'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -428,7 +431,7 @@ const definition: RoleDefinition = {
               <RoleCard roleId={player.roleId} />
             </div>
 
-            <Button
+            <HandbackButton
               onClick={handleRoleRevealComplete}
               fullWidth
               size='lg'
@@ -436,7 +439,7 @@ const definition: RoleDefinition = {
             >
               <Icon name='check' size='md' className='mr-2' />
               {t.common.iUnderstandMyRole}
-            </Button>
+            </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
       )
@@ -465,7 +468,7 @@ const definition: RoleDefinition = {
               />
             </div>
 
-            <Button
+            <HandbackButton
               onClick={() => {
                 setShowMinionsDone(true)
                 setPhase('step_list')
@@ -476,7 +479,7 @@ const definition: RoleDefinition = {
             >
               <Icon name='check' size='md' className='mr-2' />
               {t.common.continue}
-            </Button>
+            </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
       )
@@ -589,7 +592,7 @@ const definition: RoleDefinition = {
 
             <MysticDivider />
 
-            <Button
+            <HandbackButton
               onClick={handleFirstNightComplete}
               fullWidth
               size='lg'
@@ -598,7 +601,7 @@ const definition: RoleDefinition = {
             >
               <Icon name='check' size='md' className='mr-2' />
               {t.common.iUnderstandMyRole}
-            </Button>
+            </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
       )

@@ -12,12 +12,14 @@ import {
   NightActionLayout,
   NightStepListLayout,
   PlayerFacingScreen,
+  HandbackButton,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
-import { Button, Icon } from '../../../../../components/atoms'
+import { Icon } from '../../../../../components/atoms'
 import { Grimoire } from '../../../../../components/items/Grimoire'
 import { isAlive } from '../../../../types'
 import { isMalfunctioning } from '../../../../effects'
+
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -170,7 +172,7 @@ const definition: RoleDefinition = {
               />
             </div>
 
-            <Button
+            <HandbackButton
               onClick={() => {
                 setShowEvilTeamDone(true)
                 setPhase('step_list')
@@ -181,7 +183,7 @@ const definition: RoleDefinition = {
             >
               <Icon name='check' size='md' className='mr-2' />
               {t.common.continue}
-            </Button>
+            </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
       )
@@ -208,10 +210,10 @@ const definition: RoleDefinition = {
               </div>
             </div>
 
-            <Button onClick={handleComplete} fullWidth size='lg' variant='evil'>
+            <HandbackButton onClick={handleComplete} fullWidth size='lg' variant='evil'>
               <Icon name='check' size='md' className='mr-2' />
               {t.common.continue}
-            </Button>
+            </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
       )
@@ -238,10 +240,10 @@ const definition: RoleDefinition = {
             />
           </div>
 
-          <Button onClick={handleComplete} fullWidth size='lg' variant='evil'>
+          <HandbackButton onClick={handleComplete} fullWidth size='lg' variant='evil'>
             <Icon name='check' size='md' className='mr-2' />
             {t.common.iUnderstandMyRole}
-          </Button>
+          </HandbackButton>
         </NightActionLayout>
       </PlayerFacingScreen>
     )

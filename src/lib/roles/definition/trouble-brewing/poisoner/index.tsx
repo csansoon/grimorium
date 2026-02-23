@@ -12,11 +12,13 @@ import {
   NightActionLayout,
   NightStepListLayout,
   PlayerFacingScreen,
+  HandbackButton,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import { PlayerPickerList } from '../../../../../components/inputs'
 import { Button, Icon } from '../../../../../components/atoms'
 import { isAlive } from '../../../../types'
+
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -198,7 +200,7 @@ const definition: RoleDefinition = {
               />
             </div>
 
-            <Button
+            <HandbackButton
               onClick={() => {
                 setShowEvilTeamDone(true)
                 setPhase('step_list')
@@ -209,7 +211,7 @@ const definition: RoleDefinition = {
             >
               <Icon name='check' size='md' className='mr-2' />
               {t.common.iUnderstandMyRole}
-            </Button>
+            </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
       )

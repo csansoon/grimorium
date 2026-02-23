@@ -17,6 +17,7 @@ import {
   NarratorSetupLayout,
   NightStepListLayout,
   PlayerFacingScreen,
+  HandbackCardLink,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
@@ -26,7 +27,6 @@ import {
   OracleCard,
   VisionReveal,
   TeamBackground,
-  CardLink,
 } from '../../../../../components/items'
 import { PlayerPickerList } from '../../../../../components/inputs'
 import { Button, Icon } from '../../../../../components/atoms'
@@ -503,9 +503,9 @@ const definition: RoleDefinition = {
               teamId={resultTeam}
             />
           </OracleCard>
-          <CardLink onClick={handleComplete} isEvil={displaySawDemon}>
+          <HandbackCardLink onClick={handleComplete} isEvil={displaySawDemon}>
             {t.common.iUnderstandMyRole}
-          </CardLink>
+          </HandbackCardLink>
         </TeamBackground>
       </PlayerFacingScreen>
     )

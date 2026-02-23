@@ -54,7 +54,6 @@ import { SetupActionsScreen } from './SetupActionsScreen'
 import { DawnScreen } from './DawnScreen'
 import { PlayerFacingContext } from '../context/PlayerFacingContext'
 import { PlayerFacingScreen } from '../layouts/PlayerFacingScreen'
-import { HandDeviceScreen } from '../layouts/HandDeviceScreen'
 
 type Props = {
   initialGame: Game
@@ -97,8 +96,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     onResult: (result: unknown) => void
   } | null>(null)
 
-  // Hand-device interstitial state for role revelation
-  const [showingRoleReady, setShowingRoleReady] = useState(false)
+
 
   // Player-facing state — set by PlayerFacingScreen wrapper inside NightAction components
   const [isPlayerFacing, setIsPlayerFacing] = useState(false)
@@ -155,7 +153,6 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   // ========================================================================
 
   const handleRevealRole = (playerId: string) => {
-    setShowingRoleReady(false) // Reset interstitial
     setScreen({ type: 'showing_role', playerId })
   }
 
@@ -530,17 +527,8 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         const role = getRole(player.roleId)
         if (!role) return null
 
-        if (!showingRoleReady) {
-          return (
-            <HandDeviceScreen
-              playerName={player.name}
-              onReady={() => setShowingRoleReady(true)}
-            />
-          )
-        }
-
         return (
-          <PlayerFacingScreen>
+          <PlayerFacingScreen playerName={player.name}>
             <role.RoleReveal
               player={player}
               onContinue={handleRoleRevealDismiss}

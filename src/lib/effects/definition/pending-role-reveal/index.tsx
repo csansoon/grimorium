@@ -8,8 +8,9 @@ import { getTeam } from '../../../teams'
 import { RoleCard } from '../../../../components/items/RoleCard'
 import {
   TeamBackground,
-  CardLink,
 } from '../../../../components/items/TeamBackground'
+import { PlayerFacingScreen } from '../../../../components/layouts/PlayerFacingScreen'
+import { HandbackCardLink } from '../../../../components/layouts'
 import { useI18n } from '../../../i18n'
 import { cn } from '../../../../lib/utils'
 import { registerEffectTranslations } from '../../../i18n'
@@ -24,6 +25,7 @@ registerEffectTranslations('pending_role_reveal', 'es', es)
  * Action component shown when a player's role has changed and they need
  * to be informed (e.g., Scarlet Woman becoming the Demon).
  * Shows the player's current RoleCard with a "Your role has changed!" header.
+ * Wrapped in PlayerFacingScreen for hand-device + return-device interstitials.
  */
 function RoleChangeRevealAction({
   state,
@@ -61,22 +63,24 @@ function RoleChangeRevealAction({
   }
 
   return (
-    <TeamBackground teamId={teamId}>
-      <p
-        className={cn(
-          'text-center text-xs uppercase tracking-widest font-semibold mb-4',
-          team.isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
-        )}
-      >
-        {t.game.yourRoleHasChanged}
-      </p>
+    <PlayerFacingScreen playerName={player.name}>
+      <TeamBackground teamId={teamId}>
+        <p
+          className={cn(
+            'text-center text-xs uppercase tracking-widest font-semibold mb-4',
+            team.isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
+          )}
+        >
+          {t.game.yourRoleHasChanged}
+        </p>
 
-      <RoleCard roleId={player.roleId} />
+        <RoleCard roleId={player.roleId} />
 
-      <CardLink onClick={handleComplete} isEvil={team.isEvil}>
-        {t.common.continue}
-      </CardLink>
-    </TeamBackground>
+        <HandbackCardLink onClick={handleComplete} isEvil={team.isEvil}>
+          {t.common.continue}
+        </HandbackCardLink>
+      </TeamBackground>
+    </PlayerFacingScreen>
   )
 }
 

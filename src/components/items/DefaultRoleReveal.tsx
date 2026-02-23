@@ -5,6 +5,7 @@ import { RoleCard } from './RoleCard'
 import { TeamBackground, CardLink } from './TeamBackground'
 import { cn } from '../../lib/utils'
 import type { RoleRevealProps } from '../../lib/roles/types'
+import { useHandback } from '../context/PlayerFacingContext'
 
 /**
  * Standard role revelation screen used by most roles.
@@ -16,6 +17,7 @@ import type { RoleRevealProps } from '../../lib/roles/types'
  */
 export function DefaultRoleReveal({ player, onContinue }: RoleRevealProps) {
   const { t } = useI18n()
+  const { requestHandback } = useHandback()
   const role = getRole(player.roleId)
   const teamId = role?.team ?? 'townsfolk'
   const team = getTeam(teamId)
@@ -34,7 +36,7 @@ export function DefaultRoleReveal({ player, onContinue }: RoleRevealProps) {
 
       <RoleCard roleId={player.roleId} />
 
-      <CardLink onClick={onContinue} isEvil={isEvil}>
+      <CardLink onClick={() => requestHandback(onContinue)} isEvil={isEvil}>
         {t.common.iUnderstandMyRole}
       </CardLink>
     </TeamBackground>

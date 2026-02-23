@@ -10,6 +10,7 @@ import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleRe
 import {
   NightStepListLayout,
   PlayerFacingScreen,
+  HandbackCardLink,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
@@ -18,7 +19,6 @@ import {
   OracleCard,
   NumberReveal,
   TeamBackground,
-  CardLink,
 } from '../../../../../components/items'
 import { GameState, PlayerState, isAlive } from '../../../../types'
 import {
@@ -326,12 +326,12 @@ const definition: RoleDefinition = {
               teamId={resultTeam}
             />
           </OracleCard>
-          <CardLink
+          <HandbackCardLink
             onClick={handleComplete}
             isEvil={resultTeam !== 'townsfolk'}
           >
             {t.common.iUnderstandMyRole}
-          </CardLink>
+          </HandbackCardLink>
         </TeamBackground>
       </PlayerFacingScreen>
     )

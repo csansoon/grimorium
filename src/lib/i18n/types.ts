@@ -141,10 +141,10 @@ export type Translations = {
     showToPlayer: string
     oneOfThemIsThe: string
 
-    // Handback screen
-    handbackToNarrator: string
-    handbackDescription: string
-    narratorReady: string
+    // Return device interstitial
+    returnDeviceToNarrator: string
+    returnDeviceDescription: string
+    returnDeviceReady: string
 
     // Role Revelation
     roleRevelation: string
