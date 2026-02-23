@@ -86,7 +86,7 @@ const es: Translations = {
     grimoire: 'Grimorio',
     daytimeActions: 'Acciones de Día',
     accusePlayerDescription: 'Acusa a un jugador y ponlo a votación',
-    executionAlreadyHappened: 'Ya ha habido una ejecución hoy',
+
     nominatesForExecution: '{nominator} nomina a {nominee} para ejecución',
     nominatesVerb: 'nomina a',
     forExecution: 'para ejecución',
@@ -99,17 +99,22 @@ const es: Translations = {
     selectNominator: 'Seleccionar nominador...',
     selectNominee: 'Seleccionar nominado...',
     startNomination: 'Iniciar Nominación',
-    endDayGoToNight: 'Terminar Día → Ir a Noche',
 
-    executePlayer: '¿Ejecutar a {player}?',
-    yesVsNoNeeded: 'Se necesitan más votos SÍ que NO',
-    votesFor: 'A favor',
-    votesAgainst: 'En contra',
-    abstain: 'Abstención',
-    willBeExecuted:
-      '{player} será EJECUTADO ({votesFor} sí vs {votesAgainst} no)',
-    willNotBeExecuted:
-      '{player} NO será ejecutado ({votesFor} sí vs {votesAgainst} no)',
+
+    executePlayer: 'Votar sobre {player}',
+    votesNeeded: '{count} votos necesarios',
+    votesCount: 'Votos',
+    voteThreshold: 'de {threshold} necesarios',
+    voteAction: 'Votar',
+    dontVote: 'No Votar',
+    goesOnBlock: '¡{player} está en la cuerda floja!',
+    notEnoughVotes: 'No hay suficientes votos',
+    tiedNoExecution: 'Empate \u2014 sin ejecución',
+    currentBlock: '{player} en la cuerda floja ({count} votos)',
+    needMoreThan: 'Se necesitan más de {count} para reemplazar',
+    noOneOnBlock: 'Nadie en la cuerda floja',
+    endDayExecute: 'Terminar Día \u2014 Ejecutar a {player}',
+    endDayNoExecution: 'Terminar Día \u2014 Sin Ejecución',
     confirmVotes: 'Confirmar Votos',
     cancelNomination: 'Cancelar Nominación',
 
@@ -222,11 +227,6 @@ const es: Translations = {
     nightSummary: 'Resumen de Noche {round}',
     noDeathsLastNight: 'Nadie murió',
 
-    // Quick Vote
-    quickVote: 'Conteo Rápido',
-    detailedVote: 'Detallado',
-    forCount: 'Votos a favor',
-    againstCount: 'Votos en contra',
 
     // Night Dashboard review
     actionSummary: 'Resumen de Acción',
@@ -238,6 +238,7 @@ const es: Translations = {
 
     // Nomination tracking
     alreadyNominated: 'Ya nominó hoy',
+    alreadyBeenNominated: 'Ya fue nominado/a hoy',
 
     // Hand device interstitial
     handDeviceTo: 'Entrega el dispositivo a {player}',
@@ -299,9 +300,10 @@ const es: Translations = {
     learnedRole: '{player} descubrió que es el/la {role}',
     noActionTonight: '{role} no tiene acción esta noche',
     nominates: '{nominator} nomina a {nominee}',
-    voteResult: '{player}: {for} a favor, {against} en contra. ',
-    votePassed: '¡La votación pasa!',
-    voteFailed: 'La votación falla.',
+    voteResult: '{player}: {votes} votos ({threshold} necesarios). ',
+    votePassed: '¡{player} está en la cuerda floja!',
+    voteFailed: 'No hay suficientes votos.',
+    voteTied: 'Empate con {player} \u2014 nadie en la cuerda floja.',
     executed: '{player} ha sido ejecutado/a',
     goodWins: '¡El Bien gana! El Demonio ha sido derrotado.',
     evilWins: '¡El Mal gana! El pueblo ha caído.',

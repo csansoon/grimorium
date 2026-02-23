@@ -7,6 +7,7 @@ import { Grimoire } from '../items/Grimoire'
 import { MysticDivider } from '../items'
 import { ScreenFooter } from '../layouts/ScreenFooter'
 import { cn } from '../../lib/utils'
+import { BlockStatus } from '../../lib/game'
 
 type NightSummary = {
   deaths: string[]
@@ -15,7 +16,7 @@ type NightSummary = {
 
 type Props = {
   state: GameState
-  canNominate: boolean
+  blockStatus: BlockStatus
   dayActions: AvailableDayAction[]
   nightSummary?: NightSummary
   onNominate: () => void
@@ -29,7 +30,7 @@ type Props = {
 
 export function DayPhase({
   state,
-  canNominate,
+  blockStatus,
   dayActions,
   nightSummary,
   onNominate,
@@ -150,49 +151,48 @@ export function DayPhase({
               {t.game.daytimeActions}
             </span>
           </div>
+
+          {/* Block Status Banner */}
+          {blockStatus && (
+            <div className='bg-red-900/30 border border-red-500/40 rounded-xl p-3 mb-3'>
+              <div className='flex items-center gap-2'>
+                <Icon name='swords' size='sm' className='text-red-400' />
+                <span className='text-red-200 text-sm font-medium'>
+                  {interpolate(t.game.currentBlock, {
+                    player: blockStatus.playerName,
+                    count: blockStatus.voteCount,
+                  })}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className='space-y-2'>
-            {/* Nomination Button */}
+            {/* Nomination Button — always available during day */}
             <button
               onClick={onNominate}
-              disabled={!canNominate}
-              className={`w-full flex items-center gap-4 p-4 rounded-xl transition-colors group ${
-                canNominate
-                  ? 'bg-gradient-to-r from-red-900/30 to-red-800/20 border border-red-500/30 hover:border-red-500/50'
-                  : 'bg-gray-900/30 border border-gray-500/20 opacity-50 cursor-not-allowed'
-              }`}
+              className='w-full flex items-center gap-4 p-4 rounded-xl transition-colors group bg-gradient-to-r from-red-900/30 to-red-800/20 border border-red-500/30 hover:border-red-500/50'
             >
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-transform ${
-                  canNominate
-                    ? 'bg-red-900/40 border border-red-500/40 group-hover:scale-105'
-                    : 'bg-gray-900/40 border border-gray-500/30'
-                }`}
-              >
+              <div className='w-12 h-12 rounded-full flex items-center justify-center transition-transform bg-red-900/40 border border-red-500/40 group-hover:scale-105'>
                 <Icon
                   name='userX'
                   size='lg'
-                  className={canNominate ? 'text-red-400' : 'text-gray-500'}
+                  className='text-red-400'
                 />
               </div>
               <div className='flex-1 text-left'>
-                <div
-                  className={`font-tarot tracking-wider uppercase ${canNominate ? 'text-parchment-100' : 'text-parchment-500'}`}
-                >
+                <div className='font-tarot text-parchment-100 tracking-wider uppercase'>
                   {t.game.newNomination}
                 </div>
                 <p className='text-parchment-500 text-xs mt-0.5'>
-                  {canNominate
-                    ? t.game.accusePlayerDescription
-                    : t.game.executionAlreadyHappened}
+                  {t.game.accusePlayerDescription}
                 </p>
               </div>
-              {canNominate && (
-                <Icon
-                  name='arrowRight'
-                  size='md'
-                  className='text-parchment-500 group-hover:text-parchment-300 transition-colors'
-                />
-              )}
+              <Icon
+                name='arrowRight'
+                size='md'
+                className='text-parchment-500 group-hover:text-parchment-300 transition-colors'
+              />
             </button>
 
             {/* Dynamic Day Actions from Effects */}
@@ -269,7 +269,9 @@ export function DayPhase({
       <ScreenFooter borderColor='border-indigo-500/30'>
         <Button onClick={onEndDay} fullWidth size='lg' variant='dawn'>
           <Icon name='moon' size='md' className='mr-2' />
-          {t.game.endDayGoToNight}
+          {blockStatus
+            ? interpolate(t.game.endDayExecute, { player: blockStatus.playerName })
+            : t.game.endDayNoExecution}
         </Button>
       </ScreenFooter>
     </div>

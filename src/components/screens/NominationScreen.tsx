@@ -9,6 +9,7 @@ import { PlayerPickerList } from '../inputs'
 type Props = {
   state: GameState
   nominatorsToday?: Set<string>
+  nomineesToday?: Set<string>
   onNominate: (nominatorId: string, nomineeId: string) => void
   onBack: () => void
 }
@@ -16,6 +17,7 @@ type Props = {
 export function NominationScreen({
   state,
   nominatorsToday,
+  nomineesToday,
   onNominate,
   onBack,
 }: Props) {
@@ -56,6 +58,29 @@ export function NominationScreen({
     return Object.keys(annotations).length > 0 ? annotations : undefined
   }, [nominatorsToday, alivePlayers, t])
 
+  // Build disabled set + annotations for players who have already been nominated
+  const nomineeAnnotations = useMemo(() => {
+    if (!nomineesToday || nomineesToday.size === 0) return undefined
+    const annotations: Record<string, string> = {}
+    for (const player of alivePlayers) {
+      if (nomineesToday.has(player.id)) {
+        annotations[player.id] = t.game.alreadyBeenNominated
+      }
+    }
+    return Object.keys(annotations).length > 0 ? annotations : undefined
+  }, [nomineesToday, alivePlayers, t])
+
+  // Build disabled sets for enforcement
+  const disabledNominators = useMemo(() => {
+    if (!nominatorsToday || nominatorsToday.size === 0) return undefined
+    return nominatorsToday
+  }, [nominatorsToday])
+
+  const disabledNominees = useMemo(() => {
+    if (!nomineesToday || nomineesToday.size === 0) return undefined
+    return nomineesToday
+  }, [nomineesToday])
+
   return (
     <div className='min-h-app bg-gradient-to-b from-red-950 via-grimoire-blood to-grimoire-darker flex flex-col'>
       {/* Header */}
@@ -85,6 +110,7 @@ export function NominationScreen({
             selectionCount={1}
             variant='red'
             annotations={nominatorAnnotations}
+            disabled={disabledNominators}
           />
         </div>
 
@@ -107,6 +133,8 @@ export function NominationScreen({
             onSelect={setNominee}
             selectionCount={1}
             variant='red'
+            annotations={nomineeAnnotations}
+            disabled={disabledNominees}
           />
         </div>
 

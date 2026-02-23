@@ -250,7 +250,6 @@ export type GameStep =
   | { type: 'night_action_skip'; playerId: string; roleId: string }
   | { type: 'night_waiting' }
   | { type: 'day' }
-  | { type: 'voting'; nomineeId: string }
   | { type: 'game_over'; winner: 'townsfolk' | 'demon' }
 
 export function getNextStep(game: Game): GameStep {
@@ -329,21 +328,6 @@ function findLastEventIndex(game: Game, eventType: string): number {
   return -1
 }
 
-/**
- * Check if an execution has already happened today.
- */
-export function hasExecutionToday(game: Game): boolean {
-  const dayStartIndex = findLastEventIndex(game, 'day_started')
-  if (dayStartIndex === -1) return false
-
-  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
-    const entry = game.history[i]
-    if (entry.type === 'execution' || entry.type === 'virgin_execution') {
-      return true
-    }
-  }
-  return false
-}
 
 // ============================================================================
 // PHASE TRANSITIONS
@@ -549,27 +533,115 @@ export function nominate(
 }
 
 // ============================================================================
-// VOTING
+// VOTING — Official BotC rules: binary voting, threshold, deferred execution
 // ============================================================================
 
+/**
+ * The status of "the block" — the player currently nominated for execution.
+ * In the official rules, the player with the most votes (above threshold)
+ * is "on the block" and will be executed at end of day.
+ */
+export type BlockStatus = {
+  playerId: string
+  playerName: string
+  voteCount: number
+} | null
+
+/**
+ * Get who is currently "on the block" — the player with the highest
+ * vote count that met the threshold today. Returns null if nobody qualified.
+ * Scans vote entries since the last day_started.
+ */
+export function getBlockStatus(game: Game): BlockStatus {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return null
+
+  let block: BlockStatus = null
+
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    const entry = game.history[i]
+    if (entry.type === 'vote' && entry.data.replacesBlock === true) {
+      block = {
+        playerId: entry.data.nomineeId as string,
+        playerName: entry.data.nomineeName as string,
+        voteCount: entry.data.voteCount as number,
+      }
+    }
+  }
+
+  return block
+}
+
+/**
+ * Get the set of player IDs who have been nominated today.
+ */
+export function getNomineesToday(game: Game): Set<string> {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return new Set()
+  const ids = new Set<string>()
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    if (game.history[i].type === 'nomination') {
+      ids.add(game.history[i].data.nomineeId as string)
+    }
+  }
+  return ids
+}
+
+/**
+ * Get the vote threshold: the minimum number of votes needed to go on the block.
+ * This is at least half the alive players (rounded up).
+ */
+export function getVoteThreshold(state: GameState): number {
+  return Math.ceil(getAlivePlayers(state).length / 2)
+}
+
+/**
+ * Resolve a vote on a nominated player.
+ *
+ * Official BotC rules:
+ * - Voting is binary: you vote (raise hand) or don't
+ * - Threshold: votes >= ceil(aliveCount / 2) to meet the minimum
+ * - If the vote meets threshold AND is strictly higher than the current block,
+ *   the nominee replaces whoever was on the block
+ * - If it ties with the current block, nobody is on the block (tie = no execution)
+ * - Execution is deferred to end of day via executeAtEndOfDay()
+ */
 export function resolveVote(
   game: Game,
   nomineeId: string,
-  votesForCount: number,
-  votesAgainstCount: number,
-  votesForIds?: string[],
-  votesAgainstIds?: string[],
+  voteCount: number,
+  votedIds?: string[],
 ): Game {
   const state = getCurrentState(game)
   const nominee = state.players.find((p) => p.id === nomineeId)
   if (!nominee) return game
 
-  const passed = votesForCount > votesAgainstCount
+  const threshold = getVoteThreshold(state)
+  const meetsThreshold = voteCount >= threshold
+  const currentBlock = getBlockStatus(game)
+
+  // Determine if this vote replaces the current block
+  let replacesBlock = false
+  let clearsBlock = false
+
+  if (meetsThreshold) {
+    if (!currentBlock) {
+      // No one on the block — this player takes it
+      replacesBlock = true
+    } else if (voteCount > currentBlock.voteCount) {
+      // Strictly more votes — replaces the block
+      replacesBlock = true
+    } else if (voteCount === currentBlock.voteCount) {
+      // Tie — clears the block (nobody executed)
+      clearsBlock = true
+    }
+    // If fewer votes than current block, nothing changes
+  }
 
   // Mark dead voters as having used their vote (only when detailed IDs available)
   const addEffects: Record<string, { type: string }[]> = {}
-  if (votesForIds) {
-    for (const voterId of votesForIds) {
+  if (votedIds) {
+    for (const voterId of votedIds) {
       const voter = state.players.find((p) => p.id === voterId)
       if (
         voter &&
@@ -581,7 +653,12 @@ export function resolveVote(
     }
   }
 
-  let updatedGame = addHistoryEntry(
+  // Build history message
+  const messageKey = replacesBlock
+    ? 'history.votePassed'
+    : 'history.voteFailed'
+
+  const updatedGame = addHistoryEntry(
     game,
     {
       type: 'vote',
@@ -591,53 +668,113 @@ export function resolveVote(
           key: 'history.voteResult',
           params: {
             player: nomineeId,
-            for: votesForCount,
-            against: votesAgainstCount,
+            votes: voteCount,
+            threshold,
           },
         },
         {
           type: 'i18n',
-          key: passed ? 'history.votePassed' : 'history.voteFailed',
+          key: messageKey,
+          params: { player: nomineeId },
         },
       ],
       data: {
         nomineeId,
-        votesFor: votesForIds ?? [],
-        votesAgainst: votesAgainstIds ?? [],
-        votesForCount,
-        votesAgainstCount,
-        passed,
+        nomineeName: nominee.name,
+        votedIds: votedIds ?? [],
+        voteCount,
+        threshold,
+        meetsThreshold,
+        replacesBlock,
+        clearsBlock,
       },
     },
     { phase: 'day' },
     addEffects,
   )
 
-  if (passed) {
-    // Route execution through the intent pipeline so effects can intercept
-    // (e.g., Scarlet Woman becoming the Demon when the Demon is executed)
-    const executeIntent: ExecuteIntent = {
-      type: 'execute',
-      playerId: nomineeId,
-      cause: 'execution',
-    }
-
-    const result = resolveIntent(
-      executeIntent,
-      getCurrentState(updatedGame),
+  // If there's a tie, record a separate entry clearing the block
+  if (clearsBlock) {
+    return addHistoryEntry(
       updatedGame,
+      {
+        type: 'vote',
+        message: [
+          {
+            type: 'i18n',
+            key: 'history.voteTied',
+            params: { player: nomineeId },
+          },
+        ],
+        data: {
+          nomineeId,
+          nomineeName: nominee.name,
+          voteCount,
+          threshold,
+          meetsThreshold: true,
+          replacesBlock: false,
+          clearsBlock: true,
+          // A tie clear means we need to reset the block.
+          // We track this by marking no entry as replacesBlock after this point.
+        },
+      },
     )
-
-    // Executions don't require UI input, so result is always resolved or prevented
-    if (result.type === 'needs_input') {
-      // This shouldn't happen, but handle gracefully
-      return updatedGame
-    }
-
-    updatedGame = applyPipelineChanges(updatedGame, result.stateChanges)
   }
 
   return updatedGame
+}
+
+/**
+ * Execute whoever is on the block at end of day.
+ * Called when the narrator ends the day. Routes through the intent pipeline
+ * so effects (Scarlet Woman, Saint, etc.) can intercept.
+ * Returns the game unchanged if nobody is on the block.
+ */
+export function executeAtEndOfDay(game: Game): Game {
+  const block = getBlockStatus(game)
+  if (!block) return game
+
+  // Check for a tie-clear that happened after the block was set
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  for (let i = game.history.length - 1; i > dayStartIndex; i--) {
+    const entry = game.history[i]
+    if (entry.type === 'vote' && entry.data.clearsBlock === true) {
+      // The most recent clear is after the most recent block replacement
+      // Check if any replacesBlock entry comes after this clear
+      let hasBlockAfterClear = false
+      for (let j = i + 1; j < game.history.length; j++) {
+        if (
+          game.history[j].type === 'vote' &&
+          game.history[j].data.replacesBlock === true
+        ) {
+          hasBlockAfterClear = true
+          break
+        }
+      }
+      if (!hasBlockAfterClear) {
+        return game // Block was cleared by a tie, no execution
+      }
+    }
+  }
+
+  const executeIntent: ExecuteIntent = {
+    type: 'execute',
+    playerId: block.playerId,
+    cause: 'execution',
+  }
+
+  const result = resolveIntent(
+    executeIntent,
+    getCurrentState(game),
+    game,
+  )
+
+  // Executions don't require UI input, so result is always resolved or prevented
+  if (result.type === 'needs_input') {
+    return game
+  }
+
+  return applyPipelineChanges(game, result.stateChanges)
 }
 
 // ============================================================================

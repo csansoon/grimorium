@@ -275,7 +275,8 @@ describe('Pure effect', () => {
     expect(result.type).toBe('resolved')
     if (result.type === 'resolved') {
       expect(result.stateChanges.entries[0].type).toBe('nomination')
-      expect(result.stateChanges.stateUpdates?.phase).toBe('voting')
+      // Phase stays 'day' — no transition to voting phase
+      expect(result.stateChanges.stateUpdates?.phase).toBeUndefined()
     }
   })
 })

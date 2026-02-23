@@ -40,6 +40,12 @@ type PlayerPickerListProps = {
    * Maps playerId to annotation text.
    */
   annotations?: Record<string, string>
+
+  /**
+   * Optional set of player IDs that should be disabled and not selectable.
+   * Used for enforcement (e.g., players who already nominated today).
+   */
+  disabled?: Set<string>
 }
 
 const variantStyles = {
@@ -62,6 +68,7 @@ export function PlayerPickerList({
   selectionCount = 1,
   variant = 'blue',
   annotations,
+  disabled: disabledSet,
 }: PlayerPickerListProps) {
   const { t, language } = useI18n()
   const styles = variantStyles[variant]
@@ -78,7 +85,8 @@ export function PlayerPickerList({
       {players.map((player) => {
         const isSelected = selected.includes(player.id)
         // When selectionCount === 1, allow tapping a different item to replace (radio behavior)
-        const isDisabled = !isSelected && isAtMax && selectionCount !== 1
+        const isDisabled = (!isSelected && isAtMax && selectionCount !== 1) ||
+          (disabledSet?.has(player.id) ?? false)
         const role = getRole(player.roleId)
         const team = role ? getTeam(role.team) : null
         const isDead = hasEffect(player, 'dead')

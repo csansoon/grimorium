@@ -4,7 +4,7 @@
 
 export type Team = 'townsfolk' | 'outsider' | 'minion' | 'demon'
 
-export type Phase = 'setup' | 'night' | 'day' | 'voting' | 'ended'
+export type Phase = 'setup' | 'night' | 'day' | 'ended'
 
 // ============================================================================
 // EFFECTS

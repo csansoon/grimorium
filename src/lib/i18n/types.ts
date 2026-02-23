@@ -89,7 +89,7 @@ export type Translations = {
     grimoire: string
     daytimeActions: string
     accusePlayerDescription: string
-    executionAlreadyHappened: string
+
     nominatesForExecution: string
     nominatesVerb: string
     forExecution: string
@@ -103,16 +103,23 @@ export type Translations = {
     selectNominator: string
     selectNominee: string
     startNomination: string
-    endDayGoToNight: string
+
 
     // Voting
     executePlayer: string
-    yesVsNoNeeded: string
-    votesFor: string
-    votesAgainst: string
-    abstain: string
-    willBeExecuted: string
-    willNotBeExecuted: string
+    votesNeeded: string
+    votesCount: string
+    voteThreshold: string
+    voteAction: string
+    dontVote: string
+    goesOnBlock: string
+    notEnoughVotes: string
+    tiedNoExecution: string
+    currentBlock: string
+    needMoreThan: string
+    noOneOnBlock: string
+    endDayExecute: string
+    endDayNoExecution: string
     confirmVotes: string
     cancelNomination: string
 
@@ -222,11 +229,6 @@ export type Translations = {
     nightSummary: string
     noDeathsLastNight: string
 
-    // Quick Vote
-    quickVote: string
-    detailedVote: string
-    forCount: string
-    againstCount: string
 
     // Night Dashboard review
     actionSummary: string
@@ -237,6 +239,7 @@ export type Translations = {
 
     // Nomination tracking
     alreadyNominated: string
+    alreadyBeenNominated: string
 
     // Hand device interstitial
     handDeviceTo: string
@@ -301,6 +304,7 @@ export type Translations = {
     voteResult: string
     votePassed: string
     voteFailed: string
+    voteTied: string
     executed: string
     goodWins: string
     evilWins: string

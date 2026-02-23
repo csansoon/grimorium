@@ -5,7 +5,7 @@ import {
   ExecuteIntent,
   StateChanges,
 } from './types'
-import { GameState, Phase } from '../types'
+import { GameState } from '../types'
 
 // ============================================================================
 // DEFAULT RESOLVERS
@@ -61,7 +61,8 @@ function resolveNominate(intent: Intent, _state: GameState): StateChanges {
         },
       },
     ],
-    stateUpdates: { phase: 'voting' as Phase },
+    // Phase stays 'day' — the GameScreen state machine handles showing
+    // the voting UI via its own Screen type, independently of Phase.
   }
 }
 

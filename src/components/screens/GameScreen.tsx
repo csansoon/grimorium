@@ -12,10 +12,10 @@ import {
   skipNightAction,
   nominate,
   resolveVote,
+  executeAtEndOfDay,
   endGame,
   checkWinCondition,
   checkEndOfDayWinConditions,
-  hasExecutionToday,
   addEffectToPlayer,
   removeEffectFromPlayer,
   updateEffectData,
@@ -23,6 +23,8 @@ import {
   applySetupAction,
   getLastNightDeaths,
   getNominatorsToday,
+  getNomineesToday,
+  getBlockStatus,
 } from '../../lib/game'
 import {
   resolveIntent,
@@ -305,60 +307,59 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     updateGame(newGame)
 
     const newState = getCurrentState(newGame)
-    if (newState.phase === 'voting') {
-      setScreen({ type: 'voting', nomineeId })
+    // Check if an effect intercepted (e.g., Virgin killing the nominator)
+    const winner = checkWinCondition(newState, newGame)
+    if (winner) {
+      const finalGame = endGame(newGame, winner)
+      updateGame(finalGame)
+      setScreen({ type: 'game_over' })
     } else {
-      // Effect intercepted (e.g., Virgin) — check win condition
-      const winner = checkWinCondition(newState, newGame)
-      if (winner) {
-        const finalGame = endGame(newGame, winner)
-        updateGame(finalGame)
-        setScreen({ type: 'game_over' })
-      } else {
-        setScreen({ type: 'day' })
-      }
+      // Show voting screen for this nominee
+      setScreen({ type: 'voting', nomineeId })
     }
   }
 
   const handleVoteComplete = (
-    votesForCount: number,
-    votesAgainstCount: number,
-    votesForIds?: string[],
-    votesAgainstIds?: string[],
+    voteCount: number,
+    votedIds?: string[],
   ) => {
     if (screen.type !== 'voting') return
 
     const newGame = resolveVote(
       game,
       screen.nomineeId,
-      votesForCount,
-      votesAgainstCount,
-      votesForIds,
-      votesAgainstIds,
+      voteCount,
+      votedIds,
     )
     updateGame(newGame)
 
-    const winner = checkWinCondition(getCurrentState(newGame), newGame)
-    if (winner) {
-      const finalGame = endGame(newGame, winner)
-      updateGame(finalGame)
-      setScreen({ type: 'game_over' })
-    } else {
-      setScreen({ type: 'day' })
-    }
+    // No execution here — deferred to end of day
+    setScreen({ type: 'day' })
   }
 
   const handleEndDay = () => {
-    // Check dynamic end-of-day win conditions (e.g., Mayor's peaceful victory)
-    const endOfDayWinner = checkEndOfDayWinConditions(state, game)
-    if (endOfDayWinner) {
-      const finalGame = endGame(game, endOfDayWinner)
+    // Execute whoever is on the block (deferred execution)
+    let currentGame = executeAtEndOfDay(game)
+
+    // Check win conditions after execution
+    const postExecWinner = checkWinCondition(getCurrentState(currentGame), currentGame)
+    if (postExecWinner) {
+      const finalGame = endGame(currentGame, postExecWinner)
       updateGame(finalGame)
       setScreen({ type: 'game_over' })
       return
     }
 
-    const newGame = startNight(game)
+    // Check dynamic end-of-day win conditions (e.g., Mayor's peaceful victory)
+    const endOfDayWinner = checkEndOfDayWinConditions(getCurrentState(currentGame), currentGame)
+    if (endOfDayWinner) {
+      const finalGame = endGame(currentGame, endOfDayWinner)
+      updateGame(finalGame)
+      setScreen({ type: 'game_over' })
+      return
+    }
+
+    const newGame = startNight(currentGame)
     // Process auto-skips so the dashboard is ready
     const readyGame = processAutoSkips(newGame)
     updateGame(readyGame)
@@ -610,7 +611,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         return (
         <DayPhase
           state={state}
-          canNominate={!hasExecutionToday(game)}
+          blockStatus={getBlockStatus(game)}
           dayActions={dayActions}
           nightSummary={{ deaths, round: state.round - 1 || state.round }}
           onNominate={handleOpenNomination}
@@ -672,6 +673,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
           <NominationScreen
             state={state}
             nominatorsToday={getNominatorsToday(game)}
+            nomineesToday={getNomineesToday(game)}
             onNominate={handleNominate}
             onBack={handleBackFromNomination}
           />
@@ -682,6 +684,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
           <VotingPhase
             state={state}
             nomineeId={screen.nomineeId}
+            blockStatus={getBlockStatus(game)}
             onVoteComplete={handleVoteComplete}
             onCancel={handleCancelVote}
           />
@@ -800,19 +803,6 @@ function getInitialScreen(game: Game): Screen {
       return { type: 'role_revelation' }
     case 'night':
       return { type: 'night_dashboard' }
-    case 'voting': {
-      // Find the nominee from the last nomination
-      const lastNomination = [...game.history]
-        .reverse()
-        .find((e) => e.type === 'nomination')
-      if (lastNomination) {
-        return {
-          type: 'voting',
-          nomineeId: lastNomination.data.nomineeId as string,
-        }
-      }
-      return { type: 'day' }
-    }
     case 'day':
       return { type: 'day' }
     default:

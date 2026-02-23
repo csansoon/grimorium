@@ -11,13 +11,13 @@ import {
   resolveVote,
   addEffectToPlayer,
   removeEffectFromPlayer,
-  hasExecutionToday,
 } from '../game'
-import { getCurrentState, hasEffect } from '../types'
+import { getCurrentState, hasEffect, PlayerState } from '../types'
 import {
   makePlayer,
   makeGame,
   makeState,
+  makeGameWithHistory,
   makeStandardPlayers,
   addEffectTo,
   resetPlayerCounter,
@@ -350,13 +350,13 @@ describe('skipNightAction', () => {
 // ============================================================================
 
 describe('nominate', () => {
-  it('creates a nomination entry and transitions to voting', () => {
+  it('creates a nomination entry and stays in day phase', () => {
     const players = makeStandardPlayers()
     const game = makeGame(makeState({ phase: 'day', round: 1, players }))
 
     const updated = nominate(game, 'p1', 'p5')
     const state = getCurrentState(updated)
-    expect(state.phase).toBe('voting')
+    expect(state.phase).toBe('day')
 
     // Should have a nomination entry
     const nomEntry = updated.history.find((e) => e.type === 'nomination')
@@ -375,124 +375,119 @@ describe('nominate', () => {
 })
 
 describe('resolveVote', () => {
-  it('executes player when more yes than no votes', () => {
-    const players = makeStandardPlayers()
-    const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
+  // Helper: creates a game state in the day phase with a day_started event
+  // so getBlockStatus/getNomineesToday can scan history properly
+  function makeDayGame(players: PlayerState[]) {
+    return makeGameWithHistory(
+      [
+        { type: 'game_created' },
+        { type: 'day_started', stateOverrides: { phase: 'day', round: 1 } },
+      ],
+      makeState({ phase: 'setup', round: 0, players }),
+    )
+  }
 
-    // 3 for, 1 against => passes (3 > 1)
-    const updated = resolveVote(game, 'p5', 3, 1, ['p1', 'p2', 'p3'], ['p4'])
+  it('puts player on block when votes meet threshold (5 alive, 3 needed)', () => {
+    const players = makeStandardPlayers() // 5 players
+    const game = makeDayGame(players)
+
+    // 3 votes >= ceil(5/2)=3 => meets threshold, goes on block
+    const updated = resolveVote(game, 'p5', 3, ['p1', 'p2', 'p3'])
     const state = getCurrentState(updated)
     expect(state.phase).toBe('day')
 
+    // Player is NOT dead yet — execution deferred to end of day
     const p5 = state.players.find((p) => p.id === 'p5')!
-    expect(hasEffect(p5, 'dead')).toBe(true)
+    expect(hasEffect(p5, 'dead')).toBe(false)
 
-    const execEntry = updated.history.find((e) => e.type === 'execution')
-    expect(execEntry).toBeDefined()
+    // Vote entry should show replacesBlock = true
+    const voteEntry = updated.history.find((e) => e.type === 'vote')
+    expect(voteEntry?.data.replacesBlock).toBe(true)
+    expect(voteEntry?.data.meetsThreshold).toBe(true)
+    expect(voteEntry?.data.voteCount).toBe(3)
   })
 
-  it('executes when even a single yes with no opposition', () => {
-    const players = makeStandardPlayers()
-    const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
+  it('fails when votes are below threshold', () => {
+    const players = makeStandardPlayers() // 5 players
+    const game = makeDayGame(players)
 
-    // 1 for, 0 against => passes (1 > 0)
-    const updated = resolveVote(game, 'p5', 1, 0, ['p1'], [])
-    const state = getCurrentState(updated)
-
-    const p5 = state.players.find((p) => p.id === 'p5')!
-    expect(hasEffect(p5, 'dead')).toBe(true)
-  })
-
-  it('does not execute when more no than yes votes', () => {
-    const players = makeStandardPlayers()
-    const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
-
-    // 1 for, 3 against => fails (1 < 3)
-    const updated = resolveVote(game, 'p5', 1, 3, ['p1'], ['p2', 'p3', 'p4'])
+    // 2 votes < ceil(5/2)=3 => below threshold
+    const updated = resolveVote(game, 'p5', 2, ['p1', 'p2'])
     const state = getCurrentState(updated)
     expect(state.phase).toBe('day')
 
-    const p5 = state.players.find((p) => p.id === 'p5')!
-    expect(hasEffect(p5, 'dead')).toBe(false)
-
-    const execEntry = updated.history.find((e) => e.type === 'execution')
-    expect(execEntry).toBeUndefined()
+    const voteEntry = updated.history.find((e) => e.type === 'vote')
+    expect(voteEntry?.data.replacesBlock).toBe(false)
+    expect(voteEntry?.data.meetsThreshold).toBe(false)
   })
 
-  it('does not execute on a tie', () => {
+  it('replaces block when new vote is strictly higher', () => {
     const players = makeStandardPlayers()
-    const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
+    const game = makeDayGame(players)
 
-    // 2 for, 2 against => fails (tie, not strictly more)
-    const updated = resolveVote(game, 'p5', 2, 2, ['p1', 'p2'], ['p3', 'p4'])
-    const state = getCurrentState(updated)
+    // First nomination: p5 gets 3 votes (goes on block)
+    const afterFirst = resolveVote(game, 'p5', 3, ['p1', 'p2', 'p3'])
 
-    const p5 = state.players.find((p) => p.id === 'p5')!
-    expect(hasEffect(p5, 'dead')).toBe(false)
+    // Second nomination: p4 gets 4 votes (higher, replaces)
+    const afterSecond = resolveVote(afterFirst, 'p4', 4, ['p1', 'p2', 'p3', 'p5'])
 
-    const execEntry = updated.history.find((e) => e.type === 'execution')
-    expect(execEntry).toBeUndefined()
+    const voteEntries = afterSecond.history.filter((e) => e.type === 'vote')
+    const lastVote = voteEntries[voteEntries.length - 1]
+    expect(lastVote?.data.replacesBlock).toBe(true)
+    expect(lastVote?.data.nomineeId).toBe('p4')
   })
 
-  it('does not execute when everyone abstains (0 vs 0)', () => {
+  it('clears block on tie (same vote count as current block)', () => {
     const players = makeStandardPlayers()
-    const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
+    const game = makeDayGame(players)
 
-    // 0 for, 0 against => fails (0 is not > 0)
-    const updated = resolveVote(game, 'p5', 0, 0, [], [])
-    const state = getCurrentState(updated)
+    // First: p5 gets 3 votes (on block)
+    const afterFirst = resolveVote(game, 'p5', 3, ['p1', 'p2', 'p3'])
 
-    const p5 = state.players.find((p) => p.id === 'p5')!
-    expect(hasEffect(p5, 'dead')).toBe(false)
+    // Second: p4 gets 3 votes (tie)
+    const afterSecond = resolveVote(afterFirst, 'p4', 3, ['p1', 'p2', 'p5'])
+
+    const voteEntries = afterSecond.history.filter((e) => e.type === 'vote')
+    // Should have a clearsBlock entry
+    const clearEntry = voteEntries.find((e) => e.data.clearsBlock === true)
+    expect(clearEntry).toBeDefined()
+  })
+
+  it('fails with 0 votes', () => {
+    const players = makeStandardPlayers()
+    const game = makeDayGame(players)
+
+    const updated = resolveVote(game, 'p5', 0)
+    const voteEntry = updated.history.find((e) => e.type === 'vote')
+    expect(voteEntry?.data.meetsThreshold).toBe(false)
+    expect(voteEntry?.data.replacesBlock).toBe(false)
   })
 
   it("tracks dead voter's used vote", () => {
     const players = makeStandardPlayers()
     // Kill p1 first
     players[0] = addEffectTo(players[0], 'dead')
-    const game = makeGame(makeState({ phase: 'voting', round: 1, players }))
+    const game = makeDayGame(players)
 
-    // Dead player p1 votes for
-    const updated = resolveVote(game, 'p5', 4, 0, ['p1', 'p2', 'p3', 'p4'], [])
+    // Dead player p1 votes — threshold is ceil(4/2)=2 (only 4 alive)
+    const updated = resolveVote(game, 'p5', 3, ['p1', 'p2', 'p3'])
     const state = getCurrentState(updated)
 
     const p1 = state.players.find((p) => p.id === 'p1')!
     expect(hasEffect(p1, 'used_dead_vote')).toBe(true)
   })
-})
 
-// ============================================================================
-// EXECUTION TRACKING
-// ============================================================================
-
-describe('hasExecutionToday', () => {
-  it('returns false when no execution happened', () => {
+  it("does not track dead voter if they don't vote", () => {
     const players = makeStandardPlayers()
-    let game = makeGame(makeState({ phase: 'day', round: 1, players }))
-    game = addHistoryEntry(game, {
-      type: 'day_started',
-      message: [{ type: 'text', content: 'day' }],
-      data: { round: 1 },
-    })
+    players[0] = addEffectTo(players[0], 'dead')
+    const game = makeDayGame(players)
 
-    expect(hasExecutionToday(game)).toBe(false)
-  })
+    // p1 (dead) does NOT vote
+    const updated = resolveVote(game, 'p5', 2, ['p2', 'p3'])
+    const state = getCurrentState(updated)
 
-  it('returns true after an execution', () => {
-    const players = makeStandardPlayers()
-    let game = makeGame(makeState({ phase: 'day', round: 1, players }))
-    game = addHistoryEntry(game, {
-      type: 'day_started',
-      message: [{ type: 'text', content: 'day' }],
-      data: { round: 1 },
-    })
-    game = addHistoryEntry(game, {
-      type: 'execution',
-      message: [{ type: 'text', content: 'exec' }],
-      data: { playerId: 'p5' },
-    })
-
-    expect(hasExecutionToday(game)).toBe(true)
+    const p1 = state.players.find((p) => p.id === 'p1')!
+    expect(hasEffect(p1, 'used_dead_vote')).toBe(false)
   })
 })
 

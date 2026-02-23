@@ -86,7 +86,7 @@ const en: Translations = {
     grimoire: 'Grimoire',
     daytimeActions: 'Daytime Actions',
     accusePlayerDescription: 'Accuse a player and put them to vote',
-    executionAlreadyHappened: 'An execution has already happened today',
+
     nominatesForExecution: '{nominator} nominates {nominee} for execution',
     nominatesVerb: 'nominates',
     forExecution: 'for execution',
@@ -99,17 +99,22 @@ const en: Translations = {
     selectNominator: 'Select nominator...',
     selectNominee: 'Select nominee...',
     startNomination: 'Start Nomination',
-    endDayGoToNight: 'End Day → Go to Night',
 
-    executePlayer: 'Execute {player}?',
-    yesVsNoNeeded: 'More YES than NO votes needed',
-    votesFor: 'For',
-    votesAgainst: 'Against',
-    abstain: 'Abstain',
-    willBeExecuted:
-      '{player} will be EXECUTED ({votesFor} yes vs {votesAgainst} no)',
-    willNotBeExecuted:
-      '{player} will NOT be executed ({votesFor} yes vs {votesAgainst} no)',
+
+    executePlayer: 'Vote on {player}',
+    votesNeeded: '{count} votes needed',
+    votesCount: 'Votes',
+    voteThreshold: 'of {threshold} needed',
+    voteAction: 'Vote',
+    dontVote: "Don't Vote",
+    goesOnBlock: '{player} goes on the block!',
+    notEnoughVotes: 'Not enough votes',
+    tiedNoExecution: 'Tied \u2014 no execution',
+    currentBlock: '{player} on the block ({count} votes)',
+    needMoreThan: 'Need more than {count} to replace',
+    noOneOnBlock: 'No one on the block',
+    endDayExecute: 'End Day \u2014 Execute {player}',
+    endDayNoExecution: 'End Day \u2014 No Execution',
     confirmVotes: 'Confirm Votes',
     cancelNomination: 'Cancel Nomination',
 
@@ -221,11 +226,6 @@ const en: Translations = {
     nightSummary: 'Night {round} Summary',
     noDeathsLastNight: 'No one died',
 
-    // Quick Vote
-    quickVote: 'Quick Count',
-    detailedVote: 'Detailed',
-    forCount: 'For votes',
-    againstCount: 'Against votes',
 
     // Night Dashboard review
     actionSummary: 'Action Summary',
@@ -237,6 +237,7 @@ const en: Translations = {
 
     // Nomination tracking
     alreadyNominated: 'Already nominated today',
+    alreadyBeenNominated: 'Already been nominated today',
 
     // Hand device interstitial
     handDeviceTo: 'Hand the device to {player}',
@@ -298,9 +299,10 @@ const en: Translations = {
     learnedRole: '{player} learned they are the {role}',
     noActionTonight: '{role} has no action tonight',
     nominates: '{nominator} nominates {nominee}',
-    voteResult: '{player}: {for} for, {against} against. ',
-    votePassed: 'The vote passes!',
-    voteFailed: 'The vote fails.',
+    voteResult: '{player}: {votes} votes ({threshold} needed). ',
+    votePassed: '{player} goes on the block!',
+    voteFailed: 'Not enough votes.',
+    voteTied: 'Tied with {player} \u2014 block cleared.',
     executed: '{player} has been executed',
     goodWins: 'Good wins! The Demon has been defeated.',
     evilWins: 'Evil wins! The town has fallen.',

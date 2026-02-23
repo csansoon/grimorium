@@ -5,21 +5,18 @@ import { useI18n, interpolate, getRoleTranslations } from '../../lib/i18n'
 import { Button, Icon, BackButton } from '../atoms'
 import { ScreenFooter } from '../layouts/ScreenFooter'
 import { cn } from '../../lib/utils'
+import { BlockStatus, getVoteThreshold } from '../../lib/game'
 
 type Props = {
   state: GameState
   nomineeId: string
+  blockStatus: BlockStatus
   onVoteComplete: (
-    votesForCount: number,
-    votesAgainstCount: number,
-    votesForIds?: string[],
-    votesAgainstIds?: string[],
+    voteCount: number,
+    votedIds?: string[],
   ) => void
   onCancel: () => void
 }
-
-type VoteValue = 'for' | 'against' | 'abstain' | null
-type VoteMode = 'quick' | 'detailed'
 
 /**
  * Get the Butler's master player name, if this player has the butler_master effect.
@@ -40,13 +37,13 @@ function getButlerMasterName(
 export function VotingPhase({
   state,
   nomineeId,
+  blockStatus,
   onVoteComplete,
   onCancel,
 }: Props) {
   const { t, language } = useI18n()
   const butlerT = getRoleTranslations('butler', language)
   const nominee = state.players.find((p) => p.id === nomineeId)
-  const [mode, setMode] = useState<VoteMode>('detailed')
 
   const canPlayerVote = (player: PlayerState): boolean => {
     // Check all effects for voting restrictions
@@ -70,66 +67,45 @@ export function VotingPhase({
     [state.players, nomineeId],
   )
 
-  const totalEligible = eligibleVoters.length
+  const threshold = getVoteThreshold(state)
 
   // ========================================================================
-  // DETAILED MODE STATE
+  // VOTE STATE — binary: voted or not
   // ========================================================================
 
   const initialVotes = useMemo(() => {
-    const init: Record<string, VoteValue> = {}
+    const init: Record<string, boolean> = {}
     for (const voter of eligibleVoters) {
-      init[voter.id] = 'abstain'
+      init[voter.id] = false
     }
     return init
   }, [eligibleVoters])
 
-  const [votes, setVotes] = useState<Record<string, VoteValue>>(initialVotes)
+  const [votes, setVotes] = useState<Record<string, boolean>>(initialVotes)
 
-  const handleVote = (playerId: string, vote: VoteValue) => {
-    setVotes({ ...votes, [playerId]: vote })
+  const handleToggleVote = (playerId: string) => {
+    setVotes({ ...votes, [playerId]: !votes[playerId] })
   }
 
-  const detailedForCount = Object.values(votes).filter(
-    (v) => v === 'for',
-  ).length
-  const detailedAgainstCount = Object.values(votes).filter(
-    (v) => v === 'against',
-  ).length
-  const detailedAbstentions = Object.values(votes).filter(
-    (v) => v === 'abstain',
-  ).length
+  const voteCount = Object.values(votes).filter(Boolean).length
+  const meetsThreshold = voteCount >= threshold
 
-  // ========================================================================
-  // QUICK MODE STATE
-  // ========================================================================
-
-  const [quickFor, setQuickFor] = useState(0)
-  const [quickAgainst, setQuickAgainst] = useState(0)
-  const quickAbstentions = Math.max(0, totalEligible - quickFor - quickAgainst)
-
-  // ========================================================================
-  // ACTIVE VALUES (based on mode)
-  // ========================================================================
-
-  const votesForCount = mode === 'quick' ? quickFor : detailedForCount
-  const votesAgainstCount =
-    mode === 'quick' ? quickAgainst : detailedAgainstCount
-  const abstentions = mode === 'quick' ? quickAbstentions : detailedAbstentions
-  const willPass = votesForCount > votesAgainstCount
+  // Determine execution preview
+  type VoteOutcome = 'goes_on_block' | 'replaces_block' | 'tied' | 'not_enough' | 'below_block'
+  const getOutcome = (): VoteOutcome => {
+    if (!meetsThreshold) return 'not_enough'
+    if (!blockStatus) return 'goes_on_block'
+    if (voteCount > blockStatus.voteCount) return 'replaces_block'
+    if (voteCount === blockStatus.voteCount) return 'tied'
+    return 'below_block'
+  }
+  const outcome = getOutcome()
 
   const handleConfirm = () => {
-    if (mode === 'detailed') {
-      const forIds = Object.entries(votes)
-        .filter(([_, vote]) => vote === 'for')
-        .map(([id]) => id)
-      const againstIds = Object.entries(votes)
-        .filter(([_, vote]) => vote === 'against')
-        .map(([id]) => id)
-      onVoteComplete(forIds.length, againstIds.length, forIds, againstIds)
-    } else {
-      onVoteComplete(quickFor, quickAgainst)
-    }
+    const votedIds = Object.entries(votes)
+      .filter(([_, voted]) => voted)
+      .map(([id]) => id)
+    onVoteComplete(votedIds.length, votedIds)
   }
 
   if (!nominee) return null
@@ -158,7 +134,7 @@ export function VotingPhase({
               })}
             </h1>
             <p className='text-parchment-400 text-sm'>
-              {t.game.yesVsNoNeeded}
+              {interpolate(t.game.votesNeeded, { count: threshold })}
             </p>
           </div>
         </div>
@@ -168,106 +144,136 @@ export function VotingPhase({
       <div className='px-4 max-w-lg mx-auto w-full'>
         <div className='flex justify-around py-4 border-b border-white/10'>
           <div className='text-center'>
-            <div className='text-3xl font-bold text-green-400'>
-              {votesForCount}
+            <div className={cn(
+              'text-3xl font-bold',
+              meetsThreshold ? 'text-green-400' : 'text-red-400',
+            )}>
+              {voteCount}
             </div>
-            <div className='text-green-300/70 text-xs uppercase tracking-wider'>
-              {t.game.votesFor}
-            </div>
-          </div>
-          <div className='text-center'>
-            <div className='text-3xl font-bold text-red-400'>
-              {votesAgainstCount}
-            </div>
-            <div className='text-red-300/70 text-xs uppercase tracking-wider'>
-              {t.game.votesAgainst}
+            <div className='text-parchment-400/70 text-xs uppercase tracking-wider'>
+              {t.game.votesCount}
             </div>
           </div>
           <div className='text-center'>
             <div className='text-3xl font-bold text-parchment-500'>
-              {abstentions}
+              {threshold}
             </div>
             <div className='text-parchment-500/70 text-xs uppercase tracking-wider'>
-              {t.game.abstain}
+              {interpolate(t.game.voteThreshold, { threshold })}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mode Switcher */}
-      <div className='px-4 py-3 max-w-lg mx-auto w-full'>
-        <div className='flex rounded-lg bg-white/5 border border-white/10 p-0.5'>
-          <button
-            onClick={() => setMode('detailed')}
-            className={cn(
-              'flex-1 py-2 text-xs font-medium rounded-md transition-all text-center',
-              mode === 'detailed'
-                ? 'bg-red-900/60 text-parchment-100 border border-red-500/40'
-                : 'text-parchment-500 hover:text-parchment-300',
-            )}
-          >
-            {t.game.detailedVote}
-          </button>
-          <button
-            onClick={() => setMode('quick')}
-            className={cn(
-              'flex-1 py-2 text-xs font-medium rounded-md transition-all text-center',
-              mode === 'quick'
-                ? 'bg-red-900/60 text-parchment-100 border border-red-500/40'
-                : 'text-parchment-500 hover:text-parchment-300',
-            )}
-          >
-            {t.game.quickVote}
-          </button>
+      {/* Current Block Info */}
+      {blockStatus && (
+        <div className='px-4 max-w-lg mx-auto w-full'>
+          <div className='bg-amber-900/20 border border-amber-500/30 rounded-lg p-3 mt-3'>
+            <div className='flex items-center gap-2'>
+              <Icon name='swords' size='sm' className='text-amber-400' />
+              <span className='text-amber-200 text-sm'>
+                {interpolate(t.game.currentBlock, {
+                  player: blockStatus.playerName,
+                  count: blockStatus.voteCount,
+                })}
+              </span>
+            </div>
+            <p className='text-amber-400/60 text-xs mt-1 ml-6'>
+              {interpolate(t.game.needMoreThan, {
+                count: blockStatus.voteCount,
+              })}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Vote Input Area */}
+      <div className='flex-1 px-4 py-3 pb-4 max-w-lg mx-auto w-full overflow-y-auto'>
+        <div className='space-y-2'>
+          {eligibleVoters.map((player) => {
+            const isDead = hasEffect(player, 'dead')
+            const butlerMasterName = getButlerMasterName(player, state)
+            const voted = votes[player.id]
+
+            return (
+              <div
+                key={player.id}
+                className={cn(
+                  'rounded-lg p-3',
+                  butlerMasterName
+                    ? 'border-2 border-amber-500/50 bg-amber-950/20'
+                    : 'border border-white/10',
+                )}
+              >
+                <div className='flex items-center gap-2 mb-2'>
+                  {isDead && (
+                    <Icon name='skull' size='sm' className='text-parchment-500' />
+                  )}
+                  <span className='text-parchment-200 text-sm flex-1'>
+                    {player.name}
+                  </span>
+                </div>
+                {butlerMasterName && (
+                  <div className='flex items-center gap-1.5 mb-2 px-2 py-1 rounded bg-amber-900/30 border border-amber-500/30'>
+                    <Icon name='handHeart' size='sm' className='text-amber-400' />
+                    <span className='text-amber-300 text-xs font-medium'>
+                      {interpolate(butlerT.masterLabel ?? '', {
+                        player: butlerMasterName,
+                      })}
+                    </span>
+                    <span className='text-amber-400/60 text-xs ml-auto'>
+                      {butlerT.voteRestriction}
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => handleToggleVote(player.id)}
+                  className={cn(
+                    'w-full py-2.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.97] min-h-[48px]',
+                    voted
+                      ? 'bg-red-600 text-white'
+                      : 'bg-white/5 text-parchment-400 hover:bg-white/10',
+                  )}
+                >
+                  <Icon name={voted ? 'check' : 'minus'} size='sm' />
+                  <span>{voted ? t.game.voteAction : t.game.dontVote}</span>
+                </button>
+              </div>
+            )
+          })}
         </div>
       </div>
 
-      {/* Vote Input Area */}
-      <div className='flex-1 px-4 pb-4 max-w-lg mx-auto w-full overflow-y-auto'>
-        {mode === 'quick' ? (
-          <QuickVoteInput
-            forCount={quickFor}
-            againstCount={quickAgainst}
-            maxTotal={totalEligible}
-            onForChange={setQuickFor}
-            onAgainstChange={setQuickAgainst}
-          />
-        ) : (
-          <DetailedVoteInput
-            eligibleVoters={eligibleVoters}
-            votes={votes}
-            state={state}
-            butlerT={butlerT}
-            onVote={handleVote}
-          />
-        )}
-      </div>
-
-      {/* Execution Preview */}
+      {/* Outcome Preview */}
       <div className='px-4 max-w-lg mx-auto w-full'>
         <div
           className={cn(
             'rounded-lg p-3 text-center border mb-4',
-            willPass
-              ? 'bg-red-900/30 border-red-600/50'
-              : 'bg-green-900/30 border-green-600/50',
+            outcome === 'goes_on_block' || outcome === 'replaces_block'
+              ? 'bg-green-900/30 border-green-600/50'
+              : outcome === 'tied'
+                ? 'bg-amber-900/30 border-amber-600/50'
+                : 'bg-red-900/30 border-red-600/50',
           )}
         >
-          {willPass ? (
-            <p className='text-red-200 text-sm'>
-              {interpolate(t.game.willBeExecuted, {
-                player: nominee.name,
-                votesFor: votesForCount,
-                votesAgainst: votesAgainstCount,
-              })}
-            </p>
-          ) : (
+          {outcome === 'goes_on_block' && (
             <p className='text-green-200 text-sm'>
-              {interpolate(t.game.willNotBeExecuted, {
-                player: nominee.name,
-                votesFor: votesForCount,
-                votesAgainst: votesAgainstCount,
-              })}
+              {interpolate(t.game.goesOnBlock, { player: nominee.name })}
+            </p>
+          )}
+          {outcome === 'replaces_block' && (
+            <p className='text-green-200 text-sm'>
+              {interpolate(t.game.goesOnBlock, { player: nominee.name })}
+            </p>
+          )}
+          {outcome === 'tied' && (
+            <p className='text-amber-200 text-sm'>
+              {t.game.tiedNoExecution}
+            </p>
+          )}
+          {(outcome === 'not_enough' || outcome === 'below_block') && (
+            <p className='text-red-200 text-sm'>
+              {t.game.notEnoughVotes}
             </p>
           )}
         </div>
@@ -289,214 +295,6 @@ export function VotingPhase({
           </Button>
         </div>
       </ScreenFooter>
-    </div>
-  )
-}
-
-// ============================================================================
-// QUICK VOTE INPUT
-// ============================================================================
-
-function QuickVoteInput({
-  forCount,
-  againstCount,
-  maxTotal,
-  onForChange,
-  onAgainstChange,
-}: {
-  forCount: number
-  againstCount: number
-  maxTotal: number
-  onForChange: (n: number) => void
-  onAgainstChange: (n: number) => void
-}) {
-  const { t } = useI18n()
-  const maxFor = maxTotal - againstCount
-  const maxAgainst = maxTotal - forCount
-
-  return (
-    <div className='space-y-6 py-4'>
-      {/* For counter */}
-      <div className='text-center'>
-        <div className='text-green-300/70 text-xs uppercase tracking-wider mb-3'>
-          {t.game.forCount}
-        </div>
-        <div className='flex items-center justify-center gap-6'>
-          <button
-            onClick={() => onForChange(Math.max(0, forCount - 1))}
-            disabled={forCount <= 0}
-            className={cn(
-              'w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90',
-              forCount > 0
-                ? 'bg-green-900/40 border-2 border-green-500/40 text-green-400 hover:bg-green-900/60'
-                : 'bg-white/5 border border-white/10 text-parchment-600 cursor-not-allowed',
-            )}
-          >
-            <Icon name='minus' size='lg' />
-          </button>
-          <div className='text-5xl font-bold text-green-400 min-w-[80px] text-center tabular-nums'>
-            {forCount}
-          </div>
-          <button
-            onClick={() => onForChange(Math.min(maxFor, forCount + 1))}
-            disabled={forCount >= maxFor}
-            className={cn(
-              'w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90',
-              forCount < maxFor
-                ? 'bg-green-900/40 border-2 border-green-500/40 text-green-400 hover:bg-green-900/60'
-                : 'bg-white/5 border border-white/10 text-parchment-600 cursor-not-allowed',
-            )}
-          >
-            <Icon name='plus' size='lg' />
-          </button>
-        </div>
-      </div>
-
-      {/* Against counter */}
-      <div className='text-center'>
-        <div className='text-red-300/70 text-xs uppercase tracking-wider mb-3'>
-          {t.game.againstCount}
-        </div>
-        <div className='flex items-center justify-center gap-6'>
-          <button
-            onClick={() => onAgainstChange(Math.max(0, againstCount - 1))}
-            disabled={againstCount <= 0}
-            className={cn(
-              'w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90',
-              againstCount > 0
-                ? 'bg-red-900/40 border-2 border-red-500/40 text-red-400 hover:bg-red-900/60'
-                : 'bg-white/5 border border-white/10 text-parchment-600 cursor-not-allowed',
-            )}
-          >
-            <Icon name='minus' size='lg' />
-          </button>
-          <div className='text-5xl font-bold text-red-400 min-w-[80px] text-center tabular-nums'>
-            {againstCount}
-          </div>
-          <button
-            onClick={() =>
-              onAgainstChange(Math.min(maxAgainst, againstCount + 1))
-            }
-            disabled={againstCount >= maxAgainst}
-            className={cn(
-              'w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90',
-              againstCount < maxAgainst
-                ? 'bg-red-900/40 border-2 border-red-500/40 text-red-400 hover:bg-red-900/60'
-                : 'bg-white/5 border border-white/10 text-parchment-600 cursor-not-allowed',
-            )}
-          >
-            <Icon name='plus' size='lg' />
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// DETAILED VOTE INPUT
-// ============================================================================
-
-function DetailedVoteInput({
-  eligibleVoters,
-  votes,
-  state,
-  butlerT,
-  onVote,
-}: {
-  eligibleVoters: PlayerState[]
-  votes: Record<string, VoteValue>
-  state: GameState
-  butlerT: Record<string, string | undefined>
-  onVote: (playerId: string, vote: VoteValue) => void
-}) {
-  const { t } = useI18n()
-
-  return (
-    <div className='space-y-2'>
-      {eligibleVoters.map((player) => {
-        const isDead = hasEffect(player, 'dead')
-        const butlerMasterName = getButlerMasterName(player, state)
-        const currentVote = votes[player.id]
-
-        return (
-          <div
-            key={player.id}
-            className={cn(
-              'rounded-lg p-3',
-              butlerMasterName
-                ? 'border-2 border-amber-500/50 bg-amber-950/20'
-                : 'border border-white/10',
-            )}
-          >
-            <div className='flex items-center gap-2 mb-2'>
-              {isDead && (
-                <Icon name='skull' size='sm' className='text-parchment-500' />
-              )}
-              <span className='text-parchment-200 text-sm flex-1'>
-                {player.name}
-              </span>
-            </div>
-            {butlerMasterName && (
-              <div className='flex items-center gap-1.5 mb-2 px-2 py-1 rounded bg-amber-900/30 border border-amber-500/30'>
-                <Icon name='handHeart' size='sm' className='text-amber-400' />
-                <span className='text-amber-300 text-xs font-medium'>
-                  {interpolate(butlerT.masterLabel ?? '', {
-                    player: butlerMasterName,
-                  })}
-                </span>
-                <span className='text-amber-400/60 text-xs ml-auto'>
-                  {butlerT.voteRestriction}
-                </span>
-              </div>
-            )}
-            <div className='flex gap-2'>
-              <button
-                onClick={() => onVote(player.id, 'for')}
-                className={cn(
-                  'flex-1 py-2.5 rounded-lg text-xs font-medium transition-all flex flex-col items-center justify-center gap-0.5 active:scale-[0.95] min-h-[48px]',
-                  currentVote === 'for'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white/5 text-parchment-400 hover:bg-white/10',
-                )}
-              >
-                <Icon name='thumbsUp' size='sm' />
-                <span className='text-[10px] leading-tight'>
-                  {t.game.votesFor}
-                </span>
-              </button>
-              <button
-                onClick={() => onVote(player.id, 'against')}
-                className={cn(
-                  'flex-1 py-2.5 rounded-lg text-xs font-medium transition-all flex flex-col items-center justify-center gap-0.5 active:scale-[0.95] min-h-[48px]',
-                  currentVote === 'against'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-white/5 text-parchment-400 hover:bg-white/10',
-                )}
-              >
-                <Icon name='thumbsDown' size='sm' />
-                <span className='text-[10px] leading-tight'>
-                  {t.game.votesAgainst}
-                </span>
-              </button>
-              <button
-                onClick={() => onVote(player.id, 'abstain')}
-                className={cn(
-                  'flex-1 py-2.5 rounded-lg text-xs font-medium transition-all flex flex-col items-center justify-center gap-0.5 active:scale-[0.95] min-h-[48px]',
-                  currentVote === 'abstain'
-                    ? 'bg-parchment-500 text-grimoire-dark'
-                    : 'bg-white/5 text-parchment-400 hover:bg-white/10',
-                )}
-              >
-                <Icon name='minus' size='sm' />
-                <span className='text-[10px] leading-tight'>
-                  {t.game.abstain}
-                </span>
-              </button>
-            </div>
-          </div>
-        )
-      })}
     </div>
   )
 }

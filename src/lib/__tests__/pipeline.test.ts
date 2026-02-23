@@ -53,7 +53,7 @@ describe('default resolvers', () => {
     }
   })
 
-  it('nominate intent creates nomination entry and transitions to voting', () => {
+  it('nominate intent creates nomination entry (no phase transition)', () => {
     const players = [
       makePlayer({ id: 'p1', roleId: 'villager' }),
       makePlayer({ id: 'p2', roleId: 'imp' }),
@@ -72,7 +72,7 @@ describe('default resolvers', () => {
     if (result.type === 'resolved') {
       expect(result.stateChanges.entries).toHaveLength(1)
       expect(result.stateChanges.entries[0].type).toBe('nomination')
-      expect(result.stateChanges.stateUpdates?.phase).toBe('voting')
+      expect(result.stateChanges.stateUpdates?.phase).toBeUndefined()
     }
   })
 
