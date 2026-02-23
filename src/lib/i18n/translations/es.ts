@@ -216,6 +216,7 @@ const es: Translations = {
     registerAsEvil: 'Malvado',
     actualRole: 'Real: {role}',
     keepDefault: 'Por defecto (sin cambio)',
+    keepOriginalTeam: '{team} (por defecto)',
 
     // Dawn Screen
     dawnTitle: 'Amanecer',

@@ -28,14 +28,21 @@ import {
   AlertBox,
   InfoBox,
   RoleRevealBadge,
+  PerceptionConfigStep,
 } from '../../../../../components/items'
 import {
   PlayerPickerList,
   RolePickerGrid,
 } from '../../../../../components/inputs'
 import { Icon } from '../../../../../components/atoms'
-import { perceive, canRegisterAsTeam } from '../../../../pipeline'
+import {
+  perceive,
+  canRegisterAsTeam,
+  getAmbiguousPlayers,
+  applyPerceptionOverrides,
+} from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
+import { Perception } from '../../../../pipeline/types'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -45,6 +52,7 @@ registerRoleTranslations('investigator', 'es', es)
 
 type Phase =
   | 'step_list'
+  | 'configure_perceptions'
   | 'select_players'
   | 'configure_malfunction'
   | 'show_results'
@@ -60,6 +68,15 @@ const definition: RoleDefinition = {
     isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,
 
   nightSteps: [
+    {
+      id: 'configure_perceptions',
+      icon: 'hatGlasses',
+      getLabel: (t) => t.game.stepConfigurePerceptions,
+      condition: (_game, player, state) =>
+        !isMalfunctioning(player) &&
+        getAmbiguousPlayers(state.players, 'team').length > 0,
+      audience: 'narrator',
+    },
     {
       id: 'select_players',
       icon: 'search',
@@ -92,6 +109,10 @@ const definition: RoleDefinition = {
     const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
     const [selectPlayersDone, setSelectPlayersDone] = useState(false)
     const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
+    const [perceptionOverrides, setPerceptionOverrides] = useState<
+      Record<string, Partial<Perception>>
+    >({})
+    const [perceptionConfigDone, setPerceptionConfigDone] = useState(false)
 
     const malfunctioning = isMalfunctioning(player)
     const otherPlayers = state.players.filter((p) => p.id !== player.id)
@@ -99,33 +120,59 @@ const definition: RoleDefinition = {
     // All defined minion roles (for malfunction role picker)
     const minionRoles = getAllRoles().filter((r) => r.team === 'minion')
 
+    // Check if perception config is needed (only when NOT malfunctioning)
+    const ambiguousPlayers = useMemo(
+      () =>
+        malfunctioning
+          ? []
+          : getAmbiguousPlayers(state.players, 'team'),
+      [state, malfunctioning],
+    )
+    const needsPerceptionConfig = ambiguousPlayers.length > 0
+
+    // Apply perception overrides to get effective state
+    const effectiveState = useMemo(
+      () => applyPerceptionOverrides(state, perceptionOverrides),
+      [state, perceptionOverrides],
+    )
+
     // Check if any minions exist among other players (for healthy flow)
+    // Uses effectiveState so perception overrides are respected
     const hasMinions = otherPlayers.some((p) => {
-      const perception = perceive(p, player, 'team', state)
-      return perception.team === 'minion' || canRegisterAsTeam(p, 'minion')
+      const effectTarget = effectiveState.players.find((pl) => pl.id === p.id) ?? p
+      const effectiveObserver =
+        effectiveState.players.find((pl) => pl.id === player.id) ?? player
+      const perception = perceive(effectTarget, effectiveObserver, 'team', effectiveState)
+      return perception.team === 'minion' || canRegisterAsTeam(effectTarget, 'minion')
     })
 
     // Players that register or could register as minion (for healthy flow)
+    // Uses effectiveState so perception overrides are respected
     const minionsInSelection = selectedPlayers.filter((playerId) => {
-      const p = state.players.find((pl) => pl.id === playerId)
+      const p = effectiveState.players.find((pl) => pl.id === playerId)
       if (!p) return false
-      const perception = perceive(p, player, 'team', state)
+      const effectiveObserver =
+        effectiveState.players.find((pl) => pl.id === player.id) ?? player
+      const perception = perceive(p, effectiveObserver, 'team', effectiveState)
       return perception.team === 'minion' || canRegisterAsTeam(p, 'minion')
     })
 
     // Build flat unique role list with player mapping for role picker
+    // Uses effectiveState so perception overrides are respected
     const minionRoleOptions = (() => {
       const roleToPlayers = new Map<string, string[]>()
       const roles: RoleDefinition[] = []
       const seen = new Set<string>()
+      const effectiveObserver =
+        effectiveState.players.find((pl) => pl.id === player.id) ?? player
       for (const pid of minionsInSelection) {
-        const p = state.players.find((pl) => pl.id === pid)
+        const p = effectiveState.players.find((pl) => pl.id === pid)
         if (!p) continue
-        const pTeam = perceive(p, player, 'team', state)
+        const pTeam = perceive(p, effectiveObserver, 'team', effectiveState)
         const pRoles =
           pTeam.team === 'minion'
             ? (() => {
-                const rp = perceive(p, player, 'role', state)
+                const rp = perceive(p, effectiveObserver, 'role', effectiveState)
                 const r = getRole(rp.roleId)
                 return r ? [r] : []
               })()
@@ -203,6 +250,14 @@ const definition: RoleDefinition = {
       setPhase('step_list')
     }
 
+    const handlePerceptionComplete = (
+      overrides: Record<string, Partial<Perception>>,
+    ) => {
+      setPerceptionOverrides(overrides)
+      setPerceptionConfigDone(true)
+      setPhase('step_list')
+    }
+
     const handleCompleteNoMinions = () => {
       onComplete({
         entries: [
@@ -273,6 +328,16 @@ const definition: RoleDefinition = {
     const steps: NightStep[] = useMemo(() => {
       const result: NightStep[] = []
 
+      if (needsPerceptionConfig) {
+        result.push({
+          id: 'configure_perceptions',
+          icon: 'hatGlasses',
+          label: t.game.stepConfigurePerceptions,
+          status: perceptionConfigDone ? 'done' : 'pending',
+          audience: 'narrator' as const,
+        })
+      }
+
       result.push({
         id: 'select_players',
         icon: 'search',
@@ -300,10 +365,11 @@ const definition: RoleDefinition = {
       })
 
       return result
-    }, [selectPlayersDone, malfunctioning, malfunctionConfigDone, t])
+    }, [selectPlayersDone, needsPerceptionConfig, perceptionConfigDone, malfunctioning, malfunctionConfigDone, t])
 
     const handleSelectStep = (stepId: string) => {
-      if (stepId === 'select_players') setPhase('select_players')
+      if (stepId === 'configure_perceptions') setPhase('configure_perceptions')
+      else if (stepId === 'select_players') setPhase('select_players')
       else if (stepId === 'configure_malfunction')
         setPhase('configure_malfunction')
       else if (stepId === 'show_results') setPhase('show_results')
@@ -320,6 +386,23 @@ const definition: RoleDefinition = {
           playerName={player.name}
           steps={steps}
           onSelectStep={handleSelectStep}
+        />
+      )
+    }
+
+    // ================================================================
+    // Phase: Configure Perceptions
+    // ================================================================
+    if (phase === 'configure_perceptions') {
+      return (
+        <PerceptionConfigStep
+          ambiguousPlayers={ambiguousPlayers}
+          context='team'
+          state={state}
+          roleIcon='search'
+          roleName={getLocalRoleName('investigator')}
+          playerName={player.name}
+          onComplete={handlePerceptionComplete}
         />
       )
     }

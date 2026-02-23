@@ -8,6 +8,7 @@ import {
   getEffectName as getRegistryEffectName,
 } from '../../lib/i18n'
 import { Perception, PerceptionContext } from '../../lib/pipeline/types'
+import { TeamId } from '../../lib/teams'
 import { Icon } from '../atoms'
 import { NarratorSetupLayout } from '../layouts'
 import { cn } from '../../lib/utils'
@@ -34,7 +35,8 @@ type Props = {
  * for a specific role's information ability.
  *
  * For each ambiguous player, shows their actual role and lets the narrator
- * toggle whether they should misregister (e.g., appear evil instead of good).
+ * toggle whether they should misregister (e.g., appear evil instead of good,
+ * or appear as a different team).
  * The overrides are ephemeral — they only affect the current night action
  * calculation, no game events are emitted.
  */
@@ -66,6 +68,13 @@ export function PerceptionConfigStep({
     }))
   }
 
+  const handleToggleTeam = (playerId: string, team: TeamId | null) => {
+    setOverrides((prev) => ({
+      ...prev,
+      [playerId]: team ? { team } : null,
+    }))
+  }
+
   const handleConfirm = () => {
     // Build the final overrides map (only include non-null entries)
     const result: Record<string, Partial<Perception>> = {}
@@ -78,6 +87,9 @@ export function PerceptionConfigStep({
   }
 
   const getRoleName = (roleId: string) => getRegistryRoleName(roleId, language)
+
+  const getTeamName = (teamId: TeamId) =>
+    t.teams[teamId]?.name ?? teamId
 
   return (
     <NarratorSetupLayout
@@ -100,6 +112,7 @@ export function PerceptionConfigStep({
         {ambiguousPlayers.map((player) => {
           const role = getRole(player.roleId)
           const isOverriddenEvil = overrides[player.id]?.alignment === 'evil'
+          const overriddenTeam = overrides[player.id]?.team as TeamId | undefined
 
           // Find the effect that grants misregistration for display
           const misregisterEffect = player.effects.find((e) => {
@@ -122,6 +135,12 @@ export function PerceptionConfigStep({
           const effectName = effectDef
             ? getRegistryEffectName(effectDef.id, language)
             : ''
+
+          // For team context: get the player's actual team and available misregister teams
+          const actualTeam = (role?.team ?? 'townsfolk') as TeamId
+          const canRegTeams: TeamId[] = misregisterEffect
+            ? (resolveCanRegisterAs(misregisterEffect, effectDef)?.teams ?? [])
+            : []
 
           return (
             <div
@@ -181,8 +200,39 @@ export function PerceptionConfigStep({
                 </div>
               )}
 
-              {/* For "role" and "team" contexts, show a simpler default/override toggle */}
-              {(context === 'role' || context === 'team') && (
+              {/* Team toggle for "team" context — actual team + misregister teams */}
+              {context === 'team' && (
+                <div className='flex gap-2 flex-wrap'>
+                  <button
+                    onClick={() => handleToggleTeam(player.id, null)}
+                    className={cn(
+                      'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors border min-w-0',
+                      !overriddenTeam
+                        ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-300'
+                        : 'bg-white/5 border-white/10 text-parchment-500 hover:bg-white/10',
+                    )}
+                  >
+                    {t.game.keepOriginalTeam.replace('{team}', getTeamName(actualTeam))}
+                  </button>
+                  {canRegTeams.map((team) => (
+                    <button
+                      key={team}
+                      onClick={() => handleToggleTeam(player.id, team)}
+                      className={cn(
+                        'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors border min-w-0',
+                        overriddenTeam === team
+                          ? 'bg-red-900/40 border-red-500/50 text-red-300'
+                          : 'bg-white/5 border-white/10 text-parchment-500 hover:bg-white/10',
+                      )}
+                    >
+                      {getTeamName(team)}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* For "role" context, show a simpler default/override toggle */}
+              {context === 'role' && (
                 <div className='flex gap-2'>
                   <button
                     onClick={() => handleToggleAlignment(player.id, false)}

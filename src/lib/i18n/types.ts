@@ -218,6 +218,7 @@ export type Translations = {
     registerAsEvil: string
     actualRole: string
     keepDefault: string
+    keepOriginalTeam: string
 
     // Dawn Screen
     dawnTitle: string
