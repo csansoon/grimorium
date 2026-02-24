@@ -251,6 +251,9 @@ const es: Translations = {
     audiencePlayerReveal: 'Mostrar al jugador',
     storytellerDecision: 'Esta es tu decisión como Cuentacuentos',
     wakePlayerPrompt: 'Despierta a {player} y pídele que elija',
+
+    // Groups
+    otherPlayers: 'Otros Jugadores',
   },
 
   teams: {

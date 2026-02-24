@@ -250,6 +250,9 @@ const en: Translations = {
     audiencePlayerReveal: 'Show to player',
     storytellerDecision: 'This is your decision as Storyteller',
     wakePlayerPrompt: 'Wake {player} and ask them to choose',
+
+    // Groups
+    otherPlayers: 'Other Players',
   },
 
   teams: {

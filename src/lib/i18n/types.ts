@@ -252,6 +252,9 @@ export type Translations = {
     audiencePlayerReveal: string
     storytellerDecision: string
     wakePlayerPrompt: string
+
+    // Groups
+    otherPlayers: string
   }
 
   // Teams

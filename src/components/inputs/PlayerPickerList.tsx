@@ -9,6 +9,11 @@ import { IconName } from '../atoms/icon'
 import { PlayerRoleIcon, filterVisibleEffects } from '../items/PlayerRoleIcon'
 import { cn } from '../../lib/utils'
 
+export type PlayerGroup = {
+  label: string
+  playerIds: string[]
+}
+
 type PlayerPickerListProps = {
   /** Players available for selection. Pre-filtered by the caller. */
   players: PlayerState[]
@@ -46,6 +51,11 @@ type PlayerPickerListProps = {
    * Used for enforcement (e.g., players who already nominated today).
    */
   disabled?: Set<string>
+
+  /**
+   * Optional grouping to separate players into visually distinct sections.
+   */
+  groups?: PlayerGroup[]
 }
 
 const variantStyles = {
@@ -69,6 +79,7 @@ export function PlayerPickerList({
   variant = 'blue',
   annotations,
   disabled: disabledSet,
+  groups,
 }: PlayerPickerListProps) {
   const { t, language } = useI18n()
   const styles = variantStyles[variant]
@@ -80,114 +91,137 @@ export function PlayerPickerList({
 
   const getRoleName = (roleId: string) => getRegistryRoleName(roleId, language)
 
-  return (
-    <div className='space-y-2'>
-      {players.map((player) => {
-        const isSelected = selected.includes(player.id)
-        // When selectionCount === 1, allow tapping a different item to replace (radio behavior)
-        const isDisabled = (!isSelected && isAtMax && selectionCount !== 1) ||
-          (disabledSet?.has(player.id) ?? false)
-        const role = getRole(player.roleId)
-        const team = role ? getTeam(role.team) : null
-        const isDead = hasEffect(player, 'dead')
+  const renderPlayer = (player: PlayerState) => {
+    const isSelected = selected.includes(player.id)
+    // When selectionCount === 1, allow tapping a different item to replace (radio behavior)
+    const isDisabled = (!isSelected && isAtMax && selectionCount !== 1) ||
+      (disabledSet?.has(player.id) ?? false)
+    const role = getRole(player.roleId)
+    const team = role ? getTeam(role.team) : null
+    const isDead = hasEffect(player, 'dead')
 
-        return (
-          <button
-            key={player.id}
-            type='button'
-            disabled={isDisabled}
-            onClick={() => onSelect(player.id)}
+    return (
+      <button
+        key={player.id}
+        type='button'
+        disabled={isDisabled}
+        onClick={() => onSelect(player.id)}
+        className={cn(
+          'w-full rounded-xl border-2 px-3 py-2.5 transition-all flex items-center gap-3',
+          isSelected
+            ? styles.selected
+            : 'border-white/10 bg-white/5 hover:bg-white/[0.08]',
+          isDisabled && 'opacity-40 cursor-not-allowed',
+          isDead && !isSelected && 'opacity-60',
+        )}
+        style={isSelected ? { boxShadow: styles.glow } : undefined}
+      >
+        <PlayerRoleIcon
+          player={player}
+          size='sm'
+          circleClassName={
+            isSelected && team
+              ? team.colors.cardIconBg
+              : 'bg-white/5 border border-white/10'
+          }
+          iconClassName={
+            isSelected && team ? team.colors.text : 'text-parchment-500'
+          }
+        />
+
+        {/* Player info */}
+        <div className='flex-1 min-w-0 text-left'>
+          {/* Name */}
+          <span
             className={cn(
-              'w-full rounded-xl border-2 px-3 py-2.5 transition-all flex items-center gap-3',
-              isSelected
-                ? styles.selected
-                : 'border-white/10 bg-white/5 hover:bg-white/[0.08]',
-              isDisabled && 'opacity-40 cursor-not-allowed',
-              isDead && !isSelected && 'opacity-60',
+              'text-sm font-medium truncate block',
+              isDead
+                ? 'text-parchment-500 line-through'
+                : isSelected
+                  ? 'text-parchment-100'
+                  : 'text-parchment-200',
             )}
-            style={isSelected ? { boxShadow: styles.glow } : undefined}
           >
-            <PlayerRoleIcon
-              player={player}
-              size='sm'
-              circleClassName={
-                isSelected && team
-                  ? team.colors.cardIconBg
-                  : 'bg-white/5 border border-white/10'
-              }
-              iconClassName={
-                isSelected && team ? team.colors.text : 'text-parchment-500'
-              }
-            />
+            {player.name}
+          </span>
 
-            {/* Player info */}
-            <div className='flex-1 min-w-0 text-left'>
-              {/* Name */}
-              <span
-                className={cn(
-                  'text-sm font-medium truncate block',
-                  isDead
-                    ? 'text-parchment-500 line-through'
-                    : isSelected
-                      ? 'text-parchment-100'
-                      : 'text-parchment-200',
-                )}
-              >
-                {player.name}
-              </span>
-
-              {/* Role + alignment + effect icons */}
-              <div className='flex items-center gap-1.5 mt-0.5'>
-                {role && team && (
-                  <>
-                    <span className={cn('text-xs', team.colors.text)}>
-                      {getRoleName(role.id)}
-                    </span>
-                    <span className='text-parchment-600'>&middot;</span>
-                    <span
-                      className={cn(
-                        'text-xs',
-                        team.isEvil ? 'text-red-400/70' : 'text-blue-300/70',
-                      )}
-                    >
-                      {team.isEvil
-                        ? t.game.registerAsEvil
-                        : t.game.registerAsGood}
-                    </span>
-                  </>
-                )}
-
-                {/* Effect icons */}
-                <EffectIcons player={player} />
-              </div>
-              {/* Annotation */}
-              {annotations?.[player.id] && (
-                <div className='text-xs text-parchment-600 mt-0.5 italic'>
-                  {annotations[player.id]}
-                </div>
-              )}
-            </div>
-
-            {/* Selection indicator */}
-            {isSelected && (
-              <div
-                className={cn(
-                  'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
-                  variant === 'red' ? 'bg-red-500/20' : 'bg-blue-500/20',
-                )}
-              >
-                <Icon
-                  name='check'
-                  size='xs'
-                  className={styles.selectedAccent}
-                />
-              </div>
+          {/* Role + alignment + effect icons */}
+          <div className='flex items-center gap-1.5 mt-0.5'>
+            {role && team && (
+              <>
+                <span className={cn('text-xs', team.colors.text)}>
+                  {getRoleName(role.id)}
+                </span>
+                <span className='text-parchment-600'>&middot;</span>
+                <span
+                  className={cn(
+                    'text-xs',
+                    team.isEvil ? 'text-red-400/70' : 'text-blue-300/70',
+                  )}
+                >
+                  {team.isEvil
+                    ? t.game.registerAsEvil
+                    : t.game.registerAsGood}
+                </span>
+              </>
             )}
-          </button>
-        )
-      })}
-    </div>
-  )
+
+            {/* Effect icons */}
+            <EffectIcons player={player} />
+          </div>
+          {/* Annotation */}
+          {annotations?.[player.id] && (
+            <div className='text-xs text-parchment-600 mt-0.5 italic'>
+              {annotations[player.id]}
+            </div>
+          )}
+        </div>
+
+        {/* Selection indicator */}
+        {isSelected && (
+          <div
+            className={cn(
+              'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
+              variant === 'red' ? 'bg-red-500/20' : 'bg-blue-500/20',
+            )}
+          >
+            <Icon
+              name='check'
+              size='xs'
+              className={styles.selectedAccent}
+            />
+          </div>
+        )}
+      </button>
+    )
+  }
+
+  if (groups) {
+    return (
+      <div className='space-y-4'>
+        {groups.map((group) => {
+          if (group.playerIds.length === 0) return null
+
+          const groupPlayers = group.playerIds
+            .map((id) => players.find((p) => p.id === id))
+            .filter((p): p is PlayerState => p !== undefined)
+
+          return (
+            <div key={group.label} className='space-y-2'>
+              <div className='text-xs font-tarot tracking-wider text-parchment-400/80 uppercase ml-1 mb-1'>
+                {group.label}
+              </div>
+              <div className='space-y-2'>
+                {groupPlayers.map(renderPlayer)}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  return <div className='space-y-2'>{players.map(renderPlayer)}</div>
 }
 
 // ============================================================================
