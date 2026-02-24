@@ -117,6 +117,12 @@ const en: Translations = {
     endDayNoExecution: 'End Day \u2014 No Execution',
     confirmVotes: 'Confirm Votes',
     cancelNomination: 'Cancel Nomination',
+    nominee: 'Nominee',
+    ghostVoteAvailable: 'Ghost vote available',
+    ghostVoteSpent: 'Ghost vote spent',
+    cannotVote: 'Cannot vote',
+    butlerCannotVote: 'Cannot vote unless master votes',
+    butlerDeadWarning: 'Master rule does not apply while dead',
 
     // Slayer
     slayerAction: 'Slayer Shot',

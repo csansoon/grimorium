@@ -122,6 +122,12 @@ export type Translations = {
     endDayNoExecution: string
     confirmVotes: string
     cancelNomination: string
+    nominee: string
+    ghostVoteAvailable: string
+    ghostVoteSpent: string
+    cannotVote: string
+    butlerCannotVote: string
+    butlerDeadWarning: string
 
     // Slayer
     slayerAction: string

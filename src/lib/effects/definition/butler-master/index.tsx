@@ -82,6 +82,8 @@ function ButlerMasterConfigEditor({
   )
 }
 
+import { hasEffect } from '../../../types'
+
 /**
  * Butler Master — marks which player is the Butler's chosen master.
  *
@@ -98,6 +100,21 @@ const definition: EffectDefinition = {
   icon: 'handHeart',
   defaultType: 'marker',
   ConfigEditor: ButlerMasterConfigEditor,
+  preventsVoting: true,
+  canVote: (player, _state, votes) => {
+    // If the Butler is dead, they lose their ability, so the restriction lifts
+    if (hasEffect(player, 'dead')) return true
+
+    // If we're not in an active voting session or don't have vote data, default allow so they aren't fully disabled globally
+    if (!votes) return true
+
+    // Check if the master has voted
+    const masterId = player.effects.find((e) => e.type === 'butler_master')?.data?.masterId as string
+    if (!masterId) return true // No master assigned, no restriction
+
+    // Can only vote if the master has voted
+    return !!votes[masterId]
+  }
 }
 
 export default definition

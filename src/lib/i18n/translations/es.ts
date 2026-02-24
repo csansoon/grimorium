@@ -117,6 +117,12 @@ const es: Translations = {
     endDayNoExecution: 'Terminar Día \u2014 Sin Ejecución',
     confirmVotes: 'Confirmar Votos',
     cancelNomination: 'Cancelar Nominación',
+    nominee: 'Nominado/a',
+    ghostVoteAvailable: 'Voto fantasma disponible',
+    ghostVoteSpent: 'Voto fantasma usado',
+    cannotVote: 'No puede votar',
+    butlerCannotVote: 'No puede votar a menos que el amo vote',
+    butlerDeadWarning: 'La regla del amo no aplica estando muerto',
 
     // Slayer
     slayerAction: 'Disparo del Matador',

@@ -58,8 +58,13 @@ export type EffectDefinition = {
   // (e.g., Poisoned, Drunk — info roles give wrong info, passive abilities fail)
   poisonsAbility?: boolean
 
-  // Check if a player can vote given this effect
-  canVote?: (player: PlayerState, state: GameState) => boolean
+  // Check if a player can vote given this effect (e.g., dead players can vote once)
+  // Optionally receives `votes` if the voting context needs it (like Butler)
+  canVote?: (
+    player: PlayerState,
+    state: GameState,
+    votes?: Record<string, boolean>,
+  ) => boolean
 
   // Check if a player can nominate given this effect
   canNominate?: (player: PlayerState, state: GameState) => boolean
