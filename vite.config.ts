@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.{ts,tsx}'],
   },
-  base: '/grimoire/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -20,8 +20,8 @@ export default defineConfig({
         theme_color: '#0D0D0D',
         background_color: '#0D0D0D',
         display: 'standalone',
-        scope: '/grimoire/',
-        start_url: '/grimoire/',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
