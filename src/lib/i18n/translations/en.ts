@@ -21,7 +21,7 @@ const en: Translations = {
   },
 
   mainMenu: {
-    title: 'The Grimoire',
+    title: 'Grimorium',
     subtitle: 'Every Storyteller needs a Grimoire.',
     tapToOpen: 'Tap to open',
     continueGame: 'Continue Game',

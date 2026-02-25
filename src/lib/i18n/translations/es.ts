@@ -21,8 +21,8 @@ const es: Translations = {
   },
 
   mainMenu: {
-    title: 'El Grimorio',
-    subtitle: 'Compañero del Cuentacuentos de Blood on the Clocktower',
+    title: 'Grimorium',
+    subtitle: 'Todo Cuentacuentos necesita un Grimorio',
     tapToOpen: 'Toca para abrir',
     continueGame: 'Continuar Partida',
     newGame: 'Nueva Partida',

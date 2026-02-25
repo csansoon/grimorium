@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'The Grimoire',
-        short_name: 'The Grimoire',
+        name: 'Grimorium',
+        short_name: 'Grimorium',
         description: 'A companion app for Blood on the Clocktower that handles the clockwork so you can focus on the story.',
         theme_color: '#0D0D0D',
         background_color: '#0D0D0D',
