@@ -1,4 +1,4 @@
-# The Grimoire — Agent Manual
+# Grimorium — Agent Manual
 
 This is a **Blood on the Clocktower** storyteller companion app built with React 18, TypeScript, Vite, Tailwind CSS, and Radix UI. It guides the storyteller through all game phases — role revelation, night actions, day discussion, nominations, voting, and game-over. The storyteller controls the device at all times and shows the screen to players when needed (no device passing).
 
