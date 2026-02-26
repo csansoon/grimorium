@@ -6,7 +6,7 @@ const en = {
   // NightAction UI
   info: 'Choose Your Master',
   selectPlayerAsMaster:
-    'Select a player to be your master. Tomorrow, you may only vote if they vote too.',
+    'Wake {player} and ask them to point to a player to be their master. Tomorrow, they may only vote if their master votes too.',
   masterLabel: 'Master: {player}',
   voteRestriction: 'May only vote if their master votes',
 

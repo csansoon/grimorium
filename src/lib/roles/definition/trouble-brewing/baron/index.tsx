@@ -139,7 +139,7 @@ const definition: RoleDefinition = {
 
           <HandbackButton onClick={handleComplete} fullWidth size='lg' variant='evil'>
             <Icon name='check' size='md' className='mr-2' />
-            {t.common.iUnderstandMyRole}
+            {t.common.continue}
           </HandbackButton>
         </NightActionLayout>
       </PlayerFacingScreen>

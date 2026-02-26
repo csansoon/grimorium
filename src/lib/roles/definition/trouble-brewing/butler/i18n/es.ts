@@ -6,7 +6,7 @@ const es = {
   // NightAction UI
   info: 'Elige a tu Amo',
   selectPlayerAsMaster:
-    'Selecciona un jugador como tu amo. Mañana, solo podrás votar si ellos también votan.',
+    'Despierta a {player} y pídele que señale a un jugador para que sea su amo. Mañana, solo podrá votar si su amo vota.',
   masterLabel: 'Amo: {player}',
   voteRestriction: 'Solo puede votar si su amo vota',
 

@@ -322,7 +322,7 @@ const definition: RoleDefinition = {
             onClick={handleComplete}
             isEvil={resultTeam !== 'townsfolk'}
           >
-            {t.common.iUnderstandMyRole}
+            {t.common.continue}
           </HandbackCardLink>
         </TeamBackground>
       </PlayerFacingScreen>

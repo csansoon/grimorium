@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { RoleDefinition } from '../../../types'
 import {
   useI18n,
+  interpolate,
   registerRoleTranslations,
   getRoleName,
   getRoleTranslations,
@@ -146,7 +147,7 @@ const definition: RoleDefinition = {
       <NightActionLayout
         player={player}
         title={roleT.info}
-        description={roleT.selectPlayerAsMaster}
+        description={interpolate(roleT.selectPlayerAsMaster, { player: player.name })}
         audience="player_choice"
       >
         <div className='mb-6'>
@@ -167,7 +168,7 @@ const definition: RoleDefinition = {
           variant='night'
         >
           <Icon name='handHeart' size='md' className='mr-2' />
-          {t.common.iUnderstandMyRole}
+          {t.common.confirm}
         </Button>
       </NightActionLayout>
     )

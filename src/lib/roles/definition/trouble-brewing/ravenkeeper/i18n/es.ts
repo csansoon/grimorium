@@ -6,7 +6,7 @@ const es = {
   // NightAction UI
   ravenkeeperInfo: 'Elige un Jugador',
   selectPlayerToSeeRole:
-    '¡Has muerto! Selecciona un jugador para conocer su rol.',
+    'Despierta a {player} y pídele que señale a un jugador para conocer su rol.',
   playerRoleIs: 'Su rol es...',
 
   // History

@@ -80,7 +80,7 @@ const es: Translations = {
       'Todas las acciones nocturnas han sido resueltas. ¿Listos para comenzar el día?',
     startDay: 'Comenzar Día',
     choosePlayerToKill: 'Elige un jugador para matar',
-    selectVictim: 'Selecciona tu víctima para esta noche.',
+    selectVictim: 'Despierta a {player} y pídele que señale a su víctima.',
     confirmKill: 'Confirmar Asesinato',
 
     grimoire: 'Grimorio',
@@ -199,7 +199,7 @@ const es: Translations = {
     // Malfunction Config
     stepConfigureMalfunction: 'Configurar Mal Funcionamiento',
     playerIsMalfunctioning:
-      '¡Este jugador está envenenado/borracho — su habilidad falla!',
+      'Este jugador está envenenado o borracho, por lo que su habilidad da información falsa. Como Cuentacuentos, debes seleccionar la información falsa que recibirá.',
     chooseFalseNumber: '¿Qué número debería ver?',
     chooseFalseResult: '¿Qué resultado debería ver?',
     chooseFalseTarget: '¿A qué jugador le dirán que es el rol?',
@@ -216,7 +216,7 @@ const es: Translations = {
     // Perception Config
     perceptionConfigTitle: 'Configurar Percepciones',
     perceptionConfigDescription:
-      'Algunos jugadores pueden registrarse de forma diferente. Decide cómo deben aparecer para esta habilidad.',
+      'Algunos jugadores tienen habilidades que causan que se registren falsamente. Antes de mostrar el resultado al jugador, debes decidir cómo deben ser percibidos los jugadores ambiguos para esta habilidad específica.',
     howShouldRegister: '¿Cómo debe registrarse {player}?',
     registerAsGood: 'Bueno',
     registerAsEvil: 'Malvado',

@@ -6,7 +6,7 @@ const es = {
   // NightAction UI
   info: 'Elige un Jugador',
   selectPlayerToProtect:
-    'Selecciona un jugador para proteger del Demonio esta noche.',
+    'Despierta a {player} y pídele que señale a un jugador para proteger del Demonio.',
   protectedForTheNight: 'está protegido/a por esta noche.',
 
   // History

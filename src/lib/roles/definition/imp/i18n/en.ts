@@ -16,7 +16,7 @@ const en = {
   // Self-kill conversion
   selectNewImpTitle: 'Select New Imp',
   selectNewImpDescription:
-    'The Imp killed themselves. Choose which alive Minion becomes the new Imp.',
+    'The Imp killed themselves. As the Storyteller, choose which alive Minion will become the new Imp.',
   selectMinionToBecome: 'Select a Minion to become the Imp',
   confirmNewImp: 'Confirm New Imp',
 
@@ -28,7 +28,7 @@ const en = {
   // First night: bluffs
   selectBluffsTitle: 'Select Bluffs',
   selectBluffsDescription:
-    'Choose 3 good roles not in play for the Demon to bluff as.',
+    'Choose 3 good roles not in play. These will be shown to the Demon as safe bluffs.',
   selectThreeBluffs: 'Select 3 roles as bluffs',
   bluffsSelected: '{count} of 3 selected',
   demonBluffsTitle: 'Your Bluffs',

@@ -8,6 +8,7 @@ import { getRole } from '../../../index'
 import { isAlive } from '../../../../types'
 import {
   useI18n,
+  interpolate,
   registerRoleTranslations,
   getRoleName,
   getRoleTranslations,
@@ -443,7 +444,7 @@ const definition: RoleDefinition = {
         >
           <StepSection
             step={1}
-            label={roleT.selectTwoPlayersToCheck}
+            label={interpolate(roleT.selectTwoPlayersToCheck, { player: getPlayerName(player.id) })}
             count={{ current: selectedPlayers.length, max: 2 }}
           >
             <PlayerPickerList
@@ -504,7 +505,7 @@ const definition: RoleDefinition = {
             />
           </OracleCard>
           <HandbackCardLink onClick={handleComplete} isEvil={displaySawDemon}>
-            {t.common.iUnderstandMyRole}
+            {t.common.continue}
           </HandbackCardLink>
         </TeamBackground>
       </PlayerFacingScreen>

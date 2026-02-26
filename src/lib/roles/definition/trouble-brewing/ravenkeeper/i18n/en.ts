@@ -5,7 +5,7 @@ const en = {
 
   // NightAction UI
   ravenkeeperInfo: 'Choose a Player',
-  selectPlayerToSeeRole: 'You have died! Select a player to learn their role.',
+  selectPlayerToSeeRole: 'Wake {player} and ask them to point to a player to learn their role.',
   playerRoleIs: 'Their role is...',
 
   // History

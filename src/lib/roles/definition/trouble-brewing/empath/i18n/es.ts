@@ -7,7 +7,7 @@ const es = {
   info: 'Tu Información',
   evilNeighborsCount: 'Vecinos malvados:',
   evilNeighborsExplanation:
-    'Este es cuántos de tus vecinos vivos son malvados.',
+    'Este es el número de jugadores malvados sentados inmediatamente a tu lado entre los jugadores vivos.',
 
   // History
   history: {

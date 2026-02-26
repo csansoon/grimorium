@@ -4,6 +4,7 @@ import { isAlive, hasEffect } from '../../../types'
 import { isMalfunctioning } from '../../../effects'
 import {
   useI18n,
+  interpolate,
   registerRoleTranslations,
   getRoleName,
   getRoleDescription,
@@ -438,7 +439,7 @@ const definition: RoleDefinition = {
               variant={team.isEvil ? 'evil' : 'default'}
             >
               <Icon name='check' size='md' className='mr-2' />
-              {t.common.iUnderstandMyRole}
+              {t.common.continue}
             </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
@@ -600,7 +601,7 @@ const definition: RoleDefinition = {
               className='mt-4'
             >
               <Icon name='check' size='md' className='mr-2' />
-              {t.common.iUnderstandMyRole}
+              {t.common.continue}
             </HandbackButton>
           </NightActionLayout>
         </PlayerFacingScreen>
@@ -615,7 +616,7 @@ const definition: RoleDefinition = {
       <NightActionLayout
         player={player}
         title={t.game.choosePlayerToKill}
-        description={t.game.selectVictim}
+        description={interpolate(t.game.selectVictim, { player: player.name })}
         audience='player_choice'
       >
         <div className='mb-6'>

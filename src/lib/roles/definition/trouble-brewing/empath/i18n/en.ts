@@ -7,7 +7,7 @@ const en = {
   info: "Empath's Information",
   evilNeighborsCount: 'Evil neighbors among your alive neighbors:',
   evilNeighborsExplanation:
-    'This is how many of your living neighbours are evil.',
+    'This is the number of evil players sitting immediately next to you among alive players.',
 
   // History
   history: {

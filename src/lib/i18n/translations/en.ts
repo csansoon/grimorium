@@ -80,7 +80,8 @@ const en: Translations = {
       'All night actions have been resolved. Ready to start the day?',
     startDay: 'Start Day',
     choosePlayerToKill: 'Choose a player to kill',
-    selectVictim: 'Select your victim for tonight.',
+    selectVictim:
+      'Select the player they pointed to as their victim for tonight.',
     confirmKill: 'Confirm Kill',
 
     grimoire: 'Grimoire',
@@ -99,7 +100,6 @@ const en: Translations = {
     selectNominator: 'Select nominator...',
     selectNominee: 'Select nominee...',
     startNomination: 'Start Nomination',
-
 
     executePlayer: 'Vote on {player}',
     votesNeeded: '{count} votes needed',
@@ -149,8 +149,7 @@ const en: Translations = {
 
     // Return device interstitial
     returnDeviceToNarrator: 'Return the device to the Storyteller',
-    returnDeviceDescription:
-      'Please hand the device back before continuing.',
+    returnDeviceDescription: 'Please hand the device back before continuing.',
     returnDeviceReady: 'Storyteller Ready',
 
     // Role Revelation
@@ -198,7 +197,7 @@ const en: Translations = {
     // Malfunction Config
     stepConfigureMalfunction: 'Configure Malfunction',
     playerIsMalfunctioning:
-      'This player is poisoned/drunk — their ability malfunctions!',
+      'This player is poisoned or drunk, so their ability yields false information. As the Storyteller, you must select the false information they will receive.',
     chooseFalseNumber: 'What number should they see?',
     chooseFalseResult: 'What result should they see?',
     chooseFalseTarget: 'Which player should they be told is the role?',
@@ -215,7 +214,7 @@ const en: Translations = {
     // Perception Config
     perceptionConfigTitle: 'Configure Perceptions',
     perceptionConfigDescription:
-      'Some players can register differently. Decide how they should appear for this ability.',
+      'Some players have abilities that cause them to register falsely. Before showing the result to the player, you must decide how these ambiguous players should be perceived for this specific ability.',
     howShouldRegister: 'How should {player} register?',
     registerAsGood: 'Good',
     registerAsEvil: 'Evil',
@@ -232,7 +231,6 @@ const en: Translations = {
     // Night Summary (on Day Phase)
     nightSummary: 'Night {round} Summary',
     noDeathsLastNight: 'No one died',
-
 
     // Night Dashboard review
     actionSummary: 'Action Summary',

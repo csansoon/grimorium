@@ -16,7 +16,7 @@ const es = {
   // Self-kill conversion
   selectNewImpTitle: 'Seleccionar Nuevo Diablo',
   selectNewImpDescription:
-    'El Diablo se mató a sí mismo. Elige qué Secuaz vivo se convierte en el nuevo Diablo.',
+    'El Diablo se mató a sí mismo. Como Cuentacuentos, elige qué Secuaz vivo se convertirá en el nuevo Diablo.',
   selectMinionToBecome: 'Selecciona un Secuaz para convertirse en el Diablo',
   confirmNewImp: 'Confirmar Nuevo Diablo',
 
@@ -28,7 +28,7 @@ const es = {
   // First night: bluffs
   selectBluffsTitle: 'Seleccionar Faroles',
   selectBluffsDescription:
-    'Elige 3 roles buenos que no están en juego para que el Demonio finja ser.',
+    'Elige 3 roles buenos que no están en juego. Estos se mostrarán al Demonio como faroles seguros.',
   selectThreeBluffs: 'Selecciona 3 roles como faroles',
   bluffsSelected: '{count} de 3 seleccionados',
   demonBluffsTitle: 'Tus Faroles',

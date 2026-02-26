@@ -15,7 +15,7 @@ import {
   HandbackButton,
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
-import { Icon } from '../../../../../components/atoms'
+import { Button, Icon } from '../../../../../components/atoms'
 import { Grimoire } from '../../../../../components/items/Grimoire'
 import { isAlive } from '../../../../types'
 import { isMalfunctioning } from '../../../../effects'
@@ -195,27 +195,26 @@ const definition: RoleDefinition = {
 
     if (malfunctioning) {
       return (
-        <PlayerFacingScreen playerName={player.name}>
-          <NightActionLayout
-            player={player}
-            title={roleT.spyMalfunctionTitle}
-            description={roleT.spyMalfunctionDescription}
-          >
-            <div className='text-center mb-6'>
-              <div className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-900/30 border border-amber-600/30'>
-                <Icon name='flask' size='md' className='text-amber-400' />
-                <span className='text-amber-200 text-sm font-medium'>
-                  {t.game.malfunctionWarning}
-                </span>
-              </div>
+        <NightActionLayout
+          player={player}
+          title={roleT.spyMalfunctionTitle}
+          description={roleT.spyMalfunctionDescription}
+          audience="narrator"
+        >
+          <div className='text-center mb-6'>
+            <div className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-900/30 border border-amber-600/30'>
+              <Icon name='flask' size='md' className='text-amber-400' />
+              <span className='text-amber-200 text-sm font-medium'>
+                {t.game.malfunctionWarning}
+              </span>
             </div>
+          </div>
 
-            <HandbackButton onClick={handleComplete} fullWidth size='lg' variant='evil'>
-              <Icon name='check' size='md' className='mr-2' />
-              {t.common.continue}
-            </HandbackButton>
-          </NightActionLayout>
-        </PlayerFacingScreen>
+          <Button onClick={handleComplete} fullWidth size='lg' variant='evil'>
+            <Icon name='check' size='md' className='mr-2' />
+            {t.common.continue}
+          </Button>
+        </NightActionLayout>
       )
     }
 
@@ -242,7 +241,7 @@ const definition: RoleDefinition = {
 
           <HandbackButton onClick={handleComplete} fullWidth size='lg' variant='evil'>
             <Icon name='check' size='md' className='mr-2' />
-            {t.common.iUnderstandMyRole}
+            {t.common.continue}
           </HandbackButton>
         </NightActionLayout>
       </PlayerFacingScreen>

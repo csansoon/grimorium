@@ -5,7 +5,7 @@ const en = {
   // NightAction UI
   info: 'Choose a Target',
   selectPlayerToPoison:
-    'Select a player to poison tonight. Their ability will malfunction.',
+    'Wake {player} and ask them to point to a player to poison. Their ability will malfunction until the end of the next day.',
 
   // First night: evil team
   evilTeamTitle: 'Your Evil Team',

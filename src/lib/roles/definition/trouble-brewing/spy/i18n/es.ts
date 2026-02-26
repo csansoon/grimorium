@@ -8,7 +8,7 @@ const es = {
   spyGrimoireDescription: 'Puedes ver a todos los jugadores y sus roles.',
   spyMalfunctionTitle: 'El Grimorio',
   spyMalfunctionDescription:
-    'El Espía está fallando — no muestres el Grimorio real.',
+    'El Espía está envenenado o borracho, ¡así que no debería ver el Grimorio real! Para mantener la ilusión, no le entregues el dispositivo. Muéstrale un Grimorio físico con información falsa en su lugar.',
 
   // First night: evil team
   evilTeamTitle: 'Tu Equipo Malvado',

@@ -4,6 +4,7 @@ import { getRole } from '../../../index'
 import { getTeam } from '../../../../teams'
 import {
   useI18n,
+  interpolate,
   registerRoleTranslations,
   getRoleName,
   getRoleTranslations,
@@ -308,7 +309,7 @@ const definition: RoleDefinition = {
         <NightActionLayout
           player={player}
           title={roleT.ravenkeeperInfo}
-          description={roleT.selectPlayerToSeeRole}
+          description={interpolate(roleT.selectPlayerToSeeRole, { player: player.name })}
           audience="player_choice"
         >
           <div className='mb-6'>

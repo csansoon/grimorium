@@ -5,7 +5,7 @@ const es = {
   // NightAction UI
   info: 'Elige un Objetivo',
   selectPlayerToPoison:
-    'Selecciona un jugador para envenenar esta noche. Su habilidad fallará.',
+    'Despierta a {player} y pídele que señale a un jugador para envenenar. Su habilidad fallará hasta el final del próximo día.',
 
   // First night: evil team
   evilTeamTitle: 'Tu Equipo Malvado',

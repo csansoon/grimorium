@@ -9,7 +9,7 @@ const es = {
   // NightAction UI
   fortuneTellerInfo: 'Tu Visión',
   selectTwoPlayersToCheck:
-    'Selecciona 2 jugadores para verificar si son Demonios.',
+    'Despierta a {player} y pídele que señale a 2 jugadores para comprobar si son Demonios.',
   selectRedHerring: 'Asignar Pista Falsa',
   redHerringInfo:
     'Selecciona un jugador bueno que se registrará como Demonio para este Adivino.',

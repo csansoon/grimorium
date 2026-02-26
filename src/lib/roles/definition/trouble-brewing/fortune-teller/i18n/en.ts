@@ -8,7 +8,7 @@ const en = {
 
   // NightAction UI
   fortuneTellerInfo: 'Your Vision',
-  selectTwoPlayersToCheck: 'Select 2 players to check for Demons.',
+  selectTwoPlayersToCheck: 'Wake {player} and ask them to point to 2 players to check for Demons.',
   selectRedHerring: 'Assign Red Herring',
   redHerringInfo:
     'Select a good player that will register as a Demon for this Fortune Teller.',
