@@ -106,6 +106,7 @@ function App() {
 
   const handleStartGame = (
     roleAssignments: { name: string; roleId: string }[],
+    scriptId: ScriptId,
   ) => {
     const players: PlayerSetup[] = roleAssignments.map((a) => ({
       name: a.name,
@@ -113,7 +114,7 @@ function App() {
     }))
 
     const gameName = `Game ${new Date().toLocaleDateString()}`
-    const game = createGame(gameName, players)
+    const game = createGame(gameName, scriptId, players)
 
     saveGame(game)
     setCurrentGameId(game.id)
@@ -237,7 +238,9 @@ function App() {
             <RoleAssignment
               players={newGameScreen.players}
               selectedRoles={newGameScreen.selectedRoles}
-              onStart={handleStartGame}
+              onStart={(assignments) =>
+                handleStartGame(assignments, newGameScreen.scriptId)
+              }
               onBack={() =>
                 setNewGameScreen({
                   type: 'new_game_roles',

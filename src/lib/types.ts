@@ -94,6 +94,7 @@ export type HistoryEntry = {
 export type Game = {
   id: string
   name: string
+  scriptId: string
   createdAt: number
   history: HistoryEntry[]
 }

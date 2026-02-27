@@ -74,6 +74,7 @@ export function makeGame(state?: GameState): Game {
   return {
     id: generateId(),
     name: 'Test Game',
+    scriptId: 'custom',
     createdAt: Date.now(),
     history: [
       {
@@ -120,6 +121,7 @@ export function makeGameWithHistory(
   return {
     id: generateId(),
     name: 'Test Game',
+    scriptId: 'custom',
     createdAt: Date.now(),
     history: historyEntries,
   }

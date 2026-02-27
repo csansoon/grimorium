@@ -33,7 +33,7 @@ beforeEach(() => {
 
 describe('createGame', () => {
   it('produces a game with correct initial state', () => {
-    const game = createGame('Test', [
+    const game = createGame('Test', 'custom', [
       { name: 'Alice', roleId: 'villager' },
       { name: 'Bob', roleId: 'imp' },
     ])
@@ -50,7 +50,7 @@ describe('createGame', () => {
   })
 
   it('assigns player IDs and names correctly', () => {
-    const game = createGame('Test', [
+    const game = createGame('Test', 'custom', [
       { name: 'Alice', roleId: 'villager' },
       { name: 'Bob', roleId: 'imp' },
     ])
@@ -63,7 +63,7 @@ describe('createGame', () => {
   })
 
   it('applies initialEffects from role definitions', () => {
-    const game = createGame('Test', [
+    const game = createGame('Test', 'custom', [
       { name: 'Alice', roleId: 'soldier' }, // has initialEffect: safe
       { name: 'Bob', roleId: 'virgin' }, // has initialEffect: pure
       { name: 'Carol', roleId: 'villager' }, // no initial effects
