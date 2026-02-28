@@ -224,13 +224,21 @@ const en: Translations = {
 
     // Dawn Screen
     dawnTitle: 'Dawn',
-    dawnNoDeaths: 'No one died last night',
-    dawnDeathAnnouncement: '{player} is dead',
+    dawnNoDeaths: 'No one died in the night',
+    dawnDeathAnnouncement: '{player} has died',
+    dawnDiedInTheNight: '{player} died in the night',
     continueToDay: 'Continue to Day',
 
+    // Death Revelation
+    deathRevealTitle: 'The Dead Rise',
+    deathRevealSubtitle: 'A soul has been claimed...',
+    deathRevealDead: 'Dead',
+    deathRevealNextDeath: 'Next Death',
+    deathRevealContinue: 'Continue',
+
     // Night Summary (on Day Phase)
-    nightSummary: 'Night {round} Summary',
-    noDeathsLastNight: 'No one died',
+    nightSummary: 'Round {round} Details',
+    noDeathsLastNight: 'No one died last night',
 
     // Night Dashboard review
     actionSummary: 'Action Summary',

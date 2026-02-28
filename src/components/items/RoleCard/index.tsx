@@ -57,49 +57,55 @@ export function RoleCard({ roleId }: Props) {
 
   return (
     <CardShell teamId={teamId} icon={role.icon}>
-      {/* Role Icon with arcane seal */}
-      <CardIcon icon={role.icon} teamId={teamId} />
+      {/* Top: Icon + Name + Team Badge — fixed at top, slightly lowered */}
+      <div className='flex flex-col items-center pt-4'>
+        {/* Role Icon with arcane seal */}
+        <CardIcon icon={role.icon} teamId={teamId} />
 
-      {/* Role Name */}
-      <h1
-        className={cn(
-          'font-tarot text-xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2',
-          team.colors.cardText,
-        )}
-        style={{ textShadow: team.colors.cardIconGlow }}
-      >
-        {roleName}
-      </h1>
+        {/* Role Name */}
+        <h1
+          className={cn(
+            'font-tarot text-xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2',
+            team.colors.cardText,
+          )}
+          style={{ textShadow: team.colors.cardIconGlow }}
+        >
+          {roleName}
+        </h1>
 
-      {/* Team Badge */}
-      <p
-        className={cn(
-          'text-center text-xs tracking-widest uppercase mb-3 sm:mb-6',
-          team.colors.cardTeamBadge,
-        )}
-      >
-        {teamName}
-      </p>
+        {/* Team Badge */}
+        <p
+          className={cn(
+            'text-center text-xs tracking-widest uppercase',
+            team.colors.cardTeamBadge,
+          )}
+        >
+          {teamName}
+        </p>
+      </div>
 
-      {/* Divider — team-specific icon */}
-      <MysticDivider
-        icon={team.colors.cardDividerIcon}
-        iconClassName={cn(team.colors.cardWinAccent, 'opacity-50')}
-      />
+      {/* Middle: Divider + Description — centered in remaining space */}
+      <div className='flex-1 flex flex-col items-center justify-center'>
+        {/* Divider — team-specific icon */}
+        <MysticDivider
+          icon={team.colors.cardDividerIcon}
+          iconClassName={cn(team.colors.cardWinAccent, 'opacity-50')}
+        />
 
-      {/* Description */}
-      <p
-        className={cn(
-          'text-center text-sm leading-relaxed mb-3 sm:mb-6',
-          team.colors.cardText,
-          'opacity-80',
-        )}
-      >
-        {roleDescription}
-      </p>
+        {/* Description */}
+        <p
+          className={cn(
+            'text-center text-sm leading-relaxed',
+            team.colors.cardText,
+            'opacity-80',
+          )}
+        >
+          {roleDescription}
+        </p>
+      </div>
 
       {/* Win Condition */}
-      <div className={cn('rounded-lg p-3 sm:p-4', team.colors.cardWinBg)}>
+      <div className={cn('rounded-lg p-3 sm:p-4 mt-auto', team.colors.cardWinBg)}>
         <div className='flex items-center justify-center gap-2 mb-1 sm:mb-2'>
           <Icon name='trophy' size='sm' className={team.colors.cardWinAccent} />
           <span

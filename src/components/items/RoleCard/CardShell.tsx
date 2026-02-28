@@ -82,7 +82,7 @@ export function CardShell({ teamId, icon, children }: CardShellProps) {
     >
       <div
         className={cn(
-          'animate-card-float card-border-glow relative rounded-xl border-2 overflow-hidden',
+          'animate-card-float card-border-glow relative rounded-xl border-2 overflow-hidden aspect-[2.5/3.5] flex flex-col',
           team.colors.cardBg,
           team.colors.cardBorder,
         )}
@@ -114,7 +114,7 @@ export function CardShell({ teamId, icon, children }: CardShellProps) {
         ))}
 
         {/* Card Content */}
-        <div className='relative z-10 px-4 py-5 sm:px-8 sm:py-10 bg-parchment-texture'>
+        <div className='relative z-10 px-4 py-5 sm:px-8 sm:py-10 bg-parchment-texture flex-1 flex flex-col justify-center'>
           {children}
         </div>
       </div>

@@ -230,11 +230,19 @@ export type Translations = {
     dawnTitle: string
     dawnNoDeaths: string
     dawnDeathAnnouncement: string
+    dawnDiedInTheNight: string
     continueToDay: string
 
     // Night Summary (on Day Phase)
     nightSummary: string
     noDeathsLastNight: string
+
+    // Death Revelation
+    deathRevealTitle: string
+    deathRevealSubtitle: string
+    deathRevealDead: string
+    deathRevealNextDeath: string
+    deathRevealContinue: string
 
 
     // Night Dashboard review

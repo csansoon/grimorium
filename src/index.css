@@ -5,6 +5,7 @@
 @tailwind utilities;
 
 @layer base {
+
   /* Use dynamic viewport height for proper mobile support */
   :root {
     --app-height: 100vh;
@@ -16,7 +17,9 @@
     }
   }
 
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: var(--app-height);
     min-height: var(--app-height);
     max-height: var(--app-height);
@@ -36,7 +39,9 @@
   }
 
   /* Touch feedback for all interactive elements */
-  button, a, [role="button"] {
+  button,
+  a,
+  [role="button"] {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
@@ -53,11 +58,13 @@
     transform: scale(0.85);
     filter: blur(6px) brightness(1.5);
   }
+
   60% {
     opacity: 1;
     transform: scale(1.02);
     filter: blur(0px) brightness(1.1);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -72,9 +79,12 @@
 
 /* Card 3D float — continuous gentle bob on the card itself */
 @keyframes cardFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: perspective(800px) rotateY(-3deg) rotateX(3deg);
   }
+
   50% {
     transform: perspective(800px) rotateY(3deg) rotateX(-2deg);
   }
@@ -87,10 +97,13 @@
 
 /* Holographic foil shimmer — sweeps across card synced with float */
 @keyframes cardShimmer {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: -200% center;
     opacity: 0.5;
   }
+
   50% {
     background-position: 200% center;
     opacity: 1;
@@ -105,18 +118,16 @@
   z-index: 20;
   mix-blend-mode: overlay;
   background-size: 200% 100%;
-  background-image: linear-gradient(
-    105deg,
-    transparent 35%,
-    var(--shimmer-color, rgba(255,255,255,0.1)) 43%,
-    var(--shimmer-color, rgba(255,255,255,0.1)) 45%,
-    rgba(255,255,255,0.18) 48%,
-    rgba(255,255,255,0.22) 50%,
-    rgba(255,255,255,0.18) 52%,
-    var(--shimmer-color, rgba(255,255,255,0.1)) 55%,
-    var(--shimmer-color, rgba(255,255,255,0.1)) 57%,
-    transparent 65%
-  );
+  background-image: linear-gradient(105deg,
+      transparent 35%,
+      var(--shimmer-color, rgba(255, 255, 255, 0.1)) 43%,
+      var(--shimmer-color, rgba(255, 255, 255, 0.1)) 45%,
+      rgba(255, 255, 255, 0.18) 48%,
+      rgba(255, 255, 255, 0.22) 50%,
+      rgba(255, 255, 255, 0.18) 52%,
+      var(--shimmer-color, rgba(255, 255, 255, 0.1)) 55%,
+      var(--shimmer-color, rgba(255, 255, 255, 0.1)) 57%,
+      transparent 65%);
   animation: cardShimmer 6s ease-in-out infinite;
 }
 
@@ -134,26 +145,43 @@
   pointer-events: none;
   z-index: 0;
   box-shadow:
-    0 0 16px var(--glow-color, rgba(212,175,55,0.35)),
-    0 0 36px var(--glow-color, rgba(212,175,55,0.18)),
-    inset 0 0 10px var(--glow-color, rgba(212,175,55,0.06));
+    0 0 16px var(--glow-color, rgba(212, 175, 55, 0.35)),
+    0 0 36px var(--glow-color, rgba(212, 175, 55, 0.18)),
+    inset 0 0 10px var(--glow-color, rgba(212, 175, 55, 0.06));
   animation: glowPulse 4s ease-in-out infinite;
 }
 
 @keyframes glowPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Rotating arcane seal behind the role icon */
 @keyframes sealRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes sealRotateReverse {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(-360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
+  }
 }
 
 .card-seal-outer {
@@ -162,6 +190,39 @@
 
 .card-seal-inner {
   animation: sealRotateReverse 20s linear infinite;
+}
+
+/* 3D Card Flip for Death Revelation */
+.death-card-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 24rem;
+  /* max-w-sm */
+  margin: 0 auto;
+}
+
+.death-card-inner {
+  position: relative;
+  width: 100%;
+  display: grid;
+  transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+}
+
+.death-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.death-card-face {
+  grid-area: 1 / 1;
+  align-self: stretch;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.death-card-front {
+  transform: rotateY(180deg);
 }
 
 /* Team-specific inner frame styles */
@@ -181,31 +242,43 @@
 /* Minion: ember-dotted orange frame */
 .card-frame-minion {
   border: 1px solid rgba(234, 140, 30, 0.2);
-  background-image: radial-gradient(circle at 10% 50%, rgba(234,140,30,0.06) 0%, transparent 30%),
-                    radial-gradient(circle at 90% 30%, rgba(234,140,30,0.04) 0%, transparent 25%),
-                    radial-gradient(circle at 50% 90%, rgba(234,140,30,0.05) 0%, transparent 20%);
+  background-image: radial-gradient(circle at 10% 50%, rgba(234, 140, 30, 0.06) 0%, transparent 30%),
+    radial-gradient(circle at 90% 30%, rgba(234, 140, 30, 0.04) 0%, transparent 25%),
+    radial-gradient(circle at 50% 90%, rgba(234, 140, 30, 0.05) 0%, transparent 20%);
 }
 
 /* Demon: pulsing crimson frame with "breathing" hot corners */
 @keyframes demonFramePulse {
-  0%, 100% { border-color: rgba(200, 0, 0, 0.2); }
-  50% { border-color: rgba(200, 0, 0, 0.35); }
+
+  0%,
+  100% {
+    border-color: rgba(200, 0, 0, 0.2);
+  }
+
+  50% {
+    border-color: rgba(200, 0, 0, 0.35);
+  }
 }
 
 .card-frame-demon {
   border: 1px solid rgba(200, 0, 0, 0.2);
   animation: demonFramePulse 3s ease-in-out infinite;
   background-image:
-    radial-gradient(circle at 0% 0%, rgba(200,0,0,0.08) 0%, transparent 30%),
-    radial-gradient(circle at 100% 0%, rgba(200,0,0,0.06) 0%, transparent 25%),
-    radial-gradient(circle at 0% 100%, rgba(200,0,0,0.06) 0%, transparent 25%),
-    radial-gradient(circle at 100% 100%, rgba(200,0,0,0.08) 0%, transparent 30%);
+    radial-gradient(circle at 0% 0%, rgba(200, 0, 0, 0.08) 0%, transparent 30%),
+    radial-gradient(circle at 100% 0%, rgba(200, 0, 0, 0.06) 0%, transparent 25%),
+    radial-gradient(circle at 0% 100%, rgba(200, 0, 0, 0.06) 0%, transparent 25%),
+    radial-gradient(circle at 100% 100%, rgba(200, 0, 0, 0.08) 0%, transparent 30%);
 }
 
 /* Scan-line overlay for Demon cards */
 @keyframes scanlines {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 4px; }
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 4px;
+  }
 }
 
 .card-scanlines {
@@ -215,22 +288,33 @@
   pointer-events: none;
   z-index: 15;
   opacity: 0.04;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 1px,
-    rgba(200, 0, 0, 0.5) 1px,
-    rgba(200, 0, 0, 0.5) 2px
-  );
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 1px,
+      rgba(200, 0, 0, 0.5) 1px,
+      rgba(200, 0, 0, 0.5) 2px);
   animation: scanlines 0.3s linear infinite;
 }
 
 /* Ember particle drift for Minion cards */
 @keyframes emberDrift {
-  0% { transform: translateY(0) scale(1); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-120px) scale(0.3); opacity: 0; }
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translateY(-120px) scale(0.3);
+    opacity: 0;
+  }
 }
 
 .card-ember-particle {
@@ -247,8 +331,17 @@
 
 /* Star twinkle for Townsfolk cards */
 @keyframes starTwinkle {
-  0%, 100% { opacity: 0; transform: scale(0.5); }
-  50% { opacity: 0.7; transform: scale(1); }
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
 }
 
 .card-star-particle {
@@ -274,6 +367,7 @@
     opacity: 1;
     filter: blur(0px);
   }
+
   100% {
     transform: scale(2.5);
     opacity: 0;
@@ -292,9 +386,11 @@
     transform: translate(0, 0) scale(1);
     opacity: 1;
   }
+
   60% {
     opacity: 0.6;
   }
+
   100% {
     transform: translate(var(--burst-x, 80px), var(--burst-y, 0px)) scale(0);
     opacity: 0;
@@ -320,10 +416,12 @@
     transform: scale(0.88) translateY(24px);
     filter: blur(6px) brightness(1.4);
   }
+
   60% {
     opacity: 1;
     filter: blur(0px) brightness(1.1);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -338,8 +436,15 @@
 
 /* Subtle breathing for prompt text */
 @keyframes breathe {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .animate-breathe {
@@ -348,8 +453,15 @@
 
 /* Seal content fade-out during break */
 @keyframes sealFadeOut {
-  0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.85); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
 }
 
 .grimoire-seal-fade {

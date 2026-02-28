@@ -226,14 +226,21 @@ const es: Translations = {
 
     // Dawn Screen
     dawnTitle: 'Amanecer',
-    dawnNoDeaths: 'Nadie murió anoche',
-    dawnDeathAnnouncement: '{player} está muerto/a',
+    dawnNoDeaths: 'Nadie murió en la noche',
+    dawnDeathAnnouncement: '{player} ha muerto',
+    dawnDiedInTheNight: '{player} ha muerto en la noche',
     continueToDay: 'Continuar al Día',
 
     // Night Summary (on Day Phase)
-    nightSummary: 'Resumen de Noche {round}',
-    noDeathsLastNight: 'Nadie murió',
+    nightSummary: 'Detalles de la Ronda {round}',
+    noDeathsLastNight: 'Nadie murió anoche',
 
+    // Death Revelation
+    deathRevealTitle: 'Los Muertos se Alzan',
+    deathRevealSubtitle: 'Un alma ha sido reclamada...',
+    deathRevealDead: 'Muerto',
+    deathRevealNextDeath: 'Siguiente Muerte',
+    deathRevealContinue: 'Continuar',
 
     // Night Dashboard review
     actionSummary: 'Resumen de Acción',

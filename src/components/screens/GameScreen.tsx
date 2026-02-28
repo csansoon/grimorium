@@ -26,6 +26,7 @@ import {
   getNomineesToday,
   getBlockStatus,
 } from '../../lib/game'
+import { isAlive } from '../../lib/types'
 import {
   resolveIntent,
   applyPipelineChanges,
@@ -54,6 +55,7 @@ import { NightActionResult, SetupActionResult } from '../../lib/roles/types'
 import type { FC } from 'react'
 import { SetupActionsScreen } from './SetupActionsScreen'
 import { DawnScreen } from './DawnScreen'
+import { DeathRevealScreen, DeathRevealEntry } from './DeathRevealScreen'
 import { PlayerFacingContext } from '../context/PlayerFacingContext'
 import { PlayerFacingScreen } from '../layouts/PlayerFacingScreen'
 
@@ -77,6 +79,7 @@ type Screen =
   | { type: 'voting'; nomineeId: string }
   | { type: 'pipeline_input' }
   | { type: 'game_over' }
+  | { type: 'death_reveal'; deaths: DeathRevealEntry[]; next: Screen }
   | { type: 'grimoire_role_card'; playerId: string; returnTo: Screen }
 
 export function GameScreen({ initialGame, onMainMenu }: Props) {
@@ -286,7 +289,18 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       setScreen({ type: 'game_over' })
     } else {
       const deaths = getLastNightDeaths(newGame)
-      setScreen({ type: 'dawn', deaths, round: state.round })
+      const deadPlayers = deaths
+        .map((id) => state.players.find((p) => p.id === id))
+        .filter(Boolean)
+        .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
+
+      if (deadPlayers.length > 0) {
+        // Death reveal goes straight to day — dawn announcement is redundant
+        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: { type: 'day' } })
+      } else {
+        // No deaths: show dawn screen with "no one died" message
+        setScreen({ type: 'dawn', deaths, round: state.round })
+      }
     }
   }
 
@@ -314,8 +328,23 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       updateGame(finalGame)
       setScreen({ type: 'game_over' })
     } else {
-      // Show voting screen for this nominee
-      setScreen({ type: 'voting', nomineeId })
+      // Check if the virgin killed someone
+      const oldPlayerSet = new Set(state.players.filter(isAlive).map(p => p.id))
+      const newPlayerSet = new Set(newState.players.filter(isAlive).map(p => p.id))
+      const deaths = Array.from(oldPlayerSet).filter(id => !newPlayerSet.has(id))
+
+      const nextScreen: Screen = { type: 'voting', nomineeId }
+
+      if (deaths.length > 0) {
+        const deadPlayers = deaths
+          .map((id) => newState.players.find((p) => p.id === id))
+          .filter(Boolean)
+          .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
+        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nextScreen })
+      } else {
+        // Show voting screen for this nominee
+        setScreen(nextScreen)
+      }
     }
   }
 
@@ -338,11 +367,19 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   }
 
   const handleEndDay = () => {
+    // Check who is alive before execution
+    const preExecAliveIds = new Set(state.players.filter(p => !p.effects.some(e => e.type === 'dead')).map(p => p.id))
+
     // Execute whoever is on the block (deferred execution)
     let currentGame = executeAtEndOfDay(game)
 
+    // Check who is alive after
+    const postState = getCurrentState(currentGame)
+    const postExecAliveIds = new Set(postState.players.filter(p => !p.effects.some(e => e.type === 'dead')).map(p => p.id))
+    const deaths = Array.from(preExecAliveIds).filter(id => !postExecAliveIds.has(id))
+
     // Check win conditions after execution
-    const postExecWinner = checkWinCondition(getCurrentState(currentGame), currentGame)
+    const postExecWinner = checkWinCondition(postState, currentGame)
     if (postExecWinner) {
       const finalGame = endGame(currentGame, postExecWinner)
       updateGame(finalGame)
@@ -351,7 +388,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     }
 
     // Check dynamic end-of-day win conditions (e.g., Mayor's peaceful victory)
-    const endOfDayWinner = checkEndOfDayWinConditions(getCurrentState(currentGame), currentGame)
+    const endOfDayWinner = checkEndOfDayWinConditions(postState, currentGame)
     if (endOfDayWinner) {
       const finalGame = endGame(currentGame, endOfDayWinner)
       updateGame(finalGame)
@@ -363,7 +400,18 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     // Process auto-skips so the dashboard is ready
     const readyGame = processAutoSkips(newGame)
     updateGame(readyGame)
-    setScreen({ type: 'night_dashboard' })
+
+    const nightDashboardScreen: Screen = { type: 'night_dashboard' }
+
+    if (deaths.length > 0) {
+      const deadPlayers = deaths
+        .map((id) => postState.players.find((p) => p.id === id))
+        .filter(Boolean)
+        .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
+      setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nightDashboardScreen })
+    } else {
+      setScreen(nightDashboardScreen)
+    }
   }
 
   const handleCancelVote = () => {
@@ -391,13 +439,29 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const newGame = applyPipelineChanges(game, changes)
     updateGame(newGame)
 
-    const winner = checkWinCondition(getCurrentState(newGame), newGame)
+    const newState = getCurrentState(newGame)
+    const winner = checkWinCondition(newState, newGame)
     if (winner) {
       const finalGame = endGame(newGame, winner)
       updateGame(finalGame)
       setScreen({ type: 'game_over' })
     } else {
-      setScreen({ type: 'day' })
+      // Check if action caused any deaths
+      const oldPlayerSet = new Set(state.players.filter(isAlive).map(p => p.id))
+      const newPlayerSet = new Set(newState.players.filter(isAlive).map(p => p.id))
+      const deaths = Array.from(oldPlayerSet).filter(id => !newPlayerSet.has(id))
+
+      const nextScreen: Screen = { type: 'day' }
+
+      if (deaths.length > 0) {
+        const deadPlayers = deaths
+          .map((id) => newState.players.find((p) => p.id === id))
+          .filter(Boolean)
+          .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
+        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nextScreen })
+      } else {
+        setScreen(nextScreen)
+      }
     }
   }
 
@@ -540,20 +604,20 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
       case 'night_dashboard':
         return (
-        <NightDashboard
-          game={game}
-          state={state}
-          onOpenNightAction={handleOpenNightAction}
-          onOpenNightFollowUp={handleOpenNightFollowUp}
-          onStartDay={handleStartDay}
-          onMainMenu={onMainMenu}
-          onShowRoleCard={handleShowRoleCard}
-          onEditEffects={handleOpenEditEffects}
-          onOpenGrimoirePlayer={(player) => {
-            setGrimoireIntent({ view: 'player_detail', player })
-            setShowGrimoire(true)
-          }}
-        />
+          <NightDashboard
+            game={game}
+            state={state}
+            onOpenNightAction={handleOpenNightAction}
+            onOpenNightFollowUp={handleOpenNightFollowUp}
+            onStartDay={handleStartDay}
+            onMainMenu={onMainMenu}
+            onShowRoleCard={handleShowRoleCard}
+            onEditEffects={handleOpenEditEffects}
+            onOpenGrimoirePlayer={(player) => {
+              setGrimoireIntent({ view: 'player_detail', player })
+              setShowGrimoire(true)
+            }}
+          />
         )
 
       case 'night_follow_up': {
@@ -603,28 +667,36 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
           />
         )
 
+      case 'death_reveal':
+        return (
+          <DeathRevealScreen
+            deaths={screen.deaths}
+            onContinue={() => setScreen(screen.next)}
+          />
+        )
+
       case 'day': {
         // Collect available day actions from active effects
         const dayActions = getAvailableDayActions(state, t)
         const deaths = getLastNightDeaths(game)
 
         return (
-        <DayPhase
-          state={state}
-          blockStatus={getBlockStatus(game)}
-          dayActions={dayActions}
-          nightSummary={{ deaths, round: state.round - 1 || state.round }}
-          onNominate={handleOpenNomination}
-          onDayAction={handleOpenDayAction}
-          onEndDay={handleEndDay}
-          onMainMenu={onMainMenu}
-          onShowRoleCard={handleShowRoleCard}
-          onEditEffects={handleOpenEditEffects}
-          onOpenGrimoirePlayer={(player) => {
-            setGrimoireIntent({ view: 'player_detail', player })
-            setShowGrimoire(true)
-          }}
-        />
+          <DayPhase
+            state={state}
+            blockStatus={getBlockStatus(game)}
+            dayActions={dayActions}
+            nightSummary={{ deaths, round: state.round - 1 || state.round }}
+            onNominate={handleOpenNomination}
+            onDayAction={handleOpenDayAction}
+            onEndDay={handleEndDay}
+            onMainMenu={onMainMenu}
+            onShowRoleCard={handleShowRoleCard}
+            onEditEffects={handleOpenEditEffects}
+            onOpenGrimoirePlayer={(player) => {
+              setGrimoireIntent({ view: 'player_detail', player })
+              setShowGrimoire(true)
+            }}
+          />
         )
       }
 
