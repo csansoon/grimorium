@@ -31,6 +31,21 @@ No rule lookups mid-night.
 
 Everything happens inside the app.
 
+<p align="center">
+  <img src="public/game_management.png" alt="Game management — setup, day phase, and event history" width="900">
+</p>
+
+- **Game Creation** — Start a new game and add your players.
+- **Role Selection** — Pick a script and choose the roles in play, or let Grimorium generate a balanced set for you.
+- **Role Reveal** — Show each player their role privately, with themed role cards.
+- **Night Management** — The app walks you through each night in the correct wake order, resolving abilities, poisoning, protection, and death timing automatically.
+- **Day Phase** — Handle day abilities, track statuses, and move the game forward.
+- **Nominations & Voting** — Run nominations, collect votes, and resolve executions.
+- **Win Detection** — The game detects when a win condition is met.
+- **Full History** — Every action and state change is recorded in a reviewable event log.
+
+Poisoning, drunkenness, misinformation... The app handles the mechanics, but every decision stays with the Storyteller.
+
 ---
 
 ## Why It Exists
@@ -50,23 +65,6 @@ The system handles the rest.
 
 ---
 
-## What It Manages
-
-Grimorium maintains a complete, evolving model of the game:
-
-- Role assignment and secret information
-- Night order and character wake sequence
-- Poisoning, drunkenness, protection, redirection, and death timing
-- Misinformation rules (Recluse, Drunk, etc.)
-- Day flow: nominations, voting, executions, day abilities
-- Win condition detection
-- A full, reviewable event history
-
-Every action updates the internal state.  
-Every state change is recorded.
-
----
-
 ## Modular by Design
 
 Although only **Trouble Brewing** is currently implemented, the system is built around a modular role architecture.
@@ -78,9 +76,13 @@ Each character defines:
 - How it affects the game state
 - How it interacts with other roles
 
-Roles can be added independently, and new scripts can grow incrementally over time.
+<p align="center">
+  <img src="public/roles.png" alt="Role cards — Fortune Teller and Imp" width="700">
+</p>
 
-The engine doesn’t just list characters — it models how they behave.
+Every role comes with its own themed card showing its ability, alignment, and win condition. Roles can be added independently, and new scripts can grow incrementally over time.
+
+The engine doesn't just list characters — it models how they behave.
 
 ---
 
@@ -93,7 +95,7 @@ Grimorium is built upon several advanced architectural patterns to ensure flexib
 - **Decoupled Roles & Effects:** Roles are thin wrappers; all passive ability rule interactions live within modular **Effects**.
 - **Malfunction System:** Automatically tracks and overrides abilities producing false results (from Poisoned or Drunk effects) without needing narrator rule-lookups.
 
-This engine doesn’t just list characters — it fundamentally simulates how they behave and interact.
+This engine doesn't just list characters — it fundamentally simulates how they behave and interact.
 
 ---
 
@@ -117,22 +119,6 @@ Your games stay yours.
 
 - ✅ Trouble Brewing
 - ⏳ Additional scripts planned
-
----
-
-## Screenshots
-
-### Night Phase
-
-![Night Phase](public/screenshots/night.png)
-
-### Nominations & Voting
-
-![Voting](public/screenshots/voting.png)
-
-### Event History
-
-![History](public/screenshots/history.png)
 
 ---
 
