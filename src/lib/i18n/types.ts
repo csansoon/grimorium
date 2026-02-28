@@ -351,4 +351,118 @@ export type Translations = {
     presetApplied: string
     rolesSelected: string
   }
+
+  // How To Play
+  howToPlay: {
+    title: string
+    // Part 1: Game Rules
+    part1Title: string
+    p1_nutshellTitle: string
+    p1_nutshell1: string
+    p1_nutshell2: string
+    p1_nutshell3: string
+    p1_nutshell4: string
+    p1_nutshell5: string
+    p1_teamsTitle: string
+    p1_teamTownsfolk: string
+    p1_teamTownsfolkExample: string
+    p1_teamOutsider: string
+    p1_teamOutsiderExample: string
+    p1_teamMinion: string
+    p1_teamMinionExample: string
+    p1_teamDemon: string
+    p1_teamDemonExample: string
+    p1_roundTitle: string
+    p1_roundNight: string
+    p1_roundDay: string
+    p1_roundNominate: string
+    p1_roundWinGood: string
+    p1_roundWinEvil: string
+    p1_roundWinConditions: string
+    p1_roundNightLabel: string
+    p1_roundDayLabel: string
+    p1_roundNominateLabel: string
+    p1_conceptsTitle: string
+    p1_conceptPoison: string
+    p1_conceptDrunk: string
+    p1_conceptDead: string
+    p1_conceptStoryteller: string
+
+    // Part 2: App Walkthrough
+    part2Title: string
+    p2_createTitle: string
+    p2_create1: string
+    p2_create2: string
+    p2_create3: string
+    p2_create4: string
+    p2_createTip: string
+    p2_setupTitle: string
+    p2_setup1: string
+    p2_setup2: string
+    p2_revealTitle: string
+    p2_reveal1: string
+    p2_reveal2: string
+    p2_reveal3: string
+    p2_revealWarning: string
+    p2_nightTitle: string
+    p2_night1: string
+    p2_night2: string
+    p2_night3: string
+    p2_night4: string
+    p2_night5: string
+    p2_nightTip: string
+    p2_dayTitle: string
+    p2_day1: string
+    p2_day2: string
+    p2_day3: string
+    p2_day4: string
+    p2_voteTitle: string
+    p2_vote1: string
+    p2_vote2: string
+    p2_vote3: string
+    p2_vote4: string
+    p2_endTitle: string
+    p2_end1: string
+    p2_end2: string
+    p2_end3: string
+    p2_end4: string
+    p2_end5: string
+    p2_grimTitle: string
+    p2_grim1: string
+    p2_grim2: string
+    p2_grim3: string
+    p2_historyTitle: string
+    p2_history1: string
+    p2_history2: string
+    p2_history3: string
+
+    // Part 3: Players
+    part3Title: string
+    p3_tip1Title: string
+    p3_tip1Desc: string
+    p3_tip2Title: string
+    p3_tip2Desc: string
+    p3_tip3Title: string
+    p3_tip3Desc: string
+    p3_tip4Title: string
+    p3_tip4Desc: string
+
+    // Part 4: Storytellers
+    part4Title: string
+    p4_firstTitle: string
+    p4_first1: string
+    p4_first2: string
+    p4_first3: string
+    p4_first4: string
+    p4_duringTitle: string
+    p4_during1: string
+    p4_during2: string
+    p4_during3: string
+    p4_during4: string
+    p4_pitfallsTitle: string
+    p4_pitfalls1: string
+    p4_pitfalls2: string
+    p4_pitfalls3: string
+    p4_pitfalls4: string
+  }
 }

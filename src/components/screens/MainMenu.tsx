@@ -151,6 +151,7 @@ type Props = {
   onContinue: (gameId: string) => void
   onLoadGame: (gameId: string) => void
   onRolesLibrary: () => void
+  onHowToPlay: () => void
 }
 
 type Phase = 'sealed' | 'breaking' | 'open'
@@ -177,6 +178,7 @@ export function MainMenu({
   onContinue,
   onLoadGame,
   onRolesLibrary,
+  onHowToPlay,
 }: Props) {
   const { language, t } = useI18n()
   const games = getGameSummaries()
@@ -270,8 +272,8 @@ export function MainMenu({
                   style={
                     phase === 'breaking'
                       ? ({
-                          '--break-duration': '600ms',
-                        } as React.CSSProperties)
+                        '--break-duration': '600ms',
+                      } as React.CSSProperties)
                       : undefined
                   }
                 >
@@ -299,9 +301,9 @@ export function MainMenu({
                   style={
                     phase === 'breaking'
                       ? ({
-                          '--break-duration': '600ms',
-                          '--break-delay': '60ms',
-                        } as React.CSSProperties)
+                        '--break-duration': '600ms',
+                        '--break-delay': '60ms',
+                      } as React.CSSProperties)
                       : undefined
                   }
                 >
@@ -473,13 +475,22 @@ export function MainMenu({
 
               {/* Footer links */}
               <div
-                className='flex flex-col items-center gap-2 grimoire-menu-reveal'
+                className='flex flex-wrap justify-center items-center gap-x-3 gap-y-3 px-4 grimoire-menu-reveal'
                 style={
                   {
                     '--reveal-delay': hasActiveGame ? '280ms' : '200ms',
                   } as React.CSSProperties
                 }
               >
+                <button
+                  onClick={onHowToPlay}
+                  className='text-sm text-parchment-400 hover:text-parchment-200 underline underline-offset-4 decoration-1 decoration-parchment-500/40 transition-colors tracking-wider'
+                >
+                  {t.howToPlay.title}
+                </button>
+
+                <span className='text-parchment-500/40 hidden sm:inline'>·</span>
+
                 <button
                   onClick={onRolesLibrary}
                   className='text-sm text-parchment-400 hover:text-parchment-200 underline underline-offset-4 decoration-1 decoration-parchment-500/40 transition-colors tracking-wider'

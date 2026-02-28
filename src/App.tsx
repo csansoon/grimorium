@@ -14,6 +14,7 @@ import {
   RoleAssignment,
   GameScreen,
   RolesLibrary,
+  HowToPlayScreen,
 } from './components/screens'
 import { LanguagePicker } from './components/atoms'
 import { useRouter } from './hooks/useRouter'
@@ -27,11 +28,11 @@ type NewGameScreen =
   | { type: 'new_game_script'; players: string[] }
   | { type: 'new_game_roles'; players: string[]; scriptId: ScriptId }
   | {
-      type: 'new_game_assign'
-      players: string[]
-      scriptId: ScriptId
-      selectedRoles: string[]
-    }
+    type: 'new_game_assign'
+    players: string[]
+    scriptId: ScriptId
+    selectedRoles: string[]
+  }
 
 function App() {
   const { path, navigate, replace } = useRouter()
@@ -183,6 +184,21 @@ function App() {
   }
 
   // ========================================================================
+  // Route: /how-to-play
+  // ========================================================================
+
+  if (routeType === 'how-to-play') {
+    return (
+      <div className='relative'>
+        <HowToPlayScreen onBack={() => navigate('/')} />
+        <div className='fixed top-4 right-4 z-50'>
+          <LanguagePicker variant='floating' />
+        </div>
+      </div>
+    )
+  }
+
+  // ========================================================================
   // Route: / (home — main menu + new-game wizard)
   // ========================================================================
 
@@ -260,6 +276,7 @@ function App() {
         onContinue={(gameId) => navigate(`/game/${gameId}`)}
         onLoadGame={(gameId) => navigate(`/game/${gameId}`)}
         onRolesLibrary={() => navigate('/roles')}
+        onHowToPlay={() => navigate('/how-to-play')}
       />
     )
   }
