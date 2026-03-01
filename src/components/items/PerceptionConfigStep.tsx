@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { GameState, PlayerState } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import { getRole, getAllRoles } from '../../lib/roles'
 import { getEffect, resolveCanRegisterAs } from '../../lib/effects'
 import {
   useI18n,
@@ -11,6 +11,7 @@ import { Perception, PerceptionContext } from '../../lib/pipeline/types'
 import { TeamId } from '../../lib/teams'
 import { Icon } from '../atoms'
 import { NarratorSetupLayout } from '../layouts'
+import { RolePickerGrid } from '../inputs/RolePickerGrid'
 import { cn } from '../../lib/utils'
 
 type Props = {
@@ -43,6 +44,7 @@ type Props = {
 export function PerceptionConfigStep({
   ambiguousPlayers,
   context,
+  state,
   roleIcon,
   roleName,
   playerName,
@@ -72,6 +74,13 @@ export function PerceptionConfigStep({
     setOverrides((prev) => ({
       ...prev,
       [playerId]: team ? { team } : null,
+    }))
+  }
+
+  const handleToggleRole = (playerId: string, roleId: string | null) => {
+    setOverrides((prev) => ({
+      ...prev,
+      [playerId]: roleId ? { roleId } : null,
     }))
   }
 
@@ -113,6 +122,7 @@ export function PerceptionConfigStep({
           const role = getRole(player.roleId)
           const isOverriddenEvil = overrides[player.id]?.alignment === 'evil'
           const overriddenTeam = overrides[player.id]?.team as TeamId | undefined
+          const overriddenRole = overrides[player.id]?.roleId as string | undefined
 
           // Find the effect that grants misregistration for display
           const misregisterEffect = player.effects.find((e) => {
@@ -136,11 +146,26 @@ export function PerceptionConfigStep({
             ? getRegistryEffectName(effectDef.id, language)
             : ''
 
-          // For team context: get the player's actual team and available misregister teams
           const actualTeam = (role?.team ?? 'townsfolk') as TeamId
-          const canRegTeams: TeamId[] = misregisterEffect
+
+          const canRegTeams = misregisterEffect
             ? (resolveCanRegisterAs(misregisterEffect, effectDef)?.teams ?? [])
             : []
+
+          // For role context: get all roles filtered by what the effect allows
+          const allowedTeams = misregisterEffect
+            ? (resolveCanRegisterAs(misregisterEffect, effectDef)?.teams ?? [])
+            : []
+          const allowedAlignments = misregisterEffect
+            ? (resolveCanRegisterAs(misregisterEffect, effectDef)?.alignments ?? [])
+            : []
+
+          const validRolesForOverride = getAllRoles().filter(r => {
+            if (allowedTeams.includes(r.team)) return true
+            if (allowedAlignments.includes('evil') && (r.team === 'minion' || r.team === 'demon')) return true
+            if (allowedAlignments.includes('good') && (r.team === 'townsfolk' || r.team === 'outsider')) return true
+            return false
+          })
 
           return (
             <div
@@ -231,31 +256,35 @@ export function PerceptionConfigStep({
                 </div>
               )}
 
-              {/* For "role" context, show a simpler default/override toggle */}
+              {/* For "role" context, show a role picker grid */}
               {context === 'role' && (
-                <div className='flex gap-2'>
-                  <button
-                    onClick={() => handleToggleAlignment(player.id, false)}
-                    className={cn(
-                      'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors border',
-                      !isOverriddenEvil
-                        ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-300'
-                        : 'bg-white/5 border-white/10 text-parchment-500 hover:bg-white/10',
-                    )}
-                  >
-                    {t.game.keepDefault}
-                  </button>
-                  <button
-                    onClick={() => handleToggleAlignment(player.id, true)}
-                    className={cn(
-                      'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors border',
-                      isOverriddenEvil
-                        ? 'bg-red-900/40 border-red-500/50 text-red-300'
-                        : 'bg-white/5 border-white/10 text-parchment-500 hover:bg-white/10',
-                    )}
-                  >
-                    {t.game.registerAsEvil}
-                  </button>
+                <div className='mt-3'>
+                  <div className='flex gap-2 mb-3'>
+                    <button
+                      onClick={() => handleToggleRole(player.id, null)}
+                      className={cn(
+                        'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors border',
+                        !overriddenRole
+                          ? 'bg-emerald-900/40 border-emerald-500/50 text-emerald-300'
+                          : 'bg-white/5 border-white/10 text-parchment-500 hover:bg-white/10',
+                      )}
+                    >
+                      {t.game.keepOriginalRole.replace('{role}', getRoleName(player.roleId))}
+                    </button>
+                  </div>
+                  {overriddenRole !== null && (
+                    <p className='text-xs text-parchment-400 mb-2 uppercase tracking-wider font-semibold text-center'>
+                      {t.game.chooseFalseRole}
+                    </p>
+                  )}
+                  <RolePickerGrid
+                    roles={validRolesForOverride}
+                    state={state}
+                    selected={overriddenRole ? [overriddenRole] : []}
+                    onSelect={(roleId) => handleToggleRole(player.id, roleId === overriddenRole ? null : roleId)}
+                    selectionCount={1}
+                    colorMode='team'
+                  />
                 </div>
               )}
             </div>

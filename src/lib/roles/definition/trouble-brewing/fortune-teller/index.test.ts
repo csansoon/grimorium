@@ -96,7 +96,7 @@ describe('FortuneTeller', () => {
       const imp = makePlayer({ id: 'p2', roleId: 'imp' })
       const state = makeState({ players: [ft, imp] })
 
-      const perception = perceive(imp, ft, 'role', state)
+      const perception = perceive(imp, ft, 'team', state)
       expect(perception.team).toBe('demon')
     })
 
@@ -105,7 +105,7 @@ describe('FortuneTeller', () => {
       const villager = makePlayer({ id: 'p2', roleId: 'villager' })
       const state = makeState({ players: [ft, villager] })
 
-      const perception = perceive(villager, ft, 'role', state)
+      const perception = perceive(villager, ft, 'team', state)
       expect(perception.team).toBe('townsfolk')
     })
 
@@ -115,8 +115,8 @@ describe('FortuneTeller', () => {
         icon: 'user',
         perceptionModifiers: [
           {
-            context: 'role',
-            modify: (p) => ({ ...p, team: 'demon', roleId: 'imp' }),
+            context: 'team',
+            modify: (p) => ({ ...p, team: 'demon' }),
           },
         ],
       }
@@ -128,7 +128,7 @@ describe('FortuneTeller', () => {
       )
       const state = makeState({ players: [ft, recluse] })
 
-      const perception = perceive(recluse, ft, 'role', state)
+      const perception = perceive(recluse, ft, 'team', state)
       expect(perception.team).toBe('demon') // false positive
     })
 
@@ -138,8 +138,8 @@ describe('FortuneTeller', () => {
         icon: 'user',
         perceptionModifiers: [
           {
-            context: 'role',
-            modify: (p) => ({ ...p, team: 'townsfolk', roleId: 'villager' }),
+            context: 'team',
+            modify: (p) => ({ ...p, team: 'townsfolk' }),
           },
         ],
       }
@@ -151,7 +151,7 @@ describe('FortuneTeller', () => {
       )
       const state = makeState({ players: [ft, spy] })
 
-      const perception = perceive(spy, ft, 'role', state)
+      const perception = perceive(spy, ft, 'team', state)
       expect(perception.team).toBe('townsfolk') // false negative
     })
   })
@@ -213,7 +213,7 @@ describe('FortuneTeller', () => {
       )
       const state = makeState({ players: [ft, herring] })
 
-      const perception = perceive(herring, ft, 'role', state)
+      const perception = perceive(herring, ft, 'team', state)
       expect(perception.team).toBe('demon')
     })
   })
@@ -251,7 +251,7 @@ describe('FortuneTeller', () => {
       )
       const villager = makePlayer({ id: 'p2', roleId: 'villager' })
 
-      const ambiguous = getAmbiguousPlayers([recluse, villager], 'role')
+      const ambiguous = getAmbiguousPlayers([recluse, villager], 'team')
       expect(ambiguous).toHaveLength(1)
       expect(ambiguous[0].id).toBe('p1')
     })
@@ -260,7 +260,7 @@ describe('FortuneTeller', () => {
       const villager1 = makePlayer({ id: 'p1', roleId: 'villager' })
       const villager2 = makePlayer({ id: 'p2', roleId: 'villager' })
 
-      const ambiguous = getAmbiguousPlayers([villager1, villager2], 'role')
+      const ambiguous = getAmbiguousPlayers([villager1, villager2], 'team')
       expect(ambiguous).toHaveLength(0)
     })
 
@@ -294,7 +294,7 @@ describe('FortuneTeller', () => {
       const state = makeState({ players: [ft, recluse] })
 
       // Without overrides, recluse registers as their default (townsfolk)
-      const defaultPerception = perceive(recluse, ft, 'role', state)
+      const defaultPerception = perceive(recluse, ft, 'team', state)
       expect(defaultPerception.team).toBe('townsfolk')
 
       // With overrides, recluse registers as demon
@@ -309,7 +309,7 @@ describe('FortuneTeller', () => {
       const overriddenPerception = perceive(
         effectiveRecluse,
         effectiveFt,
-        'role',
+        'team',
         effectiveState,
       )
       expect(overriddenPerception.team).toBe('demon')
@@ -345,11 +345,11 @@ describe('FortuneTeller', () => {
       const villager2 = makePlayer({ id: 'p3', roleId: 'villager' })
 
       // When recluse is NOT one of the selected players, no ambiguity
-      const noAmbiguity = getAmbiguousPlayers([villager1, villager2], 'role')
+      const noAmbiguity = getAmbiguousPlayers([villager1, villager2], 'team')
       expect(noAmbiguity).toHaveLength(0)
 
       // When recluse IS one of the selected players, ambiguity detected
-      const withAmbiguity = getAmbiguousPlayers([recluse, villager1], 'role')
+      const withAmbiguity = getAmbiguousPlayers([recluse, villager1], 'team')
       expect(withAmbiguity).toHaveLength(1)
     })
   })

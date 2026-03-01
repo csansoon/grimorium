@@ -22,7 +22,7 @@ describe('RedHerring', () => {
       )
       const state = makeState({ players: [ft, herring] })
 
-      const perception = perceive(herring, ft, 'role', state)
+      const perception = perceive(herring, ft, 'team', state)
       expect(perception.team).toBe('demon')
     })
 
@@ -37,9 +37,9 @@ describe('RedHerring', () => {
       const state = makeState({ players: [ft1, ft2, herring] })
 
       // ft1 sees demon
-      expect(perceive(herring, ft1, 'role', state).team).toBe('demon')
+      expect(perceive(herring, ft1, 'team', state).team).toBe('demon')
       // ft2 sees the actual team
-      expect(perceive(herring, ft2, 'role', state).team).toBe('townsfolk')
+      expect(perceive(herring, ft2, 'team', state).team).toBe('townsfolk')
     })
 
     it('does NOT alter perception for non-Fortune Teller observers', () => {
@@ -51,7 +51,7 @@ describe('RedHerring', () => {
       )
       const state = makeState({ players: [empath, herring] })
 
-      const perception = perceive(herring, empath, 'role', state)
+      const perception = perceive(herring, empath, 'team', state)
       expect(perception.team).toBe('townsfolk')
       expect(perception.roleId).toBe('villager')
     })
@@ -65,13 +65,13 @@ describe('RedHerring', () => {
       )
       const state = makeState({ players: [ft, herring] })
 
-      const perception = perceive(herring, ft, 'role', state)
+      const perception = perceive(herring, ft, 'team', state)
       expect(perception.team).toBe('demon')
       expect(perception.roleId).toBe('villager') // Role unchanged
       expect(perception.alignment).toBe('good') // Alignment unchanged
     })
 
-    it("only applies in 'role' context, not 'alignment' or 'team'", () => {
+    it("only applies in 'team' context, not 'alignment' or 'role'", () => {
       const ft = makePlayer({ id: 'ft1', roleId: 'fortune_teller' })
       const herring = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'villager' }),
@@ -80,12 +80,12 @@ describe('RedHerring', () => {
       )
       const state = makeState({ players: [ft, herring] })
 
-      // "role" context triggers the modifier
-      expect(perceive(herring, ft, 'role', state).team).toBe('demon')
+      // "team" context triggers the modifier
+      expect(perceive(herring, ft, 'team', state).team).toBe('demon')
       // "alignment" context does not
       expect(perceive(herring, ft, 'alignment', state).team).toBe('townsfolk')
-      // "team" context does not
-      expect(perceive(herring, ft, 'team', state).team).toBe('townsfolk')
+      // "role" context does not
+      expect(perceive(herring, ft, 'role', state).team).toBe('townsfolk')
     })
   })
 })

@@ -208,6 +208,7 @@ export type Translations = {
     chooseFalseResult: string
     chooseFalseTarget: string
     chooseFalseRole: string
+    keepOriginalRole: string
     malfunctionWarning: string
 
     // Setup Actions

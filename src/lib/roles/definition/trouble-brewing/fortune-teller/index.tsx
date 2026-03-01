@@ -219,7 +219,7 @@ const definition: RoleDefinition = {
     const ambiguousPlayers = useMemo(
       () =>
         !malfunctioning && selectPlayersDone
-          ? getAmbiguousPlayers(selectedPlayerObjects, 'role')
+          ? getAmbiguousPlayers(selectedPlayerObjects, 'team')
           : [],
       [selectedPlayerObjects, malfunctioning, selectPlayersDone],
     )
@@ -337,7 +337,8 @@ const definition: RoleDefinition = {
 
       // Check if either selected player registers as a Demon
       const registersDemon = (p: typeof player1) => {
-        const perception = perceive(p, effectiveObserver, 'role', effectiveState)
+        if (!p) return false
+        const perception = perceive(p, effectiveObserver, 'team', effectiveState)
         return perception.team === 'demon'
       }
 
@@ -420,7 +421,7 @@ const definition: RoleDefinition = {
       return (
         <PerceptionConfigStep
           ambiguousPlayers={ambiguousPlayers}
-          context='role'
+          context='team'
           state={state}
           roleIcon='eye'
           roleName={getRoleName('fortune_teller', language)}
@@ -472,7 +473,7 @@ const definition: RoleDefinition = {
     // Calculate result for display
     const registersDemon = (p: typeof player1) => {
       if (!p) return false
-      const perception = perceive(p, effectiveObserver, 'role', effectiveState)
+      const perception = perceive(p, effectiveObserver, 'team', effectiveState)
       return perception.team === 'demon'
     }
 

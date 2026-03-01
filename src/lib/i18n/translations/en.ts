@@ -202,6 +202,7 @@ const en: Translations = {
     chooseFalseResult: 'What result should they see?',
     chooseFalseTarget: 'Which player should they be told is the role?',
     chooseFalseRole: 'What role should they see?',
+    keepOriginalRole: 'Keep {role}',
     malfunctionWarning: 'Malfunctioning',
 
     // Setup Actions

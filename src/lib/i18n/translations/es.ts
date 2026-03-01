@@ -204,6 +204,7 @@ const es: Translations = {
     chooseFalseResult: '¿Qué resultado debería ver?',
     chooseFalseTarget: '¿A qué jugador le dirán que es el rol?',
     chooseFalseRole: '¿Qué rol debería ver?',
+    keepOriginalRole: 'Mantener {role}',
     malfunctionWarning: 'Mal Funcionamiento',
 
     // Setup Actions

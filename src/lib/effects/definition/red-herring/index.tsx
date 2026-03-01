@@ -45,11 +45,10 @@ function RedHerringConfigEditor({
             <button
               key={p.id}
               onClick={() => setSelectedPlayerId(p.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left text-sm ${
-                isSelected
+              className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left text-sm ${isSelected
                   ? 'bg-amber-500/20 border-amber-400/50 text-amber-200'
                   : 'bg-white/5 border-white/10 text-parchment-300 hover:border-white/30'
-              }`}
+                }`}
             >
               <Icon
                 name={isSelected ? 'circleDot' : 'circle'}
@@ -85,7 +84,7 @@ const definition: EffectDefinition = {
   defaultType: 'marker',
   perceptionModifiers: [
     {
-      context: 'role',
+      context: 'team',
       observerRoles: ['fortune_teller'],
       modify: (perception, _target, observer, _state, effectData) => {
         // Only affect the specific Fortune Teller this Red Herring was assigned to
