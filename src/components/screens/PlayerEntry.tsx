@@ -16,6 +16,7 @@ type PlayerItem = {
 }
 
 const MIN_PLAYERS = 5
+const MAX_PLAYERS = 20
 
 let _nextId = 0
 function makePlayerItem(name: string): PlayerItem {
@@ -153,7 +154,10 @@ export function PlayerEntry({ onNext, onBack }: Props) {
     prevLengthRef.current = players.length
   }, [players.length])
 
+  const maxPlayersReached = players.length >= MAX_PLAYERS
+
   const addPlayer = () => {
+    if (maxPlayersReached) return
     setPlayers([...players, makePlayerItem('')])
   }
 
@@ -255,17 +259,25 @@ export function PlayerEntry({ onNext, onBack }: Props) {
         </div>
 
         {/* Add Player Button */}
-        <button
-          onClick={addPlayer}
-          className='w-full py-3 border border-dashed border-parchment-500/30 text-parchment-400 rounded-lg hover:border-parchment-400/50 hover:text-parchment-300 transition-colors flex items-center justify-center gap-2'
-        >
-          <Icon name='plus' size='md' />
-          {t.newGame.addPlayer}
-        </button>
+        {!maxPlayersReached && (
+          <button
+            onClick={addPlayer}
+            className='w-full py-3 border border-dashed border-parchment-500/30 text-parchment-400 rounded-lg hover:border-parchment-400/50 hover:text-parchment-300 transition-colors flex items-center justify-center gap-2'
+          >
+            <Icon name='plus' size='md' />
+            {t.newGame.addPlayer}
+          </button>
+        )}
 
         {!canProceed && (
           <p className='text-center text-mystic-gold/60 text-sm mt-4'>
             {t.newGame.minPlayersWarning}
+          </p>
+        )}
+
+        {!!maxPlayersReached && (
+          <p className='text-center text-mystic-gold/60 text-sm mt-4'>
+            {t.newGame.maxPlayersWarning}
           </p>
         )}
       </div>

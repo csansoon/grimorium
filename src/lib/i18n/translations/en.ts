@@ -42,6 +42,7 @@ const en: Translations = {
     addPlayer: 'Add Player',
     playerPlaceholder: 'Player',
     minPlayersWarning: 'Add at least 5 players to continue',
+    maxPlayersWarning: 'You can only add up to 20 players',
     nextSelectRoles: 'Next: Select Roles',
     loadedFromLastGame: 'From last game',
 

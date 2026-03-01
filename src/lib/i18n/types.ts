@@ -45,6 +45,7 @@ export type Translations = {
     addPlayer: string
     playerPlaceholder: string
     minPlayersWarning: string
+    maxPlayersWarning: string
     nextSelectRoles: string
     loadedFromLastGame: string
 
@@ -103,7 +104,6 @@ export type Translations = {
     selectNominator: string
     selectNominee: string
     startNomination: string
-
 
     // Voting
     executePlayer: string
@@ -244,7 +244,6 @@ export type Translations = {
     deathRevealDead: string
     deathRevealNextDeath: string
     deathRevealContinue: string
-
 
     // Night Dashboard review
     actionSummary: string
