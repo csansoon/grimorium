@@ -65,7 +65,6 @@ function FortuneTellerSetupAction({
 
   // Get good players for Red Herring selection (exclude the Fortune Teller)
   const goodPlayers = state.players.filter((p) => {
-    if (p.id === player.id) return false
     const role = getRole(p.roleId)
     return role?.team === 'townsfolk' || role?.team === 'outsider'
   })
