@@ -595,6 +595,20 @@ export function getNomineesToday(game: Game): Set<string> {
 }
 
 /**
+ * Check if a virgin execution happened today (nominations should be blocked).
+ */
+export function hasVirginExecutionToday(game: Game): boolean {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return false
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    if (game.history[i].type === 'virgin_execution') {
+      return true
+    }
+  }
+  return false
+}
+
+/**
  * Get the vote threshold: the minimum number of votes needed to go on the block.
  * This is at least half the alive players (rounded up).
  */

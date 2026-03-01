@@ -19,6 +19,7 @@ type Props = {
   blockStatus: BlockStatus
   dayActions: AvailableDayAction[]
   nightSummary?: NightSummary
+  nominationsBlocked?: boolean
   onNominate: () => void
   onDayAction: (action: AvailableDayAction) => void
   onEndDay: () => void
@@ -33,6 +34,7 @@ export function DayPhase({
   blockStatus,
   dayActions,
   nightSummary,
+  nominationsBlocked,
   onNominate,
   onDayAction,
   onEndDay,
@@ -47,8 +49,8 @@ export function DayPhase({
 
   const deadPlayers = nightSummary
     ? nightSummary.deaths
-        .map((id) => state.players.find((p) => p.id === id))
-        .filter(Boolean)
+      .map((id) => state.players.find((p) => p.id === id))
+      .filter(Boolean)
     : []
 
   return (
@@ -168,10 +170,16 @@ export function DayPhase({
           )}
 
           <div className='space-y-2'>
-            {/* Nomination Button — always available during day */}
+            {/* Nomination Button — disabled when nominations are blocked (e.g., Virgin execution) */}
             <button
-              onClick={onNominate}
-              className='w-full flex items-center gap-4 p-4 rounded-xl transition-colors group bg-gradient-to-r from-red-900/30 to-red-800/20 border border-red-500/30 hover:border-red-500/50'
+              onClick={nominationsBlocked ? undefined : onNominate}
+              disabled={nominationsBlocked}
+              className={cn(
+                'w-full flex items-center gap-4 p-4 rounded-xl transition-colors group bg-gradient-to-r border',
+                nominationsBlocked
+                  ? 'from-gray-900/30 to-gray-800/20 border-gray-500/20 opacity-50 cursor-not-allowed'
+                  : 'from-red-900/30 to-red-800/20 border-red-500/30 hover:border-red-500/50',
+              )}
             >
               <div className='w-12 h-12 rounded-full flex items-center justify-center transition-transform bg-red-900/40 border border-red-500/40 group-hover:scale-105'>
                 <Icon

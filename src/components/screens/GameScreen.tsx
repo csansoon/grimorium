@@ -25,6 +25,7 @@ import {
   getNominatorsToday,
   getNomineesToday,
   getBlockStatus,
+  hasVirginExecutionToday,
 } from '../../lib/game'
 import { isAlive } from '../../lib/types'
 import {
@@ -333,17 +334,16 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       const newPlayerSet = new Set(newState.players.filter(isAlive).map(p => p.id))
       const deaths = Array.from(oldPlayerSet).filter(id => !newPlayerSet.has(id))
 
-      const nextScreen: Screen = { type: 'voting', nomineeId }
-
       if (deaths.length > 0) {
+        // Virgin triggered — skip voting, go back to day (no further nominations)
         const deadPlayers = deaths
           .map((id) => newState.players.find((p) => p.id === id))
           .filter(Boolean)
           .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
-        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nextScreen })
+        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: { type: 'day' } })
       } else {
         // Show voting screen for this nominee
-        setScreen(nextScreen)
+        setScreen({ type: 'voting', nomineeId })
       }
     }
   }
@@ -686,6 +686,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             blockStatus={getBlockStatus(game)}
             dayActions={dayActions}
             nightSummary={{ deaths, round: state.round - 1 || state.round }}
+            nominationsBlocked={hasVirginExecutionToday(game)}
             onNominate={handleOpenNomination}
             onDayAction={handleOpenDayAction}
             onEndDay={handleEndDay}
