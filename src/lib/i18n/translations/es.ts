@@ -267,6 +267,7 @@ const es: Translations = {
 
     // Groups
     otherPlayers: 'Otros Jugadores',
+    currentPlayer: 'Jugador actual',
   },
 
   teams: {

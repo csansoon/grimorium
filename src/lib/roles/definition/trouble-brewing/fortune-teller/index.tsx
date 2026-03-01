@@ -208,8 +208,8 @@ const definition: RoleDefinition = {
     >({})
     const [perceptionConfigDone, setPerceptionConfigDone] = useState(false)
 
-    // Get all other players for the nightly check
-    const otherPlayers = state.players.filter((p) => p.id !== player.id)
+    // Get all players for the nightly check (Fortune Teller can select themselves)
+    const selectablePlayers = state.players
 
     // Check if selected players include ambiguous players for "role" perception (only when NOT malfunctioning)
     const selectedPlayerObjects = useMemo(
@@ -373,9 +373,9 @@ const definition: RoleDefinition = {
           result: sawDemon ? 'yes' : 'no',
           ...(malfunctioning
             ? {
-                malfunctioned: true,
-                actualResult: calculatedSawDemon ? 'yes' : 'no',
-              }
+              malfunctioned: true,
+              actualResult: calculatedSawDemon ? 'yes' : 'no',
+            }
             : {}),
           perceptionOverrides:
             Object.keys(perceptionOverrides).length > 0
@@ -448,7 +448,7 @@ const definition: RoleDefinition = {
             count={{ current: selectedPlayers.length, max: 2 }}
           >
             <PlayerPickerList
-              players={otherPlayers}
+              players={selectablePlayers}
               selected={selectedPlayers}
               onSelect={handlePlayerToggle}
               selectionCount={2}

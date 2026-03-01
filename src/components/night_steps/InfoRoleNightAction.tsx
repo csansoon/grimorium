@@ -94,7 +94,12 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
 
   const malfunctioning = isMalfunctioning(player)
-  const otherPlayers = state.players.filter((p) => p.id !== player.id)
+  const allPlayers = state.players
+
+  // Annotation to highlight the current player in the picker
+  const currentPlayerAnnotation = useMemo(() => ({
+    [player.id]: t.game.currentPlayer,
+  }), [player.id, t])
 
   // All defined roles of target team (for malfunction role picker)
   const targetTeamAllRoles = getAllRoles().filter((r) => r.team === config.targetTeam)
@@ -110,12 +115,12 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   }
 
   const targetGroupPlayers = useMemo(
-    () => otherPlayers.filter(isTargetTeamPlayer),
-    [otherPlayers, state],
+    () => allPlayers.filter(isTargetTeamPlayer),
+    [allPlayers, state],
   )
   const otherGroupPlayers = useMemo(
-    () => otherPlayers.filter((p) => !isTargetTeamPlayer(p)),
-    [otherPlayers, state],
+    () => allPlayers.filter((p) => !isTargetTeamPlayer(p)),
+    [allPlayers, state],
   )
 
   // Is there at least one player who could be perceived as the target team?
@@ -174,10 +179,10 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
       const pRoles =
         pTeam.team === config.targetTeam
           ? (() => {
-              const rp = perceive(p, player, 'role', state)
-              const r = getRole(rp.roleId)
-              return r ? [r] : []
-            })()
+            const rp = perceive(p, player, 'role', state)
+            const r = getRole(rp.roleId)
+            return r ? [r] : []
+          })()
           : targetTeamAllRoles
 
       for (const role of pRoles) {
@@ -432,12 +437,13 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
           count={{ current: selectedPlayers.length, max: 2 }}
         >
           <PlayerPickerList
-            players={otherPlayers}
+            players={allPlayers}
             selected={selectedPlayers}
             onSelect={handlePlayerToggle}
             selectionCount={2}
             variant='blue'
             disabled={disabledPlayerIds}
+            annotations={currentPlayerAnnotation}
             groups={[
               { label: targetTeamName, playerIds: targetGroupPlayers.map((p) => p.id) },
               { label: otherGroupLabel, playerIds: otherGroupPlayers.map((p) => p.id) },
@@ -506,11 +512,12 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
           count={{ current: selectedPlayers.length, max: 2 }}
         >
           <PlayerPickerList
-            players={otherPlayers}
+            players={allPlayers}
             selected={selectedPlayers}
             onSelect={handlePlayerToggle}
             selectionCount={2}
             variant='blue'
+            annotations={currentPlayerAnnotation}
           />
         </StepSection>
 

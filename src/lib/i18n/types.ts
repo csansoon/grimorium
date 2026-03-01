@@ -269,6 +269,7 @@ export type Translations = {
 
     // Groups
     otherPlayers: string
+    currentPlayer: string
   }
 
   // Teams

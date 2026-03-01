@@ -27,15 +27,10 @@ export function NominationScreen({
 
   const alivePlayers = getAlivePlayers(state)
 
-  const nomineeCandidates = useMemo(
-    () => alivePlayers.filter((p) => p.id !== nominator),
-    [alivePlayers, nominator],
-  )
+  const nomineeCandidates = alivePlayers
 
   const handleSelectNominator = (playerId: string) => {
     setNominator(playerId)
-    // Clear nominee if it's the same as the new nominator
-    if (nominee === playerId) setNominee(null)
   }
 
   const handleNominate = () => {
