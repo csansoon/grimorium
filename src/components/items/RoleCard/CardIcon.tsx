@@ -13,7 +13,7 @@ function ArcaneSeal({ team }: { team: TeamDefinition }) {
       {/* Outer seal ring */}
       <div
         className={cn(
-          'card-seal-outer absolute w-20 h-20 sm:w-32 sm:h-32 rounded-full border',
+          'card-seal-outer absolute w-24 h-24 sm:w-32 sm:h-32 rounded-full border',
           team.colors.cardSealRing,
         )}
       >
@@ -45,7 +45,7 @@ function ArcaneSeal({ team }: { team: TeamDefinition }) {
       {/* Inner seal ring */}
       <div
         className={cn(
-          'card-seal-inner absolute w-16 h-16 sm:w-28 sm:h-28 rounded-full border',
+          'card-seal-inner absolute w-20 h-20 sm:w-28 sm:h-28 rounded-full border',
           team.colors.cardSealRing,
         )}
       >
@@ -88,14 +88,14 @@ type CardIconProps = {
 export function CardIcon({ icon, teamId }: CardIconProps) {
   const team = getTeam(teamId)
   return (
-    <div className='relative flex justify-center mb-3 sm:mb-6'>
+    <div className='relative flex justify-center mb-3 sm:mb-6 py-2'>
       {/* Rotating arcane seal rings */}
       <ArcaneSeal team={team} />
 
       {/* Icon circle */}
       <div
         className={cn(
-          'relative z-10 w-14 h-14 sm:w-24 sm:h-24 rounded-full flex items-center justify-center',
+          'relative z-10 w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center',
           team.colors.cardIconBg,
         )}
       >

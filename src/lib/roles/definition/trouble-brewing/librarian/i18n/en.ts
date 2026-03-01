@@ -2,6 +2,11 @@ const en = {
   name: 'Librarian',
   description:
     'You start knowing that 1 of 2 players is a particular Outsider. (Or that zero are in play.)',
+  quote: 'Every name has a story. Some stories are warnings.',
+  lines: [
+    { type: 'NIGHT', text: 'In the first night, you learn 2 players and 1 Outsider role — one of those players holds that role.' },
+    { type: 'WIN', text: 'Execute the Demon to win.' },
+  ],
 
   // NightAction UI
   librarianInfo: 'Your Information',

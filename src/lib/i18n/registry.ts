@@ -101,3 +101,18 @@ export function getEffectName(effectId: string, lang: Language): string {
 export function getEffectDescription(effectId: string, lang: Language): string {
   return (getEffectTranslations(effectId, lang).description as string) ?? ''
 }
+
+/** Get a role's flavor quote for the given language. */
+export function getRoleQuote(roleId: string, lang: Language): string {
+  return (getRoleTranslations(roleId, lang).quote as string) ?? ''
+}
+
+/** Get a role's ability/condition lines for the given language. */
+export function getRoleLines(
+  roleId: string,
+  lang: Language,
+): { type: string; text: string }[] {
+  const lines = getRoleTranslations(roleId, lang).lines
+  if (Array.isArray(lines)) return lines as { type: string; text: string }[]
+  return []
+}

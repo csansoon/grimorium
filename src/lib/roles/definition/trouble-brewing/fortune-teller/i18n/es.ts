@@ -2,6 +2,12 @@ const es = {
   name: 'Adivino',
   description:
     'Cada noche, elige 2 jugadores: descubres si alguno es un Demonio. Hay un jugador bueno que se registra como Demonio para ti.',
+  quote: 'Toda visión es verdadera. No toda visión es honesta.',
+  lines: [
+    { type: 'NIGHT', text: 'Cada noche, elige 2 jugadores: descubres si alguno de ellos es el Demonio.' },
+    { type: 'CAVEAT', text: 'Un jugador bueno ha sido elegido para registrarse siempre como Demonio para ti.' },
+    { type: 'WIN', text: 'Ejecuta al Demonio para ganar.' },
+  ],
 
   // SetupAction UI
   redHerringSetupTitle: 'Configuración de Pista Falsa',

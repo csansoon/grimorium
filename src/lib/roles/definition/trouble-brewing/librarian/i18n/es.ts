@@ -2,6 +2,11 @@ const es = {
   name: 'Bibliotecario',
   description:
     'Empiezas sabiendo que 1 de 2 jugadores es un Forastero en particular. (O que no hay ninguno en juego.)',
+  quote: 'Cada nombre tiene una historia. Algunas historias son advertencias.',
+  lines: [
+    { type: 'NIGHT', text: 'En la primera noche, descubres 2 jugadores y 1 rol de Forastero — uno de esos jugadores tiene ese rol.' },
+    { type: 'WIN', text: 'Ejecuta al Demonio para ganar.' },
+  ],
 
   // NightAction UI
   librarianInfo: 'Tu Información',

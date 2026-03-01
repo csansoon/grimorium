@@ -2,6 +2,11 @@ const es = {
   name: 'Investigador',
   description:
     'Empiezas sabiendo que 1 de 2 jugadores es un Secuaz en particular.',
+  quote: 'Sigue el dinero. Sigue los susurros. Sigue el miedo.',
+  lines: [
+    { type: 'NIGHT', text: 'En la primera noche, descubres 2 jugadores y 1 rol de Secuaz — uno de esos jugadores tiene ese rol.' },
+    { type: 'WIN', text: 'Ejecuta al Demonio para ganar.' },
+  ],
 
   // NightAction UI
   investigatorInfo: 'Tu Información',

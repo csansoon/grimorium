@@ -8,6 +8,8 @@ export {
   getEffectTranslations,
   getRoleName,
   getRoleDescription,
+  getRoleQuote,
+  getRoleLines,
   getEffectName,
   getEffectDescription,
 } from './registry'

@@ -2,6 +2,11 @@ const es = {
   name: 'Lavandera',
   description:
     'Empiezas sabiendo que 1 de 2 jugadores es un Aldeano en particular.',
+  quote: 'Hasta las sábanas más sucias guardan rastros de quien las vistió.',
+  lines: [
+    { type: 'NIGHT', text: 'En la primera noche, descubres 2 jugadores y 1 rol de Aldeano — uno de esos jugadores tiene ese rol.' },
+    { type: 'WIN', text: 'Ejecuta al Demonio para ganar.' },
+  ],
 
   // NightAction UI
   washerwomanInfo: 'Tu Información',

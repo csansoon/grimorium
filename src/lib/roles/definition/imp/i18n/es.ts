@@ -2,6 +2,13 @@ const es = {
   name: 'Diablo',
   description:
     'Cada noche*, elige un jugador: muere. Si te matas a ti mismo, un Secuaz se convierte en el Diablo.',
+  quote: 'No conquista. Simplemente perdura.',
+  lines: [
+    { type: 'NIGHT', text: 'Cada noche (excepto la primera), elige un jugador para matar.' },
+    { type: 'KILL', text: 'Si te eliges a ti mismo, mueres. Pero uno de tus Secuaces se convierte en el nuevo Diablo.' },
+    { type: 'TEAM', text: 'La primera noche, descubres quiénes son tus Secuaces.' },
+    { type: 'WIN', text: 'Mantén vivo a un Diablo para ganar.' },
+  ],
 
   // DeflectRedirectUI
   deflectTitle: '¡Asesinato Redirigido!',

@@ -1,6 +1,13 @@
 const en = {
   name: 'Poisoner',
   description: 'Each night, choose a player: they are poisoned tonight.',
+  quote: 'A little patience, a little powder. No one ever suspects the cook.',
+  lines: [
+    { type: 'NIGHT', text: 'Each night, choose a player to poison until the next dusk.' },
+    { type: 'CAVEAT', text: 'Poisoned players\' abilities malfunction and produce false information, without them knowing.' },
+    { type: 'TEAM', text: 'You know who the Demon is.' },
+    { type: 'WIN', text: 'Keep your Demon alive to win.' },
+  ],
 
   // NightAction UI
   info: 'Choose a Target',
