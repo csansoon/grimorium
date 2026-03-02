@@ -42,6 +42,7 @@ const es: Translations = {
     addPlayer: 'Añadir Jugador',
     playerPlaceholder: 'Jugador',
     minPlayersWarning: 'Añade al menos 5 jugadores para continuar',
+    maxPlayersWarning: 'Solo puedes añadir hasta 20 jugadores',
     nextSelectRoles: 'Siguiente: Seleccionar Roles',
     loadedFromLastGame: 'De la última partida',
 
