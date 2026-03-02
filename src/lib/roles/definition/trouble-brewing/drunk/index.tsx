@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { RoleDefinition, SetupActionProps } from '../../../types'
 import { getAllRoles } from '../../../index'
 import {
@@ -12,6 +12,7 @@ import { RolePickerGrid } from '../../../../../components/inputs'
 
 import en from './i18n/en'
 import es from './i18n/es'
+import { PlayerState } from '../../../../types'
 
 registerRoleTranslations('drunk', 'en', en)
 registerRoleTranslations('drunk', 'es', es)
@@ -41,8 +42,22 @@ function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
   const roleT = getRoleTranslations('drunk', language)
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
 
-  // Get all Townsfolk roles for the narrator to choose from
-  const townsfolkRoles = getAllRoles().filter((r) => r.team === 'townsfolk')
+  // Build a map of roleId → PlayerState[] for annotations
+  const playersByRole = useMemo(() => {
+    const map = new Map<string, PlayerState[]>()
+    for (const p of state.players) {
+      const existing = map.get(p.roleId)
+      if (existing) {
+        existing.push(p)
+      } else {
+        map.set(p.roleId, [p])
+      }
+    }
+    return map
+  }, [state.players])
+
+  // Get all leftover Townsfolk roles for the narrator to choose from
+  const townsfolkRoles = getAllRoles().filter((r) => r.team === 'townsfolk' && !playersByRole.get(r.id))
 
   const handleSelect = (roleId: string) => {
     setSelectedRole((prev) => (prev === roleId ? null : roleId))
