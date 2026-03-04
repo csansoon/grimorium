@@ -49,6 +49,8 @@ const en = {
     failedToKill: '{player} tried to kill {target}, but they were protected',
     deflectRedirected:
       '{player} targeted {target}, but the kill was deflected to {redirect}',
+    shownMinions: '{player} was shown their Minions',
+    shownBluffs: '{player} was given bluffs: ',
     shownMinionsAndBluffs:
       '{player} was shown their Minions and given bluffs: ',
     selfKilled: '{player} (Imp) chose to kill themselves',

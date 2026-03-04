@@ -110,7 +110,7 @@ const definition: RoleDefinition = {
 
   RoleReveal: DefaultRoleReveal,
 
-  NightAction: ({ state, player, onComplete }) => {
+  NightAction: ({ game, state, player, onComplete }) => {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null)
@@ -344,6 +344,7 @@ const definition: RoleDefinition = {
           roleIcon='birdHouse'
           roleName={getRoleName('ravenkeeper', language)}
           playerName={player.name}
+          game={game}
           state={state}
           onComplete={handleMalfunctionComplete}
         />

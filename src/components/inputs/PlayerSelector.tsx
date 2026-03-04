@@ -1,5 +1,6 @@
 import { PlayerState, hasEffect } from '../../lib/types'
 import { getRole } from '../../lib/roles'
+import { getCurrentRoleId } from '../../lib/identity'
 import { useI18n, getRoleName as getRegistryRoleName } from '../../lib/i18n'
 import { Icon } from '../atoms'
 import { IconName } from '../atoms/icon'
@@ -72,7 +73,7 @@ export function PlayerSelector({
   return (
     <div className='space-y-2'>
       {filteredPlayers.map((player) => {
-        const role = getRole(player.roleId)
+        const role = getRole(getCurrentRoleId(player))
         const isSelected = selected === player.id
         const label = getLabel?.(player)
 

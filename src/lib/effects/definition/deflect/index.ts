@@ -66,6 +66,9 @@ const definition: EffectDefinition = {
   id: 'deflect',
   icon: 'trendingUpDown',
   defaultType: 'buff',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   handlers: [deflectHandler],
 }
 

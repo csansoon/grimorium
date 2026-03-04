@@ -4,18 +4,36 @@ import {
   HistoryEntry,
   PlayerState,
   RichMessage,
+  Alignment,
   generateId,
   getCurrentState,
   hasEffect,
   getAlivePlayers,
 } from './types'
+import { isMalfunctioning } from './effects'
+import {
+  getAlignmentForTeam,
+  getCurrentRole,
+  getCurrentRoleId,
+  getCurrentTeam,
+  initializePlayerIdentity,
+} from './identity'
 import { getRole } from './roles'
 import { RoleDefinition, NightActionResult, EffectToAdd } from './roles/types'
+import { getScriptForGame, type ScriptDefinition } from './scripts'
+import { getRuntimeWakeRoleIds } from './scripts/wakeOrder'
+import {
+  resolveEvilInfoPlan,
+  shouldShowDemonMinionStep,
+  shouldShowMinionEvilTeamStep,
+} from './evilInfo'
+import { syncDerivedEffects } from './stateSync'
 import {
   resolveIntent,
   applyPipelineChanges,
   checkDynamicWinConditions,
 } from './pipeline'
+import { canWakeAtNight } from './roles/runtime-helpers'
 import { NominateIntent, ExecuteIntent } from './pipeline/types'
 import { trackEvent } from './analytics'
 
@@ -28,7 +46,12 @@ export type PlayerSetup = {
   roleId: string
 }
 
-export function createGame(name: string, scriptId: string, players: PlayerSetup[]): Game {
+export function createGame(
+  name: string,
+  scriptId: string,
+  players: PlayerSetup[],
+  scriptSnapshot?: ScriptDefinition,
+): Game {
   const gameId = generateId()
 
   const playerStates: PlayerState[] = players.map((p) => {
@@ -51,22 +74,27 @@ export function createGame(name: string, scriptId: string, players: PlayerSetup[
       id: generateId(),
       name: p.name,
       roleId: p.roleId,
+      baseRoleId: p.roleId,
+      baseAlignment: getAlignmentForTeam(role?.team),
+      currentAlignment: getAlignmentForTeam(role?.team),
       effects,
     }
   })
 
-  const initialState: GameState = {
+  const initialState: GameState = syncDerivedEffects({
     phase: 'setup',
     round: 0,
     players: playerStates,
     winner: null,
-  }
+  })
 
   const game: Game = {
     id: gameId,
     name,
     scriptId,
+    scriptSnapshot,
     createdAt: Date.now(),
+    storytellerNotes: '',
     history: [
       {
         id: generateId(),
@@ -116,6 +144,7 @@ export function addHistoryEntry(
   stateUpdates?: Partial<GameState>,
   addEffects?: Record<string, EffectToAdd[]>,
   removeEffects?: Record<string, string[]>,
+  changeAlignments?: Record<string, Alignment>,
   changeRoles?: Record<string, string>,
 ): Game {
   const currentState = getCurrentState(game)
@@ -124,12 +153,15 @@ export function addHistoryEntry(
   let newState = { ...currentState, ...stateUpdates }
 
   // Apply effect and role changes
-  if (addEffects || removeEffects || changeRoles) {
+  if (addEffects || removeEffects || changeRoles || changeAlignments) {
     newState = {
       ...newState,
       players: newState.players.map((player) => {
         let effects = [...player.effects]
         let roleId = player.roleId
+        let currentAlignment = player.currentAlignment
+        const hasRoleChange = Boolean(changeRoles?.[player.id])
+        const hasAlignmentChange = Boolean(changeAlignments?.[player.id])
 
         // Remove effects
         if (removeEffects?.[player.id]) {
@@ -155,10 +187,37 @@ export function addHistoryEntry(
           roleId = changeRoles[player.id]
         }
 
-        return { ...player, effects, roleId }
+        if (hasRoleChange && !hasAlignmentChange) {
+          currentAlignment = getAlignmentForTeam(getRole(roleId)?.team)
+        }
+
+        if (changeAlignments?.[player.id]) {
+          currentAlignment = changeAlignments[player.id]
+        }
+
+        const nextPlayer = {
+          ...player,
+          effects,
+          roleId,
+          baseRoleId: player.baseRoleId ?? player.roleId,
+          baseAlignment:
+            player.baseAlignment ??
+            getAlignmentForTeam(
+              getRole(player.baseRoleId ?? player.roleId)?.team,
+            ),
+          currentAlignment:
+            currentAlignment ?? getAlignmentForTeam(getRole(roleId)?.team),
+        }
+
+        return initializePlayerIdentity(nextPlayer)
       }),
     }
   }
+
+  newState = syncDerivedEffects({
+    ...newState,
+    players: newState.players.map(initializePlayerIdentity),
+  })
 
   const historyEntry: HistoryEntry = {
     id: generateId(),
@@ -214,6 +273,7 @@ export function applySetupAction(
       ],
       data: {
         playerId,
+        roleId: player.roleId,
         originalRole: player.roleId,
         newRole: result.changeRole,
       },
@@ -221,6 +281,7 @@ export function applySetupAction(
     undefined,
     result.addEffects,
     result.removeEffects,
+    undefined,
     changeRoles,
   )
 }
@@ -230,31 +291,78 @@ export function applySetupAction(
 // ============================================================================
 
 /**
- * Build a player-centric list of all players with night roles, sorted by nightOrder.
- * When multiple players share the same role, they appear consecutively in player order.
+ * Build a player-centric list of all players with night roles, sorted by the
+ * active script's wake order. When multiple players share the same role, they
+ * appear consecutively in seating order.
+ *
+ * Roles omitted from a script's wake sheet are appended at the end using their
+ * legacy role-level order as a compatibility fallback.
  */
 function getPlayersWithNightRoles(
+  game: Game,
   state: GameState,
 ): { player: PlayerState; role: RoleDefinition }[] {
-  const result: { player: PlayerState; role: RoleDefinition }[] = []
+  const script = getScriptForGame(game)
+  const wakeOrder =
+    state.round <= 1
+      ? getRuntimeWakeRoleIds(script?.wakeOrder.firstNight ?? [])
+      : getRuntimeWakeRoleIds(script?.wakeOrder.otherNights ?? [])
+  const wakeOrderIndex = new Map(
+    wakeOrder.map((roleId, index) => [roleId, index]),
+  )
+  const ordered: Array<{
+    player: PlayerState
+    role: RoleDefinition
+    wakeIndex: number
+    seatIndex: number
+  }> = []
+  const fallback: Array<{
+    player: PlayerState
+    role: RoleDefinition
+    seatIndex: number
+  }> = []
 
-  for (const player of state.players) {
-    const role = getRole(player.roleId)
-    if (role && role.nightOrder !== null) {
-      result.push({ player, role })
+  for (const [seatIndex, player] of state.players.entries()) {
+    const role = getCurrentRole(player)
+    if (!role || role.NightAction === null) continue
+
+    const index = wakeOrderIndex.get(role.id)
+    if (index !== undefined) {
+      ordered.push({ player, role, wakeIndex: index, seatIndex })
+    } else {
+      fallback.push({ player, role, seatIndex })
     }
   }
 
-  // Sort by nightOrder (stable sort preserves player order for ties)
-  result.sort((a, b) => (a.role.nightOrder ?? 0) - (b.role.nightOrder ?? 0))
+  ordered.sort((a, b) => {
+    if (a.wakeIndex !== b.wakeIndex) return a.wakeIndex - b.wakeIndex
+    return a.seatIndex - b.seatIndex
+  })
 
-  return result
+  fallback.sort((a, b) => {
+    const aOrder = a.role.nightOrder ?? Number.MAX_SAFE_INTEGER
+    const bOrder = b.role.nightOrder ?? Number.MAX_SAFE_INTEGER
+    if (aOrder !== bOrder) return aOrder - bOrder
+    return a.seatIndex - b.seatIndex
+  })
+
+  return [...ordered, ...fallback].map(({ player, role }) => ({ player, role }))
 }
 
 export type GameStep =
   | { type: 'role_reveal'; playerId: string }
-  | { type: 'night_action'; playerId: string; roleId: string }
-  | { type: 'night_action_skip'; playerId: string; roleId: string }
+  | {
+      type: 'night_action'
+      playerId: string
+      roleId: string
+      systemStepId?: NightSystemStepId
+    }
+  | {
+      type: 'night_action_skip'
+      playerId: string
+      roleId: string
+      systemStepId?: NightSystemStepId
+    }
   | { type: 'night_waiting' }
   | { type: 'day' }
   | { type: 'game_over'; winner: 'townsfolk' | 'demon' }
@@ -286,21 +394,99 @@ export function getNextStep(game: Game): GameStep {
   }
 
   if (state.phase === 'night') {
-    // Find which players have acted this night (tracked by playerId)
+    // Track processed player-role combinations so a player who changes role
+    // mid-night can still act on a later wake in their new role.
     const nightStartIndex = findLastEventIndex(game, 'night_started')
-    const actedPlayerIds = new Set(
+    const actedNightActionKeys = new Set(
       game.history
         .slice(nightStartIndex + 1)
         .filter((e) => e.type === 'night_action' || e.type === 'night_skipped')
-        .map((e) => e.data.playerId as string),
+        .map((e) =>
+          getNightActionKey(
+            e.data.playerId as string,
+            e.data.roleId as string,
+            e.data.systemStepId as NightSystemStepId | undefined,
+          ),
+        ),
     )
+    const queueDirectives = getResolvedNightQueueDirectives(game)
+
+    for (const systemStep of getNightSystemSteps(state)) {
+      const key = getNightActionKey(
+        systemStep.playerId,
+        systemStep.roleId,
+        systemStep.systemStepId,
+      )
+      if (actedNightActionKeys.has(key)) continue
+
+      if (!systemStep.shouldRun) {
+        return {
+          type: 'night_action_skip',
+          playerId: systemStep.playerId,
+          roleId: systemStep.roleId,
+          systemStepId: systemStep.systemStepId,
+        }
+      }
+
+      return {
+        type: 'night_action',
+        playerId: systemStep.playerId,
+        roleId: systemStep.roleId,
+        systemStepId: systemStep.systemStepId,
+      }
+    }
 
     // Build a player-centric list sorted by nightOrder
-    const playersWithNightRoles = getPlayersWithNightRoles(state)
+    const playersWithNightRoles = getPlayersWithNightRoles(game, state)
+    const playersByNightKey = new Map(
+      playersWithNightRoles.map(({ player, role }) => [
+        getNightActionKey(player.id, role.id),
+        { player, role },
+      ]),
+    )
+
+    for (const key of queueDirectives.immediateKeys) {
+      if (actedNightActionKeys.has(key) || queueDirectives.skipKeys.has(key)) {
+        continue
+      }
+      const queued = playersByNightKey.get(key)
+      if (!queued) continue
+
+      const { player, role } = queued
+      if (!canWakeAtNight(game, player, role)) {
+        return {
+          type: 'night_action_skip',
+          playerId: player.id,
+          roleId: role.id,
+        }
+      }
+      if (role.shouldWake && !role.shouldWake(game, player)) {
+        return {
+          type: 'night_action_skip',
+          playerId: player.id,
+          roleId: role.id,
+        }
+      }
+      return {
+        type: 'night_action',
+        playerId: player.id,
+        roleId: role.id,
+      }
+    }
 
     // Find next player that hasn't acted
     for (const { player, role } of playersWithNightRoles) {
-      if (!actedPlayerIds.has(player.id)) {
+      const key = getNightActionKey(player.id, role.id)
+      if (queueDirectives.skipKeys.has(key)) continue
+
+      if (!actedNightActionKeys.has(key)) {
+        if (!canWakeAtNight(game, player, role)) {
+          return {
+            type: 'night_action_skip',
+            playerId: player.id,
+            roleId: role.id,
+          }
+        }
         if (role.shouldWake && !role.shouldWake(game, player)) {
           return {
             type: 'night_action_skip',
@@ -335,6 +521,148 @@ function findLastEventIndex(game: Game, eventType: string): number {
   return -1
 }
 
+function getNightActionKey(
+  playerId: string,
+  roleId: string,
+  systemStepId?: NightSystemStepId,
+): string {
+  return systemStepId
+    ? `${playerId}:${roleId}:${systemStepId}`
+    : `${playerId}:${roleId}`
+}
+
+export type NightSystemStepId = 'minion_info' | 'demon_info' | 'demon_bluffs'
+
+type NightSystemStep = {
+  systemStepId: NightSystemStepId
+  roleId: string
+  playerId: string
+  playerName: string
+  dashboardKind: NightRoleStatus['dashboardKind']
+  shouldRun: boolean
+  skippedReasonCode?: NightRoleStatus['skippedReasonCode']
+}
+
+function getNightSystemSteps(state: GameState): NightSystemStep[] {
+  if (state.phase !== 'night' || state.round !== 1) return []
+
+  const evilInfoPlan = resolveEvilInfoPlan(state)
+  const skippedReasonCode = evilInfoPlan.reasonTags.includes(
+    'global:under_seven_players',
+  )
+    ? 'evil_info_under_seven'
+    : undefined
+
+  const steps: NightSystemStep[] = []
+
+  for (const player of state.players) {
+    if (getCurrentTeam(player) !== 'minion') continue
+    steps.push({
+      systemStepId: 'minion_info',
+      roleId: getCurrentRoleId(player),
+      playerId: player.id,
+      playerName: player.name,
+      dashboardKind: 'minion_info',
+      shouldRun: shouldShowMinionEvilTeamStep(state, evilInfoPlan),
+      skippedReasonCode,
+    })
+  }
+
+  for (const player of state.players) {
+    if (getCurrentTeam(player) !== 'demon') continue
+    steps.push({
+      systemStepId: 'demon_info',
+      roleId: getCurrentRoleId(player),
+      playerId: player.id,
+      playerName: player.name,
+      dashboardKind: 'demon_info',
+      shouldRun: shouldShowDemonMinionStep(state, evilInfoPlan),
+      skippedReasonCode,
+    })
+    steps.push({
+      systemStepId: 'demon_bluffs',
+      roleId: getCurrentRoleId(player),
+      playerId: player.id,
+      playerName: player.name,
+      dashboardKind: 'demon_bluffs',
+      shouldRun: evilInfoPlan.demonLearnsBluffs,
+    })
+  }
+
+  return steps
+}
+
+type NightQueueDirective = 'skip' | 'immediate'
+
+type ResolvedNightQueueDirectives = {
+  skipKeys: Set<string>
+  immediateKeys: string[]
+}
+
+function getResolvedNightQueueDirectives(
+  game: Game,
+): ResolvedNightQueueDirectives {
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  if (nightStartIndex === -1) {
+    return { skipKeys: new Set(), immediateKeys: [] }
+  }
+
+  const actedKeys = new Set(
+    game.history
+      .slice(nightStartIndex + 1)
+      .filter(
+        (entry) =>
+          entry.type === 'night_action' || entry.type === 'night_skipped',
+      )
+      .map((entry) =>
+        getNightActionKey(
+          entry.data.playerId as string,
+          entry.data.roleId as string,
+          entry.data.systemStepId as NightSystemStepId | undefined,
+        ),
+      ),
+  )
+
+  const directives = new Map<string, NightQueueDirective>()
+  const immediateOrder: string[] = []
+
+  for (const entry of game.history.slice(nightStartIndex + 1)) {
+    if (entry.type !== 'night_queue_directive') continue
+
+    const playerId = entry.data.playerId as string | undefined
+    const roleId = entry.data.roleId as string | undefined
+    const directive = entry.data.directive as NightQueueDirective | undefined
+    if (!playerId || !roleId || !directive) continue
+
+    const key = getNightActionKey(
+      playerId,
+      roleId,
+      entry.data.systemStepId as NightSystemStepId | undefined,
+    )
+    directives.set(key, directive)
+
+    if (directive === 'immediate') {
+      const previousIndex = immediateOrder.indexOf(key)
+      if (previousIndex !== -1) immediateOrder.splice(previousIndex, 1)
+      immediateOrder.push(key)
+    }
+  }
+
+  const skipKeys = new Set<string>()
+  const immediateKeys = immediateOrder.filter((key) => {
+    if (actedKeys.has(key)) return false
+    return directives.get(key) === 'immediate'
+  })
+
+  for (const [key, directive] of directives.entries()) {
+    if (actedKeys.has(key)) continue
+    if (directive === 'skip') {
+      skipKeys.add(key)
+    }
+  }
+
+  return { skipKeys, immediateKeys }
+}
 
 // ============================================================================
 // PHASE TRANSITIONS
@@ -376,20 +704,23 @@ export function startDay(game: Game): Game {
     data: {},
   })
 
-  // Find who died tonight
+  // Find who died tonight by comparing the alive players at the start of the
+  // night to the current resolved night state. This catches any night death,
+  // regardless of the specific action label that caused it.
   const nightStartIndex = findLastEventIndex(updatedGame, 'night_started')
-  const deathEffects: string[] = []
-
-  for (let i = nightStartIndex + 1; i < updatedGame.history.length; i++) {
-    const entry = updatedGame.history[i]
-    if (entry.type === 'night_action' && entry.data.action === 'kill') {
-      deathEffects.push(entry.data.targetId as string)
-    }
-  }
+  const nightStartState =
+    nightStartIndex >= 0
+      ? updatedGame.history[nightStartIndex].stateAfter
+      : null
+  const aliveAtNightStart = new Set(
+    (nightStartState?.players ?? [])
+      .filter((player) => !hasEffect(player, 'dead'))
+      .map((player) => player.id),
+  )
 
   // Announce deaths
   const currentState = getCurrentState(updatedGame)
-  for (const playerId of deathEffects) {
+  for (const playerId of aliveAtNightStart) {
     const player = currentState.players.find((p) => p.id === playerId)
     if (player && hasEffect(player, 'dead')) {
       updatedGame = addHistoryEntry(updatedGame, {
@@ -434,6 +765,7 @@ export function markRoleRevealed(game: Game, playerId: string): Game {
   const state = getCurrentState(game)
   const player = state.players.find((p) => p.id === playerId)
   if (!player) return game
+  const roleId = getCurrentRoleId(player)
 
   return addHistoryEntry(game, {
     type: 'role_revealed',
@@ -441,11 +773,54 @@ export function markRoleRevealed(game: Game, playerId: string): Game {
       {
         type: 'i18n',
         key: 'history.learnedRole',
-        params: { player: playerId, role: player.roleId },
+        params: { player: playerId, role: roleId },
       },
     ],
-    data: { playerId, roleId: player.roleId },
+    data: { playerId, roleId },
   })
+}
+
+export function recordPreparedNightAction(
+  game: Game,
+  playerId: string,
+  roleId: string,
+  preparedData: Record<string, unknown>,
+): Game {
+  return addHistoryEntry(game, {
+    type: 'setup_action',
+    message: [
+      {
+        type: 'i18n',
+        key: 'history.setupAction',
+        params: { player: playerId, role: roleId },
+      },
+    ],
+    data: {
+      playerId,
+      roleId,
+      preparedNightAction: preparedData,
+    },
+  })
+}
+
+export function getPreparedNightActionData<T extends Record<string, unknown>>(
+  game: Game,
+  playerId: string,
+  roleId: string,
+): T | null {
+  for (let i = game.history.length - 1; i >= 0; i--) {
+    const entry = game.history[i]
+    if (entry.type !== 'setup_action') continue
+    if (entry.data.playerId !== playerId) continue
+    if (entry.data.roleId !== roleId) continue
+
+    const preparedData = entry.data.preparedNightAction
+    if (preparedData && typeof preparedData === 'object') {
+      return preparedData as T
+    }
+  }
+
+  return null
 }
 
 // markRoleChangeRevealed is no longer needed here — role change reveals
@@ -462,6 +837,7 @@ export function applyNightAction(game: Game, result: NightActionResult): Game {
     stateUpdates: result.stateUpdates,
     addEffects: result.addEffects,
     removeEffects: result.removeEffects,
+    changeAlignments: result.changeAlignments,
     changeRoles: result.changeRoles,
   }
 
@@ -472,12 +848,14 @@ export function applyNightAction(game: Game, result: NightActionResult): Game {
       directResult.stateUpdates,
       directResult.addEffects,
       directResult.removeEffects,
+      directResult.changeAlignments,
       directResult.changeRoles,
     )
     // Only apply state/effects/roles on first entry
     directResult.stateUpdates = undefined
     directResult.addEffects = undefined
     directResult.removeEffects = undefined
+    directResult.changeAlignments = undefined
     directResult.changeRoles = undefined
   }
 
@@ -488,6 +866,7 @@ export function skipNightAction(
   game: Game,
   roleId: string,
   playerId: string,
+  systemStepId?: NightSystemStepId,
 ): Game {
   return addHistoryEntry(game, {
     type: 'night_skipped',
@@ -498,7 +877,7 @@ export function skipNightAction(
         params: { role: roleId },
       },
     ],
-    data: { roleId, playerId },
+    data: { roleId, playerId, systemStepId },
   })
 }
 
@@ -590,6 +969,9 @@ export function getNomineesToday(game: Game): Set<string> {
     if (game.history[i].type === 'nomination') {
       ids.add(game.history[i].data.nomineeId as string)
     }
+    if (game.history[i].type === 'nomination_canceled') {
+      ids.delete(game.history[i].data.nomineeId as string)
+    }
   }
   return ids
 }
@@ -675,9 +1057,7 @@ export function resolveVote(
   }
 
   // Build history message
-  const messageKey = replacesBlock
-    ? 'history.votePassed'
-    : 'history.voteFailed'
+  const messageKey = replacesBlock ? 'history.votePassed' : 'history.voteFailed'
 
   const updatedGame = addHistoryEntry(
     game,
@@ -716,33 +1096,55 @@ export function resolveVote(
 
   // If there's a tie, record a separate entry clearing the block
   if (clearsBlock) {
-    return addHistoryEntry(
-      updatedGame,
-      {
-        type: 'vote',
-        message: [
-          {
-            type: 'i18n',
-            key: 'history.voteTied',
-            params: { player: nomineeId },
-          },
-        ],
-        data: {
-          nomineeId,
-          nomineeName: nominee.name,
-          voteCount,
-          threshold,
-          meetsThreshold: true,
-          replacesBlock: false,
-          clearsBlock: true,
-          // A tie clear means we need to reset the block.
-          // We track this by marking no entry as replacesBlock after this point.
+    return addHistoryEntry(updatedGame, {
+      type: 'vote',
+      message: [
+        {
+          type: 'i18n',
+          key: 'history.voteTied',
+          params: { player: nomineeId },
         },
+      ],
+      data: {
+        nomineeId,
+        nomineeName: nominee.name,
+        voteCount,
+        threshold,
+        meetsThreshold: true,
+        replacesBlock: false,
+        clearsBlock: true,
+        // A tie clear means we need to reset the block.
+        // We track this by marking no entry as replacesBlock after this point.
       },
-    )
+    })
   }
 
   return updatedGame
+}
+
+export function cancelNomination(
+  game: Game,
+  nominatorId: string,
+  nomineeId: string,
+): Game {
+  const state = getCurrentState(game)
+  const nominator = state.players.find((p) => p.id === nominatorId)
+  const nominee = state.players.find((p) => p.id === nomineeId)
+  if (!nominator || !nominee) return game
+
+  return addHistoryEntry(game, {
+    type: 'nomination_canceled',
+    message: [
+      {
+        type: 'text',
+        content: `${nominator.name}'s nomination of ${nominee.name} was canceled`,
+      },
+    ],
+    data: {
+      nominatorId,
+      nomineeId,
+    },
+  })
 }
 
 /**
@@ -784,11 +1186,7 @@ export function executeAtEndOfDay(game: Game): Game {
     cause: 'execution',
   }
 
-  const result = resolveIntent(
-    executeIntent,
-    getCurrentState(game),
-    game,
-  )
+  const result = resolveIntent(executeIntent, getCurrentState(game), game)
 
   // Executions don't require UI input, so result is always resolved or prevented
   if (result.type === 'needs_input') {
@@ -811,10 +1209,7 @@ export function checkWinCondition(
   game?: Game,
 ): 'townsfolk' | 'demon' | null {
   const alivePlayers = getAlivePlayers(state)
-  const aliveDemons = alivePlayers.filter((p) => {
-    const role = getRole(p.roleId)
-    return role?.team === 'demon'
-  })
+  const aliveDemons = alivePlayers.filter((p) => getCurrentTeam(p) === 'demon')
 
   // Good wins if all demons are dead
   if (aliveDemons.length === 0) {
@@ -828,12 +1223,10 @@ export function checkWinCondition(
 
   // Check dynamic win conditions from effects and roles
   if (game) {
-    const dynamicResult = checkDynamicWinConditions(
-      state,
-      game,
-      ['after_execution', 'after_state_change'],
-      getRole,
-    )
+    const dynamicResult = checkDynamicWinConditions(state, game, [
+      'after_execution',
+      'after_state_change',
+    ])
     if (dynamicResult) return dynamicResult
   }
 
@@ -848,7 +1241,7 @@ export function checkEndOfDayWinConditions(
   state: GameState,
   game: Game,
 ): 'townsfolk' | 'demon' | null {
-  return checkDynamicWinConditions(state, game, ['end_of_day'], getRole)
+  return checkDynamicWinConditions(state, game, ['end_of_day'])
 }
 
 export function endGame(game: Game, winner: 'townsfolk' | 'demon'): Game {
@@ -914,6 +1307,32 @@ export function getNominatorsToday(game: Game): Set<string> {
     if (game.history[i].type === 'nomination') {
       ids.add(game.history[i].data.nominatorId as string)
     }
+    if (game.history[i].type === 'nomination_canceled') {
+      ids.delete(game.history[i].data.nominatorId as string)
+    }
+  }
+  return ids
+}
+
+/**
+ * Get the set of player IDs who have voted since the last day started.
+ * During the night, this still refers to the immediately preceding day.
+ */
+export function getVotersToday(game: Game): Set<string> {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return new Set()
+  const ids = new Set<string>()
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    if (game.history[i].type === 'vote') {
+      const votedIds = game.history[i].data.votedIds
+      if (Array.isArray(votedIds)) {
+        for (const voterId of votedIds) {
+          if (typeof voterId === 'string') {
+            ids.add(voterId)
+          }
+        }
+      }
+    }
   }
   return ids
 }
@@ -925,6 +1344,8 @@ export function getNominatorsToday(game: Game): Set<string> {
 export function getNightActionSummary(
   game: Game,
   playerId: string,
+  roleId?: string,
+  systemStepId?: NightSystemStepId,
 ): RichMessage[] {
   const nightStartIndex = findLastEventIndex(game, 'night_started')
   if (nightStartIndex === -1) return []
@@ -932,11 +1353,35 @@ export function getNightActionSummary(
   const messages: RichMessage[] = []
   for (let i = nightStartIndex + 1; i < game.history.length; i++) {
     const entry = game.history[i]
-    if (entry.type === 'night_action' && entry.data.playerId === playerId) {
+    if (
+      entry.type === 'night_action' &&
+      entry.data.playerId === playerId &&
+      (roleId == null || entry.data.roleId === roleId) &&
+      entry.data.systemStepId === systemStepId
+    ) {
       messages.push(entry.message)
     }
   }
   return messages
+}
+
+export function getNightActionEntries(
+  game: Game,
+  playerId: string,
+  roleId?: string,
+  systemStepId?: NightSystemStepId,
+): HistoryEntry[] {
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  if (nightStartIndex === -1) return []
+
+  return game.history.filter(
+    (entry, index) =>
+      index > nightStartIndex &&
+      entry.type === 'night_action' &&
+      entry.data.playerId === playerId &&
+      (roleId == null || entry.data.roleId === roleId) &&
+      entry.data.systemStepId === systemStepId,
+  )
 }
 
 // ============================================================================
@@ -947,7 +1392,11 @@ export type NightRoleStatus = {
   roleId: string
   playerId: string
   playerName: string
-  status: 'pending' | 'done'
+  status: 'pending' | 'done' | 'skipped'
+  malfunctioning?: boolean
+  systemStepId?: NightSystemStepId
+  dashboardKind?: 'minion_info' | 'demon_info' | 'demon_bluffs'
+  skippedReasonCode?: 'evil_info_under_seven'
 }
 
 /**
@@ -967,42 +1416,126 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
     .slice(nightStartIndex + 1)
     .filter((e) => e.type === 'night_action' || e.type === 'night_skipped')
 
-  // Track acted players by playerId
-  const actedPlayerIds = new Map<string, 'night_action' | 'night_skipped'>()
+  // Track processed player-role combinations so role changes mid-night can
+  // still queue the new role if its wake is still ahead.
+  const actedNightActionKeys = new Map<
+    string,
+    'night_action' | 'night_skipped'
+  >()
   for (const entry of actedEntries) {
-    actedPlayerIds.set(
-      entry.data.playerId as string,
+    actedNightActionKeys.set(
+      getNightActionKey(
+        entry.data.playerId as string,
+        entry.data.roleId as string,
+        entry.data.systemStepId as NightSystemStepId | undefined,
+      ),
       entry.type as 'night_action' | 'night_skipped',
     )
   }
+  const queueDirectives = getResolvedNightQueueDirectives(game)
 
   // Build a player-centric list sorted by nightOrder
-  const playersWithNightRoles = getPlayersWithNightRoles(state)
+  const playersWithNightRoles = getPlayersWithNightRoles(game, state)
+  const playersByNightKey = new Map(
+    playersWithNightRoles.map(({ player, role }) => [
+      getNightActionKey(player.id, role.id),
+      { player, role },
+    ]),
+  )
 
   const result: NightRoleStatus[] = []
+  const insertedImmediate = new Set<string>()
+
+  for (const systemStep of getNightSystemSteps(state)) {
+    const key = getNightActionKey(
+      systemStep.playerId,
+      systemStep.roleId,
+      systemStep.systemStepId,
+    )
+    const actedType = actedNightActionKeys.get(key)
+
+    result.push({
+      roleId: systemStep.roleId,
+      playerId: systemStep.playerId,
+      playerName: systemStep.playerName,
+      malfunctioning: false,
+      systemStepId: systemStep.systemStepId,
+      dashboardKind: systemStep.dashboardKind,
+      skippedReasonCode: systemStep.skippedReasonCode,
+      status:
+        actedType === 'night_action'
+          ? 'done'
+          : actedType === 'night_skipped'
+            ? 'skipped'
+            : systemStep.shouldRun
+              ? 'pending'
+              : 'skipped',
+    })
+  }
+
+  for (const key of queueDirectives.immediateKeys) {
+    if (actedNightActionKeys.has(key) || queueDirectives.skipKeys.has(key)) {
+      continue
+    }
+
+    const queued = playersByNightKey.get(key)
+    if (!queued) continue
+
+    const { player, role } = queued
+    if (!canWakeAtNight(game, player, role)) continue
+    const shouldWake = !role.shouldWake || role.shouldWake(game, player)
+    if (!shouldWake) continue
+
+    result.push({
+      roleId: role.id,
+      playerId: player.id,
+      playerName: player.name,
+      malfunctioning: isMalfunctioning(player),
+      status: 'pending',
+    })
+    insertedImmediate.add(key)
+  }
 
   for (const { player, role } of playersWithNightRoles) {
-    const actedType = actedPlayerIds.get(player.id)
+    const key = getNightActionKey(player.id, role.id)
+    if (queueDirectives.skipKeys.has(key) || insertedImmediate.has(key)) {
+      continue
+    }
+
+    const actedType = actedNightActionKeys.get(key)
 
     if (actedType) {
-      // Already processed — only include if it actually acted (not skipped)
+      // Already processed — keep both acted and skipped rows visible so the
+      // storyteller can still see the full order for the night.
       if (actedType === 'night_action') {
         result.push({
           roleId: role.id,
           playerId: player.id,
           playerName: player.name,
+          malfunctioning: isMalfunctioning(player),
           status: 'done',
         })
+      } else {
+        result.push({
+          roleId: role.id,
+          playerId: player.id,
+          playerName: player.name,
+          malfunctioning: isMalfunctioning(player),
+          status: 'skipped',
+        })
       }
-      // night_skipped entries are simply not included
     } else {
       // Not yet processed — only include if shouldWake passes
+      if (!canWakeAtNight(game, player, role)) {
+        continue
+      }
       const shouldWake = !role.shouldWake || role.shouldWake(game, player)
       if (shouldWake) {
         result.push({
           roleId: role.id,
           playerId: player.id,
           playerName: player.name,
+          malfunctioning: isMalfunctioning(player),
           status: 'pending',
         })
       }
@@ -1022,7 +1555,12 @@ export function processAutoSkips(game: Game): Game {
   while (true) {
     const step = getNextStep(updatedGame)
     if (step.type === 'night_action_skip') {
-      updatedGame = skipNightAction(updatedGame, step.roleId, step.playerId)
+      updatedGame = skipNightAction(
+        updatedGame,
+        step.roleId,
+        step.playerId,
+        step.systemStepId,
+      )
     } else {
       break
     }
@@ -1133,5 +1671,36 @@ export function removeEffectFromPlayer(
     undefined,
     undefined,
     { [playerId]: [effectType] },
+  )
+}
+
+/**
+ * Reorder players in seating order. This affects all neighbor-based abilities.
+ */
+export function reorderPlayers(game: Game, orderedPlayerIds: string[]): Game {
+  const currentState = getCurrentState(game)
+
+  if (orderedPlayerIds.length !== currentState.players.length) return game
+
+  const byId = new Map(
+    currentState.players.map((player) => [player.id, player]),
+  )
+  const reorderedPlayers = orderedPlayerIds
+    .map((playerId) => byId.get(playerId))
+    .filter((player): player is PlayerState => player != null)
+
+  if (reorderedPlayers.length !== currentState.players.length) return game
+
+  return addHistoryEntry(
+    game,
+    {
+      type: 'grimoire_reviewed',
+      message: [{ type: 'i18n', key: 'history.reseatedPlayers' }],
+      data: {
+        source: 'narrator',
+        playerOrder: reorderedPlayers.map((player) => player.id),
+      },
+    },
+    { players: reorderedPlayers },
   )
 }

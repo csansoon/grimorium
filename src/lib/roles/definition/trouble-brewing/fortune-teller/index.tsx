@@ -59,12 +59,20 @@ function FortuneTellerSetupAction({
 }: SetupActionProps) {
   const { t, language } = useI18n()
   const roleT = getRoleTranslations('fortune_teller', language)
+  const existingRedHerringPlayer = state.players.find((candidate) =>
+    candidate.effects.some(
+      (effect) =>
+        effect.type === 'red_herring' &&
+        effect.data?.fortuneTellerId === player.id,
+    ),
+  )
   const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(
-    null,
+    existingRedHerringPlayer?.id ?? null,
   )
 
   // Get good players for Red Herring selection (exclude the Fortune Teller)
   const goodPlayers = state.players.filter((p) => {
+    if (p.id === player.id) return false
     const role = getRole(p.roleId)
     return role?.team === 'townsfolk' || role?.team === 'outsider'
   })
@@ -77,7 +85,26 @@ function FortuneTellerSetupAction({
 
   const handleConfirm = () => {
     if (!selectedRedHerring) return
+
+    const removeEffects = state.players.reduce<Record<string, string[]>>(
+      (result, candidate) => {
+        if (
+          candidate.effects.some(
+            (effect) =>
+              effect.type === 'red_herring' &&
+              effect.data?.fortuneTellerId === player.id,
+          )
+        ) {
+          result[candidate.id] = ['red_herring']
+        }
+        return result
+      },
+      {},
+    )
+
     onComplete({
+      removeEffects:
+        Object.keys(removeEffects).length > 0 ? removeEffects : undefined,
       addEffects: {
         [selectedRedHerring]: [
           {

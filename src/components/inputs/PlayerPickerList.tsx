@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { PlayerState, hasEffect } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import { getCurrentRole } from '../../lib/identity'
 import { getTeam } from '../../lib/teams'
 import { getEffect } from '../../lib/effects'
 import { useI18n, getRoleName as getRegistryRoleName } from '../../lib/i18n'
@@ -96,7 +96,7 @@ export function PlayerPickerList({
     // When selectionCount === 1, allow tapping a different item to replace (radio behavior)
     const isDisabled = (!isSelected && isAtMax && selectionCount !== 1) ||
       (disabledSet?.has(player.id) ?? false)
-    const role = getRole(player.roleId)
+    const role = getCurrentRole(player)
     const team = role ? getTeam(role.team) : null
     const isDead = hasEffect(player, 'dead')
 

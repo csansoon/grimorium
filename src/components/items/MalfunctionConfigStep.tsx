@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { getAllRoles } from '../../lib/roles'
-import { GameState } from '../../lib/types'
+import { useMemo, useState } from 'react'
+import { getRolesForGame } from '../../lib/roles'
+import type { RoleDefinition } from '../../lib/roles/types'
+import type { Game, GameState } from '../../lib/types'
 import { useI18n } from '../../lib/i18n'
 import { Icon, Button } from '../atoms'
 import { IconName } from '../atoms/icon'
@@ -32,7 +33,9 @@ type RoleProps = {
   roleIcon: IconName
   roleName: string
   playerName: string
+  game: Pick<Game, 'scriptId' | 'scriptSnapshot'>
   state: GameState
+  roles?: RoleDefinition[]
   onComplete: (result: string) => void
 }
 
@@ -45,7 +48,7 @@ type Props = NumberProps | BooleanProps | RoleProps
  * Variants:
  * - "number": Number picker (Chef, Empath)
  * - "boolean": Yes/No toggle (Fortune Teller)
- * - "role": Role picker from full role list (Undertaker, Ravenkeeper)
+ * - "role": Role picker from current script role list (Undertaker, Ravenkeeper)
  */
 export function MalfunctionConfigStep(props: Props) {
   const { t } = useI18n()
@@ -188,11 +191,13 @@ function BooleanPicker({ trueLabel, falseLabel, onComplete }: BooleanProps) {
 // ROLE PICKER
 // ============================================================================
 
-function RolePicker({ state, onComplete }: RoleProps) {
+function RolePicker({ game, state, roles, onComplete }: RoleProps) {
   const { t } = useI18n()
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
-
-  const allRoles = getAllRoles()
+  const allRoles = useMemo(
+    () => roles ?? getRolesForGame(game),
+    [roles, game],
+  )
 
   const handleSelect = (roleId: string) => {
     setSelectedRole((prev) => (prev === roleId ? null : roleId))

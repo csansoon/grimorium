@@ -215,6 +215,9 @@ const definition: EffectDefinition = {
   id: 'misregister',
   icon: 'drama',
   defaultType: 'perception',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   perceptionModifiers: [
     {
       context: ['alignment', 'team', 'role'],

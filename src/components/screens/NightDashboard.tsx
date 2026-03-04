@@ -20,7 +20,7 @@ import {
 } from '../atoms'
 import { RichMessage as RichMessageDisplay } from '../items/RichMessage'
 import { Grimoire } from '../items/Grimoire'
-import { MysticDivider } from '../items'
+import { MysticDivider, StorytellerGrimoireBoard } from '../items'
 import { ScreenFooter } from '../layouts/ScreenFooter'
 import { cn } from '../../lib/utils'
 
@@ -32,6 +32,45 @@ type NightDashboardItem =
   | { type: 'night_action'; data: NightRoleStatus }
   | { type: 'night_follow_up'; data: AvailableNightFollowUp }
 
+export function mergeNightDashboardItems(
+  nightActions: NightRoleStatus[],
+  followUps: AvailableNightFollowUp[],
+): NightDashboardItem[] {
+  const items: NightDashboardItem[] = nightActions.map((data) => ({
+    type: 'night_action' as const,
+    data,
+  }))
+
+  const trailingFollowUps: AvailableNightFollowUp[] = []
+
+  for (const followUp of followUps) {
+    if (followUp.placement === 'before_player_action') {
+      const insertIndex = items.findIndex(
+        (item) =>
+          item.type === 'night_action' &&
+          item.data.status === 'pending' &&
+          item.data.playerId === followUp.playerId,
+      )
+
+      if (insertIndex !== -1) {
+        items.splice(insertIndex, 0, {
+          type: 'night_follow_up',
+          data: followUp,
+        })
+        continue
+      }
+    }
+
+    trailingFollowUps.push(followUp)
+  }
+
+  for (const followUp of trailingFollowUps) {
+    items.push({ type: 'night_follow_up', data: followUp })
+  }
+
+  return items
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -39,7 +78,26 @@ type NightDashboardItem =
 type Props = {
   game: Game
   state: GameState
-  onOpenNightAction: (playerId: string, roleId: string) => void
+  onOpenNightAction: (
+    playerId: string,
+    roleId: string,
+    systemStepId?: NightRoleStatus['systemStepId'],
+  ) => void
+  onReplayNightAction: (
+    playerId: string,
+    roleId: string,
+    systemStepId?: NightRoleStatus['systemStepId'],
+  ) => void
+  onRerunSkippedNightAction: (
+    playerId: string,
+    roleId: string,
+    systemStepId?: NightRoleStatus['systemStepId'],
+  ) => void
+  onSkipNightAction: (
+    playerId: string,
+    roleId: string,
+    systemStepId?: NightRoleStatus['systemStepId'],
+  ) => void
   onOpenNightFollowUp: (followUp: AvailableNightFollowUp) => void
   onStartDay: () => void
   onMainMenu: () => void
@@ -52,6 +110,9 @@ export function NightDashboard({
   game,
   state,
   onOpenNightAction,
+  onReplayNightAction,
+  onRerunSkippedNightAction,
+  onSkipNightAction,
   onOpenNightFollowUp,
   onStartDay,
   onMainMenu,
@@ -61,43 +122,43 @@ export function NightDashboard({
 }: Props) {
   const { t } = useI18n()
   const [grimoireExpanded, setGrimoireExpanded] = useState(false)
-  const [reviewPlayerId, setReviewPlayerId] = useState<string | null>(null)
+  const [grimoireView, setGrimoireView] = useState<'circle' | 'list'>('circle')
+  const [reviewRoleStatus, setReviewRoleStatus] = useState<NightRoleStatus | null>(null)
 
   // Collect night actions and follow-ups separately, then merge
   const items: NightDashboardItem[] = useMemo(() => {
     const nightActions = getNightRolesStatus(game)
     const followUps = getAvailableNightFollowUps(state, game, t)
-
-    const result: NightDashboardItem[] = nightActions.map((data) => ({
-      type: 'night_action' as const,
-      data,
-    }))
-
-    // Append follow-ups after regular night actions
-    for (const followUp of followUps) {
-      result.push({ type: 'night_follow_up' as const, data: followUp })
-    }
-
-    return result
+    return mergeNightDashboardItems(nightActions, followUps)
   }, [game, state, t])
 
   // Derive next pending item and allDone from the unified list
   const nextPendingIndex = items.findIndex((item) => {
     if (item.type === 'night_action') return item.data.status === 'pending'
-    // Follow-ups are always pending (they disappear when completed)
+  // Follow-ups are always pending (they disappear when completed)
     return true
   })
   const allDone = nextPendingIndex === -1
 
-  // Review dialog data
   const reviewMessages: RichMessage[] = useMemo(() => {
-    if (!reviewPlayerId) return []
-    return getNightActionSummary(game, reviewPlayerId)
-  }, [game, reviewPlayerId])
+    if (!reviewRoleStatus || reviewRoleStatus.status !== 'done') return []
+    return getNightActionSummary(
+      game,
+      reviewRoleStatus.playerId,
+      reviewRoleStatus.roleId,
+      reviewRoleStatus.systemStepId,
+    )
+  }, [game, reviewRoleStatus])
 
-  const reviewPlayer = reviewPlayerId
-    ? state.players.find((p) => p.id === reviewPlayerId)
+  const reviewRole = reviewRoleStatus
+    ? getRole(reviewRoleStatus.roleId)
     : null
+  const reviewSkippedReason =
+    reviewRoleStatus?.skippedReasonCode === 'evil_info_under_seven'
+      ? reviewRoleStatus.dashboardKind === 'demon_info'
+        ? t.game.demonInfoSkippedUnderSeven
+        : t.game.minionInfoSkippedUnderSeven
+      : null
 
   return (
     <div className='min-h-app bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex flex-col'>
@@ -143,14 +204,25 @@ export function NightDashboard({
             {items.map((item, index) =>
               item.type === 'night_action' ? (
                 <NightActionRow
-                  key={`action-${item.data.playerId}`}
+                  key={`action-${item.data.playerId}-${item.data.roleId}-${item.data.systemStepId ?? 'role'}`}
                   roleStatus={item.data}
                   index={index + 1}
                   isNext={index === nextPendingIndex}
                   onOpen={() =>
-                    onOpenNightAction(item.data.playerId, item.data.roleId)
+                    onOpenNightAction(
+                      item.data.playerId,
+                      item.data.roleId,
+                      item.data.systemStepId,
+                    )
                   }
-                  onReview={() => setReviewPlayerId(item.data.playerId)}
+                  onSkip={() =>
+                    onSkipNightAction(
+                      item.data.playerId,
+                      item.data.roleId,
+                      item.data.systemStepId,
+                    )
+                  }
+                  onReview={() => setReviewRoleStatus(item.data)}
                 />
               ) : (
                 <NightFollowUpRow
@@ -199,13 +271,46 @@ export function NightDashboard({
           </button>
           {grimoireExpanded && (
             <div className='bg-white/5 rounded-xl border border-white/10 overflow-hidden'>
-              <Grimoire
-                state={state}
-                compact
-                onPlayerSelect={onOpenGrimoirePlayer}
-                onShowRoleCard={onShowRoleCard}
-                onEditEffects={onEditEffects}
-              />
+              <div className='flex gap-2 p-3 border-b border-white/10 bg-black/10'>
+                <button
+                  onClick={() => setGrimoireView('circle')}
+                  className={cn(
+                    'flex-1 rounded-lg border px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] transition-colors',
+                    grimoireView === 'circle'
+                      ? 'border-mystic-gold/35 bg-mystic-gold/10 text-mystic-gold'
+                      : 'border-white/10 text-parchment-500 hover:border-white/20 hover:text-parchment-300',
+                  )}
+                >
+                  {t.game.grimoireViewCircle}
+                </button>
+                <button
+                  onClick={() => setGrimoireView('list')}
+                  className={cn(
+                    'flex-1 rounded-lg border px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] transition-colors',
+                    grimoireView === 'list'
+                      ? 'border-mystic-gold/35 bg-mystic-gold/10 text-mystic-gold'
+                      : 'border-white/10 text-parchment-500 hover:border-white/20 hover:text-parchment-300',
+                  )}
+                >
+                  {t.game.grimoireViewList}
+                </button>
+              </div>
+              {grimoireView === 'circle' ? (
+                <div className='p-3'>
+                  <StorytellerGrimoireBoard
+                    state={state}
+                    onPlayerSelect={onOpenGrimoirePlayer}
+                  />
+                </div>
+              ) : (
+                <Grimoire
+                  state={state}
+                  compact
+                  onPlayerSelect={onOpenGrimoirePlayer}
+                  onShowRoleCard={onShowRoleCard}
+                  onEditEffects={onEditEffects}
+                />
+              )}
             </div>
           )}
         </div>
@@ -225,11 +330,10 @@ export function NightDashboard({
         </Button>
       </ScreenFooter>
 
-      {/* Review Action Summary Dialog */}
       <Dialog
-        open={reviewPlayerId !== null}
+        open={reviewRoleStatus !== null}
         onOpenChange={(open) => {
-          if (!open) setReviewPlayerId(null)
+          if (!open) setReviewRoleStatus(null)
         }}
       >
         <DialogContent>
@@ -237,26 +341,99 @@ export function NightDashboard({
             <DialogTitle>{t.game.actionSummary}</DialogTitle>
           </DialogHeader>
           <DialogBody>
-            {reviewPlayer && (
-              <p className='text-parchment-300 text-sm mb-3 font-medium'>
-                {reviewPlayer.name}
-              </p>
-            )}
-            {reviewMessages.length === 0 ? (
-              <p className='text-parchment-500 text-sm'>
-                {t.game.noActionRecorded}
-              </p>
-            ) : (
-              <div className='space-y-2'>
-                {reviewMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className='text-parchment-300 text-sm bg-white/5 rounded-lg p-3'
-                  >
-                    <RichMessageDisplay message={msg} state={state} />
+            {reviewRoleStatus && (
+              <>
+                <p className='text-parchment-300 text-sm mb-3 font-medium'>
+                  {reviewRoleStatus.playerName}
+                </p>
+                {reviewRoleStatus.status === 'skipped' ? (
+                  <div className='space-y-3'>
+                    {reviewRoleStatus.malfunctioning && (
+                      <div className='flex items-start gap-2 text-amber-300 text-sm bg-amber-900/20 border border-amber-500/25 rounded-lg p-3'>
+                        <Icon name='flask' size='sm' className='mt-0.5 flex-shrink-0' />
+                        {t.game.playerIsMalfunctioning}
+                      </div>
+                    )}
+                    <div className='flex items-center gap-2 text-parchment-400 text-sm bg-white/5 rounded-lg p-3'>
+                      <Icon name='zapOff' size='sm' />
+                      {t.game.actionSkipped}
+                    </div>
+                    {reviewSkippedReason && (
+                      <div className='flex items-start gap-2 text-parchment-300 text-sm bg-white/5 rounded-lg p-3'>
+                        <Icon name='scrollText' size='sm' className='mt-0.5 flex-shrink-0' />
+                        {reviewSkippedReason}
+                      </div>
+                    )}
+                    <div className='flex items-start gap-2 text-amber-300 text-sm bg-amber-900/20 border border-amber-500/25 rounded-lg p-3'>
+                      <Icon name='alertTriangle' size='sm' className='mt-0.5 flex-shrink-0' />
+                      {t.game.rerunSkippedActionWarning}
+                    </div>
+                    {!reviewRoleStatus.systemStepId && reviewRole?.NightAction && (
+                      <Button
+                        fullWidth
+                        variant='secondary'
+                        onClick={() => {
+                          onRerunSkippedNightAction(
+                            reviewRoleStatus.playerId,
+                            reviewRoleStatus.roleId,
+                            reviewRoleStatus.systemStepId,
+                          )
+                          setReviewRoleStatus(null)
+                        }}
+                      >
+                        <Icon name='play' size='sm' className='mr-2' />
+                        {t.game.rerunSkippedAction}
+                      </Button>
+                    )}
                   </div>
-                ))}
-              </div>
+                ) : reviewMessages.length === 0 ? (
+                  <div className='space-y-3'>
+                    {reviewRoleStatus.malfunctioning && (
+                      <div className='flex items-start gap-2 text-amber-300 text-sm bg-amber-900/20 border border-amber-500/25 rounded-lg p-3'>
+                        <Icon name='flask' size='sm' className='mt-0.5 flex-shrink-0' />
+                        {t.game.playerIsMalfunctioning}
+                      </div>
+                    )}
+                    <p className='text-parchment-500 text-sm'>
+                      {t.game.noActionRecorded}
+                    </p>
+                  </div>
+                ) : (
+                  <div className='space-y-3'>
+                    {reviewRoleStatus.malfunctioning && (
+                      <div className='flex items-start gap-2 text-amber-300 text-sm bg-amber-900/20 border border-amber-500/25 rounded-lg p-3'>
+                        <Icon name='flask' size='sm' className='mt-0.5 flex-shrink-0' />
+                        {t.game.playerIsMalfunctioning}
+                      </div>
+                    )}
+                    <div className='space-y-2'>
+                      {reviewMessages.map((msg, i) => (
+                        <div
+                          key={i}
+                          className='text-parchment-300 text-sm bg-white/5 rounded-lg p-3'
+                        >
+                          <RichMessageDisplay message={msg} state={state} />
+                        </div>
+                      ))}
+                    </div>
+                    <Button
+                      fullWidth
+                      variant='secondary'
+                      onClick={() => {
+                        onReplayNightAction(
+                          reviewRoleStatus.playerId,
+                          reviewRoleStatus.roleId,
+                          reviewRoleStatus.systemStepId,
+                        )
+                        setReviewRoleStatus(null)
+                      }}
+                    >
+                      <Icon name='play' size='sm' className='mr-2' />
+                      {t.game.showActionAgain}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </DialogBody>
         </DialogContent>
@@ -274,34 +451,65 @@ function NightActionRow({
   index,
   isNext,
   onOpen,
+  onSkip,
   onReview,
 }: {
   roleStatus: NightRoleStatus
   index: number
   isNext: boolean
   onOpen: () => void
+  onSkip: () => void
   onReview: () => void
 }) {
-  const { language } = useI18n()
+  const { language, t } = useI18n()
   const role = getRole(roleStatus.roleId)
   const team = role ? getTeam(role.team) : null
 
   const roleName = useMemo(() => {
+    if (roleStatus.dashboardKind === 'minion_info') {
+      return t.game.minionInfo
+    }
+    if (roleStatus.dashboardKind === 'demon_info') {
+      return t.game.demonInfo
+    }
+    if (roleStatus.dashboardKind === 'demon_bluffs') {
+      return t.game.stepShowBluffs
+    }
     return getRoleName(roleStatus.roleId, language)
-  }, [roleStatus.roleId, language])
+  }, [
+    roleStatus.dashboardKind,
+    roleStatus.roleId,
+    language,
+    t.game.minionInfo,
+    t.game.demonInfo,
+    t.game.stepShowBluffs,
+  ])
+
+  const rowIcon =
+    roleStatus.dashboardKind === 'minion_info'
+      ? 'swords'
+      : roleStatus.dashboardKind === 'demon_info'
+        ? 'users'
+        : roleStatus.dashboardKind === 'demon_bluffs'
+          ? 'eye'
+          : (role?.icon ?? 'user')
 
   const isDone = roleStatus.status === 'done'
+  const isSkipped = roleStatus.status === 'skipped'
 
   return (
     <DashboardRow
       index={index}
       isNext={isNext}
       isDone={isDone}
-      icon={role?.icon ?? 'user'}
+      isSkipped={isSkipped}
+      icon={rowIcon}
       label={roleName}
       sublabel={roleStatus.playerName}
+      malfunctioning={roleStatus.malfunctioning}
       isEvil={team?.isEvil}
       onOpen={onOpen}
+      onSkip={onSkip}
       onReview={onReview}
     />
   )
@@ -344,32 +552,38 @@ function DashboardRow({
   index,
   isNext,
   isDone,
+  isSkipped,
   icon,
   label,
   sublabel,
+  malfunctioning,
   isEvil,
   isFollowUp,
   onOpen,
+  onSkip,
   onReview,
 }: {
   index: number
   isNext: boolean
   isDone: boolean
+  isSkipped?: boolean
   icon: string
   label: string
   sublabel: string
+  malfunctioning?: boolean
   isEvil?: boolean
   isFollowUp?: boolean
   onOpen: () => void
+  onSkip?: () => void
   onReview?: () => void
 }) {
   const { t } = useI18n()
 
-  const isClickable = isNext || isDone
+  const isClickable = isNext || isDone || Boolean(isSkipped)
   const handleClick = () => {
     if (isNext) {
       onOpen()
-    } else if (isDone && onReview) {
+    } else if ((isDone || isSkipped) && onReview) {
       onReview()
     }
   }
@@ -380,6 +594,14 @@ function DashboardRow({
         <span className='flex items-center gap-1 text-xs text-emerald-400'>
           <Icon name='checkCircle' size='sm' />
           {t.game.actionDone}
+        </span>
+      )
+    }
+    if (isSkipped) {
+      return (
+        <span className='flex items-center gap-1 text-xs text-parchment-500'>
+          <Icon name='zapOff' size='sm' />
+          {t.game.actionSkipped}
         </span>
       )
     }
@@ -410,6 +632,8 @@ function DashboardRow({
             : 'bg-indigo-900/30 border border-indigo-500/40 hover:bg-indigo-900/50 cursor-pointer'
           : isDone
             ? 'bg-white/3 opacity-70 hover:opacity-90 cursor-pointer'
+            : isSkipped
+              ? 'bg-white/3 opacity-60'
             : 'bg-white/2 opacity-50',
       )}
     >
@@ -423,10 +647,12 @@ function DashboardRow({
               : 'bg-indigo-500/30 text-indigo-300 border border-indigo-400/40'
             : isDone
               ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
+              : isSkipped
+                ? 'bg-parchment-500/10 text-parchment-500 border border-parchment-500/20'
               : 'bg-white/5 text-parchment-600 border border-white/10',
         )}
       >
-        {isDone ? <Icon name='check' size='xs' /> : index}
+        {isDone ? <Icon name='check' size='xs' /> : isSkipped ? <Icon name='zapOff' size='xs' /> : index}
       </div>
 
       {/* Icon */}
@@ -441,6 +667,8 @@ function DashboardRow({
                 : 'bg-indigo-500/20 border-indigo-400/30'
             : isDone
               ? 'bg-parchment-500/10 border-parchment-500/20'
+              : isSkipped
+                ? 'bg-parchment-500/8 border-parchment-500/15'
               : 'bg-white/5 border-white/10',
         )}
       >
@@ -454,6 +682,8 @@ function DashboardRow({
                 : isEvil
                   ? 'text-red-400'
                   : 'text-indigo-300'
+              : isSkipped
+                ? 'text-parchment-500'
               : 'text-parchment-500',
           )}
         />
@@ -468,6 +698,8 @@ function DashboardRow({
               ? 'text-parchment-100'
               : isDone
                 ? 'text-parchment-400'
+                : isSkipped
+                  ? 'text-parchment-500'
                 : 'text-parchment-600',
           )}
         >
@@ -480,6 +712,8 @@ function DashboardRow({
               ? isFollowUp
                 ? 'text-purple-400/80'
                 : 'text-indigo-400/80'
+              : isSkipped
+                ? 'text-parchment-500'
               : 'text-parchment-600',
           )}
         >
@@ -487,8 +721,33 @@ function DashboardRow({
         </span>
       </div>
 
-      {/* Status Badge */}
-      {getStatusBadge()}
+      {/* Status Badge / Skip */}
+      <div className='flex items-center gap-2 flex-shrink-0'>
+        {malfunctioning && (
+          <div
+            className='w-7 h-7 rounded-full border border-amber-500/30 bg-amber-900/20 text-amber-300 flex items-center justify-center'
+            title={t.game.malfunctionWarning}
+            aria-label={t.game.malfunctionWarning}
+          >
+            <Icon name='flask' size='xs' />
+          </div>
+        )}
+        {isNext && !isDone && !isFollowUp && onSkip && (
+          <button
+            type='button'
+            onClick={(event) => {
+              event.stopPropagation()
+              onSkip()
+            }}
+            className='w-9 h-9 rounded-full border border-amber-500/35 bg-amber-900/20 text-amber-300 flex items-center justify-center hover:bg-amber-900/35 hover:border-amber-400/50 transition-colors'
+            title={t.game.skipNightAction}
+            aria-label={t.game.skipNightAction}
+          >
+            <Icon name='zapOff' size='sm' />
+          </button>
+        )}
+        {getStatusBadge()}
+      </div>
     </button>
   )
 }

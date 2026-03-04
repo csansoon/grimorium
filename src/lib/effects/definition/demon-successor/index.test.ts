@@ -231,7 +231,7 @@ describe('DemonSuccessor effect', () => {
       if (result.action === 'allow') {
         expect(result.stateChanges?.entries).toHaveLength(1)
         expect(result.stateChanges!.entries[0].type).toBe('role_changed')
-        expect(result.stateChanges!.entries[0].data).toEqual({
+        expect(result.stateChanges!.entries[0].data).toMatchObject({
           playerId: 'sw',
           fromRole: 'scarlet_woman',
           toRole: 'imp',

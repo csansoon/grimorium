@@ -1,4 +1,9 @@
-import { EffectDefinition, EffectId, EffectType } from './types'
+import {
+  EffectDefinition,
+  EffectId,
+  EffectType,
+  EffectPersistencePolicy,
+} from './types'
 import type { EffectInstance } from '../types'
 import type { TeamId } from '../teams'
 import Dead from './definition/dead'
@@ -16,6 +21,25 @@ import Poisoned from './definition/poisoned'
 import Drunk from './definition/drunk'
 import ButlerMaster from './definition/butler-master'
 import ImpStarpassPending from './definition/imp-starpass-pending'
+import SweetheartTrigger from './definition/sweetheart-trigger'
+import SageTrigger from './definition/sage-trigger'
+import KlutzTrigger from './definition/klutz-trigger'
+import BarberTrigger from './definition/barber-trigger'
+import SweetheartPending from './definition/sweetheart-pending'
+import SagePending from './definition/sage-pending'
+import KlutzChoicePending from './definition/klutz-choice-pending'
+import MutantExecution from './definition/mutant-execution'
+import BarberSwapPending from './definition/barber-swap-pending'
+import ArtistQuestion from './definition/artist-question'
+import SavantAdvice from './definition/savant-advice'
+import WitchCurse from './definition/witch-curse'
+import CerenovusMadness from './definition/cerenovus-madness'
+import EvilTwinLink from './definition/evil-twin-link'
+import EvilTwinRevealPending from './definition/evil-twin-reveal-pending'
+import FangGuJump from './definition/fang-gu-jump'
+import VigormortisDemon from './definition/vigormortis-demon'
+import VigormortisKilled from './definition/vigormortis-killed'
+import VortoxRule from './definition/vortox-rule'
 
 export const EFFECTS: Record<EffectId, EffectDefinition> = {
   dead: Dead,
@@ -33,10 +57,38 @@ export const EFFECTS: Record<EffectId, EffectDefinition> = {
   drunk: Drunk,
   butler_master: ButlerMaster,
   imp_starpass_pending: ImpStarpassPending,
+  sweetheart_trigger: SweetheartTrigger,
+  sage_trigger: SageTrigger,
+  klutz_trigger: KlutzTrigger,
+  barber_trigger: BarberTrigger,
+  sweetheart_pending: SweetheartPending,
+  sage_pending: SagePending,
+  klutz_choice_pending: KlutzChoicePending,
+  mutant_execution: MutantExecution,
+  barber_swap_pending: BarberSwapPending,
+  artist_question: ArtistQuestion,
+  savant_advice: SavantAdvice,
+  witch_curse: WitchCurse,
+  cerenovus_madness: CerenovusMadness,
+  evil_twin_link: EvilTwinLink,
+  evil_twin_reveal_pending: EvilTwinRevealPending,
+  fang_gu_jump: FangGuJump,
+  vigormortis_demon: VigormortisDemon,
+  vigormortis_killed: VigormortisKilled,
+  vortox_rule: VortoxRule,
 }
 
 export function getEffect(effectId: string): EffectDefinition | undefined {
   return EFFECTS[effectId as EffectId]
+}
+
+export function resolveEffectPersistence(
+  instance: EffectInstance,
+  def?: EffectDefinition | null,
+): EffectPersistencePolicy {
+  const persistence = def?.persistence
+  if (!persistence) return {}
+  return typeof persistence === 'function' ? persistence(instance) : persistence
 }
 
 export function getAllEffects(): EffectDefinition[] {

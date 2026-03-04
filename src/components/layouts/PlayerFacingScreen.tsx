@@ -55,9 +55,14 @@ export function PlayerFacingScreen({
   )
 
   const handleHandbackReady = useCallback(() => {
-    pendingCallback.current?.()
+    const callback = pendingCallback.current
     pendingCallback.current = null
-  }, [])
+    setDone(false)
+    if (playerName) {
+      setReady(false)
+    }
+    callback?.()
+  }, [playerName])
 
   // State 1: Hand device to player
   if (!ready && playerName) {

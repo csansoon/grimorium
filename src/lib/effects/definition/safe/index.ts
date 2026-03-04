@@ -50,6 +50,10 @@ const definition: EffectDefinition = {
   id: 'safe',
   icon: 'shield',
   defaultType: 'buff',
+  persistence: (instance) => ({
+    targetRoleChange:
+      instance.data?.source === 'soldier' ? 'remove' : 'keep',
+  }),
   handlers: [safeHandler],
 }
 

@@ -41,6 +41,9 @@ const definition: EffectDefinition = {
   id: 'martyrdom',
   icon: 'bomb',
   defaultType: 'passive',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   winConditions: [martyrdomWinCondition],
 }
 

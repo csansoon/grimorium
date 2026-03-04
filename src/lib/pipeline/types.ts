@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { GameState, PlayerState, HistoryEntry, Game } from '../types'
+import { GameState, PlayerState, HistoryEntry, Game, Alignment } from '../types'
 import { EffectToAdd } from '../roles/types'
 import { IconName } from '../../components/atoms/icon'
 import { TeamId } from '../teams/types'
@@ -39,6 +39,7 @@ export type StateChanges = {
   addEffects?: Record<string, EffectToAdd[]>
   removeEffects?: Record<string, string[]>
   changeRoles?: Record<string, string> // playerId -> new roleId
+  changeAlignments?: Record<string, Alignment> // playerId -> new alignment
 }
 
 // ============================================================================
@@ -108,13 +109,19 @@ export type DayActionProps = {
 
 export type DayActionResult = {
   entries: Omit<HistoryEntry, 'id' | 'timestamp' | 'stateAfter'>[]
+  stateUpdates?: Partial<GameState>
   addEffects?: Record<string, EffectToAdd[]>
   removeEffects?: Record<string, string[]>
+  changeRoles?: Record<string, string>
+  changeAlignments?: Record<string, Alignment>
+  intent?: Intent
+  winner?: 'townsfolk' | 'demon'
 }
 
 export type DayActionDefinition = {
   id: string
   icon: IconName
+  category?: 'standard' | 'resolution'
   // Functions receive the translations object and return localized strings
   getLabel: (t: Record<string, any>) => string
   getDescription: (t: Record<string, any>) => string
@@ -156,8 +163,12 @@ export type NightFollowUpProps = {
  */
 export type NightFollowUpResult = {
   entries: Omit<HistoryEntry, 'id' | 'timestamp' | 'stateAfter'>[]
+  stateUpdates?: Partial<GameState>
   addEffects?: Record<string, EffectToAdd[]>
   removeEffects?: Record<string, string[]>
+  changeRoles?: Record<string, string>
+  changeAlignments?: Record<string, Alignment>
+  winner?: 'townsfolk' | 'demon'
 }
 
 /**
@@ -173,6 +184,7 @@ export type NightFollowUpDefinition = {
   icon: IconName
   getLabel: (t: Record<string, any>) => string
   condition: (player: PlayerState, state: GameState, game: Game) => boolean
+  placement?: 'after_actions' | 'before_player_action'
   ActionComponent: FC<NightFollowUpProps>
 }
 
@@ -185,6 +197,7 @@ export type AvailableNightFollowUp = {
   playerName: string
   icon: IconName
   label: string
+  placement?: 'after_actions' | 'before_player_action'
   ActionComponent: FC<NightFollowUpProps>
 }
 

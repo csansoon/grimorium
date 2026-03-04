@@ -1,5 +1,5 @@
 import { PlayerState, EffectInstance, hasEffect } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import { getCurrentRole } from '../../lib/identity'
 import { getTeam } from '../../lib/teams'
 import { Icon } from '../atoms'
 import { IconName } from '../atoms/icon'
@@ -10,7 +10,19 @@ import { cn } from '../../lib/utils'
 // =============================================================================
 
 /** Effects rendered via custom UI instead of generic effect badges. */
-const CUSTOM_UI_EFFECT_TYPES = new Set<string>(['dead', 'drunk'])
+const CUSTOM_UI_EFFECT_TYPES = new Set<string>([
+  'dead',
+  'drunk',
+  'sweetheart_trigger',
+  'sage_trigger',
+  'klutz_trigger',
+  'barber_trigger',
+  'sweetheart_pending',
+  'sage_pending',
+  'klutz_choice_pending',
+  'mutant_execution',
+  'barber_swap_pending',
+])
 
 /** Filter out effects that have dedicated custom UI (dead, drunk). */
 export function filterVisibleEffects(
@@ -84,7 +96,7 @@ export function PlayerRoleIcon({
   circleClassName,
   iconClassName,
 }: PlayerRoleIconProps) {
-  const role = getRole(player.roleId)
+  const role = getCurrentRole(player)
   const team = role ? getTeam(role.team) : null
   const isDead = hasEffect(player, 'dead')
   const isDrunk = hasEffect(player, 'drunk')

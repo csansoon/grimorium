@@ -130,7 +130,6 @@ const definition: RoleDefinition = {
     const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
 
     const malfunctioning = isMalfunctioning(player)
-
     const roleT = getRoleTranslations('undertaker', language)
 
     // Find the executed player
@@ -301,6 +300,7 @@ const definition: RoleDefinition = {
           roleIcon='shovel'
           roleName={getRoleName('undertaker', language)}
           playerName={player.name}
+          game={game}
           state={state}
           onComplete={handleMalfunctionComplete}
         />

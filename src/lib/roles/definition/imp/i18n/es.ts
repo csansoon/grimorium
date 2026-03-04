@@ -49,6 +49,8 @@ const es = {
     failedToKill: '{player} intentó matar a {target}, pero estaba protegido/a',
     deflectRedirected:
       '{player} eligió a {target}, pero el asesinato fue deflectado a {redirect}',
+    shownMinions: '{player} vio a sus Secuaces',
+    shownBluffs: '{player} recibió faroles: ',
     shownMinionsAndBluffs: '{player} vio a sus Secuaces y recibió faroles: ',
     selfKilled: '{player} (Diablo) eligió matarse a sí mismo/a',
     minionBecameImp: '{player} se convirtió en el nuevo Diablo',

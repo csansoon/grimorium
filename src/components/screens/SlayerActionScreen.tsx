@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { isAlive } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import { getCurrentTeam } from '../../lib/identity'
 import { isMalfunctioning } from '../../lib/effects'
 import { useI18n } from '../../lib/i18n'
 import { DayActionProps } from '../../lib/pipeline/types'
@@ -31,9 +31,9 @@ export function SlayerActionScreen({
     const target = state.players.find((p) => p.id === selectedTarget)
     if (!target) return
 
-    const targetRole = getRole(target.roleId)
     // When malfunctioning, the shot always misses
-    const isDemon = !isMalfunctioning(slayer) && targetRole?.team === 'demon'
+    const isDemon =
+      !isMalfunctioning(slayer) && getCurrentTeam(target) === 'demon'
 
     if (isDemon) {
       onComplete({
@@ -57,10 +57,13 @@ export function SlayerActionScreen({
             },
           },
         ],
-        addEffects: {
-          [selectedTarget]: [{ type: 'dead', expiresAt: 'never' }],
-        },
         removeEffects: { [playerId]: ['slayer_bullet'] },
+        intent: {
+          type: 'kill',
+          sourceId: playerId,
+          targetId: selectedTarget,
+          cause: 'slayer_shot',
+        },
       })
     } else {
       onComplete({

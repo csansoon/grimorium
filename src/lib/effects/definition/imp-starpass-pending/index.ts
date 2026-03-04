@@ -4,6 +4,7 @@ import { StarpassSelectUI } from '../../../../components/items/StarpassSelectUI'
 import { isAlive } from '../../../types'
 import { getRole } from '../../../roles'
 import { registerEffectTranslations } from '../../../i18n'
+import { buildTransformationStateChanges } from '../../../transformations'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -51,53 +52,31 @@ const starpassHandler: IntentHandler = {
       UIComponent: StarpassSelectUI,
       resume: (selectedNewImpId: unknown) => {
         const newImpId = selectedNewImpId as string
-        const newImpPlayer = state.players.find((p) => p.id === newImpId)
 
-        // Clean up effects sourced by the converting Minion (role-agnostic).
-        // E.g., if the Poisoner becomes the Imp, poison they applied is removed.
-        const sourcedEffectRemovals: Record<string, string[]> = {}
-        for (const p of state.players) {
-          const sourced = p.effects.filter(
-            (e) => e.sourcePlayerId === newImpId,
-          )
-          if (sourced.length > 0) {
-            sourcedEffectRemovals[p.id] = sourced.map((e) => e.type)
-          }
-        }
+        const transformation = buildTransformationStateChanges(state, {
+          kind: 'role_change',
+          source: {
+            cause: 'imp_starpass',
+            playerId: effectPlayer.id,
+            roleId: 'imp',
+          },
+          targets: [
+            {
+              playerId: newImpId,
+              newRoleId: 'imp',
+              reveal: 'pending',
+              queuePolicy: 'skip_if_window_passed',
+            },
+          ],
+        })
 
         return {
           action: 'allow',
           stateChanges: {
-            entries: [
-              {
-                type: 'role_changed',
-                message: [
-                  {
-                    type: 'i18n',
-                    key: 'roles.imp.history.minionBecameImp',
-                    params: {
-                      player: newImpId,
-                    },
-                  },
-                ],
-                data: {
-                  playerId: newImpId,
-                  fromRole: newImpPlayer?.roleId ?? 'unknown',
-                  toRole: 'imp',
-                },
-              },
-            ],
-            changeRoles: {
-              [newImpId]: 'imp',
-            },
-            addEffects: {
-              [newImpId]: [
-                { type: 'pending_role_reveal', expiresAt: 'never' },
-              ],
-            },
+            ...transformation,
             removeEffects: {
+              ...transformation.removeEffects,
               [effectPlayer.id]: ['imp_starpass_pending'],
-              ...sourcedEffectRemovals,
             },
           },
         }
@@ -110,6 +89,9 @@ const definition: EffectDefinition = {
   id: 'imp_starpass_pending',
   icon: 'sparkles',
   defaultType: 'pending',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   handlers: [starpassHandler],
 }
 
