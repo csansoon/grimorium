@@ -57,6 +57,49 @@ describe('core win conditions', () => {
 
     expect(checkWinCondition(state)).toBe('demon')
   })
+
+  it("returns 'townsfolk' when the demon is dead with only 4 alive and Scarlet Woman cannot take over", () => {
+    const scarletWoman = addEffectTo(
+      makePlayer({ id: 'sw', roleId: 'scarlet_woman' }),
+      'demon_successor',
+    )
+    const players = [
+      addEffectTo(makePlayer({ id: 'imp', roleId: 'imp' }), 'dead'),
+      scarletWoman,
+      makePlayer({ id: 'p1', roleId: 'washerwoman' }),
+      makePlayer({ id: 'p2', roleId: 'chef' }),
+    ]
+    const state = makeState({ phase: 'day', round: 3, players })
+
+    expect(checkWinCondition(state)).toBe('townsfolk')
+  })
+
+  it('does not award town the win after a Fang Gu jump leaves a new demon alive', () => {
+    const formerFangGu = addEffectTo(
+      makePlayer({ id: 'fang', roleId: 'fang_gu' }),
+      'dead',
+    )
+    const newFangGu = addEffectTo(
+      makePlayer({
+        id: 'outsider',
+        roleId: 'fang_gu',
+        baseRoleId: 'sweetheart',
+        baseAlignment: 'good',
+        currentAlignment: 'evil',
+      }),
+      'fang_gu_jump',
+    )
+    const players = [
+      formerFangGu,
+      newFangGu,
+      makePlayer({ id: 'p1', roleId: 'chef' }),
+      makePlayer({ id: 'p2', roleId: 'washerwoman' }),
+      makePlayer({ id: 'p3', roleId: 'slayer' }),
+    ]
+    const state = makeState({ phase: 'day', round: 2, players })
+
+    expect(checkWinCondition(state)).toBeNull()
+  })
 })
 
 // ============================================================================

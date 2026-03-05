@@ -13,7 +13,7 @@ export function ScreenFooter({
   return (
     <div
       className={cn(
-        'sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]',
+        'sticky bottom-0 bg-grimoire-dark/95 backdrop-blur-sm border-t px-4 pt-3 sm:pt-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] sm:pb-[max(1rem,env(safe-area-inset-bottom))]',
         borderColor,
       )}
     >

@@ -181,6 +181,7 @@ export function MainMenu({
   onHowToPlay,
 }: Props) {
   const { language, t } = useI18n()
+  const branchName = __APP_BRANCH__
   const games = getGameSummaries()
   const currentGameId = getCurrentGameId()
   const currentGame = games.find((g) => g.id === currentGameId)
@@ -394,6 +395,11 @@ export function MainMenu({
                 <h1 className='font-tarot text-2xl sm:text-3xl font-bold text-parchment-100 tracking-widest-xl uppercase mb-2'>
                   {t.mainMenu.title}
                 </h1>
+                <div className='mb-3 flex justify-center'>
+                  <span className='rounded-full border border-mystic-gold/25 bg-grimoire-dark/70 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-parchment-400'>
+                    {branchName}
+                  </span>
+                </div>
                 <MysticDivider />
               </div>
 

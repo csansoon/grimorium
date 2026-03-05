@@ -1,4 +1,4 @@
-import { getRole } from '../../lib/roles'
+import { getCurrentRoleId, getCurrentTeam } from '../../lib/identity'
 import { getTeam } from '../../lib/teams'
 import { useI18n } from '../../lib/i18n'
 import { RoleCard } from './RoleCard'
@@ -18,8 +18,8 @@ import { useHandback } from '../context/PlayerFacingContext'
 export function DefaultRoleReveal({ player, onContinue }: RoleRevealProps) {
   const { t } = useI18n()
   const { requestHandback } = useHandback()
-  const role = getRole(player.roleId)
-  const teamId = role?.team ?? 'townsfolk'
+  const roleId = getCurrentRoleId(player)
+  const teamId = getCurrentTeam(player) ?? 'townsfolk'
   const team = getTeam(teamId)
   const isEvil = team.isEvil
 
@@ -34,7 +34,7 @@ export function DefaultRoleReveal({ player, onContinue }: RoleRevealProps) {
         {t.common.youAreThe}
       </p>
 
-      <RoleCard roleId={player.roleId} />
+      <RoleCard roleId={roleId} />
 
       <CardLink onClick={() => requestHandback(onContinue)} isEvil={isEvil}>
         {t.common.iUnderstandMyRole}

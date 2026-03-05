@@ -224,6 +224,37 @@ describe('ImpStarpassPending effect', () => {
       }
     })
 
+    it('marks the new Imp to skip their demon wake for the current night', () => {
+      const { imp, state, game } = makeScenario()
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'imp',
+        targetId: 'imp',
+        cause: 'imp_self_kill',
+      }
+
+      const result = handler.handle(intent, imp, state, game)
+      if (result.action !== 'request_ui') {
+        throw new Error('Expected request_ui')
+      }
+
+      const resumed = result.resume('minion0')
+      if (resumed.action === 'allow') {
+        expect(resumed.stateChanges?.entries).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: 'night_queue_directive',
+              data: expect.objectContaining({
+                playerId: 'minion0',
+                roleId: 'imp',
+                directive: 'skip',
+              }),
+            }),
+          ]),
+        )
+      }
+    })
+
     it('removes the imp_starpass_pending effect from the old Imp', () => {
       const { imp, state, game } = makeScenario()
       const intent: KillIntent = {
@@ -262,13 +293,18 @@ describe('ImpStarpassPending effect', () => {
 
       const resumed = result.resume('minion0')
       if (resumed.action === 'allow') {
-        expect(resumed.stateChanges?.entries).toHaveLength(1)
-        expect(resumed.stateChanges!.entries[0].type).toBe('role_changed')
-        expect(resumed.stateChanges!.entries[0].data).toEqual({
-          playerId: 'minion0',
-          fromRole: 'poisoner',
-          toRole: 'imp',
-        })
+        expect(resumed.stateChanges?.entries).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              type: 'role_changed',
+              data: expect.objectContaining({
+                playerId: 'minion0',
+                fromRole: 'poisoner',
+                toRole: 'imp',
+              }),
+            }),
+          ]),
+        )
       }
     })
 

@@ -1,18 +1,21 @@
-import { useState } from 'react'
-import { getAllRoles } from '../../lib/roles'
-import { GameState } from '../../lib/types'
+import { useMemo, useState } from 'react'
+import { getRolesForGame } from '../../lib/roles'
+import type { RoleDefinition } from '../../lib/roles/types'
+import type { Game, GameState } from '../../lib/types'
 import { useI18n } from '../../lib/i18n'
 import { Icon, Button } from '../atoms'
 import { IconName } from '../atoms/icon'
 import { NarratorSetupLayout } from '../layouts'
 import { RolePickerGrid } from '../inputs/RolePickerGrid'
 import { cn } from '../../lib/utils'
+import type { FalseInfoMode } from '../../lib/roles/runtime-helpers'
 
 type NumberProps = {
   type: 'number'
   roleIcon: IconName
   roleName: string
   playerName: string
+  falseInfoMode?: FalseInfoMode | null
   numberRange: { min: number; max: number }
   onComplete: (result: number) => void
 }
@@ -22,6 +25,7 @@ type BooleanProps = {
   roleIcon: IconName
   roleName: string
   playerName: string
+  falseInfoMode?: FalseInfoMode | null
   trueLabel: string
   falseLabel: string
   onComplete: (result: boolean) => void
@@ -32,7 +36,10 @@ type RoleProps = {
   roleIcon: IconName
   roleName: string
   playerName: string
+  falseInfoMode?: FalseInfoMode | null
+  game: Pick<Game, 'scriptId' | 'scriptSnapshot'>
   state: GameState
+  roles?: RoleDefinition[]
   onComplete: (result: string) => void
 }
 
@@ -45,10 +52,18 @@ type Props = NumberProps | BooleanProps | RoleProps
  * Variants:
  * - "number": Number picker (Chef, Empath)
  * - "boolean": Yes/No toggle (Fortune Teller)
- * - "role": Role picker from full role list (Undertaker, Ravenkeeper)
+ * - "role": Role picker from current script role list (Undertaker, Ravenkeeper)
  */
 export function MalfunctionConfigStep(props: Props) {
   const { t } = useI18n()
+  const warningText =
+    props.falseInfoMode === 'vortox'
+      ? t.game.falseInfoReminder
+      : t.game.arbitraryInfoReminder
+  const warningTitle =
+    props.falseInfoMode === 'vortox'
+      ? t.game.falseInfoRequired
+      : t.game.malfunctionWarning
 
   return (
     <NarratorSetupLayout
@@ -65,11 +80,11 @@ export function MalfunctionConfigStep(props: Props) {
             className='text-amber-400 flex-shrink-0'
           />
           <p className='text-sm text-amber-300 font-medium'>
-            {t.game.malfunctionWarning}
+            {warningTitle}
           </p>
         </div>
         <p className='text-xs text-amber-400/70 mt-1 ml-7'>
-          {t.game.playerIsMalfunctioning}
+          {warningText}
         </p>
       </div>
 
@@ -188,11 +203,13 @@ function BooleanPicker({ trueLabel, falseLabel, onComplete }: BooleanProps) {
 // ROLE PICKER
 // ============================================================================
 
-function RolePicker({ state, onComplete }: RoleProps) {
+function RolePicker({ game, state, roles, onComplete }: RoleProps) {
   const { t } = useI18n()
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
-
-  const allRoles = getAllRoles()
+  const allRoles = useMemo(
+    () => roles ?? getRolesForGame(game),
+    [roles, game],
+  )
 
   const handleSelect = (roleId: string) => {
     setSelectedRole((prev) => (prev === roleId ? null : roleId))

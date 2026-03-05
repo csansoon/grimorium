@@ -99,6 +99,9 @@ const definition: EffectDefinition = {
   id: 'butler_master',
   icon: 'handHeart',
   defaultType: 'marker',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   ConfigEditor: ButlerMasterConfigEditor,
   preventsVoting: true,
   canVote: (player, _state, votes) => {

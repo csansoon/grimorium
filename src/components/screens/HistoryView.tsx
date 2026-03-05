@@ -11,6 +11,8 @@ type Props = {
 const eventIcons: Record<string, { name: IconName; className: string }> = {
   game_created: { name: 'sparkles', className: 'text-mystic-gold' },
   night_started: { name: 'moon', className: 'text-indigo-400' },
+  night_queue_directive: { name: 'arrowRight', className: 'text-parchment-500' },
+  grimoire_reviewed: { name: 'bookUser', className: 'text-mystic-gold' },
   role_revealed: { name: 'eye', className: 'text-purple-400' },
   night_action: { name: 'swords', className: 'text-red-400' },
   night_skipped: { name: 'zapOff', className: 'text-parchment-500' },
@@ -19,6 +21,7 @@ const eventIcons: Record<string, { name: IconName; className: string }> = {
   nomination: { name: 'userPlus', className: 'text-orange-300' },
   vote: { name: 'vote', className: 'text-purple-300' },
   execution: { name: 'skull', className: 'text-red-500' },
+  artist_question: { name: 'pencil', className: 'text-amber-300' },
   effect_added: { name: 'sparkles', className: 'text-cyan-400' },
   effect_removed: { name: 'x', className: 'text-parchment-500' },
   game_ended: { name: 'trophy', className: 'text-mystic-gold' },

@@ -1,6 +1,6 @@
 import { GameState, PlayerState, EffectInstance } from '../types'
-import { getRole } from '../roles/index'
 import { getEffect, resolveCanRegisterAs } from '../effects'
+import { getCurrentRoleId, getCurrentTeam } from '../identity'
 import { isEvilTeam, TeamId } from '../teams'
 import { Perception, PerceptionContext } from './types'
 
@@ -25,11 +25,10 @@ export function perceive(
   context: PerceptionContext,
   state: GameState,
 ): Perception {
-  const role = getRole(targetPlayer.roleId)
-  const team = role?.team ?? 'townsfolk'
+  const team = getCurrentTeam(targetPlayer) ?? 'townsfolk'
 
   let perception: Perception = {
-    roleId: targetPlayer.roleId,
+    roleId: getCurrentRoleId(targetPlayer),
     team,
     alignment: isEvilTeam(team) ? 'evil' : 'good',
   }
@@ -48,7 +47,8 @@ export function perceive(
 
       // Check if this modifier is restricted to specific observer roles
       if (modifier.observerRoles) {
-        if (!modifier.observerRoles.includes(observerPlayer.roleId)) continue
+        if (!modifier.observerRoles.includes(getCurrentRoleId(observerPlayer)))
+          continue
       }
 
       // Apply the modification

@@ -23,6 +23,9 @@ const definition: EffectDefinition = {
   icon: 'flask',
   defaultType: 'nerf',
   poisonsAbility: true,
+  persistence: (instance) => ({
+    sourceRoleChange: instance.sourcePlayerId ? 'remove' : 'keep',
+  }),
 }
 
 export default definition

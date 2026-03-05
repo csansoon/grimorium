@@ -392,6 +392,28 @@ describe('Malfunction — handler bypass', () => {
     }
   })
 
+  it('monk protection still works when the protected player is poisoned', () => {
+    const protectedVirgin = addEffectTo(
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'virgin' }), 'safe', {
+        source: 'monk',
+      }),
+      'poisoned',
+    )
+    const players = [protectedVirgin, makePlayer({ id: 'p2', roleId: 'imp' })]
+    const state = makeState({ phase: 'night', round: 2, players })
+    const game = makeGame(state)
+
+    const intent: KillIntent = {
+      type: 'kill',
+      sourceId: 'p2',
+      targetId: 'p1',
+      cause: 'demon',
+    }
+
+    const result = resolveIntent(intent, state, game)
+    expect(result.type).toBe('prevented')
+  })
+
   it('pure handler is bypassed when the virgin is poisoned', () => {
     // Poisoned virgin — townsfolk nomination should proceed normally
     const players = [

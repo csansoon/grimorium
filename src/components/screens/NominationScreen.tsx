@@ -41,29 +41,54 @@ export function NominationScreen({
 
   const canNominate = nominator && nominee
 
-  // Build annotations for players who already nominated today
-  const nominatorAnnotations = useMemo(() => {
-    if (!nominatorsToday || nominatorsToday.size === 0) return undefined
+  const twinAnnotations = useMemo(() => {
     const annotations: Record<string, string> = {}
     for (const player of alivePlayers) {
+      const twinEffect = player.effects.find((effect) => effect.type === 'evil_twin_link')
+      if (!twinEffect) continue
+      annotations[player.id] =
+        twinEffect.data?.isEvilTwin === true ? t.game.evilTwinLabel : t.game.goodTwinLabel
+    }
+    return Object.keys(annotations).length > 0 ? annotations : undefined
+  }, [alivePlayers, t])
+
+  // Build annotations for players who already nominated today
+  const nominatorAnnotations = useMemo(() => {
+    const annotations: Record<string, string> = {}
+    if (twinAnnotations) {
+      Object.assign(annotations, twinAnnotations)
+    }
+    if (!nominatorsToday || nominatorsToday.size === 0) {
+      return Object.keys(annotations).length > 0 ? annotations : undefined
+    }
+    for (const player of alivePlayers) {
       if (nominatorsToday.has(player.id)) {
-        annotations[player.id] = t.game.alreadyNominated
+        annotations[player.id] = annotations[player.id]
+          ? `${annotations[player.id]} • ${t.game.alreadyNominated}`
+          : t.game.alreadyNominated
       }
     }
     return Object.keys(annotations).length > 0 ? annotations : undefined
-  }, [nominatorsToday, alivePlayers, t])
+  }, [nominatorsToday, alivePlayers, t, twinAnnotations])
 
   // Build disabled set + annotations for players who have already been nominated
   const nomineeAnnotations = useMemo(() => {
-    if (!nomineesToday || nomineesToday.size === 0) return undefined
     const annotations: Record<string, string> = {}
+    if (twinAnnotations) {
+      Object.assign(annotations, twinAnnotations)
+    }
+    if (!nomineesToday || nomineesToday.size === 0) {
+      return Object.keys(annotations).length > 0 ? annotations : undefined
+    }
     for (const player of alivePlayers) {
       if (nomineesToday.has(player.id)) {
-        annotations[player.id] = t.game.alreadyBeenNominated
+        annotations[player.id] = annotations[player.id]
+          ? `${annotations[player.id]} • ${t.game.alreadyBeenNominated}`
+          : t.game.alreadyBeenNominated
       }
     }
     return Object.keys(annotations).length > 0 ? annotations : undefined
-  }, [nomineesToday, alivePlayers, t])
+  }, [nomineesToday, alivePlayers, t, twinAnnotations])
 
   // Build disabled sets for enforcement
   const disabledNominators = useMemo(() => {

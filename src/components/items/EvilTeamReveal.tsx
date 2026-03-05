@@ -1,6 +1,11 @@
 import { useMemo } from 'react'
+import {
+  resolveEvilInfoPlan,
+  shouldShowDemonMinionStep,
+  shouldShowMinionEvilTeamStep,
+} from '../../lib/evilInfo'
 import { GameState, PlayerState } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import { getCurrentRole, getCurrentTeam } from '../../lib/identity'
 import { useI18n, getRoleName } from '../../lib/i18n'
 import { Icon } from '../atoms'
 
@@ -40,25 +45,48 @@ export function EvilTeamReveal({
   viewerType,
 }: EvilTeamRevealProps) {
   const { t, language } = useI18n()
+  const evilInfoPlan = useMemo(() => resolveEvilInfoPlan(state), [state.players])
 
   const teamMembers: TeamMember[] = useMemo(() => {
     const members: TeamMember[] = []
+    const showForViewer =
+      viewerType === 'demon'
+        ? shouldShowDemonMinionStep(state, evilInfoPlan)
+        : shouldShowMinionEvilTeamStep(state, evilInfoPlan)
+
+    if (!showForViewer) {
+      return members
+    }
 
     for (const p of state.players) {
       if (p.id === viewer.id) continue
-      const role = getRole(p.roleId)
+      const role = getCurrentRole(p)
       if (!role) continue
 
-      if (role.team === 'minion') {
+      if (role.team === 'minion' && viewerType === 'demon') {
         members.push({
           player: p,
           showRole: false, // Never show minion roles
           teamLabel: t.teams.minion.name,
         })
-      } else if (role.team === 'demon') {
+      } else if (
+        role.team === 'minion' &&
+        viewerType === 'minion' &&
+        evilInfoPlan.minionsLearnOtherMinions
+      ) {
         members.push({
           player: p,
-          showRole: viewerType === 'minion', // Minions learn the Demon role
+          showRole: false,
+          teamLabel: t.teams.minion.name,
+        })
+      } else if (
+        role.team === 'demon' &&
+        viewerType === 'minion' &&
+        evilInfoPlan.minionsLearnDemon
+      ) {
+        members.push({
+          player: p,
+          showRole: true, // Minions learn the Demon role
           teamLabel: t.teams.demon.name,
         })
       }
@@ -66,15 +94,15 @@ export function EvilTeamReveal({
 
     // Sort: demons first (when viewer is minion), then minions
     members.sort((a, b) => {
-      const aRole = getRole(a.player.roleId)
-      const bRole = getRole(b.player.roleId)
+      const aRole = getCurrentRole(a.player)
+      const bRole = getCurrentRole(b.player)
       if (aRole?.team === 'demon' && bRole?.team !== 'demon') return -1
       if (aRole?.team !== 'demon' && bRole?.team === 'demon') return 1
       return 0
     })
 
     return members
-  }, [state.players, viewer.id, viewerType, t, language])
+  }, [evilInfoPlan, state.players, viewer.id, viewerType, t, language])
 
   if (teamMembers.length === 0) {
     return (
@@ -87,8 +115,8 @@ export function EvilTeamReveal({
   return (
     <div className='space-y-3'>
       {teamMembers.map((member) => {
-        const role = getRole(member.player.roleId)
-        const isDemon = role?.team === 'demon'
+        const role = getCurrentRole(member.player)
+        const isDemon = getCurrentTeam(member.player) === 'demon'
 
         return (
           <div

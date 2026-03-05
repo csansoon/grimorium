@@ -1,17 +1,20 @@
 import { PlayerState } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import { getCurrentRole } from '../../lib/identity'
 import { getTeam } from '../../lib/teams'
 import { useI18n, getRoleName, interpolate } from '../../lib/i18n'
 import { Icon } from '../atoms'
 import { MysticDivider } from '../items'
 import { cn } from '../../lib/utils'
 import type { NightStepAudience } from '../../lib/roles/types'
+import type { FalseInfoMode } from '../../lib/roles/runtime-helpers'
 
 type Props = {
   player: PlayerState
   title?: string
   description?: string
   children: React.ReactNode
+  falseInfoWarning?: boolean
+  falseInfoMode?: FalseInfoMode | null
   /**
    * Who this screen is for. Affects background gradient and shows a contextual banner.
    * - `narrator` — blue/indigo background, "This is your decision" banner
@@ -28,9 +31,11 @@ export function NightActionLayout({
   description,
   children,
   audience,
+  falseInfoWarning = false,
+  falseInfoMode = null,
 }: Props) {
   const { t, language } = useI18n()
-  const role = getRole(player.roleId)
+  const role = getCurrentRole(player)
   const team = role ? getTeam(role.team) : null
 
   const isEvil = team?.isEvil ?? false
@@ -78,7 +83,7 @@ export function NightActionLayout({
     >
       {/* Audience Banner */}
       {audience === 'narrator' && (
-        <div className='mx-4 mt-4 mb-0 max-w-lg self-center w-full'>
+        <div className='mx-4 mt-3 sm:mt-4 mb-0 max-w-lg self-center w-full'>
           <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-900/30 border border-blue-500/30'>
             <Icon name='eye' size='sm' className='text-blue-400 flex-shrink-0' />
             <span className='text-blue-300 text-xs'>
@@ -88,7 +93,7 @@ export function NightActionLayout({
         </div>
       )}
       {audience === 'player_choice' && (
-        <div className='mx-4 mt-4 mb-0 max-w-lg self-center w-full'>
+        <div className='mx-4 mt-3 sm:mt-4 mb-0 max-w-lg self-center w-full'>
           <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-900/40 border border-amber-500/40'>
             <Icon
               name='userRound'
@@ -103,25 +108,37 @@ export function NightActionLayout({
           </div>
         </div>
       )}
+      {(falseInfoWarning || falseInfoMode) && (
+        <div className='mx-4 mt-3 sm:mt-4 mb-0 max-w-lg self-center w-full'>
+          <div className='flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-900/40 border border-amber-500/40'>
+            <Icon name='flask' size='sm' className='text-amber-400 flex-shrink-0 mt-0.5' />
+            <span className='text-amber-300 text-xs'>
+              {falseInfoMode === 'vortox'
+                ? t.game.falseInfoReminder
+                : t.game.arbitraryInfoReminder}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
-      <div className='px-4 py-6 text-center'>
-        <div className='flex justify-center mb-4'>
+      <div className='px-4 py-4 sm:py-6 text-center'>
+        <div className='flex justify-center mb-3 sm:mb-4'>
           <div
             className={cn(
-              'w-20 h-20 rounded-full flex items-center justify-center border',
+              'w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center border',
               iconColors.circleBg,
             )}
           >
             <Icon
               name={role?.icon ?? 'moon'}
-              size='3xl'
+              size='2xl'
               className={iconColors.icon}
             />
           </div>
         </div>
 
-        <h1 className='font-tarot text-xl text-parchment-100 tracking-wider uppercase mb-1'>
+        <h1 className='font-tarot text-lg sm:text-xl text-parchment-100 tracking-wider uppercase mb-1'>
           {player.name}
         </h1>
         {role && (
@@ -140,7 +157,7 @@ export function NightActionLayout({
         )}
 
         {(title || description) && (
-          <div className='mt-6 max-w-sm mx-auto'>
+          <div className='mt-4 sm:mt-6 max-w-sm mx-auto'>
             <MysticDivider
               icon={
                 audience === 'player_choice'
@@ -169,7 +186,7 @@ export function NightActionLayout({
       </div>
 
       {/* Content */}
-      <div className='flex-1 px-4 pb-6 max-w-lg mx-auto w-full'>{children}</div>
+      <div className='flex-1 px-4 pb-4 sm:pb-6 max-w-lg mx-auto w-full overflow-y-auto'>{children}</div>
     </div>
   )
 }

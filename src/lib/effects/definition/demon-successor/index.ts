@@ -4,9 +4,10 @@ import {
   KillIntent,
   ExecuteIntent,
 } from '../../../pipeline/types'
-import { getRole } from '../../../roles'
 import { hasEffect, getAlivePlayers } from '../../../types'
 import { registerEffectTranslations } from '../../../i18n'
+import { getCurrentRoleId, getCurrentTeam } from '../../../identity'
+import { buildTransformationStateChanges } from '../../../transformations'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -34,7 +35,8 @@ const demonSuccessorHandler: IntentHandler = {
     // chooses who becomes the new Imp via the starpass handler.
     if (
       intent.type === 'kill' &&
-      (intent as KillIntent).cause === 'imp_self_kill'
+      ((intent as KillIntent).cause === 'imp_self_kill' ||
+        (intent as KillIntent).cause === 'fang_gu_jump')
     )
       return false
 
@@ -51,8 +53,7 @@ const demonSuccessorHandler: IntentHandler = {
     // The target must be a Demon
     const target = state.players.find((p) => p.id === targetId)
     if (!target) return false
-    const targetRole = getRole(target.roleId)
-    if (targetRole?.team !== 'demon') return false
+    if (getCurrentTeam(target) !== 'demon') return false
 
     // The successor (effect holder) must be alive
     if (hasEffect(effectPlayer, 'dead')) return false
@@ -74,42 +75,27 @@ const demonSuccessorHandler: IntentHandler = {
     }
 
     const target = state.players.find((p) => p.id === targetId)!
+    const transformation = buildTransformationStateChanges(state, {
+      kind: 'role_change',
+      source: {
+        cause: 'demon_successor',
+        playerId: effectPlayer.id,
+        roleId: getCurrentRoleId(effectPlayer),
+      },
+      targets: [
+        {
+          playerId: effectPlayer.id,
+          newRoleId: getCurrentRoleId(target),
+          reveal: 'pending',
+          includeNewRoleInitialEffects: true,
+          removeEffects: ['demon_successor'],
+        },
+      ],
+    })
 
     return {
       action: 'allow',
-      stateChanges: {
-        entries: [
-          {
-            type: 'role_changed',
-            message: [
-              {
-                type: 'i18n',
-                key: 'roles.scarlet_woman.history.becameDemon',
-                params: {
-                  player: effectPlayer.id,
-                  role: target.roleId,
-                },
-              },
-            ],
-            data: {
-              playerId: effectPlayer.id,
-              fromRole: effectPlayer.roleId,
-              toRole: target.roleId,
-            },
-          },
-        ],
-        changeRoles: {
-          [effectPlayer.id]: target.roleId,
-        },
-        addEffects: {
-          [effectPlayer.id]: [
-            { type: 'pending_role_reveal', expiresAt: 'never' },
-          ],
-        },
-        removeEffects: {
-          [effectPlayer.id]: ['demon_successor'],
-        },
-      },
+      stateChanges: transformation,
     }
   },
 }
@@ -118,6 +104,10 @@ const definition: EffectDefinition = {
   id: 'demon_successor',
   icon: 'crown',
   defaultType: 'passive',
+  persistence: {
+    targetRoleChange: 'remove',
+    targetAlignmentChange: 'remove',
+  },
   handlers: [demonSuccessorHandler],
 }
 

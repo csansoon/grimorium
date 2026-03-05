@@ -3,8 +3,8 @@ import { ROLES } from '../../lib/roles'
 import { RoleDefinition, RoleId } from '../../lib/roles/types'
 import { Language } from '../../lib/i18n/types'
 import {
-  SCRIPTS,
   ScriptId,
+  getScript,
   getRecommendedDistribution,
   applyDistributionModifiers,
 } from '../../lib/scripts'
@@ -40,12 +40,14 @@ type SelectionMode = 'generate' | 'manual'
 
 export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
   const { t, language } = useI18n()
-  const script = SCRIPTS[scriptId]
-  const isCustomMode = scriptId === 'custom'
+  const script = getScript(scriptId) ?? getScript('custom')!
+  const isCustomMode = !script.enforceDistribution
+  const defaultDemonRoleId =
+    script.roles.find((roleId) => ROLES[roleId]?.team === 'demon') ?? null
 
   // ── State ──────────────────────────────────────────────────────────
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>(() => {
-    return { imp: 1 }
+    return defaultDemonRoleId ? { [defaultDemonRoleId]: 1 } : {}
   })
   const [mode, setMode] = useState<SelectionMode>(
     isCustomMode ? 'manual' : 'generate',
@@ -63,7 +65,6 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const totalRoles = Object.values(roleCounts).reduce((a, b) => a + b, 0)
-  const impCount = roleCounts['imp'] ?? 0
 
   // Auto-generate pools when entering generate mode
   useEffect(() => {
@@ -126,6 +127,8 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
     return counts
   }, [roleCounts])
 
+  const demonCount = teamCounts.demon
+
   // ── Handlers ───────────────────────────────────────────────────────
 
   const toggleRole = (roleId: string) => {
@@ -187,7 +190,7 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
     onNext(selectedRoles)
   }
 
-  const canProceed = totalRoles >= players.length && impCount >= 1
+  const canProceed = totalRoles >= players.length && demonCount >= 1
 
   // ── Render ─────────────────────────────────────────────────────────
 
@@ -253,7 +256,7 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
       )}
 
       {/* Warnings */}
-      {totalRoles > 0 && (totalRoles < players.length || impCount < 1) && (
+      {totalRoles > 0 && (totalRoles < players.length || demonCount < 1) && (
         <div className='px-4 py-2 bg-mystic-crimson/20 border-b border-red-500/30'>
           <div className='max-w-lg mx-auto space-y-1'>
             {totalRoles < players.length && (
@@ -264,10 +267,10 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
                 })}
               </div>
             )}
-            {impCount < 1 && (
+            {demonCount < 1 && (
               <div className='flex items-center gap-2 text-red-300 text-xs'>
                 <Icon name='alertTriangle' size='sm' />
-                {t.newGame.needAtLeastImp}
+                {t.newGame.needAtLeastDemon}
               </div>
             )}
           </div>
