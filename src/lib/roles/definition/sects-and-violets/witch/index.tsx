@@ -1,5 +1,5 @@
 import { RoleDefinition } from '../../../types'
-import { isAlive } from '../../../../types'
+import { hasEffect, isAlive } from '../../../../types'
 import {
   registerRoleTranslations,
   getRoleTranslations,
@@ -29,6 +29,17 @@ const definition: RoleDefinition = {
   NightAction: ({ state, player, onComplete }) => {
     const { language } = useI18n()
     const roleT = getRoleTranslations('witch', language)
+    const selectablePlayers = state.players.filter((candidate) => candidate.id !== player.id)
+    const aliveIds = selectablePlayers
+      .filter((candidate) => !hasEffect(candidate, 'dead'))
+      .map((candidate) => candidate.id)
+    const deadIds = selectablePlayers
+      .filter((candidate) => hasEffect(candidate, 'dead'))
+      .map((candidate) => candidate.id)
+    const groups = [
+      { label: 'Alive', playerIds: aliveIds },
+      { label: 'Dead', playerIds: deadIds },
+    ].filter((group) => group.playerIds.length > 0)
 
     return (
       <StorytellerChoiceScreen
@@ -37,7 +48,8 @@ const definition: RoleDefinition = {
         title={roleT.chooseTargetTitle}
         description={roleT.chooseTargetDescription}
         confirmLabel={roleT.confirmChoiceLabel}
-        players={state.players.filter((candidate) => candidate.id !== player.id)}
+        players={selectablePlayers}
+        groups={groups}
         selectionCount={1}
         onConfirm={(ids) => {
           const targetId = ids[0]

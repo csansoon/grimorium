@@ -10,7 +10,7 @@ const en = {
   infoTitle: 'Oracle',
   countLabel: 'Dead evil players',
   configureTitle: 'Configure Oracle',
-  configureDescription: 'Choose the number to show if the Oracle is malfunctioning.',
+  configureDescription: 'Review and adjust the number before showing the result.',
   configureConfirm: 'Show Result',
 } as const
 

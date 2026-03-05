@@ -8,12 +8,14 @@ import { IconName } from '../atoms/icon'
 import { NarratorSetupLayout } from '../layouts'
 import { RolePickerGrid } from '../inputs/RolePickerGrid'
 import { cn } from '../../lib/utils'
+import type { FalseInfoMode } from '../../lib/roles/runtime-helpers'
 
 type NumberProps = {
   type: 'number'
   roleIcon: IconName
   roleName: string
   playerName: string
+  falseInfoMode?: FalseInfoMode | null
   numberRange: { min: number; max: number }
   onComplete: (result: number) => void
 }
@@ -23,6 +25,7 @@ type BooleanProps = {
   roleIcon: IconName
   roleName: string
   playerName: string
+  falseInfoMode?: FalseInfoMode | null
   trueLabel: string
   falseLabel: string
   onComplete: (result: boolean) => void
@@ -33,6 +36,7 @@ type RoleProps = {
   roleIcon: IconName
   roleName: string
   playerName: string
+  falseInfoMode?: FalseInfoMode | null
   game: Pick<Game, 'scriptId' | 'scriptSnapshot'>
   state: GameState
   roles?: RoleDefinition[]
@@ -52,6 +56,14 @@ type Props = NumberProps | BooleanProps | RoleProps
  */
 export function MalfunctionConfigStep(props: Props) {
   const { t } = useI18n()
+  const warningText =
+    props.falseInfoMode === 'vortox'
+      ? t.game.falseInfoReminder
+      : t.game.arbitraryInfoReminder
+  const warningTitle =
+    props.falseInfoMode === 'vortox'
+      ? t.game.falseInfoRequired
+      : t.game.malfunctionWarning
 
   return (
     <NarratorSetupLayout
@@ -68,11 +80,11 @@ export function MalfunctionConfigStep(props: Props) {
             className='text-amber-400 flex-shrink-0'
           />
           <p className='text-sm text-amber-300 font-medium'>
-            {t.game.malfunctionWarning}
+            {warningTitle}
           </p>
         </div>
         <p className='text-xs text-amber-400/70 mt-1 ml-7'>
-          {t.game.playerIsMalfunctioning}
+          {warningText}
         </p>
       </div>
 

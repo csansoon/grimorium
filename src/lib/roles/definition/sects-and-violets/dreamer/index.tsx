@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { RoleDefinition } from '../../../types'
-import { isAlive } from '../../../../types'
+import { GameState, PlayerState, isAlive } from '../../../../types'
 import {
   registerRoleTranslations,
   getRoleTranslations,
@@ -33,6 +33,13 @@ type Phase =
   | 'select_evil_role'
   | 'show_result'
 
+export function getDreamerSelectableTargets(
+  state: Pick<GameState, 'players'>,
+  dreamerId: string,
+): PlayerState[] {
+  return state.players.filter((candidate) => candidate.id !== dreamerId)
+}
+
 const definition: RoleDefinition = {
   id: 'dreamer',
   team: 'townsfolk',
@@ -53,6 +60,10 @@ const definition: RoleDefinition = {
     const [selectedEvilRoleId, setSelectedEvilRoleId] = useState<string | null>(null)
 
     const malfunctioning = shouldForceFalseInfo(state, player)
+    const selectableTargets = useMemo(
+      () => getDreamerSelectableTargets(state, player.id),
+      [state, player.id],
+    )
     const target = state.players.find((candidate) => candidate.id === selectedTargetId) ?? null
     const actualRoleId = target
       ? perceive(target, player, 'role', state).roleId
@@ -98,7 +109,9 @@ const definition: RoleDefinition = {
     ])
 
     const complete = () => {
-      if (!selectedTargetId || !shownRoleIds) return
+      if (!selectedTargetId || selectedTargetId === player.id || !shownRoleIds || !target) {
+        return
+      }
       onComplete({
         entries: [
           {
@@ -275,7 +288,7 @@ const definition: RoleDefinition = {
           </div>
           <div className='flex-1 px-4 pb-4 max-w-lg mx-auto w-full overflow-y-auto'>
             <PlayerPickerList
-              players={state.players}
+              players={selectableTargets}
               selected={selectedTargetId ? [selectedTargetId] : []}
               onSelect={(playerId) => setSelectedTargetId(playerId)}
               selectionCount={1}

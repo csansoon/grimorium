@@ -16,7 +16,7 @@ import {
   StorytellerBooleanScreen,
 } from '../../../../../components/screens/SectsAndVioletsActionScreens'
 import { playersShareAlignment } from '../helpers'
-import { shouldForceFalseInfo } from '../../../runtime-helpers'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -47,6 +47,7 @@ const definition: RoleDefinition = {
   NightAction: ({ state, player, onComplete }) => {
     const { t, language } = useI18n()
     const roleT = getRoleTranslations('seamstress', language)
+    const falseInfoMode = getFalseInfoMode(state, player)
     const malfunctioning = shouldForceFalseInfo(state, player)
     const [phase, setPhase] = useState<'choose_players' | 'configure' | 'show_result'>(
       'choose_players',
@@ -97,6 +98,7 @@ const definition: RoleDefinition = {
           description={roleT.configureDescription.replace('{first}', playerNames[0] ?? '').replace('{second}', playerNames[1] ?? '')}
           trueLabel={roleT.sameLabel}
           falseLabel={roleT.differentLabel}
+          falseInfoMode={falseInfoMode}
           onBack={() => setPhase('choose_players')}
           onSelect={(value) => {
             setShownValue(value)

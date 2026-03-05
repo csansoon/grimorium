@@ -6,6 +6,7 @@ import {
   PlayerBooleanRevealScreen,
   StorytellerTextBooleanScreen,
 } from '../../../../components/screens/SectsAndVioletsActionScreens'
+import { getFalseInfoMode } from '../../../roles/runtime-helpers'
 
 function ArtistQuestionScreen({
   state,
@@ -16,6 +17,7 @@ function ArtistQuestionScreen({
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState<boolean | null>(null)
   if (!player) return null
+  const falseInfoMode = getFalseInfoMode(state, player)
 
   if (answer !== null) {
     return (
@@ -58,6 +60,7 @@ function ArtistQuestionScreen({
       icon='pencil'
       title='Artist Question'
       description='Record the question and choose the truthful yes/no answer.'
+      falseInfoMode={falseInfoMode}
       questionLabel='Question'
       question={question}
       onQuestionChange={setQuestion}

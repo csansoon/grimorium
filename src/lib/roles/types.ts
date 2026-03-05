@@ -58,6 +58,8 @@ export type NightActionResult = {
   changeAlignments?: Record<string, Alignment>
   // Intent to resolve through the pipeline (for action roles like Imp)
   intent?: Intent
+  // Optional additional intents to resolve sequentially
+  intents?: Intent[]
 }
 
 // ============================================================================

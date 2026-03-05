@@ -30,6 +30,7 @@ import { isMalfunctioning } from '../../../../effects'
 import { MalfunctionConfigStep } from '../../../../../components/items'
 import { Perception } from '../../../../pipeline/types'
 import { cn } from '../../../../../lib/utils'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -129,6 +130,8 @@ const definition: RoleDefinition = {
     )
     const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
 
+    const falseInfoMode = getFalseInfoMode(state, player)
+    const falseInfo = shouldForceFalseInfo(state, player)
     const malfunctioning = isMalfunctioning(player)
     const roleT = getRoleTranslations('undertaker', language)
 
@@ -141,10 +144,10 @@ const definition: RoleDefinition = {
     // Check if perception config is needed (only when NOT malfunctioning)
     const ambiguousPlayers = useMemo(
       () =>
-        !malfunctioning && executedPlayer
+        !falseInfo && executedPlayer
           ? getAmbiguousPlayers([executedPlayer], 'role')
           : [],
-      [executedPlayer, malfunctioning],
+      [executedPlayer, falseInfo],
     )
     const needsPerceptionConfig = ambiguousPlayers.length > 0
 
@@ -154,7 +157,7 @@ const definition: RoleDefinition = {
     const steps: NightStep[] = useMemo(() => {
       const result: NightStep[] = []
 
-      if (malfunctioning) {
+      if (falseInfo) {
         result.push({
           id: 'configure_malfunction',
           icon: 'flask',
@@ -184,7 +187,7 @@ const definition: RoleDefinition = {
 
       return result
     }, [
-      malfunctioning,
+      falseInfo,
       needsPerceptionConfig,
       perceptionConfigDone,
       malfunctionConfigDone,
@@ -300,6 +303,7 @@ const definition: RoleDefinition = {
           roleIcon='shovel'
           roleName={getRoleName('undertaker', language)}
           playerName={player.name}
+          falseInfoMode={falseInfoMode}
           game={game}
           state={state}
           onComplete={handleMalfunctionComplete}

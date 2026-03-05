@@ -11,6 +11,7 @@ import {
   PlayerNumberRevealScreen,
   StorytellerNumberScreen,
 } from '../../../../../components/screens/SectsAndVioletsActionScreens'
+import { getFalseInfoMode } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -31,6 +32,7 @@ const definition: RoleDefinition = {
   NightAction: ({ state, player, onComplete }) => {
     const { language } = useI18n()
     const roleT = getRoleTranslations('mathematician', language)
+    const falseInfoMode = getFalseInfoMode(state, player)
     const [shownValue, setShownValue] = useState(0)
     const [phase, setPhase] = useState<'configure' | 'show_result'>('configure')
 
@@ -66,6 +68,7 @@ const definition: RoleDefinition = {
           min={0}
           max={state.players.length}
           confirmLabel={roleT.configureConfirm}
+          falseInfoMode={falseInfoMode}
           onChange={setShownValue}
           onConfirm={() => setPhase('show_result')}
         />

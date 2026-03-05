@@ -11,6 +11,8 @@ const en = {
   chooseTargetDescription: 'Select the player you want to transform tonight.',
   chooseRoleTitle: 'Choose a New Character',
   chooseRoleDescription: 'Select the character they will become.',
+  roleAlreadyInPlayWarning:
+    'This character is already in play. If confirmed, no transformation will occur.',
   confirmChoiceLabel: 'Transform Player',
 } as const
 

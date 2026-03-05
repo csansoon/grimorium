@@ -3,6 +3,7 @@ import {
   ScriptDefinition,
   ScriptId,
   RoleDistribution,
+  ScriptWakeOrder,
 } from './types'
 import { RoleId } from '../roles/types'
 import { TeamId } from '../teams/types'
@@ -105,6 +106,40 @@ const SECTS_AND_VIOLETS_ROLES: RoleId[] = [
   'vortox',
 ]
 
+const SECTS_AND_VIOLETS_WAKE_ORDER: ScriptWakeOrder = {
+  firstNight: [
+    { roleId: 'philosopher' },
+    { roleId: 'snake_charmer' },
+    { roleId: 'evil_twin' },
+    { roleId: 'witch' },
+    { roleId: 'cerenovus' },
+    { roleId: 'clockmaker' },
+    { roleId: 'dreamer' },
+    { roleId: 'seamstress' },
+    { roleId: 'mathematician' },
+  ],
+  otherNights: [
+    { roleId: 'philosopher' },
+    { roleId: 'snake_charmer' },
+    { roleId: 'witch' },
+    { roleId: 'cerenovus' },
+    { roleId: 'pit_hag' },
+    { roleId: 'fang_gu' },
+    { roleId: 'no_dashii' },
+    { roleId: 'vortox' },
+    { roleId: 'vigormortis' },
+    { roleId: 'barber' },
+    { roleId: 'sweetheart' },
+    { roleId: 'sage' },
+    { roleId: 'dreamer' },
+    { roleId: 'flowergirl' },
+    { roleId: 'town_crier' },
+    { roleId: 'oracle' },
+    { roleId: 'seamstress' },
+    { roleId: 'mathematician' },
+  ],
+}
+
 const TROUBLE_BREWING_ROLES: RoleId[] = [
   'washerwoman',
   'librarian',
@@ -149,7 +184,7 @@ export const BUILTIN_SCRIPTS: Record<BuiltinScriptId, ScriptDefinition> = {
     icon: 'flower',
     roles: SECTS_AND_VIOLETS_ROLES,
     enforceDistribution: true,
-    wakeOrder: deriveWakeOrderFromRoleIds(SECTS_AND_VIOLETS_ROLES),
+    wakeOrder: SECTS_AND_VIOLETS_WAKE_ORDER,
     isOfficial: true,
   },
   custom: {

@@ -12,7 +12,7 @@ const es = {
   yesLabel: 'Si',
   noLabel: 'No',
   configureTitle: 'Configurar Pregonero',
-  configureDescription: 'Elige la respuesta que se mostrara si el Pregonero esta afectado.',
+  configureDescription: 'Revisa y ajusta la respuesta antes de mostrar el resultado.',
 } as const
 
 export default es

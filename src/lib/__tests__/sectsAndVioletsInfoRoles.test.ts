@@ -7,6 +7,9 @@ import {
   didDemonVoteToday,
   didMinionNominateToday,
 } from '../roles/definition/sects-and-violets/helpers'
+import { getDreamerSelectableTargets } from '../roles/definition/sects-and-violets/dreamer'
+import { getRole } from '../roles'
+import { getPhilosopherQueuePolicyForChosenRole } from '../roles/definition/sects-and-violets/philosopher'
 
 beforeEach(() => {
   resetPlayerCounter()
@@ -22,6 +25,20 @@ describe('Sects & Violets info roles', () => {
         makePlayer({ id: 'p4', roleId: 'villager' }),
         makePlayer({ id: 'p5', roleId: 'imp' }),
         makePlayer({ id: 'p6', roleId: 'baron' }),
+      ],
+    })
+
+    expect(countClosestMinionDistance(state)).toBe(1)
+  })
+
+  it('Clockmaker uses the shortest circular path across seat 0', () => {
+    const state = makeState({
+      players: [
+        makePlayer({ id: 'minion_start', roleId: 'witch' }),
+        makePlayer({ id: 'town_1', roleId: 'villager' }),
+        makePlayer({ id: 'town_2', roleId: 'villager' }),
+        makePlayer({ id: 'town_3', roleId: 'villager' }),
+        makePlayer({ id: 'demon_end', roleId: 'fang_gu' }),
       ],
     })
 
@@ -108,5 +125,38 @@ describe('Sects & Violets info roles', () => {
     )
 
     expect(didMinionNominateToday(game)).toBe(true)
+  })
+
+  it('Dreamer cannot target self', () => {
+    const state = makeState({
+      players: [
+        makePlayer({ id: 'dreamer', roleId: 'dreamer' }),
+        makePlayer({ id: 'other', roleId: 'villager' }),
+      ],
+    })
+
+    const targetIds = getDreamerSelectableTargets(state, 'dreamer').map(
+      (player) => player.id,
+    )
+
+    expect(targetIds).toEqual(['other'])
+  })
+
+  it('Philosopher queues gained night-action roles for immediate wake', () => {
+    const clockmaker = getRole('clockmaker')
+    expect(clockmaker).toBeDefined()
+    if (!clockmaker) return
+
+    expect(getPhilosopherQueuePolicyForChosenRole(clockmaker)).toBe(
+      'act_immediately_force',
+    )
+  })
+
+  it('Philosopher does not queue gained roles without a night action', () => {
+    const artist = getRole('artist')
+    expect(artist).toBeDefined()
+    if (!artist) return
+
+    expect(getPhilosopherQueuePolicyForChosenRole(artist)).toBeUndefined()
   })
 })

@@ -163,7 +163,6 @@ const ROLE_WAKE_HIERARCHY: Record<RoleId, RoleWakeHierarchy> = {
     otherNights: { bucket: 'manipulation', priority: 4 },
   },
   pit_hag: {
-    firstNight: { bucket: 'manipulation', priority: 5 },
     otherNights: { bucket: 'manipulation', priority: 5 },
   },
   fang_gu: {

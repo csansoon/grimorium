@@ -284,12 +284,13 @@ export function RoleDeal({
                 className='w-full bg-white/5 border border-parchment-500/30 text-parchment-100 placeholder-parchment-500 rounded-xl px-4 py-3 focus:outline-none focus:border-mystic-gold/50 focus:ring-1 focus:ring-mystic-gold/30 transition-colors'
               />
 
-              <div className='flex gap-3 mt-4'>
+              <div className='flex flex-col sm:flex-row gap-3 mt-4'>
                 <Button
                   onClick={handleCloseReveal}
                   variant='secondary'
                   size='default'
                   fullWidth
+                  className='sm:flex-1'
                 >
                   {t.common.back}
                 </Button>
@@ -298,6 +299,7 @@ export function RoleDeal({
                   variant={activeTeam.isEvil ? 'evil' : 'gold'}
                   size='default'
                   fullWidth
+                  className='sm:flex-1'
                   disabled={!nameDraft.trim()}
                 >
                   <Icon name='check' size='sm' className='mr-1' />

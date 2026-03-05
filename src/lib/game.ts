@@ -10,7 +10,7 @@ import {
   hasEffect,
   getAlivePlayers,
 } from './types'
-import { isMalfunctioning } from './effects'
+import { getEffect, isMalfunctioning } from './effects'
 import {
   getAlignmentForTeam,
   getCurrentRole,
@@ -33,8 +33,13 @@ import {
   applyPipelineChanges,
   checkDynamicWinConditions,
 } from './pipeline'
-import { canWakeAtNight } from './roles/runtime-helpers'
+import {
+  canWakeAtNight,
+  getFalseInfoMode,
+  type FalseInfoMode,
+} from './roles/runtime-helpers'
 import { NominateIntent, ExecuteIntent } from './pipeline/types'
+import type { WinConditionTrigger } from './pipeline/types'
 import { trackEvent } from './analytics'
 
 // ============================================================================
@@ -411,7 +416,7 @@ export function getNextStep(game: Game): GameStep {
     )
     const queueDirectives = getResolvedNightQueueDirectives(game)
 
-    for (const systemStep of getNightSystemSteps(state)) {
+    for (const systemStep of getNightSystemSteps(game, state)) {
       const key = getNightActionKey(
         systemStep.playerId,
         systemStep.roleId,
@@ -453,6 +458,7 @@ export function getNextStep(game: Game): GameStep {
       if (!queued) continue
 
       const { player, role } = queued
+      const forceImmediate = queueDirectives.forceImmediateKeys.has(key)
       if (!canWakeAtNight(game, player, role)) {
         return {
           type: 'night_action_skip',
@@ -460,7 +466,7 @@ export function getNextStep(game: Game): GameStep {
           roleId: role.id,
         }
       }
-      if (role.shouldWake && !role.shouldWake(game, player)) {
+      if (!forceImmediate && role.shouldWake && !role.shouldWake(game, player)) {
         return {
           type: 'night_action_skip',
           playerId: player.id,
@@ -531,7 +537,11 @@ function getNightActionKey(
     : `${playerId}:${roleId}`
 }
 
-export type NightSystemStepId = 'minion_info' | 'demon_info' | 'demon_bluffs'
+export type NightSystemStepId =
+  | 'minion_info'
+  | 'demon_info'
+  | 'demon_bluffs'
+  | 'demon_creation_deaths'
 
 type NightSystemStep = {
   systemStepId: NightSystemStepId
@@ -543,60 +553,121 @@ type NightSystemStep = {
   skippedReasonCode?: NightRoleStatus['skippedReasonCode']
 }
 
-function getNightSystemSteps(state: GameState): NightSystemStep[] {
-  if (state.phase !== 'night' || state.round !== 1) return []
+function findPitHagDemonCreationContext(
+  game: Game,
+  state: GameState,
+): {
+  playerId: string
+  playerName: string
+  roleId: string
+} | null {
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  if (nightStartIndex === -1) return null
 
-  const evilInfoPlan = resolveEvilInfoPlan(state)
-  const skippedReasonCode = evilInfoPlan.reasonTags.includes(
-    'global:under_seven_players',
-  )
-    ? 'evil_info_under_seven'
-    : undefined
+  for (const entry of game.history.slice(nightStartIndex + 1)) {
+    if (entry.type !== 'role_changed') continue
+    if (entry.data.sourceCause !== 'pit_hag_change') continue
 
-  const steps: NightSystemStep[] = []
+    const fromRoleId = entry.data.fromRole as string | undefined
+    const toRoleId = entry.data.toRole as string | undefined
+    if (!fromRoleId || !toRoleId) continue
 
-  for (const player of state.players) {
-    if (getCurrentTeam(player) !== 'minion') continue
-    steps.push({
-      systemStepId: 'minion_info',
-      roleId: getCurrentRoleId(player),
-      playerId: player.id,
-      playerName: player.name,
-      dashboardKind: 'minion_info',
-      shouldRun: shouldShowMinionEvilTeamStep(state, evilInfoPlan),
-      skippedReasonCode,
-    })
+    const fromTeam = getRole(fromRoleId)?.team
+    const toTeam = getRole(toRoleId)?.team
+    if (toTeam !== 'demon' || fromTeam === 'demon') continue
+
+    const sourcePlayerId =
+      (entry.data.sourcePlayerId as string | undefined) ??
+      (entry.data.playerId as string | undefined)
+    if (!sourcePlayerId) continue
+
+    const sourcePlayer = state.players.find(
+      (candidate) => candidate.id === sourcePlayerId,
+    )
+    if (!sourcePlayer) continue
+
+    const sourceRoleId = entry.data.sourceRoleId as string | undefined
+
+    return {
+      playerId: sourcePlayer.id,
+      playerName: sourcePlayer.name,
+      roleId: sourceRoleId ?? getCurrentRoleId(sourcePlayer),
+    }
   }
 
-  for (const player of state.players) {
-    if (getCurrentTeam(player) !== 'demon') continue
+  return null
+}
+
+function getNightSystemSteps(game: Game, state: GameState): NightSystemStep[] {
+  if (state.phase !== 'night') return []
+  const steps: NightSystemStep[] = []
+
+  if (state.round === 1) {
+    const evilInfoPlan = resolveEvilInfoPlan(state)
+    const skippedReasonCode = evilInfoPlan.reasonTags.includes(
+      'global:under_seven_players',
+    )
+      ? 'evil_info_under_seven'
+      : undefined
+
+    for (const player of state.players) {
+      if (getCurrentTeam(player) !== 'minion') continue
+      steps.push({
+        systemStepId: 'minion_info',
+        roleId: getCurrentRoleId(player),
+        playerId: player.id,
+        playerName: player.name,
+        dashboardKind: 'minion_info',
+        shouldRun: shouldShowMinionEvilTeamStep(state, evilInfoPlan),
+        skippedReasonCode,
+      })
+    }
+
+    for (const player of state.players) {
+      if (getCurrentTeam(player) !== 'demon') {
+        continue
+      }
+      steps.push({
+        systemStepId: 'demon_info',
+        roleId: getCurrentRoleId(player),
+        playerId: player.id,
+        playerName: player.name,
+        dashboardKind: 'demon_info',
+        shouldRun: shouldShowDemonMinionStep(state, evilInfoPlan),
+        skippedReasonCode,
+      })
+      steps.push({
+        systemStepId: 'demon_bluffs',
+        roleId: getCurrentRoleId(player),
+        playerId: player.id,
+        playerName: player.name,
+        dashboardKind: 'demon_bluffs',
+        shouldRun: evilInfoPlan.demonLearnsBluffs,
+      })
+    }
+  }
+
+  const demonCreationContext = findPitHagDemonCreationContext(game, state)
+  if (demonCreationContext) {
     steps.push({
-      systemStepId: 'demon_info',
-      roleId: getCurrentRoleId(player),
-      playerId: player.id,
-      playerName: player.name,
-      dashboardKind: 'demon_info',
-      shouldRun: shouldShowDemonMinionStep(state, evilInfoPlan),
-      skippedReasonCode,
-    })
-    steps.push({
-      systemStepId: 'demon_bluffs',
-      roleId: getCurrentRoleId(player),
-      playerId: player.id,
-      playerName: player.name,
-      dashboardKind: 'demon_bluffs',
-      shouldRun: evilInfoPlan.demonLearnsBluffs,
+      systemStepId: 'demon_creation_deaths',
+      roleId: demonCreationContext.roleId,
+      playerId: demonCreationContext.playerId,
+      playerName: demonCreationContext.playerName,
+      dashboardKind: 'demon_creation_deaths',
+      shouldRun: true,
     })
   }
 
   return steps
 }
 
-type NightQueueDirective = 'skip' | 'immediate'
+type NightQueueDirective = 'skip' | 'immediate' | 'immediate_force'
 
 type ResolvedNightQueueDirectives = {
   skipKeys: Set<string>
   immediateKeys: string[]
+  forceImmediateKeys: Set<string>
 }
 
 function getResolvedNightQueueDirectives(
@@ -604,7 +675,11 @@ function getResolvedNightQueueDirectives(
 ): ResolvedNightQueueDirectives {
   const nightStartIndex = findLastEventIndex(game, 'night_started')
   if (nightStartIndex === -1) {
-    return { skipKeys: new Set(), immediateKeys: [] }
+    return {
+      skipKeys: new Set(),
+      immediateKeys: [],
+      forceImmediateKeys: new Set(),
+    }
   }
 
   const actedKeys = new Set(
@@ -625,6 +700,7 @@ function getResolvedNightQueueDirectives(
 
   const directives = new Map<string, NightQueueDirective>()
   const immediateOrder: string[] = []
+  const forceImmediateKeys = new Set<string>()
 
   for (const entry of game.history.slice(nightStartIndex + 1)) {
     if (entry.type !== 'night_queue_directive') continue
@@ -645,13 +721,21 @@ function getResolvedNightQueueDirectives(
       const previousIndex = immediateOrder.indexOf(key)
       if (previousIndex !== -1) immediateOrder.splice(previousIndex, 1)
       immediateOrder.push(key)
+    } else if (directive === 'immediate_force') {
+      const previousIndex = immediateOrder.indexOf(key)
+      if (previousIndex !== -1) immediateOrder.splice(previousIndex, 1)
+      immediateOrder.push(key)
+      forceImmediateKeys.add(key)
     }
   }
 
   const skipKeys = new Set<string>()
   const immediateKeys = immediateOrder.filter((key) => {
     if (actedKeys.has(key)) return false
-    return directives.get(key) === 'immediate'
+    return (
+      directives.get(key) === 'immediate' ||
+      directives.get(key) === 'immediate_force'
+    )
   })
 
   for (const [key, directive] of directives.entries()) {
@@ -661,7 +745,7 @@ function getResolvedNightQueueDirectives(
     }
   }
 
-  return { skipKeys, immediateKeys }
+  return { skipKeys, immediateKeys, forceImmediateKeys }
 }
 
 // ============================================================================
@@ -1244,8 +1328,148 @@ export function checkEndOfDayWinConditions(
   return checkDynamicWinConditions(state, game, ['end_of_day'])
 }
 
+export type WinReasonCode =
+  | 'all_demons_dead'
+  | 'final_two_alive'
+  | 'vortox_no_execution'
+  | 'martyrdom_execution'
+  | 'evil_twin_good_executed'
+  | 'evil_twin_evil_executed'
+  | 'mayor_peaceful_victory'
+  | 'special_ability'
+
+type WinReasonDetails = {
+  code: WinReasonCode
+  sourceRoleId?: string
+  sourceEffectType?: string
+}
+
+function hadExecutionSinceLastDayStart(game: Game): boolean {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return false
+
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    const type = game.history[i].type
+    if (type === 'execution' || type === 'virgin_execution') {
+      return true
+    }
+  }
+
+  return false
+}
+
+function inferSpecialAbilitySource(
+  state: GameState,
+  game: Game,
+  winner: 'townsfolk' | 'demon',
+): Pick<WinReasonDetails, 'sourceRoleId' | 'sourceEffectType'> {
+  const triggers: WinConditionTrigger[] = [
+    'after_execution',
+    'after_state_change',
+    'end_of_day',
+  ]
+
+  for (const player of state.players) {
+    if (isMalfunctioning(player)) continue
+
+    for (const effect of player.effects) {
+      const effectDef = getEffect(effect.type)
+      if (!effectDef?.winConditions) continue
+
+      for (const winCondition of effectDef.winConditions) {
+        if (!triggers.includes(winCondition.trigger)) continue
+        if (winCondition.check(state, game) === winner) {
+          return { sourceEffectType: effect.type }
+        }
+      }
+    }
+  }
+
+  for (const player of state.players) {
+    if (isMalfunctioning(player)) continue
+
+    const role = getCurrentRole(player)
+    if (!role?.winConditions) continue
+
+    for (const winCondition of role.winConditions) {
+      if (!triggers.includes(winCondition.trigger)) continue
+      if (winCondition.check(state, game) === winner) {
+        return { sourceRoleId: role.id }
+      }
+    }
+  }
+
+  return {}
+}
+
+function inferWinReason(
+  state: GameState,
+  game: Game,
+  winner: 'townsfolk' | 'demon',
+): WinReasonDetails {
+  const alivePlayers = getAlivePlayers(state)
+  const aliveDemons = alivePlayers.filter((player) => getCurrentTeam(player) === 'demon')
+
+  if (winner === 'townsfolk' && aliveDemons.length === 0) {
+    return { code: 'all_demons_dead' }
+  }
+
+  if (winner === 'demon' && alivePlayers.length <= 2 && aliveDemons.length > 0) {
+    return { code: 'final_two_alive' }
+  }
+
+  const hasExecutionToday = hadExecutionSinceLastDayStart(game)
+  const hasVortoxRule = state.players.some((player) =>
+    player.effects.some((effect) => effect.type === 'vortox_rule'),
+  )
+  if (winner === 'demon' && hasVortoxRule && !hasExecutionToday) {
+    return { code: 'vortox_no_execution' }
+  }
+
+  const lastEntry = game.history.at(-1)
+  if (
+    lastEntry &&
+    (lastEntry.type === 'execution' || lastEntry.type === 'virgin_execution')
+  ) {
+    const executedId = (lastEntry.data.playerId ??
+      lastEntry.data.nominatorId) as string | undefined
+    const executedPlayer = executedId
+      ? state.players.find((player) => player.id === executedId)
+      : null
+
+    if (executedPlayer?.effects.some((effect) => effect.type === 'martyrdom')) {
+      return { code: 'martyrdom_execution' }
+    }
+
+    const twinLink = executedPlayer?.effects.find(
+      (effect) => effect.type === 'evil_twin_link',
+    )
+    if (twinLink) {
+      return {
+        code:
+          twinLink.data?.isEvilTwin === true
+            ? 'evil_twin_evil_executed'
+            : 'evil_twin_good_executed',
+      }
+    }
+  }
+
+  const hasAliveMayor = alivePlayers.some(
+    (player) => player.roleId === 'mayor' && !isMalfunctioning(player),
+  )
+  if (winner === 'townsfolk' && alivePlayers.length === 3 && hasAliveMayor && !hasExecutionToday) {
+    return { code: 'mayor_peaceful_victory' }
+  }
+
+  return {
+    code: 'special_ability',
+    ...inferSpecialAbilitySource(state, game, winner),
+  }
+}
+
 export function endGame(game: Game, winner: 'townsfolk' | 'demon'): Game {
   const state = getCurrentState(game)
+  const winReason = inferWinReason(state, game, winner)
   trackEvent('game_finished', {
     winner,
     player_count: state.players.length,
@@ -1263,7 +1487,12 @@ export function endGame(game: Game, winner: 'townsfolk' | 'demon'): Game {
           key: winner === 'townsfolk' ? 'history.goodWins' : 'history.evilWins',
         },
       ],
-      data: { winner },
+      data: {
+        winner,
+        winReason: winReason.code,
+        winReasonSourceRoleId: winReason.sourceRoleId,
+        winReasonSourceEffectType: winReason.sourceEffectType,
+      },
     },
     { phase: 'ended', winner },
   )
@@ -1394,8 +1623,13 @@ export type NightRoleStatus = {
   playerName: string
   status: 'pending' | 'done' | 'skipped'
   malfunctioning?: boolean
+  falseInfoMode?: FalseInfoMode | null
   systemStepId?: NightSystemStepId
-  dashboardKind?: 'minion_info' | 'demon_info' | 'demon_bluffs'
+  dashboardKind?:
+    | 'minion_info'
+    | 'demon_info'
+    | 'demon_bluffs'
+    | 'demon_creation_deaths'
   skippedReasonCode?: 'evil_info_under_seven'
 }
 
@@ -1446,7 +1680,7 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
   const result: NightRoleStatus[] = []
   const insertedImmediate = new Set<string>()
 
-  for (const systemStep of getNightSystemSteps(state)) {
+  for (const systemStep of getNightSystemSteps(game, state)) {
     const key = getNightActionKey(
       systemStep.playerId,
       systemStep.roleId,
@@ -1482,8 +1716,10 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
     if (!queued) continue
 
     const { player, role } = queued
+    const forceImmediate = queueDirectives.forceImmediateKeys.has(key)
     if (!canWakeAtNight(game, player, role)) continue
-    const shouldWake = !role.shouldWake || role.shouldWake(game, player)
+    const shouldWake =
+      forceImmediate || !role.shouldWake || role.shouldWake(game, player)
     if (!shouldWake) continue
 
     result.push({
@@ -1491,6 +1727,7 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
       playerId: player.id,
       playerName: player.name,
       malfunctioning: isMalfunctioning(player),
+      falseInfoMode: getFalseInfoMode(state, player),
       status: 'pending',
     })
     insertedImmediate.add(key)
@@ -1513,6 +1750,7 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
           playerId: player.id,
           playerName: player.name,
           malfunctioning: isMalfunctioning(player),
+          falseInfoMode: getFalseInfoMode(state, player),
           status: 'done',
         })
       } else {
@@ -1521,6 +1759,7 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
           playerId: player.id,
           playerName: player.name,
           malfunctioning: isMalfunctioning(player),
+          falseInfoMode: getFalseInfoMode(state, player),
           status: 'skipped',
         })
       }
@@ -1536,6 +1775,7 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
           playerId: player.id,
           playerName: player.name,
           malfunctioning: isMalfunctioning(player),
+          falseInfoMode: getFalseInfoMode(state, player),
           status: 'pending',
         })
       }

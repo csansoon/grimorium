@@ -15,6 +15,7 @@ function EvilTwinRevealAction({
   const player = state.players.find((candidate) => candidate.id === playerId)
   const effect = player?.effects.find((candidate) => candidate.type === 'evil_twin_reveal_pending')
   const counterpartId = effect?.data?.counterpartId as string | undefined
+  const isEvilTwin = effect?.data?.isEvilTwin === true
   const counterpart = state.players.find((candidate) => candidate.id === counterpartId)
   if (!player || !counterpart) return null
 
@@ -30,7 +31,7 @@ function EvilTwinRevealAction({
               Evil Twin
             </h1>
             <p className='text-parchment-300 text-base max-w-xs mb-6'>
-              One of you is the Evil Twin.
+              {isEvilTwin ? t.game.yourGoodTwinIs : t.game.yourEvilTwinIs}
             </p>
             <div className='rounded-2xl border border-indigo-400/20 bg-white/5 px-4 py-4 w-full max-w-sm'>
               <div className='text-lg font-semibold text-parchment-100'>

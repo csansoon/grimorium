@@ -14,12 +14,22 @@ import { ScreenFooter } from '../../../../../components/layouts/ScreenFooter'
 import { PlayerFacingScreen } from '../../../../../components/layouts/PlayerFacingScreen'
 import { GOOD_ROLE_IDS } from '../helpers'
 import { buildTransformationStateChanges } from '../../../../transformations'
+import {
+  TransformationQueuePolicy,
+} from '../../../../transformations'
 
 import en from './i18n/en'
 import es from './i18n/es'
 
 registerRoleTranslations('philosopher', 'en', en)
 registerRoleTranslations('philosopher', 'es', es)
+
+export function getPhilosopherQueuePolicyForChosenRole(
+  role: RoleDefinition,
+): TransformationQueuePolicy | undefined {
+  if (!role.NightAction) return undefined
+  return 'act_immediately_force'
+}
 
 const definition: RoleDefinition = {
   id: 'philosopher',
@@ -47,6 +57,8 @@ const definition: RoleDefinition = {
 
     const complete = () => {
       if (!selectedRoleId) return
+      const selectedRole = goodRoles.find((role) => role.id === selectedRoleId)
+      if (!selectedRole) return
       const drunkTarget = state.players.find(
         (candidate) =>
           candidate.id !== player.id && candidate.roleId === selectedRoleId,
@@ -63,6 +75,7 @@ const definition: RoleDefinition = {
             playerId: player.id,
             newRoleId: selectedRoleId,
             reveal: 'pending',
+            queuePolicy: getPhilosopherQueuePolicyForChosenRole(selectedRole),
             includeNewRoleInitialEffects: true,
           },
         ],
@@ -94,7 +107,18 @@ const definition: RoleDefinition = {
           ...transformation.addEffects,
           ...(drunkTarget
             ? {
-                [drunkTarget.id]: [{ type: 'drunk', expiresAt: 'never' }],
+                [drunkTarget.id]: [
+                  {
+                    type: 'drunk',
+                    data: {
+                      source: 'philosopher',
+                      philosopherId: player.id,
+                      chosenRoleId: selectedRoleId,
+                    },
+                    sourcePlayerId: player.id,
+                    expiresAt: 'never',
+                  },
+                ],
               }
             : {}),
         },

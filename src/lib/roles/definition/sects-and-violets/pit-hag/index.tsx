@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { RoleDefinition } from '../../../types'
-import { isAlive } from '../../../../types'
+import {
+  Game,
+  GameState,
+  PlayerState,
+  getCurrentState,
+  isAlive,
+} from '../../../../types'
 import {
   registerRoleTranslations,
   getRoleTranslations,
@@ -13,13 +19,42 @@ import { Button, Icon, BackButton } from '../../../../../components/atoms'
 import { ScreenFooter } from '../../../../../components/layouts/ScreenFooter'
 import { getRolesForGame } from '../../../index'
 import { canActWhileDeadUnderVigormortis } from '../../../runtime-helpers'
-import { buildTransformationStateChanges } from '../../../../transformations'
+import {
+  buildTransformationStateChanges,
+  type TransformationQueuePolicy,
+} from '../../../../transformations'
+import { getCurrentAlignment, getCurrentRoleId } from '../../../../identity'
 
 import en from './i18n/en'
 import es from './i18n/es'
 
 registerRoleTranslations('pit_hag', 'en', en)
 registerRoleTranslations('pit_hag', 'es', es)
+
+export function isPitHagRoleAlreadyInPlay(
+  state: Pick<GameState, 'players'>,
+  roleId: string,
+): boolean {
+  return state.players.some((candidate) => getCurrentRoleId(candidate) === roleId)
+}
+
+export function getPitHagQueuePolicyForNewRole(
+  game: Game,
+  target: PlayerState,
+  newRole: RoleDefinition,
+): TransformationQueuePolicy | undefined {
+  if (!newRole.NightAction) return undefined
+
+  const shouldWake = newRole.shouldWake
+    ? newRole.shouldWake(game, { ...target, roleId: newRole.id })
+    : true
+
+  if (!shouldWake) {
+    return 'act_immediately_force'
+  }
+
+  return undefined
+}
 
 const definition: RoleDefinition = {
   id: 'pit_hag',
@@ -28,7 +63,8 @@ const definition: RoleDefinition = {
   nightOrder: 8,
   chaos: 82,
   shouldWake: (game, player) =>
-    isAlive(player) || canActWhileDeadUnderVigormortis(game, player),
+    getCurrentState(game).round > 1 &&
+    (isAlive(player) || canActWhileDeadUnderVigormortis(game, player)),
 
   RoleReveal: DefaultRoleReveal,
 
@@ -40,6 +76,9 @@ const definition: RoleDefinition = {
     const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
     const target = state.players.find((candidate) => candidate.id === selectedPlayerId) ?? null
     const scriptRoles = getRolesForGame(game)
+    const selectedRoleAlreadyInPlay = Boolean(
+      selectedRoleId && isPitHagRoleAlreadyInPlay(state, selectedRoleId),
+    )
 
     if (phase === 'select_role') {
       return (
@@ -75,11 +114,43 @@ const definition: RoleDefinition = {
               }
               selectionCount={1}
             />
+            {selectedRoleAlreadyInPlay && (
+              <div className='mt-3 rounded-xl border border-amber-500/40 bg-amber-900/20 px-3 py-2 text-amber-300 text-xs'>
+                {roleT.roleAlreadyInPlayWarning ??
+                  'This character is already in play. If confirmed, no transformation will occur.'}
+              </div>
+            )}
           </div>
           <ScreenFooter borderColor='border-red-500/30'>
             <Button
               onClick={() => {
                 if (!target || !selectedRoleId) return
+                if (selectedRoleAlreadyInPlay) {
+                  onComplete({
+                    entries: [
+                      {
+                        type: 'night_action',
+                        message: [
+                          {
+                            type: 'text',
+                            content: `${player.name} chose to change ${target.name} into ${getRoleName(selectedRoleId, language)}, but that character is already in play, so nothing happened.`,
+                          },
+                        ],
+                        data: {
+                          roleId: 'pit_hag',
+                          playerId: player.id,
+                          action: 'pit_hag_change',
+                          targetId: target.id,
+                          newRoleId: selectedRoleId,
+                          noChange: true,
+                          reason: 'already_in_play',
+                        },
+                      },
+                    ],
+                  })
+                  return
+                }
+                const selectedRole = scriptRoles.find((role) => role.id === selectedRoleId)
                 const transformation = buildTransformationStateChanges(state, {
                   kind: 'role_change',
                   source: {
@@ -91,7 +162,11 @@ const definition: RoleDefinition = {
                     {
                       playerId: target.id,
                       newRoleId: selectedRoleId,
+                      newAlignment: getCurrentAlignment(target),
                       reveal: 'pending',
+                      queuePolicy: selectedRole
+                        ? getPitHagQueuePolicyForNewRole(game, target, selectedRole)
+                        : undefined,
                       includeNewRoleInitialEffects: true,
                     },
                   ],

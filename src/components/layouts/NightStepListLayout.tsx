@@ -93,11 +93,11 @@ export function NightStepListLayout({
       )}
     >
       {/* Header */}
-      <div className='px-4 py-6 text-center'>
-        <div className='flex justify-center mb-4'>
+      <div className='px-4 py-4 sm:py-6 text-center'>
+        <div className='flex justify-center mb-3 sm:mb-4'>
           <div
             className={cn(
-              'w-20 h-20 rounded-full flex items-center justify-center border',
+              'w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center border',
               isEvil
                 ? 'bg-red-900/30 border-red-600/40'
                 : 'bg-indigo-500/10 border-indigo-400/30',
@@ -105,7 +105,7 @@ export function NightStepListLayout({
           >
             <Icon
               name={icon}
-              size='3xl'
+              size='2xl'
               className={cn(
                 isEvil ? 'text-red-400 text-glow-crimson' : 'text-indigo-400',
               )}
@@ -113,7 +113,7 @@ export function NightStepListLayout({
           </div>
         </div>
 
-        <h1 className='font-tarot text-xl text-parchment-100 tracking-wider uppercase mb-1'>
+        <h1 className='font-tarot text-lg sm:text-xl text-parchment-100 tracking-wider uppercase mb-1'>
           {roleName}
         </h1>
         <p
@@ -127,7 +127,7 @@ export function NightStepListLayout({
       </div>
 
       {/* Steps List */}
-      <div className='flex-1 px-4 pb-6 max-w-lg mx-auto w-full'>
+      <div className='flex-1 px-4 pb-4 sm:pb-6 max-w-lg mx-auto w-full overflow-y-auto'>
         <div className='flex items-center gap-2 mb-3 px-1'>
           <Icon
             name='listOrdered'

@@ -10,7 +10,7 @@ const es = {
   infoTitle: 'Oraculo',
   countLabel: 'Jugadores muertos malvados',
   configureTitle: 'Configurar Oraculo',
-  configureDescription: 'Elige el numero que se mostrara si el Oraculo esta afectado.',
+  configureDescription: 'Revisa y ajusta el numero antes de mostrar el resultado.',
   configureConfirm: 'Mostrar resultado',
 } as const
 

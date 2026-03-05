@@ -72,7 +72,7 @@ export function CardShell({ teamId, icon, children }: CardShellProps) {
 
   return (
     <div
-      className='animate-card-summon w-full max-w-sm mx-auto'
+      className='animate-card-summon w-full max-w-[17.5rem] sm:max-w-sm mx-auto'
       style={
         {
           '--glow-color': team.colors.cardGlow,
@@ -114,7 +114,7 @@ export function CardShell({ teamId, icon, children }: CardShellProps) {
         ))}
 
         {/* Card Content */}
-        <div className='relative z-10 px-4 py-5 sm:px-8 sm:py-10 bg-parchment-texture flex-1 flex flex-col justify-center'>
+        <div className='relative z-10 px-3 py-4 sm:px-8 sm:py-10 bg-parchment-texture flex-1 flex flex-col justify-center'>
           {children}
         </div>
       </div>

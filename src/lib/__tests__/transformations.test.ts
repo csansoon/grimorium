@@ -75,6 +75,27 @@ describe('buildTransformationStateChanges', () => {
     expect(changes.changeAlignments).toEqual({ p1: 'evil' })
   })
 
+  it('preserves explicit alignment even when role changes team', () => {
+    const state = makeState({
+      players: [makePlayer({ id: 'p1', roleId: 'artist' })],
+    })
+
+    const changes = buildTransformationStateChanges(state, {
+      kind: 'role_change',
+      source: { cause: 'pit_hag_change' },
+      targets: [
+        {
+          playerId: 'p1',
+          newRoleId: 'vortox',
+          newAlignment: 'good',
+        },
+      ],
+    })
+
+    expect(changes.changeRoles).toEqual({ p1: 'vortox' })
+    expect(changes.changeAlignments).toEqual({ p1: 'good' })
+  })
+
   it('can include initial effects of the new role', () => {
     const state = makeState({
       players: [makePlayer({ id: 'p1', roleId: 'villager' })],

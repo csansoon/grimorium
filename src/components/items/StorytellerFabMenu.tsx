@@ -14,6 +14,7 @@ type Props = {
   onShowCharacters: () => void
   onTakeNotes: () => void
   onShowHistory: () => void
+  onRevealAlignment: () => void
 }
 
 function MenuAction({ action }: { action: Action }) {
@@ -37,6 +38,7 @@ export function StorytellerFabMenu({
   onShowCharacters,
   onTakeNotes,
   onShowHistory,
+  onRevealAlignment,
 }: Props) {
   const { t } = useI18n()
 
@@ -64,6 +66,12 @@ export function StorytellerFabMenu({
       icon: 'history',
       label: t.common.history,
       onSelect: onShowHistory,
+    },
+    {
+      id: 'alignment',
+      icon: 'scale',
+      label: t.game.revealAlignment,
+      onSelect: onRevealAlignment,
     },
   ]
 

@@ -12,7 +12,7 @@ const en = {
   yesLabel: 'Yes',
   noLabel: 'No',
   configureTitle: 'Configure Town Crier',
-  configureDescription: 'Choose the answer to show if the Town Crier is malfunctioning.',
+  configureDescription: 'Review and adjust the answer before showing the result.',
 } as const
 
 export default en

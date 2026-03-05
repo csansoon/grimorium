@@ -13,6 +13,7 @@ import {
 import { useI18n, getRoleName } from '../../lib/i18n'
 import { Button, Icon } from '../atoms'
 import { RichMessage as RichMessageDisplay } from '../items/RichMessage'
+import { SYSTEM_DEMON_CREATION_DEATHS_ACTION } from '../../lib/nightSystem'
 import {
   EvilTeamReveal,
   MysticDivider,
@@ -126,6 +127,9 @@ function getReplayTitle(
   if (action === 'first_night_info') {
     return roleId === 'imp' ? t.game.demonInfo : t.game.minionInfo
   }
+  if (action === SYSTEM_DEMON_CREATION_DEATHS_ACTION) {
+    return t.game.demonCreationDeaths
+  }
   if (
     action === 'kill' ||
     action === 'fang_gu_kill' ||
@@ -142,6 +146,7 @@ function getReplayTitle(
   if (action === 'view_grimoire') return t.game.stepViewGrimoire
   if (action === 'check') return t.game.stepSelectPlayers
   if (action === 'dreamer_info') return t.game.stepShowResult
+  if (action === 'savant_info') return t.game.stepShowResult
   if (action === 'saw_role' || action === 'saw_executed') return t.game.stepShowRole
   return t.game.actionSummary
 }
@@ -246,6 +251,22 @@ function ReplayEntry({
             </div>
           ))}
         </div>
+      </ReplaySection>
+    )
+  }
+
+  if (action === SYSTEM_DEMON_CREATION_DEATHS_ACTION) {
+    const targetIds = Array.isArray(entry.data.targetIds)
+      ? (entry.data.targetIds as string[])
+      : []
+
+    return (
+      <ReplaySection title={t.game.demonCreationDeaths}>
+        {targetIds.length > 0 ? (
+          <ReplayPlayerChips state={snapshotState} ids={targetIds} />
+        ) : (
+          <div className='text-sm text-parchment-500'>{t.game.dawnNoDeaths}</div>
+        )}
       </ReplaySection>
     )
   }
@@ -384,6 +405,48 @@ function ReplayEntry({
     )
   }
 
+  if (action === 'savant_info') {
+    const statements = Array.isArray(entry.data.statements)
+      ? (entry.data.statements as string[]).filter(
+          (statement): statement is string =>
+            typeof statement === 'string' && statement.trim().length > 0,
+        )
+      : []
+
+    return (
+      <ReplaySection title={getReplayTitle(entry, t)}>
+        <TeamBackground teamId='townsfolk'>
+          <OracleCard
+            icon='scrollText'
+            teamId='townsfolk'
+            title='Savant'
+            subtitle={viewer.name}
+          >
+            <div className='space-y-4 py-3'>
+              <p className='text-center text-parchment-300 text-sm'>
+                Two statements. One is true and one is false.
+              </p>
+              {statements.length === 0 ? (
+                <div className='rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-parchment-400'>
+                  {t.game.noActionRecorded}
+                </div>
+              ) : (
+                statements.map((statement, index) => (
+                  <div
+                    key={`${statement}-${index}`}
+                    className='rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-parchment-100 text-sm leading-relaxed'
+                  >
+                    {statement}
+                  </div>
+                ))
+              )}
+            </div>
+          </OracleCard>
+        </TeamBackground>
+      </ReplaySection>
+    )
+  }
+
   if (action === 'see_target') {
     const shownPlayers = Array.isArray(entry.data.shownPlayers)
       ? (entry.data.shownPlayers as string[])
@@ -476,12 +539,18 @@ function ReplayEntry({
   if (action === 'pit_hag_change') {
     const targetId = entry.data.targetId as string | undefined
     const newRoleId = entry.data.newRoleId as string | undefined
+    const noChange = Boolean(entry.data.noChange)
     return (
       <ReplaySection title={t.game.stepChooseTarget}>
         {targetId && <ReplayPlayerChips state={snapshotState} ids={[targetId]} />}
-        {newRoleId && (
+        {newRoleId && !noChange && (
           <div className='rounded-xl border border-white/10 bg-white/5 p-3'>
             <RoleCard roleId={newRoleId} />
+          </div>
+        )}
+        {noChange && (
+          <div className='rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 text-sm text-amber-200'>
+            {t.game.noActionRecorded}
           </div>
         )}
       </ReplaySection>

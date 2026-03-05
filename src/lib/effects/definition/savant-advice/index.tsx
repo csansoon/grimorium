@@ -7,6 +7,7 @@ import { Button, Icon, BackButton } from '../../../../components/atoms'
 import { ScreenFooter } from '../../../../components/layouts/ScreenFooter'
 import { PlayerFacingScreen } from '../../../../components/layouts/PlayerFacingScreen'
 import { OracleCard, TeamBackground } from '../../../../components/items'
+import { getFalseInfoMode } from '../../../roles/runtime-helpers'
 
 function SavantAdviceAction({
   state,
@@ -21,6 +22,7 @@ function SavantAdviceAction({
   const [phase, setPhase] = useState<'compose' | 'reveal'>('compose')
 
   if (!player) return null
+  const falseInfoMode = getFalseInfoMode(state, player)
 
   if (phase === 'reveal') {
     return (
@@ -114,6 +116,16 @@ function SavantAdviceAction({
       </div>
 
       <div className='flex-1 px-4 py-4 max-w-lg mx-auto w-full space-y-4'>
+        {falseInfoMode && (
+          <div className='rounded-lg bg-amber-900/40 border border-amber-500/40 px-3 py-2 flex items-start gap-2'>
+            <Icon name='flask' size='sm' className='text-amber-400 flex-shrink-0 mt-0.5' />
+            <span className='text-amber-300 text-xs'>
+              {falseInfoMode === 'vortox'
+                ? t.game.falseInfoReminder
+                : t.game.arbitraryInfoReminder}
+            </span>
+          </div>
+        )}
         <div>
           <label className='block text-xs uppercase tracking-[0.18em] text-parchment-500 mb-2'>
             First statement

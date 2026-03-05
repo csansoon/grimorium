@@ -102,6 +102,8 @@ const es: Translations = {
     narratorRoleChanged: 'Dale el dispositivo a {player} — su rol ha cambiado.',
     readyShowToPlayer: 'Listo - Mostrar al Jugador',
     yourRoleHasChanged: '¡Tu rol ha cambiado!',
+    yourGoodTwinIs: 'Tu gemelo bueno es...',
+    yourEvilTwinIs: 'Tu gemelo malvado es...',
 
     nightComplete: 'Noche {round} Completa',
     nightActionsResolved:
@@ -164,6 +166,24 @@ const es: Translations = {
     evilWins: '¡Gana el Mal!',
     townVanquishedDemon: '¡El pueblo ha vencido al Demonio!',
     demonConqueredTown: '¡El Demonio ha conquistado el pueblo!',
+    winTriggeredBy: 'Disparador de Victoria',
+    winReasonAllDemonsDead: 'Todos los Demonios están muertos.',
+    winReasonFinalTwoAlive:
+      'Solo quedan 2 jugadores con vida y al menos 1 es un Demonio.',
+    winReasonVortoxNoExecution:
+      'Regla de Vortox: no hubo ejecución hoy.',
+    winReasonMartyrdomExecution:
+      'Una ejecución activó una condición de victoria malvada tipo martirio.',
+    winReasonEvilTwinGoodExecuted:
+      'Se ejecutó al Gemelo Bueno.',
+    winReasonEvilTwinEvilExecuted:
+      'Se ejecutó al Gemelo Malvado.',
+    winReasonMayorPeacefulVictory:
+      'Se cumplió la condición de victoria pacífica del Alcalde.',
+    winReasonSpecialAbility:
+      'Se cumplió una condición de victoria por habilidad especial.',
+    winReasonSourceRole: 'Rol origen: {role}',
+    winReasonSourceEffect: 'Efecto origen: {effect}',
     finalRoles: 'Roles Finales',
     backToMainMenu: 'Volver al Menú Principal',
 
@@ -178,6 +198,14 @@ const es: Translations = {
     storytellerNotesPlaceholder:
       'Escribe faroles, confirmaciones suaves, recordatorios de fichas o cualquier otra cosa que quieras seguir.',
     viewHistory: 'Ver Historial',
+    revealAlignment: 'Revelar alineación',
+    selectPlayerForAlignmentReveal:
+      'Elige un jugador al que mostrar una alineación.',
+    chooseAlignmentToShow:
+      'Elige qué alineación mostrar a {player}.',
+    yourAlignmentIs: 'Tu alineación es',
+    youAreGood: 'Eres bueno',
+    youAreEvil: 'Eres malvado',
 
     // Shared narrator keys
     narratorSetup: 'Configuración del Cuentacuentos',
@@ -228,8 +256,14 @@ const es: Translations = {
       'Se omitió porque en partidas con menos de 7 jugadores el Demonio y los Secuaces no se conocen entre sí.',
     demonBluffsDescription:
       'Elige y muestra los tres faroles que este Demonio puede reclamar durante la partida.',
+    demonCreationDeaths: 'Muertes por Creación de Demonio',
+    demonCreationDeathsDescription:
+      'Se creó un Demonio esta noche. Elige qué jugadores mueren esta noche.',
+    demonCreationDeathsConfirm: 'Confirmar Muertes Nocturnas',
     allActionsComplete: 'Todas las acciones nocturnas han sido procesadas',
     proceedToDay: 'Proceder al Día',
+    goodTwinLabel: 'Gemelo Bueno',
+    evilTwinLabel: 'Gemelo Malvado',
 
     // Night Steps
     nightSteps: 'Pasos Nocturnos',
@@ -263,6 +297,11 @@ const es: Translations = {
     chooseFalseRole: '¿Qué rol debería ver?',
     keepOriginalRole: 'Mantener {role}',
     malfunctionWarning: 'Mal Funcionamiento',
+    falseInfoRequired: 'Información Falsa Requerida',
+    arbitraryInfoReminder:
+      'Esta habilidad está envenenada o borracha, así que el resultado puede ser arbitrario o poco fiable. Elige qué mostrar antes de despertar al jugador.',
+    falseInfoReminder:
+      'Vortox está en juego, así que esta habilidad de Aldeanos debe dar información falsa esta noche. Elige el resultado falso antes de despertar al jugador.',
 
     // Setup Actions
     setupActions: 'Acciones de Configuración',
@@ -365,12 +404,12 @@ const es: Translations = {
     minion: {
       name: 'Secuaz',
       winCondition:
-        '¡Ayuda a tu Demonio a sobrevivir! El mal gana cuando los jugadores malvados igualan o superan a los buenos.',
+        '¡Ayuda a tu Demonio a sobrevivir! El mal gana cuando solo quedan 2 jugadores con vida y al menos 1 es un Demonio (o por habilidades especiales).',
     },
     demon: {
       name: 'Demonio',
       winCondition:
-        'El mal gana cuando los jugadores malvados igualan o superan a los buenos. ¡Permanece oculto y elimina al pueblo!',
+        'Permanece oculto y elimina al pueblo. El mal gana cuando solo quedan 2 jugadores con vida (o por habilidades especiales).',
     },
   },
 

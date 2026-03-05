@@ -7,9 +7,16 @@ function stripDerivedEffects(player: PlayerState): PlayerState {
   return {
     ...player,
     effects: player.effects.filter((effect) => {
-      if (effect.type !== 'poisoned') return true
-      const source = effect.data?.source
-      return source !== 'no_dashii' && source !== 'vigormortis'
+      if (effect.type === 'poisoned') {
+        const source = effect.data?.source
+        return source !== 'no_dashii' && source !== 'vigormortis'
+      }
+
+      if (effect.type === 'drunk') {
+        return effect.data?.source !== 'philosopher'
+      }
+
+      return true
     }),
   }
 }
@@ -88,6 +95,34 @@ function findClosestAliveTownsfolkNeighbor(
 }
 
 export function syncDerivedEffects(state: GameState): GameState {
+  const philosopherDrunkLinks = new Map<
+    string,
+    {
+      targetId: string
+      sourcePlayerId: string
+      data?: Record<string, unknown>
+    }
+  >()
+
+  for (const player of state.players) {
+    for (const effect of player.effects) {
+      if (effect.type !== 'drunk') continue
+      if (effect.data?.source !== 'philosopher') continue
+
+      const sourcePlayerId =
+        effect.sourcePlayerId ??
+        (effect.data?.philosopherId as string | undefined)
+
+      if (!sourcePlayerId) continue
+
+      philosopherDrunkLinks.set(`${player.id}:${sourcePlayerId}`, {
+        targetId: player.id,
+        sourcePlayerId,
+        data: effect.data,
+      })
+    }
+  }
+
   const cleanPlayers = state.players.map(stripDerivedEffects)
   const cleanState = { ...state, players: cleanPlayers }
   const additions: Record<string, EffectToAdd[]> = {}
@@ -155,6 +190,30 @@ export function syncDerivedEffects(state: GameState): GameState {
         })
       }
     }
+  }
+
+  for (const link of philosopherDrunkLinks.values()) {
+    const sourcePlayer = cleanPlayers.find(
+      (player) => player.id === link.sourcePlayerId,
+    )
+
+    if (
+      !sourcePlayer ||
+      !isAlive(sourcePlayer) ||
+      isMalfunctioning(sourcePlayer)
+    ) {
+      continue
+    }
+
+    addEffect(additions, link.targetId, {
+      type: 'drunk',
+      data: link.data ?? {
+        source: 'philosopher',
+        philosopherId: link.sourcePlayerId,
+      },
+      sourcePlayerId: link.sourcePlayerId,
+      expiresAt: 'never',
+    })
   }
 
   if (Object.keys(additions).length === 0) return cleanState

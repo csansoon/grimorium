@@ -12,7 +12,7 @@ const es = {
   yesLabel: 'Si',
   noLabel: 'No',
   configureTitle: 'Configurar Chica de las Flores',
-  configureDescription: 'Elige la respuesta que se mostrara si esta afectada.',
+  configureDescription: 'Revisa y ajusta la respuesta antes de mostrar el resultado.',
 } as const
 
 export default es

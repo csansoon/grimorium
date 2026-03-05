@@ -10,6 +10,7 @@ export type TransformationQueuePolicy =
   | 'preserve'
   | 'skip_if_window_passed'
   | 'act_immediately'
+  | 'act_immediately_force'
 
 export type TransformationSource = {
   cause: string
@@ -119,6 +120,7 @@ export function buildTransformationStateChanges(
     const currentRoleId = getCurrentRoleId(player)
     const nextRoleId = target.newRoleId ?? currentRoleId
     const currentAlignment = getCurrentAlignment(player)
+    const hasExplicitAlignment = target.newAlignment !== undefined
     const nextAlignment = target.newAlignment ?? currentAlignment
 
     if (target.newRoleId && target.newRoleId !== currentRoleId) {
@@ -139,8 +141,8 @@ export function buildTransformationStateChanges(
       })
     }
 
-    if (target.newAlignment && target.newAlignment !== currentAlignment) {
-      changeAlignments[target.playerId] = target.newAlignment
+    if (hasExplicitAlignment) {
+      changeAlignments[target.playerId] = nextAlignment as Alignment
     }
 
     if (target.includeNewRoleInitialEffects && target.newRoleId) {
@@ -201,6 +203,19 @@ export function buildTransformationStateChanges(
           roleId: nextRoleId,
           playerId: target.playerId,
           directive: 'immediate',
+          sourceCause: plan.source.cause,
+        },
+      })
+    }
+
+    if (target.queuePolicy === 'act_immediately_force') {
+      entries.push({
+        type: 'night_queue_directive',
+        message: [],
+        data: {
+          roleId: nextRoleId,
+          playerId: target.playerId,
+          directive: 'immediate_force',
           sourceCause: plan.source.cause,
         },
       })

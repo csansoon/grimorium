@@ -48,7 +48,7 @@ export function OracleCard({
         {/* Title */}
         <h1
           className={cn(
-            'font-tarot text-xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2',
+            'font-tarot text-lg sm:text-3xl font-bold text-center uppercase tracking-[0.22em] sm:tracking-widest-xl mb-2',
             team.colors.cardText,
           )}
           style={{ textShadow: team.colors.cardIconGlow }}
@@ -59,7 +59,7 @@ export function OracleCard({
         {/* Subtitle (role name) */}
         <p
           className={cn(
-            'text-center text-xs tracking-widest uppercase mb-3 sm:mb-6',
+            'text-center text-[11px] tracking-[0.22em] sm:tracking-widest uppercase mb-3 sm:mb-6',
             team.colors.cardTeamBadge,
           )}
         >
@@ -109,13 +109,13 @@ export function NumberReveal({ value, label, teamId }: NumberRevealProps) {
       {/* Large number */}
       <div
         className={cn(
-          'inline-flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 rounded-full',
+          'inline-flex items-center justify-center w-16 h-16 sm:w-28 sm:h-28 rounded-full',
           team.colors.cardWinBg,
         )}
       >
         <span
           className={cn(
-            'font-tarot text-5xl sm:text-7xl font-bold',
+            'font-tarot text-4xl sm:text-7xl font-bold',
             team.colors.cardWinAccent,
           )}
           style={{ textShadow: team.colors.cardIconGlow }}

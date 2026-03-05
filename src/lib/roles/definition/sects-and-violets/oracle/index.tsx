@@ -12,7 +12,7 @@ import {
   StorytellerNumberScreen,
 } from '../../../../../components/screens/SectsAndVioletsActionScreens'
 import { countDeadEvilPlayers } from '../helpers'
-import { shouldForceFalseInfo } from '../../../runtime-helpers'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -38,11 +38,10 @@ const definition: RoleDefinition = {
       () => countDeadEvilPlayers(state, player),
       [player, state],
     )
+    const falseInfoMode = getFalseInfoMode(state, player)
     const malfunctioning = shouldForceFalseInfo(state, player)
     const [shownCount, setShownCount] = useState(actualCount)
-    const [phase, setPhase] = useState<'configure' | 'show_result'>(
-      malfunctioning ? 'configure' : 'show_result',
-    )
+    const [phase, setPhase] = useState<'configure' | 'show_result'>('configure')
 
     const complete = () => {
       onComplete({
@@ -77,6 +76,7 @@ const definition: RoleDefinition = {
           min={0}
           max={state.players.length}
           confirmLabel={roleT.configureConfirm}
+          falseInfoMode={falseInfoMode}
           onChange={setShownCount}
           onConfirm={() => setPhase('show_result')}
         />

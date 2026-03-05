@@ -12,7 +12,7 @@ const en = {
   yesLabel: 'Yes',
   noLabel: 'No',
   configureTitle: 'Configure Flowergirl',
-  configureDescription: 'Choose the answer to show if the Flowergirl is malfunctioning.',
+  configureDescription: 'Review and adjust the answer before showing the result.',
 } as const
 
 export default en

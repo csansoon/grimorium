@@ -10,7 +10,7 @@ const es = {
   infoTitle: 'Relojero',
   distanceLabel: 'Distancia al Secuaz mas cercano',
   configureTitle: 'Configurar Relojero',
-  configureDescription: 'Elige la distancia que se mostrara si el Relojero esta afectado.',
+  configureDescription: 'Revisa y ajusta la distancia antes de mostrar el resultado.',
   configureConfirm: 'Mostrar resultado',
 } as const
 

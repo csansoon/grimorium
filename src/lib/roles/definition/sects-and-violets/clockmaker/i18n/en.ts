@@ -10,7 +10,7 @@ const en = {
   infoTitle: 'Clockmaker',
   distanceLabel: 'Distance to the nearest Minion',
   configureTitle: 'Configure Clockmaker',
-  configureDescription: 'Choose the distance to show if the Clockmaker is malfunctioning.',
+  configureDescription: 'Review and adjust the distance before showing the result.',
   configureConfirm: 'Show Result',
 } as const
 

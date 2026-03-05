@@ -35,7 +35,8 @@ const fangGuJumpHandler: IntentHandler = {
           playerId: target.id,
           newRoleId: 'fang_gu',
           reveal: 'pending',
-          includeNewRoleInitialEffects: true,
+          queuePolicy: 'skip_if_window_passed',
+          includeNewRoleInitialEffects: false,
         },
       ],
     })

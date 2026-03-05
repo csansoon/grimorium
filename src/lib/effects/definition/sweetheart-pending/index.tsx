@@ -107,6 +107,7 @@ const nightFollowUp: NightFollowUpDefinition = {
   icon: 'handHeart',
   getLabel: () => 'Resolve Sweetheart',
   condition: (player) => hasEffect(player, 'sweetheart_pending'),
+  placement: 'before_player_action',
   ActionComponent: SweetheartNightFollowUp,
 }
 

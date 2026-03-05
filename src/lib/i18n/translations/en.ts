@@ -102,6 +102,8 @@ const en: Translations = {
       'Give the device to {player} — their role has changed.',
     readyShowToPlayer: 'Ready - Show to Player',
     yourRoleHasChanged: 'Your role has changed!',
+    yourGoodTwinIs: 'Your good twin is...',
+    yourEvilTwinIs: 'Your evil twin is...',
 
     nightComplete: 'Night {round} Complete',
     nightActionsResolved:
@@ -165,6 +167,24 @@ const en: Translations = {
     evilWins: 'Evil Wins!',
     townVanquishedDemon: 'The town has vanquished the Demon!',
     demonConqueredTown: 'The Demon has conquered the town!',
+    winTriggeredBy: 'Win Trigger',
+    winReasonAllDemonsDead: 'All Demons are dead.',
+    winReasonFinalTwoAlive:
+      'Only 2 players are alive and at least 1 is a Demon.',
+    winReasonVortoxNoExecution:
+      'Vortox rule: no execution happened today.',
+    winReasonMartyrdomExecution:
+      'Execution triggered a martyrdom-style evil win condition.',
+    winReasonEvilTwinGoodExecuted:
+      'Good Twin was executed.',
+    winReasonEvilTwinEvilExecuted:
+      'Evil Twin was executed.',
+    winReasonMayorPeacefulVictory:
+      'Mayor peaceful-victory condition was met.',
+    winReasonSpecialAbility:
+      'A special ability win condition was met.',
+    winReasonSourceRole: 'Source role: {role}',
+    winReasonSourceEffect: 'Source effect: {effect}',
     finalRoles: 'Final Roles',
     backToMainMenu: 'Back to Main Menu',
 
@@ -179,6 +199,12 @@ const en: Translations = {
     storytellerNotesPlaceholder:
       'Write down bluff claims, soft confirmations, token reminders, or anything else you want to track.',
     viewHistory: 'View History',
+    revealAlignment: 'Reveal Alignment',
+    selectPlayerForAlignmentReveal: 'Choose a player to show an alignment to.',
+    chooseAlignmentToShow: 'Choose what alignment to show {player}.',
+    yourAlignmentIs: 'Your alignment is',
+    youAreGood: "You're good",
+    youAreEvil: "You're evil",
 
     // Shared narrator keys
     narratorSetup: 'Storyteller Setup',
@@ -227,8 +253,14 @@ const en: Translations = {
       'Skipped because games with fewer than 7 players do not have demons and minions learn each other.',
     demonBluffsDescription:
       'Choose and show the three bluff roles this demon can claim during the game.',
+    demonCreationDeaths: 'Demon Creation Deaths',
+    demonCreationDeathsDescription:
+      'A Demon was created tonight. Choose any players who die tonight.',
+    demonCreationDeathsConfirm: 'Confirm Night Deaths',
     allActionsComplete: 'All night actions have been processed',
     proceedToDay: 'Proceed to Day',
+    goodTwinLabel: 'Good Twin',
+    evilTwinLabel: 'Evil Twin',
 
     // Night Steps
     nightSteps: 'Night Steps',
@@ -262,6 +294,11 @@ const en: Translations = {
     chooseFalseRole: 'What role should they see?',
     keepOriginalRole: 'Keep {role}',
     malfunctionWarning: 'Malfunctioning',
+    falseInfoRequired: 'False Info Required',
+    arbitraryInfoReminder:
+      'This ability is poisoned or drunk, so the result can be arbitrary or unreliable. Choose what to show before waking the player.',
+    falseInfoReminder:
+      'Vortox is in play, so this Townsfolk ability must yield false information tonight. Choose the false result before waking the player.',
 
     // Setup Actions
     setupActions: 'Setup Actions',
@@ -364,12 +401,12 @@ const en: Translations = {
     minion: {
       name: 'Minion',
       winCondition:
-        'Help your Demon survive! Evil wins when evil players equal or outnumber the good.',
+        'Help your Demon survive! Evil wins when only 2 players remain alive and at least 1 is a Demon (or via special abilities).',
     },
     demon: {
       name: 'Demon',
       winCondition:
-        'Evil wins when evil players equal or outnumber the good. Stay hidden and eliminate the town!',
+        'Stay hidden and eliminate the town. Evil wins when only 2 players remain alive (or via special abilities).',
     },
   },
 

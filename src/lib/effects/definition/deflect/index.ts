@@ -2,6 +2,7 @@ import { EffectDefinition } from '../../types'
 import { IntentHandler, KillIntent } from '../../../pipeline/types'
 import { DeflectRedirectUI } from '../../../../components/items/DeflectRedirectUI'
 import { registerEffectTranslations } from '../../../i18n'
+import { isDemonCreationArbitraryDeathCause } from '../../../nightSystem'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -13,7 +14,11 @@ const deflectHandler: IntentHandler = {
   intentType: 'kill',
   priority: 5, // Before safe (10) — redirect happens before protection check
   appliesTo: (intent, effectPlayer) => {
-    return intent.type === 'kill' && intent.targetId === effectPlayer.id
+    return (
+      intent.type === 'kill' &&
+      intent.targetId === effectPlayer.id &&
+      !isDemonCreationArbitraryDeathCause(intent.cause)
+    )
   },
   handle: (intent, effectPlayer) => {
     const kill = intent as KillIntent

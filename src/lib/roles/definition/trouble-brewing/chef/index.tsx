@@ -30,6 +30,7 @@ import {
 import { isMalfunctioning } from '../../../../effects'
 import { Perception } from '../../../../pipeline/types'
 import { getPreparedNightActionData } from '../../../../game'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -144,8 +145,10 @@ const definition: RoleDefinition = {
       null,
     )
 
+    const falseInfoMode = getFalseInfoMode(state, player)
+    const falseInfo = shouldForceFalseInfo(state, player)
     const malfunctioning = isMalfunctioning(player)
-    const shouldUsePreparedData = Boolean(preparedData && !malfunctioning)
+    const shouldUsePreparedData = Boolean(preparedData && !falseInfo)
 
     // Check if perception config is needed (only when NOT malfunctioning)
     const ambiguousPlayers = useMemo(
@@ -412,6 +415,7 @@ const definition: RoleDefinition = {
           icon='chefHat'
           roleName={getRoleName('chef', language)}
           playerName={player.name}
+          falseInfoMode={falseInfoMode}
           onShowToPlayer={handleComplete}
           showToPlayerLabel={t.common.confirm}
         >

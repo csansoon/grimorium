@@ -23,6 +23,7 @@ import { Grimoire } from '../items/Grimoire'
 import { MysticDivider, StorytellerGrimoireBoard } from '../items'
 import { ScreenFooter } from '../layouts/ScreenFooter'
 import { cn } from '../../lib/utils'
+import type { FalseInfoMode } from '../../lib/roles/runtime-helpers'
 
 // ============================================================================
 // UNIFIED NIGHT DASHBOARD ITEM
@@ -45,15 +46,23 @@ export function mergeNightDashboardItems(
 
   for (const followUp of followUps) {
     if (followUp.placement === 'before_player_action') {
-      const insertIndex = items.findIndex(
+      const matchingPlayerIndex = items.findIndex(
         (item) =>
           item.type === 'night_action' &&
           item.data.status === 'pending' &&
           item.data.playerId === followUp.playerId,
       )
 
-      if (insertIndex !== -1) {
-        items.splice(insertIndex, 0, {
+      const nextPendingActionIndex =
+        matchingPlayerIndex !== -1
+          ? matchingPlayerIndex
+          : items.findIndex(
+              (item) =>
+                item.type === 'night_action' && item.data.status === 'pending',
+            )
+
+      if (nextPendingActionIndex !== -1) {
+        items.splice(nextPendingActionIndex, 0, {
           type: 'night_follow_up',
           data: followUp,
         })
@@ -104,6 +113,15 @@ type Props = {
   onShowRoleCard?: (player: PlayerState) => void
   onEditEffects?: (player: PlayerState) => void
   onOpenGrimoirePlayer?: (player: PlayerState) => void
+}
+
+function getFalseInfoWarningText(
+  t: ReturnType<typeof useI18n>['t'],
+  mode?: FalseInfoMode | null,
+) {
+  if (mode === 'vortox') return t.game.falseInfoReminder
+  if (mode === 'malfunction') return t.game.arbitraryInfoReminder
+  return null
 }
 
 export function NightDashboard({
@@ -348,10 +366,10 @@ export function NightDashboard({
                 </p>
                 {reviewRoleStatus.status === 'skipped' ? (
                   <div className='space-y-3'>
-                    {reviewRoleStatus.malfunctioning && (
+                    {reviewRoleStatus.falseInfoMode && (
                       <div className='flex items-start gap-2 text-amber-300 text-sm bg-amber-900/20 border border-amber-500/25 rounded-lg p-3'>
                         <Icon name='flask' size='sm' className='mt-0.5 flex-shrink-0' />
-                        {t.game.playerIsMalfunctioning}
+                        {getFalseInfoWarningText(t, reviewRoleStatus.falseInfoMode)}
                       </div>
                     )}
                     <div className='flex items-center gap-2 text-parchment-400 text-sm bg-white/5 rounded-lg p-3'>
@@ -388,10 +406,10 @@ export function NightDashboard({
                   </div>
                 ) : reviewMessages.length === 0 ? (
                   <div className='space-y-3'>
-                    {reviewRoleStatus.malfunctioning && (
+                    {reviewRoleStatus.falseInfoMode && (
                       <div className='flex items-start gap-2 text-amber-300 text-sm bg-amber-900/20 border border-amber-500/25 rounded-lg p-3'>
                         <Icon name='flask' size='sm' className='mt-0.5 flex-shrink-0' />
-                        {t.game.playerIsMalfunctioning}
+                        {getFalseInfoWarningText(t, reviewRoleStatus.falseInfoMode)}
                       </div>
                     )}
                     <p className='text-parchment-500 text-sm'>
@@ -400,10 +418,10 @@ export function NightDashboard({
                   </div>
                 ) : (
                   <div className='space-y-3'>
-                    {reviewRoleStatus.malfunctioning && (
+                    {reviewRoleStatus.falseInfoMode && (
                       <div className='flex items-start gap-2 text-amber-300 text-sm bg-amber-900/20 border border-amber-500/25 rounded-lg p-3'>
                         <Icon name='flask' size='sm' className='mt-0.5 flex-shrink-0' />
-                        {t.game.playerIsMalfunctioning}
+                        {getFalseInfoWarningText(t, reviewRoleStatus.falseInfoMode)}
                       </div>
                     )}
                     <div className='space-y-2'>
@@ -475,6 +493,9 @@ function NightActionRow({
     if (roleStatus.dashboardKind === 'demon_bluffs') {
       return t.game.stepShowBluffs
     }
+    if (roleStatus.dashboardKind === 'demon_creation_deaths') {
+      return t.game.demonCreationDeaths
+    }
     return getRoleName(roleStatus.roleId, language)
   }, [
     roleStatus.dashboardKind,
@@ -483,6 +504,7 @@ function NightActionRow({
     t.game.minionInfo,
     t.game.demonInfo,
     t.game.stepShowBluffs,
+    t.game.demonCreationDeaths,
   ])
 
   const rowIcon =
@@ -492,6 +514,8 @@ function NightActionRow({
         ? 'users'
         : roleStatus.dashboardKind === 'demon_bluffs'
           ? 'eye'
+          : roleStatus.dashboardKind === 'demon_creation_deaths'
+            ? 'skull'
           : (role?.icon ?? 'user')
 
   const isDone = roleStatus.status === 'done'
@@ -507,6 +531,7 @@ function NightActionRow({
       label={roleName}
       sublabel={roleStatus.playerName}
       malfunctioning={roleStatus.malfunctioning}
+      falseInfoMode={roleStatus.falseInfoMode}
       isEvil={team?.isEvil}
       onOpen={onOpen}
       onSkip={onSkip}
@@ -557,6 +582,7 @@ function DashboardRow({
   label,
   sublabel,
   malfunctioning,
+  falseInfoMode,
   isEvil,
   isFollowUp,
   onOpen,
@@ -571,6 +597,7 @@ function DashboardRow({
   label: string
   sublabel: string
   malfunctioning?: boolean
+  falseInfoMode?: FalseInfoMode | null
   isEvil?: boolean
   isFollowUp?: boolean
   onOpen: () => void
@@ -723,11 +750,23 @@ function DashboardRow({
 
       {/* Status Badge / Skip */}
       <div className='flex items-center gap-2 flex-shrink-0'>
-        {malfunctioning && (
+        {(falseInfoMode || malfunctioning) && (
           <div
             className='w-7 h-7 rounded-full border border-amber-500/30 bg-amber-900/20 text-amber-300 flex items-center justify-center'
-            title={t.game.malfunctionWarning}
-            aria-label={t.game.malfunctionWarning}
+            title={
+              falseInfoMode === 'vortox'
+                ? t.game.falseInfoReminder
+                : falseInfoMode === 'malfunction'
+                  ? t.game.arbitraryInfoReminder
+                  : t.game.malfunctionWarning
+            }
+            aria-label={
+              falseInfoMode === 'vortox'
+                ? t.game.falseInfoReminder
+                : falseInfoMode === 'malfunction'
+                  ? t.game.arbitraryInfoReminder
+                  : t.game.malfunctionWarning
+            }
           >
             <Icon name='flask' size='xs' />
           </div>
