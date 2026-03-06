@@ -122,6 +122,12 @@ Your games stay yours.
 
 ---
 
+## Related Resources
+
+- [Haptics (haptics.lochie.me)](https://haptics.lochie.me/) — a useful Storyteller/Clocktower helper resource.
+
+---
+
 ## Development
 
 ```bash
