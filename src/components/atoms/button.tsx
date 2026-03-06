@@ -1,6 +1,8 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { defaultPatterns } from 'web-haptics'
+import { useWebHaptics } from 'web-haptics/react'
 import { cn } from '../../lib/utils'
 
 const buttonVariants = cva(
@@ -53,15 +55,61 @@ export interface ButtonProps
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  haptic?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, fullWidth, asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      fullWidth,
+      asChild = false,
+      haptic = true,
+      onClick,
+      onKeyDown,
+      ...props
+    },
+    ref,
+  ) => {
+    const { trigger } = useWebHaptics()
     const Comp = asChild ? Slot : 'button'
+
+    const triggerHaptic = React.useCallback(() => {
+      if (!haptic || props.disabled) return
+
+      if (variant === 'danger' || variant === 'evil') {
+        trigger(defaultPatterns.error)
+        return
+      }
+
+      if (variant === 'primary' || variant === 'gold') {
+        trigger(defaultPatterns.success)
+        return
+      }
+
+      trigger()
+    }, [haptic, props.disabled, trigger, variant])
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      triggerHaptic()
+      onClick?.(event)
+    }
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        triggerHaptic()
+      }
+      onKeyDown?.(event)
+    }
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, fullWidth, className }))}
         ref={ref}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
         {...props}
       />
     )
