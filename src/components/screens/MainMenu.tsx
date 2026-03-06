@@ -9,6 +9,7 @@ import { Icon } from '../atoms'
 import { MysticDivider } from '../items'
 import { useShaderBackground } from '../../hooks/useShaderBackground'
 import { cn } from '../../lib/utils'
+import { triggerHaptic } from '../../lib/haptics'
 
 // =============================================================================
 // GRIMOIRE BACKGROUND SHADER
@@ -200,19 +201,23 @@ export function MainMenu({
 
   const handleBreakSeal = useCallback(() => {
     if (phase !== 'sealed') return
+    triggerHaptic('nudge')
     setPhase('breaking')
     setTimeout(() => {
       hasOpenedGrimoire = true
       setPhase('open')
+      triggerHaptic('success')
     }, 700)
   }, [phase])
 
   const openPastGames = useCallback(() => {
+    triggerHaptic('nudge')
     setShowPastGames(true)
     setPastGamesClosing(false)
   }, [])
 
   const closePastGames = useCallback(() => {
+    triggerHaptic('nudge')
     setPastGamesClosing(true)
     setTimeout(() => {
       setShowPastGames(false)
@@ -408,7 +413,10 @@ export function MainMenu({
                     }
                   >
                     <button
-                      onClick={() => onContinue(currentGame.id)}
+                      onClick={() => {
+                        triggerHaptic('success')
+                        onContinue(currentGame.id)
+                      }}
                       className='relative w-full p-5 rounded-xl bg-gradient-to-r from-mystic-gold/15 to-mystic-bronze/10 border border-mystic-gold/25 card-border-glow transition-all group'
                       style={
                         {
@@ -446,7 +454,10 @@ export function MainMenu({
                   }
                 >
                   <button
-                    onClick={onNewGame}
+                    onClick={() => {
+                      triggerHaptic('success')
+                      onNewGame()
+                    }}
                     className='relative w-full p-5 rounded-xl bg-gradient-to-r from-indigo-900/40 to-purple-900/30 border border-indigo-500/25 card-border-glow transition-all group'
                     style={
                       {
@@ -483,7 +494,10 @@ export function MainMenu({
                 }
               >
                 <button
-                  onClick={onHowToPlay}
+                  onClick={() => {
+                    triggerHaptic('nudge')
+                    onHowToPlay()
+                  }}
                   className='text-sm text-parchment-400 hover:text-parchment-200 underline underline-offset-4 decoration-1 decoration-parchment-500/40 transition-colors tracking-wider'
                 >
                   {t.howToPlay.title}
@@ -492,7 +506,10 @@ export function MainMenu({
                 <span className='text-parchment-500/40 hidden sm:inline'>·</span>
 
                 <button
-                  onClick={onRolesLibrary}
+                  onClick={() => {
+                    triggerHaptic('nudge')
+                    onRolesLibrary()
+                  }}
                   className='text-sm text-parchment-400 hover:text-parchment-200 underline underline-offset-4 decoration-1 decoration-parchment-500/40 transition-colors tracking-wider'
                 >
                   {t.mainMenu.rolesLibrary}
@@ -562,6 +579,7 @@ export function MainMenu({
                   <button
                     key={game.id}
                     onClick={() => {
+                      triggerHaptic('success')
                       closePastGames()
                       onLoadGame(game.id)
                     }}
