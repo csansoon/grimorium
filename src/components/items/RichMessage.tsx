@@ -4,6 +4,7 @@ import {
   getPlayer,
 } from '../../lib/types'
 import { getRole } from '../../lib/roles'
+import { getCurrentRole } from '../../lib/identity'
 import { getEffect, getEffectType, EFFECT_TYPE_BADGE_VARIANT } from '../../lib/effects'
 import {
   useI18n,
@@ -97,7 +98,7 @@ export function RichMessage({ message, state }: Props) {
   const renderPlayerBadge = (playerId: string, key: string | number) => {
     const player = getPlayer(state, playerId)
     if (!player) return <span key={key}>{t.ui.unknownPlayer}</span>
-    const role = getRole(player.roleId)
+    const role = getCurrentRole(player)
     return (
       <Badge
         key={key}

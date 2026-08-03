@@ -1,20 +1,71 @@
-import { GameState, hasEffect } from '../../lib/types'
+import { Game, GameState, hasEffect } from '../../lib/types'
 import { getRole } from '../../lib/roles'
-import { useI18n, getRoleName } from '../../lib/i18n'
+import {
+  useI18n,
+  getEffectName as getRegistryEffectName,
+  getRoleName,
+  interpolate,
+} from '../../lib/i18n'
 import { Button, Badge, Icon } from '../atoms'
 import { MysticDivider } from '../items'
 import { cn } from '../../lib/utils'
+import type { WinReasonCode } from '../../lib/game'
 
 type Props = {
+  game: Game
   state: GameState
   onMainMenu: () => void
   onShowHistory: () => void
 }
 
-export function GameOver({ state, onMainMenu, onShowHistory }: Props) {
+function getWinReasonText(
+  t: ReturnType<typeof useI18n>['t'],
+  reason?: string,
+): string {
+  switch (reason as WinReasonCode | undefined) {
+    case 'all_demons_dead':
+      return t.game.winReasonAllDemonsDead
+    case 'final_two_alive':
+      return t.game.winReasonFinalTwoAlive
+    case 'vortox_no_execution':
+      return t.game.winReasonVortoxNoExecution
+    case 'martyrdom_execution':
+      return t.game.winReasonMartyrdomExecution
+    case 'evil_twin_good_executed':
+      return t.game.winReasonEvilTwinGoodExecuted
+    case 'evil_twin_evil_executed':
+      return t.game.winReasonEvilTwinEvilExecuted
+    case 'mayor_peaceful_victory':
+      return t.game.winReasonMayorPeacefulVictory
+    default:
+      return t.game.winReasonSpecialAbility
+  }
+}
+
+export function GameOver({ game, state, onMainMenu, onShowHistory }: Props) {
   const { t, language } = useI18n()
   const winner = state.winner
   const isGoodWin = winner === 'townsfolk'
+  const gameEndedEntry = [...game.history]
+    .reverse()
+    .find((entry) => entry.type === 'game_ended')
+  const winReason = getWinReasonText(t, gameEndedEntry?.data?.winReason as string | undefined)
+  const winReasonSourceRoleId = gameEndedEntry?.data?.winReasonSourceRoleId as
+    | string
+    | undefined
+  const winReasonSourceEffectType = gameEndedEntry?.data
+    ?.winReasonSourceEffectType as string | undefined
+  const winReasonSourceRole = winReasonSourceRoleId
+    ? getRoleName(winReasonSourceRoleId, language)
+    : null
+  const winReasonSourceEffect = winReasonSourceEffectType
+    ? getRegistryEffectName(winReasonSourceEffectType, language)
+    : null
+  const winReasonSourceText = winReasonSourceRole
+    ? interpolate(t.game.winReasonSourceRole, { role: winReasonSourceRole })
+    : winReasonSourceEffect
+      ? interpolate(t.game.winReasonSourceEffect, { effect: winReasonSourceEffect })
+      : null
 
   return (
     <div
@@ -68,6 +119,16 @@ export function GameOver({ state, onMainMenu, onShowHistory }: Props) {
           <p className='text-parchment-400 text-sm mb-8'>
             {isGoodWin ? t.game.townVanquishedDemon : t.game.demonConqueredTown}
           </p>
+
+          <div className='max-w-sm mx-auto mb-8 rounded-xl border border-white/15 bg-black/25 px-4 py-3 text-left'>
+            <div className='text-xs uppercase tracking-[0.2em] text-parchment-500 mb-1'>
+              {t.game.winTriggeredBy}
+            </div>
+            <div className='text-sm text-parchment-200'>{winReason}</div>
+            {winReasonSourceText && (
+              <div className='text-xs text-parchment-400 mt-1'>{winReasonSourceText}</div>
+            )}
+          </div>
 
           {/* Divider */}
           <MysticDivider

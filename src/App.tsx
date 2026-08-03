@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createGame, PlayerSetup } from './lib/game'
+import {
+  createGame,
+  PlayerSetup,
+  applySetupAction,
+  markRoleRevealed,
+  startNight,
+  processAutoSkips,
+} from './lib/game'
+import { getCurrentState } from './lib/types'
 import {
   saveGame,
   setCurrentGameId,
@@ -10,8 +18,10 @@ import {
   MainMenu,
   PlayerEntry,
   ScriptSelection,
+  ScriptImportScreen,
+  ScriptWakeOrderEditor,
   RoleSelection,
-  RoleAssignment,
+  RoleDeal,
   GameScreen,
   RolesLibrary,
   HowToPlayScreen,
@@ -20,19 +30,40 @@ import { LanguagePicker } from './components/atoms'
 import { useRouter } from './hooks/useRouter'
 import { RoleId } from './lib/roles/types'
 import { getRole } from './lib/roles'
-import { ScriptId } from './lib/scripts'
+import {
+  ScriptId,
+  EditableScriptDraft,
+  getScript,
+  saveScript,
+  type SavedScriptDefinition,
+  deriveScriptWakeOrderFromRoleIds,
+} from './lib/scripts'
+import { PreparedRoleAssignment } from './components/screens/RoleDeal'
+import { generateId } from './lib/types'
 
 // Internal screens for the new-game wizard (not routed — stays on "/")
 type NewGameScreen =
-  | { type: 'new_game_players' }
-  | { type: 'new_game_script'; players: string[] }
-  | { type: 'new_game_roles'; players: string[]; scriptId: ScriptId }
+  | { type: 'new_game_players'; playerCount?: number }
+  | { type: 'new_game_script'; playerCount: number }
+  | { type: 'new_game_import_script'; playerCount: number }
+  | { type: 'new_game_roles'; playerCount: number; scriptId: ScriptId }
   | {
-    type: 'new_game_assign'
-    players: string[]
+    type: 'new_game_wake_order'
+    playerCount: number
+    draftScript: EditableScriptDraft
+    nextStep: 'script_list' | 'roles' | 'deal'
+    selectedRoles?: string[]
+  }
+  | {
+    type: 'new_game_deal'
+    playerCount: number
     scriptId: ScriptId
     selectedRoles: string[]
   }
+
+function makeSeatLabels(playerCount: number): string[] {
+  return Array.from({ length: playerCount }, (_, index) => `Seat ${index + 1}`)
+}
 
 function App() {
   const { path, navigate, replace } = useRouter()
@@ -84,38 +115,167 @@ function App() {
     setNewGameScreen({ type: 'new_game_players' })
   }
 
-  const handlePlayersNext = (players: string[]) => {
-    setNewGameScreen({ type: 'new_game_script', players })
+  const handlePlayerCountNext = (playerCount: number) => {
+    setNewGameScreen({ type: 'new_game_script', playerCount })
   }
 
-  const handleScriptNext = (players: string[], scriptId: ScriptId) => {
-    setNewGameScreen({ type: 'new_game_roles', players, scriptId })
+  const handleScriptNext = (playerCount: number, scriptId: ScriptId) => {
+    setNewGameScreen({ type: 'new_game_roles', playerCount, scriptId })
+  }
+
+  const handleImportDraft = (playerCount: number, draftScript: EditableScriptDraft) => {
+    setNewGameScreen({
+      type: 'new_game_wake_order',
+      playerCount,
+      draftScript,
+      nextStep: 'roles',
+    })
+  }
+
+  const handleEditSavedScript = (playerCount: number, scriptId: ScriptId) => {
+    const script = getScript(scriptId)
+    if (!script || script.isOfficial) return
+
+    setNewGameScreen({
+      type: 'new_game_wake_order',
+      playerCount,
+      draftScript: {
+        id: script.id,
+        source: script.source === 'builtin' ? 'custom' : script.source,
+        name: script.name,
+        author: script.author,
+        icon: script.icon,
+        roles: script.roles,
+        enforceDistribution: script.enforceDistribution,
+        wakeOrder: script.wakeOrder,
+      },
+      nextStep: 'script_list',
+    })
   }
 
   const handleRolesNext = (
-    players: string[],
+    playerCount: number,
     scriptId: ScriptId,
     selectedRoles: string[],
   ) => {
+    if (scriptId === 'custom') {
+      const uniqueRoles = Array.from(
+        new Set(selectedRoles.filter((roleId): roleId is RoleId => !!getRole(roleId))),
+      )
+      const defaultName = `Custom Script ${new Date().toLocaleDateString()}`
+      setNewGameScreen({
+        type: 'new_game_wake_order',
+        playerCount,
+        draftScript: {
+          source: 'custom',
+          name: defaultName,
+          icon: 'settings',
+          author: undefined,
+          roles: uniqueRoles,
+          enforceDistribution: true,
+          wakeOrder: deriveScriptWakeOrderFromRoleIds(uniqueRoles),
+        },
+        nextStep: 'deal',
+        selectedRoles,
+      })
+      return
+    }
+
     setNewGameScreen({
-      type: 'new_game_assign',
-      players,
+      type: 'new_game_deal',
+      playerCount,
       scriptId,
       selectedRoles,
     })
   }
 
+  const handleSaveWakeOrder = (
+    playerCount: number,
+    draftScript: EditableScriptDraft,
+    nextStep: 'script_list' | 'roles' | 'deal',
+    selectedRoles?: string[],
+  ) => {
+    const savedScript: SavedScriptDefinition = {
+      id: draftScript.id ?? `script_${generateId()}`,
+      source: draftScript.source,
+      name: draftScript.name,
+      author: draftScript.author,
+      icon: draftScript.icon,
+      roles: draftScript.roles,
+      enforceDistribution: draftScript.enforceDistribution,
+      wakeOrder: draftScript.wakeOrder,
+      isOfficial: false,
+    }
+
+    saveScript(savedScript)
+
+    if (nextStep === 'roles') {
+      setNewGameScreen({
+        type: 'new_game_roles',
+        playerCount,
+        scriptId: savedScript.id,
+      })
+      return
+    }
+
+    if (nextStep === 'deal' && selectedRoles) {
+      setNewGameScreen({
+        type: 'new_game_deal',
+        playerCount,
+        scriptId: savedScript.id,
+        selectedRoles,
+      })
+      return
+    }
+
+    setNewGameScreen({
+      type: 'new_game_script',
+      playerCount,
+    })
+  }
+
   const handleStartGame = (
-    roleAssignments: { name: string; roleId: string }[],
+    preparedAssignments: PreparedRoleAssignment[],
     scriptId: ScriptId,
   ) => {
-    const players: PlayerSetup[] = roleAssignments.map((a) => ({
-      name: a.name,
-      roleId: a.roleId,
+    const script = getScript(scriptId)
+    const players: PlayerSetup[] = preparedAssignments.map((assignment) => ({
+      name: assignment.playerName,
+      roleId: assignment.baseRoleId,
     }))
 
     const gameName = `Game ${new Date().toLocaleDateString()}`
-    const game = createGame(gameName, scriptId, players)
+    let game = createGame(gameName, scriptId, players, script)
+
+    preparedAssignments.forEach((assignment, index) => {
+      const currentState = getCurrentState(game)
+      const player = currentState.players[index]
+      if (!player) return
+
+      if (assignment.autoSetup.kind === 'drunk') {
+        if (!assignment.autoSetup.believedRoleId) return
+
+        game = applySetupAction(game, player.id, {
+          changeRole: assignment.autoSetup.believedRoleId,
+          addEffects: {
+            [player.id]: [
+              {
+                type: 'drunk',
+                data: { actualRole: 'drunk' },
+                expiresAt: 'never',
+              },
+            ],
+          },
+        })
+      }
+
+    })
+
+    getCurrentState(game).players.forEach((player) => {
+      game = markRoleRevealed(game, player.id)
+    })
+
+    game = processAutoSkips(startNight(game))
 
     saveGame(game)
     setCurrentGameId(game.id)
@@ -214,28 +374,62 @@ function App() {
       switch (newGameScreen.type) {
         case 'new_game_players':
           return (
-            <PlayerEntry onNext={handlePlayersNext} onBack={handleBackToMenu} />
+            <PlayerEntry
+              initialPlayerCount={newGameScreen.playerCount}
+              onNext={handlePlayerCountNext}
+              onBack={handleBackToMenu}
+            />
           )
 
         case 'new_game_script':
           return (
             <ScriptSelection
-              players={newGameScreen.players}
+              playerCount={newGameScreen.playerCount}
               onSelect={(scriptId) =>
-                handleScriptNext(newGameScreen.players, scriptId)
+                handleScriptNext(newGameScreen.playerCount, scriptId)
               }
-              onBack={() => setNewGameScreen({ type: 'new_game_players' })}
+              onImport={() =>
+                setNewGameScreen({
+                  type: 'new_game_import_script',
+                  playerCount: newGameScreen.playerCount,
+                })
+              }
+              onEditScript={(scriptId) =>
+                handleEditSavedScript(newGameScreen.playerCount, scriptId)
+              }
+              onBack={() =>
+                setNewGameScreen({
+                  type: 'new_game_players',
+                  playerCount: newGameScreen.playerCount,
+                })
+              }
+            />
+          )
+
+        case 'new_game_import_script':
+          return (
+            <ScriptImportScreen
+              playerCount={newGameScreen.playerCount}
+              onResolved={(draftScript) =>
+                handleImportDraft(newGameScreen.playerCount, draftScript)
+              }
+              onBack={() =>
+                setNewGameScreen({
+                  type: 'new_game_script',
+                  playerCount: newGameScreen.playerCount,
+                })
+              }
             />
           )
 
         case 'new_game_roles':
           return (
             <RoleSelection
-              players={newGameScreen.players}
+              players={makeSeatLabels(newGameScreen.playerCount)}
               scriptId={newGameScreen.scriptId}
               onNext={(selectedRoles) =>
                 handleRolesNext(
-                  newGameScreen.players,
+                  newGameScreen.playerCount,
                   newGameScreen.scriptId,
                   selectedRoles,
                 )
@@ -243,24 +437,64 @@ function App() {
               onBack={() =>
                 setNewGameScreen({
                   type: 'new_game_script',
-                  players: newGameScreen.players,
+                  playerCount: newGameScreen.playerCount,
                 })
               }
             />
           )
 
-        case 'new_game_assign':
+        case 'new_game_wake_order':
           return (
-            <RoleAssignment
-              players={newGameScreen.players}
+            <ScriptWakeOrderEditor
+              playerCount={newGameScreen.playerCount}
+              draftScript={newGameScreen.draftScript}
+              onSave={(draftScript) =>
+                handleSaveWakeOrder(
+                  newGameScreen.playerCount,
+                  draftScript,
+                  newGameScreen.nextStep,
+                  newGameScreen.selectedRoles,
+                )
+              }
+              onBack={() => {
+                if (newGameScreen.nextStep === 'deal' && newGameScreen.selectedRoles) {
+                  setNewGameScreen({
+                    type: 'new_game_roles',
+                    playerCount: newGameScreen.playerCount,
+                    scriptId: 'custom',
+                  })
+                  return
+                }
+
+                if (newGameScreen.nextStep === 'roles') {
+                  setNewGameScreen({
+                    type: 'new_game_import_script',
+                    playerCount: newGameScreen.playerCount,
+                  })
+                  return
+                }
+
+                setNewGameScreen({
+                  type: 'new_game_script',
+                  playerCount: newGameScreen.playerCount,
+                })
+              }}
+            />
+          )
+
+        case 'new_game_deal':
+          return (
+            <RoleDeal
+              playerCount={newGameScreen.playerCount}
+              scriptId={newGameScreen.scriptId}
               selectedRoles={newGameScreen.selectedRoles}
-              onStart={(assignments) =>
+              onComplete={(assignments) =>
                 handleStartGame(assignments, newGameScreen.scriptId)
               }
               onBack={() =>
                 setNewGameScreen({
                   type: 'new_game_roles',
-                  players: newGameScreen.players,
+                  playerCount: newGameScreen.playerCount,
                   scriptId: newGameScreen.scriptId,
                 })
               }

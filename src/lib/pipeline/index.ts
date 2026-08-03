@@ -14,9 +14,12 @@ import {
   HistoryEntry,
   generateId,
 } from '../types'
+import { getAlignmentForTeam, getCurrentRole } from '../identity'
 import { getEffect, isMalfunctioning } from '../effects'
 import { getDefaultResolver } from './resolvers'
 import { EffectToAdd } from '../roles/types'
+import { getRole } from '../roles'
+import { syncDerivedEffects } from '../stateSync'
 
 // ============================================================================
 // STATE CHANGES UTILITIES
@@ -42,6 +45,10 @@ export function mergeStateChanges(
       target.removeEffects,
       source.removeEffects,
     ),
+    changeAlignments:
+      target.changeAlignments || source.changeAlignments
+        ? { ...target.changeAlignments, ...source.changeAlignments }
+        : undefined,
     changeRoles:
       target.changeRoles || source.changeRoles
         ? { ...target.changeRoles, ...source.changeRoles }
@@ -88,14 +95,18 @@ function collectActiveHandlers(
   const result: Array<{ handler: IntentHandler; player: PlayerState }> = []
 
   for (const player of state.players) {
-    // Skip handlers from malfunctioning players — their passive abilities
-    // don't work (e.g., Poisoned Soldier's Safe doesn't protect,
-    // Drunk Virgin's Pure doesn't trigger)
-    if (isMalfunctioning(player)) continue
-
     for (const effectInstance of player.effects) {
       const effectDef = getEffect(effectInstance.type)
       if (!effectDef?.handlers) continue
+
+      // Most passive handlers are disabled when the player carrying the effect
+      // is malfunctioning. Monk protection is different: the Safe effect lives
+      // on the protected target, but the ability is sourced from the Monk.
+      // If the target is poisoned, the protection should still apply.
+      const bypassHolderMalfunctionCheck =
+        effectInstance.type === 'safe' && effectInstance.data?.source === 'monk'
+
+      if (!bypassHolderMalfunctionCheck && isMalfunctioning(player)) continue
 
       for (const handler of effectDef.handlers) {
         const types = Array.isArray(handler.intentType)
@@ -272,7 +283,9 @@ export function applyPipelineChanges(game: Game, changes: StateChanges): Game {
     changes.entries.length === 0 &&
     !changes.stateUpdates &&
     !changes.addEffects &&
-    !changes.removeEffects
+    !changes.removeEffects &&
+    !changes.changeAlignments &&
+    !changes.changeRoles
   ) {
     return game
   }
@@ -298,15 +311,23 @@ export function applyPipelineChanges(game: Game, changes: StateChanges): Game {
       // Apply effect and role changes on first entry
       if (
         isFirst &&
-        (changes.addEffects || changes.removeEffects || changes.changeRoles)
+        (
+          changes.addEffects ||
+          changes.removeEffects ||
+          changes.changeRoles ||
+          changes.changeAlignments
+        )
       ) {
         newState = applyPlayerChanges(
           newState,
           changes.addEffects,
           changes.removeEffects,
+          changes.changeAlignments,
           changes.changeRoles,
         )
       }
+
+      newState = syncDerivedEffects(newState)
 
       // Create non-first entry state from latest
       if (!isFirst) {
@@ -333,14 +354,21 @@ export function applyPipelineChanges(game: Game, changes: StateChanges): Game {
   // No entries but there are state/effect changes — apply silently
   // by updating the last history entry's stateAfter
   let newState = { ...currentState, ...changes.stateUpdates }
-  if (changes.addEffects || changes.removeEffects || changes.changeRoles) {
+  if (
+    changes.addEffects ||
+    changes.removeEffects ||
+    changes.changeRoles ||
+    changes.changeAlignments
+  ) {
     newState = applyPlayerChanges(
       newState,
       changes.addEffects,
       changes.removeEffects,
+      changes.changeAlignments,
       changes.changeRoles,
     )
   }
+  newState = syncDerivedEffects(newState)
 
   const lastEntry = game.history[game.history.length - 1]
   if (lastEntry) {
@@ -360,6 +388,7 @@ function applyPlayerChanges(
   state: GameState,
   addEffects?: Record<string, EffectToAdd[]>,
   removeEffects?: Record<string, string[]>,
+  changeAlignments?: Record<string, import('../types').Alignment>,
   changeRoles?: Record<string, string>,
 ): GameState {
   return {
@@ -367,6 +396,9 @@ function applyPlayerChanges(
     players: state.players.map((player) => {
       let effects = [...player.effects]
       let roleId = player.roleId
+      let currentAlignment = player.currentAlignment
+      const hasRoleChange = Boolean(changeRoles?.[player.id])
+      const hasAlignmentChange = Boolean(changeAlignments?.[player.id])
 
       if (removeEffects?.[player.id]) {
         effects = effects.filter(
@@ -389,7 +421,15 @@ function applyPlayerChanges(
         roleId = changeRoles[player.id]
       }
 
-      return { ...player, effects, roleId }
+      if (hasRoleChange && !hasAlignmentChange) {
+        currentAlignment = getAlignmentForTeam(getRole(roleId)?.team)
+      }
+
+      if (changeAlignments?.[player.id]) {
+        currentAlignment = changeAlignments[player.id]
+      }
+
+      return { ...player, effects, roleId, currentAlignment }
     }),
   }
 }
@@ -404,6 +444,7 @@ function applyPlayerChanges(
 export function getAvailableDayActions(
   state: GameState,
   t: Record<string, any>,
+  category: 'all' | 'resolution' = 'all',
 ): AvailableDayAction[] {
   const actions: AvailableDayAction[] = []
 
@@ -413,6 +454,10 @@ export function getAvailableDayActions(
       if (!effectDef?.dayActions) continue
 
       for (const dayAction of effectDef.dayActions) {
+        const actionCategory = dayAction.category ?? 'standard'
+        if (category === 'resolution' && actionCategory !== 'resolution') {
+          continue
+        }
         if (dayAction.condition(player, state)) {
           actions.push({
             id: `${dayAction.id}_${player.id}`,
@@ -461,6 +506,7 @@ export function getAvailableNightFollowUps(
             playerName: player.name,
             icon: followUp.icon,
             label: followUp.getLabel(t),
+            placement: followUp.placement,
             ActionComponent: followUp.ActionComponent,
           })
         }
@@ -482,9 +528,6 @@ export function checkDynamicWinConditions(
   state: GameState,
   game: Game,
   triggers: WinConditionTrigger[],
-  getRole: (
-    roleId: string,
-  ) => { winConditions?: import('./types').WinConditionCheck[] } | undefined,
 ): 'townsfolk' | 'demon' | null {
   // Check effect-based win conditions
   // Skip win conditions from malfunctioning players (e.g., poisoned Saint's
@@ -511,7 +554,7 @@ export function checkDynamicWinConditions(
   for (const player of state.players) {
     if (isMalfunctioning(player)) continue
 
-    const role = getRole(player.roleId)
+    const role = getCurrentRole(player)
     if (!role?.winConditions) continue
 
     for (const wc of role.winConditions) {

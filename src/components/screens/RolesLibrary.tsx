@@ -12,6 +12,7 @@ import { cn } from '../../lib/utils'
 
 type Props = {
   selectedRoleId: RoleId | null
+  roleIds?: string[]
   onBack: () => void
   onSelectRole: (roleId: RoleId) => void
   onDeselectRole: () => void
@@ -21,14 +22,14 @@ const TEAM_ORDER: TeamId[] = ['townsfolk', 'outsider', 'minion', 'demon']
 
 export function RolesLibrary({
   selectedRoleId,
+  roleIds,
   onBack,
   onSelectRole,
   onDeselectRole,
 }: Props) {
   const { t, language } = useI18n()
 
-  // Get all roles from the Trouble Brewing script (currently the only one)
-  const scriptRoles = SCRIPTS['trouble-brewing'].roles
+  const scriptRoles = roleIds ?? SCRIPTS['trouble-brewing'].roles
 
   // Group roles by team
   const rolesByTeam = TEAM_ORDER.map((teamId) => {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { RoleDefinition } from '../../../types'
+import { RoleDefinition, NightActionProps } from '../../../types'
 import {
   useI18n,
   registerRoleTranslations,
@@ -9,6 +9,7 @@ import {
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import {
   NightStepListLayout,
+  NarratorSetupLayout,
   PlayerFacingScreen,
   HandbackCardLink,
 } from '../../../../../components/layouts'
@@ -28,6 +29,8 @@ import {
 } from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
 import { Perception } from '../../../../pipeline/types'
+import { getPreparedNightActionData } from '../../../../game'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -118,9 +121,23 @@ const definition: RoleDefinition = {
 
   RoleReveal: DefaultRoleReveal,
 
-  NightAction: ({ state, player, onComplete }) => {
+  NightAction: ({
+    game,
+    state,
+    player,
+    onComplete,
+    mode = 'night',
+  }: NightActionProps & { mode?: 'night' | 'prepare' }) => {
     const { t, language } = useI18n()
-    const [phase, setPhase] = useState<Phase>('step_list')
+    const preparedData =
+      mode === 'night'
+        ? getPreparedNightActionData<{
+            evilPairs: number
+            malfunctioned?: boolean
+            actualEvilPairs?: number
+            perceptionOverrides?: Record<string, Partial<Perception>>
+          }>(game, player.id, 'chef')
+        : null
     const [perceptionOverrides, setPerceptionOverrides] = useState<
       Record<string, Partial<Perception>>
     >({})
@@ -128,7 +145,10 @@ const definition: RoleDefinition = {
       null,
     )
 
+    const falseInfoMode = getFalseInfoMode(state, player)
+    const falseInfo = shouldForceFalseInfo(state, player)
     const malfunctioning = isMalfunctioning(player)
+    const shouldUsePreparedData = Boolean(preparedData && !falseInfo)
 
     // Check if perception config is needed (only when NOT malfunctioning)
     const ambiguousPlayers = useMemo(
@@ -139,6 +159,14 @@ const definition: RoleDefinition = {
       [state, malfunctioning],
     )
     const needsPerceptionConfig = ambiguousPlayers.length > 0
+    const [phase, setPhase] = useState<Phase>(() => {
+      if (mode === 'prepare') {
+        if (malfunctioning) return 'configure_malfunction'
+        if (needsPerceptionConfig) return 'configure_perceptions'
+        return 'show_result'
+      }
+      return 'step_list'
+    })
 
     // Track which steps are done
     const [perceptionConfigDone, setPerceptionConfigDone] = useState(false)
@@ -202,12 +230,21 @@ const definition: RoleDefinition = {
       overrides: Record<string, Partial<Perception>>,
     ) => {
       setPerceptionOverrides(overrides)
+      if (mode === 'prepare') {
+        setPhase('show_result')
+        return
+      }
       setPerceptionConfigDone(true)
       setPhase('step_list')
     }
 
     const handleMalfunctionComplete = (value: number) => {
       setMalfunctionValue(value)
+      if (mode === 'prepare') {
+        setMalfunctionConfigDone(true)
+        setPhase('show_result')
+        return
+      }
       setMalfunctionConfigDone(true)
       setPhase('step_list')
     }
@@ -263,6 +300,66 @@ const definition: RoleDefinition = {
       })
     }
 
+    if (shouldUsePreparedData && preparedData) {
+      const resultTeam = preparedData.evilPairs > 0 ? 'minion' : 'townsfolk'
+
+      return (
+        <PlayerFacingScreen playerName={player.name}>
+          <TeamBackground teamId={resultTeam}>
+            <OracleCard
+              icon='chefHat'
+              teamId={resultTeam}
+              title={roleT.info}
+              subtitle={getRoleName('chef', language)}
+            >
+              <NumberReveal
+                value={preparedData.evilPairs}
+                label={roleT.evilPairsCount}
+                teamId={resultTeam}
+              />
+            </OracleCard>
+            <HandbackCardLink
+              onClick={() =>
+                onComplete({
+                  entries: [
+                    {
+                      type: 'night_action',
+                      message: [
+                        {
+                          type: 'i18n',
+                          key: 'roles.chef.history.sawEvilPairs',
+                          params: {
+                            player: player.id,
+                            count: preparedData.evilPairs.toString(),
+                          },
+                        },
+                      ],
+                      data: {
+                        roleId: 'chef',
+                        playerId: player.id,
+                        action: 'count_evil_pairs',
+                        evilPairs: preparedData.evilPairs,
+                        ...(preparedData.malfunctioned
+                          ? {
+                              malfunctioned: true,
+                              actualEvilPairs: preparedData.actualEvilPairs,
+                            }
+                          : {}),
+                        perceptionOverrides: preparedData.perceptionOverrides,
+                      },
+                    },
+                  ],
+                })
+              }
+              isEvil={resultTeam !== 'townsfolk'}
+            >
+              {t.common.continue}
+            </HandbackCardLink>
+          </TeamBackground>
+        </PlayerFacingScreen>
+      )
+    }
+
     // Phase: Step List
     if (phase === 'step_list') {
       return (
@@ -310,6 +407,33 @@ const definition: RoleDefinition = {
 
     // Phase: Show Result — dynamic theme based on result
     const resultTeam = displayedEvilPairs > 0 ? 'minion' : 'townsfolk'
+
+    if (mode === 'prepare') {
+      return (
+        <NarratorSetupLayout
+          audience='narrator'
+          icon='chefHat'
+          roleName={getRoleName('chef', language)}
+          playerName={player.name}
+          falseInfoMode={falseInfoMode}
+          onShowToPlayer={handleComplete}
+          showToPlayerLabel={t.common.confirm}
+        >
+          <OracleCard
+            icon='chefHat'
+            teamId={resultTeam}
+            title={roleT.info}
+            subtitle={getRoleName('chef', language)}
+          >
+            <NumberReveal
+              value={displayedEvilPairs}
+              label={roleT.evilPairsCount}
+              teamId={resultTeam}
+            />
+          </OracleCard>
+        </NarratorSetupLayout>
+      )
+    }
 
     return (
       <PlayerFacingScreen playerName={player.name}>

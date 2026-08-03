@@ -34,6 +34,7 @@ import { isMalfunctioning } from '../../../../effects'
 import { MalfunctionConfigStep } from '../../../../../components/items'
 import { Perception } from '../../../../pipeline/types'
 import { cn } from '../../../../../lib/utils'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -110,7 +111,7 @@ const definition: RoleDefinition = {
 
   RoleReveal: DefaultRoleReveal,
 
-  NightAction: ({ state, player, onComplete }) => {
+  NightAction: ({ game, state, player, onComplete }) => {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
     const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null)
@@ -124,6 +125,8 @@ const definition: RoleDefinition = {
     )
     const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
 
+    const falseInfoMode = getFalseInfoMode(state, player)
+    const falseInfo = shouldForceFalseInfo(state, player)
     const malfunctioning = isMalfunctioning(player)
 
     const roleT = getRoleTranslations('ravenkeeper', language)
@@ -137,10 +140,10 @@ const definition: RoleDefinition = {
 
     const ambiguousPlayers = useMemo(
       () =>
-        !malfunctioning && selectedTargetPlayer
+        !falseInfo && selectedTargetPlayer
           ? getAmbiguousPlayers([selectedTargetPlayer], 'role')
           : [],
-      [selectedTargetPlayer, malfunctioning],
+      [selectedTargetPlayer, falseInfo],
     )
     const needsPerceptionConfig = ambiguousPlayers.length > 0
 
@@ -156,7 +159,7 @@ const definition: RoleDefinition = {
         },
       ]
 
-      if (selectPlayerDone && malfunctioning) {
+      if (selectPlayerDone && falseInfo) {
         result.push({
           id: 'configure_malfunction',
           icon: 'flask',
@@ -187,7 +190,7 @@ const definition: RoleDefinition = {
       return result
     }, [
       selectPlayerDone,
-      malfunctioning,
+      falseInfo,
       malfunctionConfigDone,
       needsPerceptionConfig,
       perceptionConfigDone,
@@ -344,6 +347,8 @@ const definition: RoleDefinition = {
           roleIcon='birdHouse'
           roleName={getRoleName('ravenkeeper', language)}
           playerName={player.name}
+          falseInfoMode={falseInfoMode}
+          game={game}
           state={state}
           onComplete={handleMalfunctionComplete}
         />

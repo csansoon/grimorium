@@ -120,10 +120,15 @@ export function RoleAssignment({
     return result
   }, [rolePool, assignedCounts])
 
-  const impManuallyAssigned = Object.values(assignments).includes('imp')
-  const impInRandomPool = rolesInRandomPool.includes('imp')
-  const impWillBeAssigned =
-    impManuallyAssigned || (willBeRandomlyAssigned > 0 && impInRandomPool)
+  const demonManuallyAssigned = Object.values(assignments).some((roleId) => {
+    if (!roleId) return false
+    return getRole(roleId)?.team === 'demon'
+  })
+  const demonInRandomPool = rolesInRandomPool.some(
+    (roleId) => getRole(roleId)?.team === 'demon',
+  )
+  const demonWillBeAssigned =
+    demonManuallyAssigned || (willBeRandomlyAssigned > 0 && demonInRandomPool)
 
   return (
     <div className='min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col'>
@@ -143,7 +148,8 @@ export function RoleAssignment({
       </div>
 
       {/* Warning */}
-      {!impWillBeAssigned && selectedRoles.includes('imp') && (
+      {!demonWillBeAssigned &&
+        selectedRoles.some((roleId) => getRole(roleId)?.team === 'demon') && (
         <div className='px-4 py-3 bg-mystic-crimson/20 border-b border-red-500/30'>
           <div className='max-w-lg mx-auto flex items-start gap-2'>
             <Icon
@@ -152,7 +158,7 @@ export function RoleAssignment({
               className='text-red-400 flex-shrink-0 mt-0.5'
             />
             <p className='text-red-200 text-xs'>
-              {t.newGame.impNotAssignedWarning}
+              {t.newGame.demonNotAssignedWarning}
             </p>
           </div>
         </div>

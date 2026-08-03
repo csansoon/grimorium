@@ -10,6 +10,15 @@ import {
   PerceptionModifier,
 } from '../pipeline/types'
 
+export type EffectPersistenceDecision = 'keep' | 'remove'
+
+export type EffectPersistencePolicy = {
+  targetRoleChange?: EffectPersistenceDecision
+  targetAlignmentChange?: EffectPersistenceDecision
+  sourceRoleChange?: EffectPersistenceDecision
+  sourceAlignmentChange?: EffectPersistenceDecision
+}
+
 export type EffectId =
   | 'dead'
   | 'used_dead_vote'
@@ -26,6 +35,25 @@ export type EffectId =
   | 'drunk'
   | 'butler_master'
   | 'imp_starpass_pending'
+  | 'sweetheart_trigger'
+  | 'sage_trigger'
+  | 'klutz_trigger'
+  | 'barber_trigger'
+  | 'sweetheart_pending'
+  | 'sage_pending'
+  | 'klutz_choice_pending'
+  | 'mutant_execution'
+  | 'barber_swap_pending'
+  | 'artist_question'
+  | 'savant_advice'
+  | 'witch_curse'
+  | 'cerenovus_madness'
+  | 'evil_twin_link'
+  | 'evil_twin_reveal_pending'
+  | 'fang_gu_jump'
+  | 'vigormortis_demon'
+  | 'vigormortis_killed'
+  | 'vortox_rule'
 
 /**
  * Semantic type of an effect for badge styling.
@@ -48,6 +76,18 @@ export type EffectType =
 export type EffectDefinition = {
   id: EffectId
   icon: IconName
+
+  /**
+   * Controls whether an effect should survive transformations on the player
+   * carrying it, or on the player who sourced it onto someone else.
+   *
+   * Defaults to all "keep". Effects that are tightly coupled to a role
+   * (e.g. Virgin's Pure, Soldier's innate Safe, Slayer bullet) should opt in
+   * to removal on target role change.
+   */
+  persistence?:
+    | EffectPersistencePolicy
+    | ((instance: EffectInstance) => EffectPersistencePolicy)
 
   // Behavior modifiers
   preventsNightWake?: boolean

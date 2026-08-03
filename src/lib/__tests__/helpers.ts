@@ -1,10 +1,13 @@
 import {
+  Alignment,
   PlayerState,
   GameState,
   Game,
   HistoryEntry,
   generateId,
 } from '../types'
+import { getRole } from '../roles'
+import { getAlignmentForTeam } from '../identity'
 
 // ============================================================================
 // PLAYER FACTORY
@@ -16,10 +19,16 @@ export function makePlayer(
   overrides: Partial<PlayerState> & { roleId?: string } = {},
 ): PlayerState {
   playerCounter++
+  const roleId = overrides.roleId ?? 'villager'
+  const role = getRole(roleId)
+  const alignment: Alignment = getAlignmentForTeam(role?.team)
   return {
     id: overrides.id ?? `player_${playerCounter}`,
     name: overrides.name ?? `Player ${playerCounter}`,
-    roleId: overrides.roleId ?? 'villager',
+    roleId,
+    baseRoleId: overrides.baseRoleId ?? roleId,
+    baseAlignment: overrides.baseAlignment ?? alignment,
+    currentAlignment: overrides.currentAlignment ?? alignment,
     effects: overrides.effects ?? [],
   }
 }

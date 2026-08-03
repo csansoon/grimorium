@@ -1,5 +1,5 @@
 import { PlayerState, hasEffect } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import { getCurrentRole, getCurrentTeam } from '../../lib/identity'
 import { getTeam, TeamId } from '../../lib/teams'
 import {
   getEffect,
@@ -45,13 +45,12 @@ export function PlayerDetailModal({
 
   if (!player) return null
 
-  const role = getRole(player.roleId)
-  const team = role ? getTeam(role.team) : null
+  const role = getCurrentRole(player)
+  const teamId = getCurrentTeam(player) as TeamId | undefined
+  const team = teamId ? getTeam(teamId) : null
   const isDead = hasEffect(player, 'dead')
   const isDrunk = hasEffect(player, 'drunk')
   const isEvil = team?.isEvil ?? false
-
-  const teamId = role?.team as TeamId | undefined
 
   const roleName = role ? getRegistryRoleName(role.id, language) : t.ui.unknown
   const roleDescription = role

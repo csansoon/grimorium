@@ -28,6 +28,7 @@ import {
 } from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
 import { Perception } from '../../../../pipeline/types'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -92,6 +93,8 @@ const definition: RoleDefinition = {
       null,
     )
 
+    const falseInfoMode = getFalseInfoMode(state, player)
+    const falseInfo = shouldForceFalseInfo(state, player)
     const malfunctioning = isMalfunctioning(player)
 
     // Role-specific translations via registry
@@ -100,15 +103,15 @@ const definition: RoleDefinition = {
     // Get alive neighbors
     const [leftNeighbor, rightNeighbor] = getAliveNeighbors(state, player.id)
 
-    // Collect unique neighbors for ambiguity check (only when NOT malfunctioning)
+    // Collect unique neighbors for ambiguity check (only when not forcing false info)
     const neighbors = useMemo(() => {
-      if (malfunctioning) return []
+      if (falseInfo) return []
       const result = []
       if (leftNeighbor) result.push(leftNeighbor)
       if (rightNeighbor && rightNeighbor.id !== leftNeighbor?.id)
         result.push(rightNeighbor)
       return result
-    }, [leftNeighbor, rightNeighbor, malfunctioning])
+    }, [leftNeighbor, rightNeighbor, falseInfo])
 
     const ambiguousPlayers = useMemo(
       () => getAmbiguousPlayers(neighbors, 'alignment'),
@@ -123,7 +126,7 @@ const definition: RoleDefinition = {
     const steps: NightStep[] = useMemo(() => {
       const result: NightStep[] = []
 
-      if (malfunctioning) {
+      if (falseInfo) {
         result.push({
           id: 'configure_malfunction',
           icon: 'flask',
@@ -153,7 +156,7 @@ const definition: RoleDefinition = {
 
       return result
     }, [
-      malfunctioning,
+      falseInfo,
       needsPerceptionConfig,
       perceptionConfigDone,
       malfunctionConfigDone,
@@ -279,6 +282,7 @@ const definition: RoleDefinition = {
           roleIcon='handHeart'
           roleName={getRoleName('empath', language)}
           playerName={player.name}
+          falseInfoMode={falseInfoMode}
           numberRange={{ min: 0, max: 2 }}
           onComplete={handleMalfunctionComplete}
         />

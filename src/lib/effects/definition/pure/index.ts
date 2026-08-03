@@ -1,7 +1,7 @@
 import { EffectDefinition } from '../../types'
 import { IntentHandler, NominateIntent } from '../../../pipeline/types'
 import { PlayerState } from '../../../types'
-import { getRole } from '../../../roles'
+import { getCurrentTeam } from '../../../identity'
 import { registerEffectTranslations } from '../../../i18n'
 
 import en from './i18n/en'
@@ -25,10 +25,10 @@ function getActualTeam(player: PlayerState): string {
   for (const eff of player.effects) {
     const actualRole = eff.data?.actualRole as string | undefined
     if (actualRole) {
-      return getRole(actualRole)?.team ?? 'townsfolk'
+      return getCurrentTeam({ ...player, roleId: actualRole }) ?? 'townsfolk'
     }
   }
-  return getRole(player.roleId)?.team ?? 'townsfolk'
+  return getCurrentTeam(player) ?? 'townsfolk'
 }
 
 const pureHandler: IntentHandler = {
@@ -124,6 +124,9 @@ const definition: EffectDefinition = {
   id: 'pure',
   icon: 'flowerLotus',
   defaultType: 'passive',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   handlers: [pureHandler],
 }
 

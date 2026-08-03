@@ -1,4 +1,5 @@
 import { GameState, PlayerState, HistoryEntry, Game } from '../types'
+import type { Alignment } from '../types'
 import { IconName } from '../../components/atoms/icon'
 import { TeamId } from '../teams'
 import { Intent, WinConditionCheck } from '../pipeline/types'
@@ -13,6 +14,13 @@ export type EffectToAdd = {
   data?: Record<string, unknown>
   sourcePlayerId?: string
   expiresAt?: 'end_of_night' | 'end_of_day' | 'never'
+}
+
+export type EvilInfoModifier = {
+  suppressDemonLearnsMinions?: boolean
+  suppressMinionsLearnDemon?: boolean
+  suppressMinionsLearnOtherMinions?: boolean
+  suppressDemonBluffs?: boolean
 }
 
 // ============================================================================
@@ -46,8 +54,12 @@ export type NightActionResult = {
   removeEffects?: Record<string, string[]>
   // Role changes to apply to players (playerId -> new roleId)
   changeRoles?: Record<string, string>
+  // Alignment changes to apply to players (playerId -> new alignment)
+  changeAlignments?: Record<string, Alignment>
   // Intent to resolve through the pipeline (for action roles like Imp)
   intent?: Intent
+  // Optional additional intents to resolve sequentially
+  intents?: Intent[]
 }
 
 // ============================================================================
@@ -136,13 +148,46 @@ export type RoleId =
   | 'butler'
   | 'baron'
   | 'spy'
+  | 'sweetheart'
+  | 'sage'
+  | 'klutz'
+  | 'mutant'
+  | 'barber'
+  | 'clockmaker'
+  | 'oracle'
+  | 'seamstress'
+  | 'flowergirl'
+  | 'town_crier'
+  | 'mathematician'
+  | 'dreamer'
+  | 'snake_charmer'
+  | 'savant'
+  | 'philosopher'
+  | 'artist'
+  | 'evil_twin'
+  | 'witch'
+  | 'cerenovus'
+  | 'pit_hag'
+  | 'fang_gu'
+  | 'vigormortis'
+  | 'no_dashii'
+  | 'vortox'
 
 export type RoleDefinition = {
   id: RoleId
   team: TeamId
   icon: IconName
+  evilInfoModifier?: EvilInfoModifier
 
-  // Night order - lower numbers wake first, null means doesn't wake at night
+  // Canonical BOTC wake positions used to derive default wake sheets for
+  // imported/custom scripts.
+  canonicalWakeOrder?: {
+    firstNight: number | null
+    otherNights: number | null
+  }
+
+  // Legacy fallback order used only when a script does not provide an explicit
+  // wake sheet entry for this role. Lower numbers wake first.
   nightOrder: number | null
 
   // Chaos metric (0-100) — how much chaos this role introduces to the game.

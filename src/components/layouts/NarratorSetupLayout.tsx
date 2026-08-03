@@ -5,12 +5,15 @@ import { ScreenFooter } from './ScreenFooter'
 import { useI18n, interpolate } from '../../lib/i18n'
 import { cn } from '../../lib/utils'
 import type { NightStepAudience } from '../../lib/roles/types'
+import type { FalseInfoMode } from '../../lib/roles/runtime-helpers'
 
 type NarratorSetupLayoutProps = {
   icon: IconName
   roleName: string
   playerName: string
   children: ReactNode
+  falseInfoWarning?: boolean
+  falseInfoMode?: FalseInfoMode | null
   footer?: ReactNode
   // If provided, shows a default "Show to Player" button
   onShowToPlayer?: () => void
@@ -31,6 +34,8 @@ export function NarratorSetupLayout({
   playerName,
   children,
   footer,
+  falseInfoWarning = false,
+  falseInfoMode = null,
   onShowToPlayer,
   showToPlayerDisabled,
   showToPlayerLabel,
@@ -51,7 +56,7 @@ export function NarratorSetupLayout({
     >
       {/* Audience Banner */}
       {audience === 'narrator' && (
-        <div className='mx-4 mt-4 mb-0 max-w-lg self-center w-full'>
+        <div className='mx-4 mt-3 sm:mt-4 mb-0 max-w-lg self-center w-full'>
           <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-900/30 border border-blue-500/30'>
             <Icon name='eye' size='sm' className='text-blue-400 flex-shrink-0' />
             <span className='text-blue-300 text-xs'>
@@ -61,7 +66,7 @@ export function NarratorSetupLayout({
         </div>
       )}
       {isPlayerChoice && (
-        <div className='mx-4 mt-4 mb-0 max-w-lg self-center w-full'>
+        <div className='mx-4 mt-3 sm:mt-4 mb-0 max-w-lg self-center w-full'>
           <div className='flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-900/40 border border-amber-500/40'>
             <Icon
               name='userRound'
@@ -74,11 +79,23 @@ export function NarratorSetupLayout({
           </div>
         </div>
       )}
+      {(falseInfoWarning || falseInfoMode) && (
+        <div className='mx-4 mt-3 sm:mt-4 mb-0 max-w-lg self-center w-full'>
+          <div className='flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-900/40 border border-amber-500/40'>
+            <Icon name='flask' size='sm' className='text-amber-400 flex-shrink-0 mt-0.5' />
+            <span className='text-amber-300 text-xs'>
+              {falseInfoMode === 'vortox'
+                ? t.game.falseInfoReminder
+                : t.game.arbitraryInfoReminder}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div
         className={cn(
-          'px-4 py-6 text-center',
+          'px-4 py-4 sm:py-6 text-center',
           !isPlayerChoice && 'bg-gradient-to-b from-blue-900/50 to-transparent',
           isPlayerChoice && 'bg-gradient-to-b from-amber-900/30 to-transparent',
         )}
@@ -86,7 +103,7 @@ export function NarratorSetupLayout({
         <div className='flex justify-center mb-3'>
           <div
             className={cn(
-              'w-16 h-16 rounded-full flex items-center justify-center border',
+              'w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center border',
               isPlayerChoice
                 ? 'bg-amber-500/20 border-amber-400/30'
                 : 'bg-blue-500/20 border-blue-400/30',
@@ -94,12 +111,12 @@ export function NarratorSetupLayout({
           >
             <Icon
               name={icon}
-              size='2xl'
+              size='xl'
               className={cn(isPlayerChoice ? 'text-amber-300' : 'text-blue-300')}
             />
           </div>
         </div>
-        <h1 className='font-tarot text-xl text-parchment-100 tracking-wider uppercase'>
+        <h1 className='font-tarot text-lg sm:text-xl text-parchment-100 tracking-wider uppercase'>
           {t.game.narratorSetup}
         </h1>
         <p className='text-parchment-400 text-sm mt-1'>
@@ -108,7 +125,7 @@ export function NarratorSetupLayout({
       </div>
 
       {/* Content */}
-      <div className='flex-1 px-4 pb-4 max-w-lg mx-auto w-full overflow-y-auto'>
+      <div className='flex-1 px-4 pb-3 sm:pb-4 max-w-lg mx-auto w-full overflow-y-auto'>
         {children}
       </div>
 

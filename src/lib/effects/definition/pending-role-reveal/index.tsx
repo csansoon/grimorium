@@ -88,6 +88,7 @@ const roleChangeFollowUp: NightFollowUpDefinition = {
   id: 'role_change_reveal',
   icon: 'sparkles',
   getLabel: (t) => t.game.yourRoleHasChanged,
+  placement: 'before_player_action',
   // If the effect exists on the player, the reveal is needed
   condition: () => true,
   ActionComponent: RoleChangeRevealAction,

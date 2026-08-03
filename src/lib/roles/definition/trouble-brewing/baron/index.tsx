@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { RoleDefinition } from '../../../types'
+import { resolveEvilInfoPlan, shouldShowMinionEvilTeamStep } from '../../../../evilInfo'
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import { EvilTeamReveal } from '../../../../../components/items/EvilTeamReveal'
 import {
@@ -48,7 +49,10 @@ const definition: RoleDefinition = {
 
   shouldWake: (game) => {
     const state = game.history.at(-1)?.stateAfter
-    return state?.round === 1
+    return (
+      state?.round === 1 &&
+      shouldShowMinionEvilTeamStep(state, resolveEvilInfoPlan(state))
+    )
   },
 
   nightSteps: [
@@ -56,7 +60,9 @@ const definition: RoleDefinition = {
       id: 'show_evil_team',
       icon: 'swords',
       getLabel: (t) => t.game.stepShowEvilTeam,
-      condition: (_game, _player, state) => state.round === 1,
+      condition: (_game, _player, state) =>
+        state.round === 1 &&
+        shouldShowMinionEvilTeamStep(state, resolveEvilInfoPlan(state)),
       audience: 'player_reveal',
     },
   ],
@@ -66,6 +72,10 @@ const definition: RoleDefinition = {
   NightAction: ({ state, player, onComplete }) => {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
+    const showEvilTeam = shouldShowMinionEvilTeamStep(
+      state,
+      resolveEvilInfoPlan(state),
+    )
 
     const roleT = getRoleTranslations('baron', language)
 
@@ -96,15 +106,17 @@ const definition: RoleDefinition = {
     // ================================================================
 
     if (phase === 'step_list') {
-      const steps: NightStep[] = [
-        {
-          id: 'show_evil_team',
-          icon: 'swords',
-          label: t.game.stepShowEvilTeam,
-          status: 'pending',
-          audience: 'player_reveal' as const,
-        },
-      ]
+      const steps: NightStep[] = showEvilTeam
+        ? [
+            {
+              id: 'show_evil_team',
+              icon: 'swords',
+              label: t.game.stepShowEvilTeam,
+              status: 'pending',
+              audience: 'player_reveal' as const,
+            },
+          ]
+        : []
 
       return (
         <NightStepListLayout

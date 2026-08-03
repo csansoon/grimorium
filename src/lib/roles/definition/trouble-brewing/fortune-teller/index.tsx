@@ -38,6 +38,7 @@ import {
 } from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
 import { Perception } from '../../../../pipeline/types'
+import { getFalseInfoMode, shouldForceFalseInfo } from '../../../runtime-helpers'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -59,12 +60,20 @@ function FortuneTellerSetupAction({
 }: SetupActionProps) {
   const { t, language } = useI18n()
   const roleT = getRoleTranslations('fortune_teller', language)
+  const existingRedHerringPlayer = state.players.find((candidate) =>
+    candidate.effects.some(
+      (effect) =>
+        effect.type === 'red_herring' &&
+        effect.data?.fortuneTellerId === player.id,
+    ),
+  )
   const [selectedRedHerring, setSelectedRedHerring] = useState<string | null>(
-    null,
+    existingRedHerringPlayer?.id ?? null,
   )
 
   // Get good players for Red Herring selection (exclude the Fortune Teller)
   const goodPlayers = state.players.filter((p) => {
+    if (p.id === player.id) return false
     const role = getRole(p.roleId)
     return role?.team === 'townsfolk' || role?.team === 'outsider'
   })
@@ -77,7 +86,26 @@ function FortuneTellerSetupAction({
 
   const handleConfirm = () => {
     if (!selectedRedHerring) return
+
+    const removeEffects = state.players.reduce<Record<string, string[]>>(
+      (result, candidate) => {
+        if (
+          candidate.effects.some(
+            (effect) =>
+              effect.type === 'red_herring' &&
+              effect.data?.fortuneTellerId === player.id,
+          )
+        ) {
+          result[candidate.id] = ['red_herring']
+        }
+        return result
+      },
+      {},
+    )
+
     onComplete({
+      removeEffects:
+        Object.keys(removeEffects).length > 0 ? removeEffects : undefined,
       addEffects: {
         [selectedRedHerring]: [
           {
@@ -193,6 +221,8 @@ const definition: RoleDefinition = {
 
     const roleT = getRoleTranslations('fortune_teller', language)
 
+    const falseInfoMode = getFalseInfoMode(state, player)
+    const falseInfo = shouldForceFalseInfo(state, player)
     const malfunctioning = isMalfunctioning(player)
 
     const [phase, setPhase] = useState<Phase>('step_list')
@@ -217,10 +247,10 @@ const definition: RoleDefinition = {
     )
     const ambiguousPlayers = useMemo(
       () =>
-        !malfunctioning && selectPlayersDone
+        !falseInfo && selectPlayersDone
           ? getAmbiguousPlayers(selectedPlayerObjects, 'team')
           : [],
-      [selectedPlayerObjects, malfunctioning, selectPlayersDone],
+      [selectedPlayerObjects, falseInfo, selectPlayersDone],
     )
     const needsPerceptionConfig = ambiguousPlayers.length > 0
 
@@ -250,7 +280,7 @@ const definition: RoleDefinition = {
         })
       }
 
-      if (malfunctioning) {
+      if (falseInfo) {
         result.push({
           id: 'configure_malfunction',
           icon: 'flask',
@@ -269,7 +299,7 @@ const definition: RoleDefinition = {
       })
 
       return result
-    }, [selectPlayersDone, needsPerceptionConfig, perceptionConfigDone, malfunctioning, malfunctionConfigDone, t])
+    }, [selectPlayersDone, needsPerceptionConfig, perceptionConfigDone, falseInfo, malfunctionConfigDone, t])
 
     const handleSelectStep = (stepId: string) => {
       if (stepId === 'select_players') {
@@ -408,6 +438,7 @@ const definition: RoleDefinition = {
           roleIcon='eye'
           roleName={getRoleName('fortune_teller', language)}
           playerName={player.name}
+          falseInfoMode={falseInfoMode}
           trueLabel={roleT.yesOneIsDemon}
           falseLabel={roleT.noNeitherIsDemon}
           onComplete={handleMalfunctionComplete}
@@ -438,6 +469,7 @@ const definition: RoleDefinition = {
           roleName={getRoleName('fortune_teller', language)}
           audience='player_choice'
           playerName={getPlayerName(player.id)}
+          falseInfoMode={falseInfoMode}
           onShowToPlayer={handleSelectPlayersDone}
           showToPlayerDisabled={selectedPlayers.length !== 2}
           showToPlayerLabel={t.common.confirm}
