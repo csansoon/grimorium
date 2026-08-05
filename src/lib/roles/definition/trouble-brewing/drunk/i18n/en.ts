@@ -6,7 +6,7 @@ const en = {
   lines: [
     { type: 'PASSIVE', text: 'You believe you are a Townsfolk. You are not.' },
     { type: 'CAVEAT', text: 'Instead of this card, you see another role\'s card.' },
-    { type: 'CAVEAT', text: 'Whatever ability you think you have doesn\'t work. Your information is always false.' },
+    { type: 'CAVEAT', text: 'Whatever ability you think you have doesn\'t work. The Storyteller may give you true or false information.' },
     { type: 'WIN', text: 'Execute the Demon to win.' },
   ],
 

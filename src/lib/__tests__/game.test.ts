@@ -15,6 +15,9 @@ import {
   checkWinCondition,
   getNominatorsToday,
   getNomineesToday,
+  addNightDashboardUndoCheckpoint,
+  getLastNightDashboardUndo,
+  undoLastNightDashboardStep,
 } from '../game'
 import { applyPipelineChanges, resolveIntent } from '../pipeline'
 import type { ScriptDefinition } from '../scripts'
@@ -408,6 +411,41 @@ describe('getNextStep', () => {
       expect(step.playerId).toBe('p2')
       expect(step.roleId).toBe('imp')
     }
+  })
+
+  it('uses canonical other-night order for roles omitted from a script wake sheet', () => {
+    const players = [
+      makePlayer({ id: 'p1', name: 'Alice', roleId: 'empath' }),
+      makePlayer({ id: 'p2', name: 'Bob', roleId: 'imp' }),
+      makePlayer({ id: 'p3', name: 'Cara', roleId: 'villager' }),
+      makePlayer({ id: 'p4', name: 'Dane', roleId: 'villager' }),
+      makePlayer({ id: 'p5', name: 'Elle', roleId: 'villager' }),
+    ]
+    const scriptSnapshot: ScriptDefinition = {
+      id: 'test-custom',
+      source: 'custom',
+      name: 'Test Custom',
+      icon: 'moon',
+      roles: ['empath', 'imp'],
+      enforceDistribution: false,
+      wakeOrder: {
+        firstNight: [],
+        otherNights: [],
+      },
+      isOfficial: false,
+    }
+    const game = {
+      ...makeGame(makeState({ phase: 'night', round: 2, players })),
+      scriptId: 'custom',
+      scriptSnapshot,
+    }
+
+    const step = getNextStep(game)
+    expect(step).toEqual({
+      type: 'night_action',
+      playerId: 'p2',
+      roleId: 'imp',
+    })
   })
 
   it('keeps demon-role wakes based on role order, regardless of alignment', () => {
@@ -1094,6 +1132,158 @@ describe('skipNightAction', () => {
   })
 })
 
+// ============================================================================
+// NIGHT DASHBOARD UNDO
+// ============================================================================
+
+describe('night dashboard undo', () => {
+  function makeRoundTwoNightGame() {
+    const players = [
+      makePlayer({ id: 'imp', name: 'Imp', roleId: 'imp' }),
+      makePlayer({ id: 'target', name: 'Target', roleId: 'villager' }),
+    ]
+    const game = makeGame(makeState({ phase: 'night', round: 2, players }))
+    return addHistoryEntry(game, {
+      type: 'night_started',
+      message: [{ type: 'text', content: 'night' }],
+      data: { round: 2 },
+    })
+  }
+
+  it('restores the previous night state after a completed action and its side effects', () => {
+    const game = makeRoundTwoNightGame()
+    const checkpointed = addNightDashboardUndoCheckpoint(game, {
+      playerId: 'imp',
+      roleId: 'imp',
+    })
+
+    const acted = applyNightAction(checkpointed, {
+      entries: [
+        {
+          type: 'night_action',
+          message: [{ type: 'text', content: 'Imp attacked Target' }],
+          data: {
+            playerId: 'imp',
+            roleId: 'imp',
+            action: 'kill',
+            targetId: 'target',
+          },
+        },
+      ],
+    })
+
+    const killed = applyPipelineChanges(acted, {
+      entries: [],
+      addEffects: {
+        target: [{ type: 'dead', data: { cause: 'demon' }, expiresAt: 'never' }],
+      },
+    })
+
+    expect(
+      hasEffect(
+        getCurrentState(killed).players.find((player) => player.id === 'target')!,
+        'dead',
+      ),
+    ).toBe(true)
+    expect(getLastNightDashboardUndo(killed)).toMatchObject({
+      playerId: 'imp',
+      roleId: 'imp',
+    })
+
+    const undone = undoLastNightDashboardStep(killed)!
+    const restoredTarget = getCurrentState(undone).players.find(
+      (player) => player.id === 'target',
+    )!
+
+    expect(hasEffect(restoredTarget, 'dead')).toBe(false)
+    expect(
+      undone.history.some((entry) => entry.type === 'night_action'),
+    ).toBe(false)
+    expect(getLastNightDashboardUndo(undone)).toBeNull()
+  })
+
+  it('restores state when a follow-up only applies silent effect changes', () => {
+    const playerWithPendingFollowUp = addEffectTo(
+      makePlayer({ id: 'p1', name: 'Twin', roleId: 'villager' }),
+      'evil_twin_reveal_pending',
+    )
+    const game = addHistoryEntry(
+      makeGame(
+        makeState({
+          phase: 'night',
+          round: 1,
+          players: [playerWithPendingFollowUp],
+        }),
+      ),
+      {
+        type: 'night_started',
+        message: [{ type: 'text', content: 'night' }],
+        data: { round: 1 },
+      },
+    )
+
+    const checkpointed = addNightDashboardUndoCheckpoint(game, {
+      playerId: 'p1',
+      label: 'Reveal Evil Twin',
+    })
+    const completed = applyPipelineChanges(checkpointed, {
+      entries: [],
+      removeEffects: { p1: ['evil_twin_reveal_pending'] },
+    })
+
+    expect(completed.history.at(-1)?.type).toBe('undo_checkpoint')
+    expect(
+      hasEffect(
+        getCurrentState(completed).players.find((player) => player.id === 'p1')!,
+        'evil_twin_reveal_pending',
+      ),
+    ).toBe(false)
+    expect(getLastNightDashboardUndo(completed)).toMatchObject({
+      playerId: 'p1',
+      label: 'Reveal Evil Twin',
+    })
+
+    const undone = undoLastNightDashboardStep(completed)!
+
+    expect(
+      hasEffect(
+        getCurrentState(undone).players.find((player) => player.id === 'p1')!,
+        'evil_twin_reveal_pending',
+      ),
+    ).toBe(true)
+    expect(
+      undone.history.some((entry) => entry.type === 'undo_checkpoint'),
+    ).toBe(false)
+  })
+
+  it('removes skipped entries after the checkpoint and makes the action pending again', () => {
+    const game = makeRoundTwoNightGame()
+    const checkpointed = addNightDashboardUndoCheckpoint(game, {
+      playerId: 'imp',
+      roleId: 'imp',
+    })
+    const skipped = skipNightAction(checkpointed, 'imp', 'imp')
+    const withTrailingAutoSkip = skipNightAction(skipped, 'chef', 'target')
+
+    expect(
+      withTrailingAutoSkip.history.some((entry) => entry.type === 'night_skipped'),
+    ).toBe(true)
+
+    const undone = undoLastNightDashboardStep(withTrailingAutoSkip)!
+
+    expect(
+      undone.history.some((entry) => entry.type === 'night_skipped'),
+    ).toBe(false)
+    expect(getLastNightDashboardUndo(undone)).toBeNull()
+  })
+
+  it('is unavailable without a night dashboard checkpoint in the current night', () => {
+    const game = makeRoundTwoNightGame()
+
+    expect(getLastNightDashboardUndo(game)).toBeNull()
+    expect(undoLastNightDashboardStep(game)).toBeNull()
+  })
+})
 
 // ============================================================================
 // NOMINATIONS AND VOTING

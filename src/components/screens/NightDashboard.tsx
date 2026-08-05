@@ -7,6 +7,7 @@ import {
   getNightActionSummary,
   NightRoleStatus,
 } from '../../lib/game'
+import type { NightDashboardUndoPreview } from '../../lib/game'
 import { getAvailableNightFollowUps } from '../../lib/pipeline'
 import { AvailableNightFollowUp } from '../../lib/pipeline/types'
 import { useI18n, getRoleName } from '../../lib/i18n'
@@ -108,6 +109,8 @@ type Props = {
     systemStepId?: NightRoleStatus['systemStepId'],
   ) => void
   onOpenNightFollowUp: (followUp: AvailableNightFollowUp) => void
+  undoPreview?: NightDashboardUndoPreview | null
+  onUndoLastStep?: () => void
   onStartDay: () => void
   onMainMenu: () => void
   onShowRoleCard?: (player: PlayerState) => void
@@ -132,6 +135,8 @@ export function NightDashboard({
   onRerunSkippedNightAction,
   onSkipNightAction,
   onOpenNightFollowUp,
+  undoPreview,
+  onUndoLastStep,
   onStartDay,
   onMainMenu,
   onShowRoleCard,
@@ -142,6 +147,7 @@ export function NightDashboard({
   const [grimoireExpanded, setGrimoireExpanded] = useState(false)
   const [grimoireView, setGrimoireView] = useState<'circle' | 'list'>('circle')
   const [reviewRoleStatus, setReviewRoleStatus] = useState<NightRoleStatus | null>(null)
+  const [confirmUndoOpen, setConfirmUndoOpen] = useState(false)
 
   // Collect night actions and follow-ups separately, then merge
   const items: NightDashboardItem[] = useMemo(() => {
@@ -336,17 +342,68 @@ export function NightDashboard({
 
       {/* Footer */}
       <ScreenFooter borderColor='border-indigo-500/30'>
-        <Button
-          onClick={onStartDay}
-          disabled={!allDone}
-          fullWidth
-          size='lg'
-          variant='ember'
-        >
-          <Icon name='sun' size='md' className='mr-2' />
-          {t.game.proceedToDay}
-        </Button>
+        <div className='space-y-3'>
+          {undoPreview && onUndoLastStep && (
+            <Button
+              onClick={() => setConfirmUndoOpen(true)}
+              fullWidth
+              size='lg'
+              variant='secondary'
+            >
+              <Icon name='history' size='md' className='mr-2' />
+              {t.game.undoLastDashboardStep}
+            </Button>
+          )}
+          <Button
+            onClick={onStartDay}
+            disabled={!allDone}
+            fullWidth
+            size='lg'
+            variant='ember'
+          >
+            <Icon name='sun' size='md' className='mr-2' />
+            {t.game.proceedToDay}
+          </Button>
+        </div>
       </ScreenFooter>
+
+      <Dialog
+        open={confirmUndoOpen}
+        onOpenChange={setConfirmUndoOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.game.undoLastDashboardStepTitle}</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <div className='space-y-4'>
+              <div className='flex items-start gap-3 rounded-lg border border-amber-500/25 bg-amber-900/20 p-3 text-sm text-amber-200'>
+                <Icon name='alertTriangle' size='sm' className='mt-0.5 flex-shrink-0' />
+                <p>{t.game.undoLastDashboardStepDescription}</p>
+              </div>
+              <div className='grid grid-cols-2 gap-3'>
+                <Button
+                  variant='secondary'
+                  onClick={() => setConfirmUndoOpen(false)}
+                  fullWidth
+                >
+                  {t.common.cancel}
+                </Button>
+                <Button
+                  variant='danger'
+                  onClick={() => {
+                    setConfirmUndoOpen(false)
+                    onUndoLastStep?.()
+                  }}
+                  fullWidth
+                >
+                  {t.game.confirmUndoLastDashboardStep}
+                </Button>
+              </div>
+            </div>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={reviewRoleStatus !== null}

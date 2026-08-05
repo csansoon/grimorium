@@ -186,8 +186,8 @@ export type RoleDefinition = {
     otherNights: number | null
   }
 
-  // Legacy fallback order used only when a script does not provide an explicit
-  // wake sheet entry for this role. Lower numbers wake first.
+  // Final legacy fallback when neither a script wake sheet nor canonical
+  // phase-specific wake order provides this role's position. Lower wakes first.
   nightOrder: number | null
 
   // Chaos metric (0-100) — how much chaos this role introduces to the game.

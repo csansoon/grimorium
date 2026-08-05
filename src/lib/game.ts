@@ -21,7 +21,11 @@ import {
 import { getRole } from './roles'
 import { RoleDefinition, NightActionResult, EffectToAdd } from './roles/types'
 import { getScriptForGame, type ScriptDefinition } from './scripts'
-import { getRuntimeWakeRoleIds } from './scripts/wakeOrder'
+import {
+  getRoleFallbackWakeOrder,
+  getRuntimeWakeRoleIds,
+  type WakePhase,
+} from './scripts/wakeOrder'
 import {
   resolveEvilInfoPlan,
   shouldShowDemonMinionStep,
@@ -240,6 +244,107 @@ export function addHistoryEntry(
 }
 
 // ============================================================================
+// NIGHT DASHBOARD UNDO
+// ============================================================================
+
+export type NightDashboardUndoCheckpointInput = {
+  playerId?: string
+  roleId?: string
+  systemStepId?: NightSystemStepId
+  label?: string
+}
+
+export type NightDashboardUndoPreview = NightDashboardUndoCheckpointInput & {
+  checkpointId: string
+  historyEntryCount: number
+}
+
+/**
+ * Add a hidden history checkpoint before a night dashboard step is committed.
+ *
+ * The checkpoint is intentionally stored as a history entry with an empty
+ * message so it can shield the previous real entry from silent state changes
+ * (applyPipelineChanges with no visible entries mutates the latest entry's
+ * stateAfter). Undo removes this checkpoint and everything after it.
+ */
+export function addNightDashboardUndoCheckpoint(
+  game: Game,
+  data: NightDashboardUndoCheckpointInput = {},
+): Game {
+  return addHistoryEntry(game, {
+    type: 'undo_checkpoint',
+    message: [],
+    data: {
+      kind: 'night_dashboard_step',
+      ...data,
+    },
+  })
+}
+
+export function getLastNightDashboardUndo(
+  game: Game,
+): NightDashboardUndoPreview | null {
+  const state = getCurrentState(game)
+  if (state.phase !== 'night') return null
+
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  if (nightStartIndex === -1) return null
+
+  const checkpointIndex = findLastNightDashboardUndoCheckpointIndex(
+    game,
+    nightStartIndex,
+  )
+  if (checkpointIndex === -1) return null
+
+  const checkpoint = game.history[checkpointIndex]
+  return {
+    checkpointId: checkpoint.id,
+    playerId: readOptionalString(checkpoint.data.playerId),
+    roleId: readOptionalString(checkpoint.data.roleId),
+    systemStepId: readOptionalString(
+      checkpoint.data.systemStepId,
+    ) as NightSystemStepId | undefined,
+    label: readOptionalString(checkpoint.data.label),
+    historyEntryCount: game.history.length - checkpointIndex - 1,
+  }
+}
+
+export function undoLastNightDashboardStep(game: Game): Game | null {
+  const undo = getLastNightDashboardUndo(game)
+  if (!undo) return null
+
+  const checkpointIndex = game.history.findIndex(
+    (entry) => entry.id === undo.checkpointId,
+  )
+  if (checkpointIndex <= 0) return null
+
+  return {
+    ...game,
+    history: game.history.slice(0, checkpointIndex),
+  }
+}
+
+function findLastNightDashboardUndoCheckpointIndex(
+  game: Game,
+  afterIndex: number,
+): number {
+  for (let i = game.history.length - 1; i > afterIndex; i--) {
+    const entry = game.history[i]
+    if (
+      entry.type === 'undo_checkpoint' &&
+      entry.data.kind === 'night_dashboard_step'
+    ) {
+      return i
+    }
+  }
+  return -1
+}
+
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined
+}
+
+// ============================================================================
 // SETUP ACTIONS
 // ============================================================================
 
@@ -300,18 +405,17 @@ export function applySetupAction(
  * active script's wake order. When multiple players share the same role, they
  * appear consecutively in seating order.
  *
- * Roles omitted from a script's wake sheet are appended at the end using their
- * legacy role-level order as a compatibility fallback.
+ * Roles omitted from a script's wake sheet are appended at the end using the
+ * canonical phase-specific order, then legacy role-level order as a final
+ * compatibility fallback.
  */
 function getPlayersWithNightRoles(
   game: Game,
   state: GameState,
 ): { player: PlayerState; role: RoleDefinition }[] {
   const script = getScriptForGame(game)
-  const wakeOrder =
-    state.round <= 1
-      ? getRuntimeWakeRoleIds(script?.wakeOrder.firstNight ?? [])
-      : getRuntimeWakeRoleIds(script?.wakeOrder.otherNights ?? [])
+  const wakePhase: WakePhase = state.round <= 1 ? 'firstNight' : 'otherNights'
+  const wakeOrder = getRuntimeWakeRoleIds(script?.wakeOrder[wakePhase] ?? [])
   const wakeOrderIndex = new Map(
     wakeOrder.map((roleId, index) => [roleId, index]),
   )
@@ -345,8 +449,8 @@ function getPlayersWithNightRoles(
   })
 
   fallback.sort((a, b) => {
-    const aOrder = a.role.nightOrder ?? Number.MAX_SAFE_INTEGER
-    const bOrder = b.role.nightOrder ?? Number.MAX_SAFE_INTEGER
+    const aOrder = getRoleFallbackWakeOrder(a.role, wakePhase)
+    const bOrder = getRoleFallbackWakeOrder(b.role, wakePhase)
     if (aOrder !== bOrder) return aOrder - bOrder
     return a.seatIndex - b.seatIndex
   })
@@ -441,7 +545,7 @@ export function getNextStep(game: Game): GameStep {
       }
     }
 
-    // Build a player-centric list sorted by nightOrder
+    // Build a player-centric list sorted by script wake order plus fallback order.
     const playersWithNightRoles = getPlayersWithNightRoles(game, state)
     const playersByNightKey = new Map(
       playersWithNightRoles.map(({ player, role }) => [
@@ -1668,7 +1772,7 @@ export function getNightRolesStatus(game: Game): NightRoleStatus[] {
   }
   const queueDirectives = getResolvedNightQueueDirectives(game)
 
-  // Build a player-centric list sorted by nightOrder
+  // Build a player-centric list sorted by script wake order plus fallback order.
   const playersWithNightRoles = getPlayersWithNightRoles(game, state)
   const playersByNightKey = new Map(
     playersWithNightRoles.map(({ player, role }) => [

@@ -16,6 +16,15 @@ const es = {
   spyMalfunctionTitle: 'El Grimorio',
   spyMalfunctionDescription:
     'El Espía está envenenado o borracho, ¡así que no debería ver el Grimorio real! Para mantener la ilusión, no le entregues el dispositivo. Muéstrale un Grimorio físico con información falsa en su lugar.',
+  spyInfoPingsTitle: 'Pistas de Información',
+  spyInfoPingsDescription:
+    'Estas son las pistas de dos jugadores preparadas para los roles de información de la primera noche.',
+  shownTo: 'mostrado a',
+  shownRole: 'Rol mostrado',
+  correctPing: 'Correcto',
+  wrongPing: 'Incorrecto',
+  noTargetInfo: 'A este rol se le mostró que no había un objetivo válido.',
+  arbitraryInfo: 'Arbitrario',
 
   // First night: evil team
   evilTeamTitle: 'Tu Equipo Malvado',

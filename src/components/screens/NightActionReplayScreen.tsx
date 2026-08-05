@@ -27,6 +27,8 @@ import { NightActionLayout } from '../layouts'
 import { ScreenFooter } from '../layouts/ScreenFooter'
 import { cn } from '../../lib/utils'
 import { getRole } from '../../lib/roles'
+import { getSpyInfoPings } from '../../lib/roles/definition/trouble-brewing/spy/info'
+import { SpyInfoPingsPanel } from '../../lib/roles/definition/trouble-brewing/spy/SpyInfoPingsPanel'
 
 type Props = {
   game: Game
@@ -153,8 +155,10 @@ function getReplayTitle(
 
 function ReplayEntry({
   entry,
+  game,
 }: {
   entry: HistoryEntry
+  game: Game
 }) {
   const { t, language } = useI18n()
   const action = entry.data.action as string | undefined
@@ -272,9 +276,15 @@ function ReplayEntry({
   }
 
   if (action === 'view_grimoire') {
+    const spyInfoPings =
+      entry.data.roleId === 'spy'
+        ? getSpyInfoPings(game, { upToEntryId: entry.id })
+        : []
+
     return (
       <ReplaySection title={t.game.stepViewGrimoire}>
         <Grimoire state={snapshotState} compact />
+        <SpyInfoPingsPanel state={snapshotState} pings={spyInfoPings} />
       </ReplaySection>
     )
   }
@@ -640,7 +650,7 @@ export function NightActionReplayScreen({
   const content = useMemo(() => {
     if (entries.length > 0) {
       return entries.map((entry, index) => (
-        <ReplayEntry key={`${entry.id}-${index}`} entry={entry} />
+        <ReplayEntry key={`${entry.id}-${index}`} entry={entry} game={game} />
       ))
     }
 

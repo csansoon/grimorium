@@ -89,7 +89,7 @@ export function RoleCard({ roleId }: Props) {
         {/* Role Name */}
         <h1
           className={cn(
-            'font-tarot text-lg sm:text-3xl font-bold text-center uppercase tracking-[0.22em] sm:tracking-widest-xl mb-2',
+            'font-tarot text-base sm:text-2xl md:text-3xl font-bold text-center uppercase tracking-normal leading-tight mb-2 max-w-full break-words',
             team.colors.cardText,
           )}
           style={{ textShadow: team.colors.cardIconGlow }}
@@ -100,7 +100,7 @@ export function RoleCard({ roleId }: Props) {
         {/* Team Badge */}
         <p
           className={cn(
-            'text-center text-xs tracking-widest uppercase',
+            'text-center text-xs tracking-normal uppercase max-w-full break-words',
             team.colors.cardTeamBadge,
           )}
         >
@@ -109,7 +109,7 @@ export function RoleCard({ roleId }: Props) {
       </div>
 
       {/* Middle: Divider + Quote + Lines — centered in remaining space */}
-      <div className='flex-1 flex flex-col items-center justify-center p-3 sm:p-2'>
+      <div className='flex-1 min-h-0 flex flex-col items-center justify-center p-2 sm:p-2'>
         {/* Icon-tagged ability/condition lines */}
         {roleLines.length > 0 && (
           <div className='w-full space-y-1.5 sm:space-y-2'>
@@ -124,7 +124,7 @@ export function RoleCard({ roleId }: Props) {
                 </span>
                 <span
                   className={cn(
-                    'text-[11px] sm:text-sm leading-snug',
+                    'text-[10px] sm:text-xs md:text-sm leading-snug break-words min-w-0',
                     team.colors.cardText,
                     line.type === 'WIN' ? 'opacity-90 font-medium' : 'opacity-70',
                   )}
@@ -141,7 +141,7 @@ export function RoleCard({ roleId }: Props) {
       {roleQuote && (
         <p
           className={cn(
-            'text-center text-xs sm:text-sm italic leading-relaxed mb-3 sm:mb-0',
+            'text-center text-[10px] sm:text-xs md:text-sm italic leading-snug mt-1 mb-2 sm:mb-0 max-w-full break-words',
             team.colors.cardText,
             'opacity-60',
           )}

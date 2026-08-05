@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import definition from '.'
 import { perceive } from '../../../../pipeline/perception'
-import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
   makeState,
@@ -10,24 +9,8 @@ import {
   resetPlayerCounter,
 } from '../../../../__tests__/helpers'
 
-vi.mock('../../../../effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    getEffect: (effectId: string) => {
-      if (testEffects[effectId]) return testEffects[effectId]
-      return (actual.getEffect as (id: string) => EffectDefinition | undefined)(
-        effectId,
-      )
-    },
-  }
-})
-
-const testEffects: Record<string, EffectDefinition> = {}
-
 beforeEach(() => {
   resetPlayerCounter()
-  for (const key of Object.keys(testEffects)) delete testEffects[key]
 })
 
 describe('Undertaker', () => {
@@ -133,21 +116,11 @@ describe('Undertaker', () => {
     })
 
     it('sees deceived role when target has role perception modifier', () => {
-      testEffects['appears_as_villager'] = {
-        id: 'appears_as_villager' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'role',
-            modify: (p) => ({ ...p, roleId: 'villager', team: 'townsfolk' }),
-          },
-        ],
-      }
-
       const undertaker = makePlayer({ id: 'p1', roleId: 'undertaker' })
       const executed = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'imp' }),
-        'appears_as_villager',
+        'misregister',
+        { perceiveAs: { roleId: 'villager', team: 'townsfolk' } },
       )
       const state = makeState({ players: [undertaker, executed] })
 

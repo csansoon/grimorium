@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import definition from '.'
 import { perceive } from '../../../../pipeline/perception'
-import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
   makeState,
@@ -10,24 +9,8 @@ import {
   resetPlayerCounter,
 } from '../../../../__tests__/helpers'
 
-vi.mock('../../../../effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    getEffect: (effectId: string) => {
-      if (testEffects[effectId]) return testEffects[effectId]
-      return (actual.getEffect as (id: string) => EffectDefinition | undefined)(
-        effectId,
-      )
-    },
-  }
-})
-
-const testEffects: Record<string, EffectDefinition> = {}
-
 beforeEach(() => {
   resetPlayerCounter()
-  for (const key of Object.keys(testEffects)) delete testEffects[key]
 })
 
 describe('Ravenkeeper', () => {
@@ -178,21 +161,11 @@ describe('Ravenkeeper', () => {
     })
 
     it('sees deceived role when target has role perception modifier', () => {
-      testEffects['appears_as_chef'] = {
-        id: 'appears_as_chef' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'role',
-            modify: (p) => ({ ...p, roleId: 'chef', team: 'townsfolk' }),
-          },
-        ],
-      }
-
       const rk = makePlayer({ id: 'p1', roleId: 'ravenkeeper' })
       const target = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'imp' }),
-        'appears_as_chef',
+        'misregister',
+        { perceiveAs: { roleId: 'chef', team: 'townsfolk' } },
       )
       const state = makeState({ players: [rk, target] })
 
@@ -202,21 +175,11 @@ describe('Ravenkeeper', () => {
     })
 
     it('good player with demon-like role modifier appears as demon', () => {
-      testEffects['appears_as_imp'] = {
-        id: 'appears_as_imp' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'role',
-            modify: (p) => ({ ...p, roleId: 'imp', team: 'demon' }),
-          },
-        ],
-      }
-
       const rk = makePlayer({ id: 'p1', roleId: 'ravenkeeper' })
       const recluse = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'villager' }),
-        'appears_as_imp',
+        'misregister',
+        { perceiveAs: { roleId: 'imp', team: 'demon' } },
       )
       const state = makeState({ players: [rk, recluse] })
 

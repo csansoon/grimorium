@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { countEvilPairs } from '.'
 import definition from '.'
-import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
   makeState,
@@ -10,25 +9,8 @@ import {
   resetPlayerCounter,
 } from '../../../../__tests__/helpers'
 
-// Mock getEffect to inject test perception modifiers
-vi.mock('../../../../effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    getEffect: (effectId: string) => {
-      if (testEffects[effectId]) return testEffects[effectId]
-      return (actual.getEffect as (id: string) => EffectDefinition | undefined)(
-        effectId,
-      )
-    },
-  }
-})
-
-const testEffects: Record<string, EffectDefinition> = {}
-
 beforeEach(() => {
   resetPlayerCounter()
-  for (const key of Object.keys(testEffects)) delete testEffects[key]
 })
 
 describe('Chef', () => {
@@ -174,22 +156,12 @@ describe('Chef', () => {
 
   describe('perception deception', () => {
     it("good player with 'appears evil' modifier is counted as evil (false positive)", () => {
-      testEffects['appears_evil'] = {
-        id: 'appears_evil' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'alignment',
-            modify: (p) => ({ ...p, alignment: 'evil' }),
-          },
-        ],
-      }
-
       const chef = makePlayer({ id: 'chef', roleId: 'chef' })
       const players = [
         addEffectTo(
           makePlayer({ id: 'p1', roleId: 'villager' }),
-          'appears_evil',
+          'misregister',
+          { perceiveAs: { alignment: 'evil' } },
         ), // looks evil
         makePlayer({ id: 'p2', roleId: 'imp' }), // actually evil
         makePlayer({ id: 'p3', roleId: 'villager' }),
@@ -201,21 +173,12 @@ describe('Chef', () => {
     })
 
     it("evil player with 'appears good' modifier is NOT counted as evil (false negative)", () => {
-      testEffects['appears_good'] = {
-        id: 'appears_good' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'alignment',
-            modify: (p) => ({ ...p, alignment: 'good' }),
-          },
-        ],
-      }
-
       const chef = makePlayer({ id: 'chef', roleId: 'chef' })
       const players = [
         makePlayer({ id: 'p1', roleId: 'imp' }),
-        addEffectTo(makePlayer({ id: 'p2', roleId: 'imp' }), 'appears_good'), // looks good
+        addEffectTo(makePlayer({ id: 'p2', roleId: 'imp' }), 'misregister', {
+          perceiveAs: { alignment: 'good' },
+        }), // looks good
         makePlayer({ id: 'p3', roleId: 'villager' }),
         chef,
       ]
@@ -225,26 +188,17 @@ describe('Chef', () => {
     })
 
     it('two adjacent good players both appearing evil count as an evil pair', () => {
-      testEffects['appears_evil'] = {
-        id: 'appears_evil' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'alignment',
-            modify: (p) => ({ ...p, alignment: 'evil' }),
-          },
-        ],
-      }
-
       const chef = makePlayer({ id: 'chef', roleId: 'chef' })
       const players = [
         addEffectTo(
           makePlayer({ id: 'p1', roleId: 'villager' }),
-          'appears_evil',
+          'misregister',
+          { perceiveAs: { alignment: 'evil' } },
         ),
         addEffectTo(
           makePlayer({ id: 'p2', roleId: 'villager' }),
-          'appears_evil',
+          'misregister',
+          { perceiveAs: { alignment: 'evil' } },
         ),
         makePlayer({ id: 'p3', roleId: 'villager' }),
         chef,

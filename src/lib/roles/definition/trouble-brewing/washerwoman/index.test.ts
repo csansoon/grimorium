@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import definition from '.'
 import { perceive } from '../../../../pipeline/perception'
-import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
   makeState,
@@ -10,24 +9,8 @@ import {
   resetPlayerCounter,
 } from '../../../../__tests__/helpers'
 
-vi.mock('../../../../effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    getEffect: (effectId: string) => {
-      if (testEffects[effectId]) return testEffects[effectId]
-      return (actual.getEffect as (id: string) => EffectDefinition | undefined)(
-        effectId,
-      )
-    },
-  }
-})
-
-const testEffects: Record<string, EffectDefinition> = {}
-
 beforeEach(() => {
   resetPlayerCounter()
-  for (const key of Object.keys(testEffects)) delete testEffects[key]
 })
 
 describe('Washerwoman', () => {
@@ -106,21 +89,11 @@ describe('Washerwoman', () => {
     })
 
     it('deceiving player appearing as townsfolk creates false positive', () => {
-      testEffects['appears_townsfolk'] = {
-        id: 'appears_townsfolk' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'team',
-            modify: (p) => ({ ...p, team: 'townsfolk' }),
-          },
-        ],
-      }
-
       const washerwoman = makePlayer({ id: 'p1', roleId: 'washerwoman' })
       const imp = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'imp' }),
-        'appears_townsfolk',
+        'misregister',
+        { perceiveAs: { team: 'townsfolk' } },
       )
       const state = makeState({ players: [washerwoman, imp] })
 
@@ -129,21 +102,11 @@ describe('Washerwoman', () => {
     })
 
     it('townsfolk appearing as another team creates false negative', () => {
-      testEffects['appears_outsider'] = {
-        id: 'appears_outsider' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'team',
-            modify: (p) => ({ ...p, team: 'outsider' }),
-          },
-        ],
-      }
-
       const washerwoman = makePlayer({ id: 'p1', roleId: 'washerwoman' })
       const villager = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'villager' }),
-        'appears_outsider',
+        'misregister',
+        { perceiveAs: { team: 'outsider' } },
       )
       const state = makeState({ players: [washerwoman, villager] })
 
@@ -152,21 +115,11 @@ describe('Washerwoman', () => {
     })
 
     it('role shown is affected by role perception modifiers', () => {
-      testEffects['appears_as_monk'] = {
-        id: 'appears_as_monk' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'role',
-            modify: (p) => ({ ...p, roleId: 'monk' }),
-          },
-        ],
-      }
-
       const washerwoman = makePlayer({ id: 'p1', roleId: 'washerwoman' })
       const chef = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'chef' }),
-        'appears_as_monk',
+        'misregister',
+        { perceiveAs: { roleId: 'monk' } },
       )
       const state = makeState({ players: [washerwoman, chef] })
 

@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import definition from '.'
 import {
   perceive,
   getAmbiguousPlayers,
   applyPerceptionOverrides,
 } from '../../../../pipeline/perception'
-import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
   makeState,
@@ -14,24 +13,8 @@ import {
   resetPlayerCounter,
 } from '../../../../__tests__/helpers'
 
-vi.mock('../../../../effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    getEffect: (effectId: string) => {
-      if (testEffects[effectId]) return testEffects[effectId]
-      return (actual.getEffect as (id: string) => EffectDefinition | undefined)(
-        effectId,
-      )
-    },
-  }
-})
-
-const testEffects: Record<string, EffectDefinition> = {}
-
 beforeEach(() => {
   resetPlayerCounter()
-  for (const key of Object.keys(testEffects)) delete testEffects[key]
 })
 
 describe('FortuneTeller', () => {
@@ -110,21 +93,11 @@ describe('FortuneTeller', () => {
     })
 
     it('deceiving player registering as demon triggers false positive', () => {
-      testEffects['appears_demon'] = {
-        id: 'appears_demon' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'team',
-            modify: (p) => ({ ...p, team: 'demon' }),
-          },
-        ],
-      }
-
       const ft = makePlayer({ id: 'p1', roleId: 'fortune_teller' })
       const recluse = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'villager' }),
-        'appears_demon',
+        'misregister',
+        { perceiveAs: { team: 'demon' } },
       )
       const state = makeState({ players: [ft, recluse] })
 
@@ -133,21 +106,11 @@ describe('FortuneTeller', () => {
     })
 
     it('demon appearing as townsfolk avoids detection', () => {
-      testEffects['appears_townsfolk'] = {
-        id: 'appears_townsfolk' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'team',
-            modify: (p) => ({ ...p, team: 'townsfolk' }),
-          },
-        ],
-      }
-
       const ft = makePlayer({ id: 'p1', roleId: 'fortune_teller' })
       const spy = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'imp' }),
-        'appears_townsfolk',
+        'misregister',
+        { perceiveAs: { team: 'townsfolk' } },
       )
       const state = makeState({ players: [ft, spy] })
 
@@ -224,30 +187,15 @@ describe('FortuneTeller', () => {
 
   describe('perception configuration for ambiguous players', () => {
     it('detects ambiguous players among selected targets via getAmbiguousPlayers', () => {
-      testEffects['can_register_demon'] = {
-        id: 'can_register_demon' as EffectId,
-        icon: 'user',
-        canRegisterAs: {
-          teams: ['minion', 'demon'],
-          alignments: ['evil'],
-        },
-        perceptionModifiers: [
-          {
-            context: ['alignment', 'team', 'role'],
-            modify: (p, _target, _observer, _state, effectData) => {
-              const overrides = effectData?.perceiveAs as
-                | Partial<typeof p>
-                | undefined
-              if (!overrides) return p
-              return { ...p, ...overrides }
-            },
-          },
-        ],
-      }
-
       const recluse = addEffectTo(
         makePlayer({ id: 'p1', roleId: 'villager' }),
-        'can_register_demon',
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['minion', 'demon'],
+            alignments: ['evil'],
+          },
+        },
       )
       const villager = makePlayer({ id: 'p2', roleId: 'villager' })
 
@@ -265,31 +213,16 @@ describe('FortuneTeller', () => {
     })
 
     it('applyPerceptionOverrides makes ambiguous player register as demon for perceive()', () => {
-      testEffects['can_register_demon'] = {
-        id: 'can_register_demon' as EffectId,
-        icon: 'user',
-        canRegisterAs: {
-          teams: ['minion', 'demon'],
-          alignments: ['evil'],
-        },
-        perceptionModifiers: [
-          {
-            context: ['alignment', 'team', 'role'],
-            modify: (p, _target, _observer, _state, effectData) => {
-              const overrides = effectData?.perceiveAs as
-                | Partial<typeof p>
-                | undefined
-              if (!overrides) return p
-              return { ...p, ...overrides }
-            },
-          },
-        ],
-      }
-
       const ft = makePlayer({ id: 'p1', roleId: 'fortune_teller' })
       const recluse = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'villager' }),
-        'can_register_demon',
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['minion', 'demon'],
+            alignments: ['evil'],
+          },
+        },
       )
       const state = makeState({ players: [ft, recluse] })
 
@@ -316,30 +249,15 @@ describe('FortuneTeller', () => {
     })
 
     it('only scopes ambiguity check to selected players, not all players', () => {
-      testEffects['can_register_demon'] = {
-        id: 'can_register_demon' as EffectId,
-        icon: 'user',
-        canRegisterAs: {
-          teams: ['minion', 'demon'],
-          alignments: ['evil'],
-        },
-        perceptionModifiers: [
-          {
-            context: ['alignment', 'team', 'role'],
-            modify: (p, _target, _observer, _state, effectData) => {
-              const overrides = effectData?.perceiveAs as
-                | Partial<typeof p>
-                | undefined
-              if (!overrides) return p
-              return { ...p, ...overrides }
-            },
-          },
-        ],
-      }
-
       const recluse = addEffectTo(
         makePlayer({ id: 'p1', roleId: 'villager' }),
-        'can_register_demon',
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['minion', 'demon'],
+            alignments: ['evil'],
+          },
+        },
       )
       const villager1 = makePlayer({ id: 'p2', roleId: 'villager' })
       const villager2 = makePlayer({ id: 'p3', roleId: 'villager' })

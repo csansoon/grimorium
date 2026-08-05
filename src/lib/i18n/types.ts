@@ -241,6 +241,10 @@ export type Translations = {
     demonCreationDeathsConfirm: string
     allActionsComplete: string
     proceedToDay: string
+    undoLastDashboardStep: string
+    undoLastDashboardStepTitle: string
+    undoLastDashboardStepDescription: string
+    confirmUndoLastDashboardStep: string
     goodTwinLabel: string
     evilTwinLabel: string
 

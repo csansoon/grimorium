@@ -58,7 +58,10 @@ export function HistoryView({ game, onClose }: Props) {
       <div className='max-w-lg mx-auto px-4 py-4'>
         <div className='space-y-0'>
           {game.history
-            .filter((entry) => entry.message.length > 0) // Hide entries with no message
+            .filter(
+              (entry) =>
+                entry.type !== 'undo_checkpoint' && entry.message.length > 0,
+            ) // Hide internal checkpoints and entries with no message
             .map((entry, index, filteredHistory) => {
               const iconConfig = eventIcons[entry.type]
               const isLast = index === filteredHistory.length - 1

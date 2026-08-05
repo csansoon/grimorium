@@ -21,6 +21,8 @@ import { cn } from '../../../../../lib/utils'
 import { isAlive } from '../../../../types'
 import { isMalfunctioning } from '../../../../effects'
 import { canActWhileDeadUnderVigormortis } from '../../../runtime-helpers'
+import { getSpyInfoPings } from './info'
+import { SpyInfoPingsPanel } from './SpyInfoPingsPanel'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -64,12 +66,13 @@ const definition: RoleDefinition = {
 
   RoleReveal: DefaultRoleReveal,
 
-  NightAction: ({ state, player, onComplete }) => {
+  NightAction: ({ game, state, player, onComplete }) => {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
     const [grimoireView, setGrimoireView] = useState<'circle' | 'list'>('circle')
     const malfunctioning = isMalfunctioning(player)
     const roleT = getRoleTranslations('spy', language)
+    const spyInfoPings = getSpyInfoPings(game)
 
     const handleComplete = () => {
       onComplete({
@@ -157,6 +160,8 @@ const definition: RoleDefinition = {
                 <Grimoire state={state} compact />
               )}
             </div>
+
+            <SpyInfoPingsPanel state={state} pings={spyInfoPings} />
           </div>
 
           <HandbackButton

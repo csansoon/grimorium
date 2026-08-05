@@ -6,7 +6,7 @@ import {
 } from '../../lib/evilInfo'
 import { GameState, PlayerState } from '../../lib/types'
 import { getCurrentRole, getCurrentTeam } from '../../lib/identity'
-import { useI18n, getRoleName } from '../../lib/i18n'
+import { useI18n } from '../../lib/i18n'
 import { Icon } from '../atoms'
 
 // ============================================================================
@@ -24,7 +24,6 @@ type EvilTeamRevealProps = {
 
 type TeamMember = {
   player: PlayerState
-  showRole: boolean
   teamLabel: string
 }
 
@@ -37,14 +36,14 @@ type TeamMember = {
  *
  * - When viewerType is "demon": Shows minion players (name only, no role).
  * - When viewerType is "minion": Shows other minions (name only) and demons
- *   (name + role name, since minions learn the Demon's identity).
+ *   (name only, identified by team; minions learn who the Demon is, not the role).
  */
 export function EvilTeamReveal({
   state,
   viewer,
   viewerType,
 }: EvilTeamRevealProps) {
-  const { t, language } = useI18n()
+  const { t } = useI18n()
   const evilInfoPlan = useMemo(() => resolveEvilInfoPlan(state), [state.players])
 
   const teamMembers: TeamMember[] = useMemo(() => {
@@ -66,7 +65,6 @@ export function EvilTeamReveal({
       if (role.team === 'minion' && viewerType === 'demon') {
         members.push({
           player: p,
-          showRole: false, // Never show minion roles
           teamLabel: t.teams.minion.name,
         })
       } else if (
@@ -76,7 +74,6 @@ export function EvilTeamReveal({
       ) {
         members.push({
           player: p,
-          showRole: false,
           teamLabel: t.teams.minion.name,
         })
       } else if (
@@ -86,7 +83,6 @@ export function EvilTeamReveal({
       ) {
         members.push({
           player: p,
-          showRole: true, // Minions learn the Demon role
           teamLabel: t.teams.demon.name,
         })
       }
@@ -102,7 +98,7 @@ export function EvilTeamReveal({
     })
 
     return members
-  }, [evilInfoPlan, state.players, viewer.id, viewerType, t, language])
+  }, [evilInfoPlan, state.players, viewer.id, viewerType, t])
 
   if (teamMembers.length === 0) {
     return (
@@ -115,7 +111,6 @@ export function EvilTeamReveal({
   return (
     <div className='space-y-3'>
       {teamMembers.map((member) => {
-        const role = getCurrentRole(member.player)
         const isDemon = getCurrentTeam(member.player) === 'demon'
 
         return (
@@ -150,9 +145,7 @@ export function EvilTeamReveal({
               <div
                 className={`text-xs ${isDemon ? 'text-red-400/70' : 'text-orange-400/70'}`}
               >
-                {member.showRole && role
-                  ? getRoleName(role.id, language)
-                  : member.teamLabel}
+                {member.teamLabel}
               </div>
             </div>
           </div>

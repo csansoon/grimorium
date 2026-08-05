@@ -67,6 +67,7 @@ export type EventType =
   | 'game_created'
   | 'night_started'
   | 'night_queue_directive'
+  | 'undo_checkpoint'
   | 'grimoire_reviewed'
   | 'role_revealed'
   | 'night_action'

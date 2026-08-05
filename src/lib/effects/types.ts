@@ -95,7 +95,8 @@ export type EffectDefinition = {
   preventsNomination?: boolean
 
   // Whether this effect causes the player's ability to malfunction
-  // (e.g., Poisoned, Drunk — info roles give wrong info, passive abilities fail)
+  // (e.g., Poisoned, Drunk — info roles receive Storyteller-chosen info,
+  // passive abilities fail)
   poisonsAbility?: boolean
 
   // Check if a player can vote given this effect (e.g., dead players can vote once)

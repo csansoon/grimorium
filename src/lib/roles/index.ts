@@ -48,7 +48,10 @@ import FangGu from './definition/sects-and-violets/fang-gu'
 import Vigormortis from './definition/sects-and-violets/vigormortis'
 import NoDashii from './definition/sects-and-violets/no-dashii'
 import Vortox from './definition/sects-and-violets/vortox'
-import { applyCanonicalWakeOrder } from '../scripts/wakeOrder'
+import {
+  applyCanonicalWakeOrder,
+  getRoleFallbackWakeOrder,
+} from '../scripts/wakeOrder'
 import { getRoleIdsForGame } from '../scripts'
 import { getRoleEvilInfoModifier } from './evilInfoMetadata'
 
@@ -142,11 +145,18 @@ export const ROLES: Record<RoleId, RoleDefinition> = new Proxy(
 // Re-export scripts module for backward compatibility
 export { SCRIPTS, type ScriptId } from '../scripts'
 
-// Legacy helper: script wake sheets now drive runtime wake order.
+/**
+ * @deprecated Script wake sheets drive runtime wake order. This remains for
+ * compatibility with older callers and sorts by other-night canonical fallback.
+ */
 export function getNightOrderRoles(): RoleDefinition[] {
   return Object.values(getRoleRegistry())
     .filter((role) => role.nightOrder !== null)
-    .sort((a, b) => (a.nightOrder ?? 0) - (b.nightOrder ?? 0))
+    .sort(
+      (a, b) =>
+        getRoleFallbackWakeOrder(a, 'otherNights') -
+        getRoleFallbackWakeOrder(b, 'otherNights'),
+    )
 }
 
 export function getRole(roleId: string): RoleDefinition | undefined {

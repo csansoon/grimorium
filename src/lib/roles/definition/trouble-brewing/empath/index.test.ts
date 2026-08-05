@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import definition from '.'
 import { perceive } from '../../../../pipeline/perception'
 import { getAliveNeighbors } from '../../../../types'
-import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
   makeState,
@@ -11,24 +10,8 @@ import {
   resetPlayerCounter,
 } from '../../../../__tests__/helpers'
 
-vi.mock('../../../../effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    getEffect: (effectId: string) => {
-      if (testEffects[effectId]) return testEffects[effectId]
-      return (actual.getEffect as (id: string) => EffectDefinition | undefined)(
-        effectId,
-      )
-    },
-  }
-})
-
-const testEffects: Record<string, EffectDefinition> = {}
-
 beforeEach(() => {
   resetPlayerCounter()
-  for (const key of Object.keys(testEffects)) delete testEffects[key]
 })
 
 describe('Empath', () => {
@@ -136,21 +119,11 @@ describe('Empath', () => {
 
   describe('perception deception', () => {
     it('evil neighbor appearing good → Empath sees 0', () => {
-      testEffects['appears_good'] = {
-        id: 'appears_good' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'alignment',
-            modify: (p) => ({ ...p, alignment: 'good' }),
-          },
-        ],
-      }
-
       const empath = makePlayer({ id: 'p2', roleId: 'empath' })
       const evilNeighbor = addEffectTo(
         makePlayer({ id: 'p3', roleId: 'imp' }),
-        'appears_good',
+        'misregister',
+        { perceiveAs: { alignment: 'good' } },
       )
       const state = makeState({
         players: [
@@ -167,21 +140,11 @@ describe('Empath', () => {
     })
 
     it('good neighbor appearing evil → Empath sees 1', () => {
-      testEffects['appears_evil'] = {
-        id: 'appears_evil' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'alignment',
-            modify: (p) => ({ ...p, alignment: 'evil' }),
-          },
-        ],
-      }
-
       const empath = makePlayer({ id: 'p2', roleId: 'empath' })
       const deceivedNeighbor = addEffectTo(
         makePlayer({ id: 'p3', roleId: 'villager' }),
-        'appears_evil',
+        'misregister',
+        { perceiveAs: { alignment: 'evil' } },
       )
       const state = makeState({
         players: [

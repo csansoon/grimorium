@@ -259,6 +259,11 @@ const en: Translations = {
     demonCreationDeathsConfirm: 'Confirm Night Deaths',
     allActionsComplete: 'All night actions have been processed',
     proceedToDay: 'Proceed to Day',
+    undoLastDashboardStep: 'Return to Previous Step',
+    undoLastDashboardStepTitle: 'Return to previous step?',
+    undoLastDashboardStepDescription:
+      'This will erase the last completed night dashboard step and any automatic effects, deaths, skips, or follow-ups it caused.',
+    confirmUndoLastDashboardStep: 'Return',
     goodTwinLabel: 'Good Twin',
     evilTwinLabel: 'Evil Twin',
 
@@ -287,7 +292,7 @@ const en: Translations = {
     // Malfunction Config
     stepConfigureMalfunction: 'Configure Malfunction',
     playerIsMalfunctioning:
-      'This player is poisoned or drunk, so their ability yields false information. As the Storyteller, you must select the false information they will receive.',
+      'This player is poisoned or drunk, so their ability malfunctions. As the Storyteller, choose what information they receive; it may be true or false.',
     chooseFalseNumber: 'What number should they see?',
     chooseFalseResult: 'What result should they see?',
     chooseFalseTarget: 'Which player should they be told is the role?',
@@ -567,9 +572,9 @@ const en: Translations = {
     p1_roundNominateLabel: 'Nominations',
     p1_conceptsTitle: 'Key Concepts',
     p1_conceptPoison:
-      "**Poisoning** — A poisoned player's ability gives wrong information (or doesn't work). They don't know they're poisoned.",
+      "**Poisoning** — A poisoned player's ability malfunctions. Any information they receive is chosen by the Storyteller and may be true or false. They don't know they're poisoned.",
     p1_conceptDrunk:
-      "**Drunkenness** — Like poisoning, but permanent. The Drunk thinks they're a different role entirely.",
+      "**Drunkenness** — Like poisoning, but permanent. The Drunk thinks they're a different role, and any information they receive may be true or false.",
     p1_conceptDead:
       '**Dead players** — Dead players can still talk, debate, and vote **once** (then they lose their vote forever).',
     p1_conceptStoryteller:

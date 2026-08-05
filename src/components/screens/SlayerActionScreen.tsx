@@ -1,13 +1,112 @@
 import { useState } from 'react'
-import { isAlive } from '../../lib/types'
-import { getCurrentTeam } from '../../lib/identity'
+import { GameState, PlayerState, isAlive } from '../../lib/types'
 import { isMalfunctioning } from '../../lib/effects'
-import { useI18n } from '../../lib/i18n'
-import { DayActionProps } from '../../lib/pipeline/types'
+import { getRoleName, useI18n } from '../../lib/i18n'
+import {
+  applyPerceptionOverrides,
+  canRegisterAsTeam,
+  perceive,
+} from '../../lib/pipeline'
+import {
+  DayActionProps,
+  DayActionResult,
+  Perception,
+} from '../../lib/pipeline/types'
 import { Button, Icon, BackButton } from '../atoms'
-import { MysticDivider } from '../items'
+import { MysticDivider, PerceptionConfigStep } from '../items'
 import { PlayerPickerList } from '../inputs'
 import { ScreenFooter } from '../layouts/ScreenFooter'
+
+type Phase = 'select_target' | 'configure_perception'
+
+export function shouldPromptForSlayerDemonRegistration(
+  slayer: PlayerState | undefined,
+  target: PlayerState | undefined,
+): boolean {
+  if (!slayer || !target) return false
+  return !isMalfunctioning(slayer) && canRegisterAsTeam(target, 'demon')
+}
+
+export function buildSlayerShotResult(
+  state: GameState,
+  playerId: string,
+  targetId: string,
+  perceptionOverrides: Record<string, Partial<Perception>> = {},
+): DayActionResult | null {
+  const effectiveState = applyPerceptionOverrides(state, perceptionOverrides)
+  const slayer = effectiveState.players.find((p) => p.id === playerId)
+  const target = effectiveState.players.find((p) => p.id === targetId)
+  if (!slayer || !target) return null
+
+  const malfunctioning = isMalfunctioning(slayer)
+  const perceivedTeam = perceive(target, slayer, 'team', effectiveState).team
+  const hit = !malfunctioning && perceivedTeam === 'demon'
+  const perceptionData =
+    Object.keys(perceptionOverrides).length > 0
+      ? { perceptionOverrides }
+      : {}
+
+  if (hit) {
+    return {
+      entries: [
+        {
+          type: 'slayer_shot',
+          message: [
+            {
+              type: 'i18n',
+              key: 'roles.slayer.history.killedDemon',
+              params: {
+                slayer: playerId,
+                target: targetId,
+              },
+            },
+          ],
+          data: {
+            slayerId: playerId,
+            targetId,
+            hit: true,
+            perceivedTeam,
+            ...perceptionData,
+          },
+        },
+      ],
+      removeEffects: { [playerId]: ['slayer_bullet'] },
+      intent: {
+        type: 'kill',
+        sourceId: playerId,
+        targetId,
+        cause: 'slayer_shot',
+      },
+    }
+  }
+
+  return {
+    entries: [
+      {
+        type: 'slayer_shot',
+        message: [
+          {
+            type: 'i18n',
+            key: 'roles.slayer.history.missed',
+            params: {
+              slayer: playerId,
+              target: targetId,
+            },
+          },
+        ],
+        data: {
+          slayerId: playerId,
+          targetId,
+          hit: false,
+          perceivedTeam,
+          ...(malfunctioning ? { malfunctioned: true } : {}),
+          ...perceptionData,
+        },
+      },
+    ],
+    removeEffects: { [playerId]: ['slayer_bullet'] },
+  }
+}
 
 /**
  * Day action component for the Slayer's ability.
@@ -19,11 +118,29 @@ export function SlayerActionScreen({
   onComplete,
   onBack,
 }: DayActionProps) {
-  const { t } = useI18n()
+  const { t, language } = useI18n()
+  const [phase, setPhase] = useState<Phase>('select_target')
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
 
   const slayer = state.players.find((p) => p.id === playerId)
   const alivePlayers = state.players.filter((p) => isAlive(p))
+  const target = selectedTarget
+    ? state.players.find((p) => p.id === selectedTarget)
+    : undefined
+
+  const completeShot = (
+    perceptionOverrides: Record<string, Partial<Perception>> = {},
+  ) => {
+    if (!selectedTarget) return
+
+    const result = buildSlayerShotResult(
+      state,
+      playerId,
+      selectedTarget,
+      perceptionOverrides,
+    )
+    if (result) onComplete(result)
+  }
 
   const handleConfirm = () => {
     if (!selectedTarget || !slayer) return
@@ -31,66 +148,26 @@ export function SlayerActionScreen({
     const target = state.players.find((p) => p.id === selectedTarget)
     if (!target) return
 
-    // When malfunctioning, the shot always misses
-    const isDemon =
-      !isMalfunctioning(slayer) && getCurrentTeam(target) === 'demon'
-
-    if (isDemon) {
-      onComplete({
-        entries: [
-          {
-            type: 'slayer_shot',
-            message: [
-              {
-                type: 'i18n',
-                key: 'roles.slayer.history.killedDemon',
-                params: {
-                  slayer: playerId,
-                  target: selectedTarget,
-                },
-              },
-            ],
-            data: {
-              slayerId: playerId,
-              targetId: selectedTarget,
-              hit: true,
-            },
-          },
-        ],
-        removeEffects: { [playerId]: ['slayer_bullet'] },
-        intent: {
-          type: 'kill',
-          sourceId: playerId,
-          targetId: selectedTarget,
-          cause: 'slayer_shot',
-        },
-      })
-    } else {
-      onComplete({
-        entries: [
-          {
-            type: 'slayer_shot',
-            message: [
-              {
-                type: 'i18n',
-                key: 'roles.slayer.history.missed',
-                params: {
-                  slayer: playerId,
-                  target: selectedTarget,
-                },
-              },
-            ],
-            data: {
-              slayerId: playerId,
-              targetId: selectedTarget,
-              hit: false,
-              ...(isMalfunctioning(slayer) ? { malfunctioned: true } : {}),
-            },
-          },
-        ],
-        removeEffects: { [playerId]: ['slayer_bullet'] },
-      })
+    if (shouldPromptForSlayerDemonRegistration(slayer, target)) {
+      setPhase('configure_perception')
+      return
     }
+
+    completeShot()
+  }
+
+  if (phase === 'configure_perception' && slayer && target) {
+    return (
+      <PerceptionConfigStep
+        ambiguousPlayers={[target]}
+        context='team'
+        state={state}
+        roleIcon='crosshair'
+        roleName={getRoleName('slayer', language)}
+        playerName={slayer.name}
+        onComplete={completeShot}
+      />
+    )
   }
 
   return (

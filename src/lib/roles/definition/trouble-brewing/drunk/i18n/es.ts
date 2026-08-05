@@ -6,7 +6,7 @@ const es = {
   lines: [
     { type: 'PASSIVE', text: 'Crees que eres un Aldeano. No lo eres.' },
     { type: 'CAVEAT', text: 'En lugar de esta carta, ves la carta de otro rol.' },
-    { type: 'CAVEAT', text: 'La habilidad que crees tener no funciona. Tu información es siempre falsa.' },
+    { type: 'CAVEAT', text: 'La habilidad que crees tener no funciona. El Cuentacuentos puede darte información verdadera o falsa.' },
     { type: 'WIN', text: 'Ejecuta al Demonio para ganar.' },
   ],
 

@@ -30,6 +30,9 @@ import {
   getNomineesToday,
   getBlockStatus,
   hasVirginExecutionToday,
+  addNightDashboardUndoCheckpoint,
+  getLastNightDashboardUndo,
+  undoLastNightDashboardStep,
 } from '../../lib/game'
 import { isAlive } from '../../lib/types'
 import {
@@ -171,6 +174,10 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   const completedNightPrepItems = useMemo(
     () => getCompletedNightPrepItems(game, language, t),
     [game, language, t],
+  )
+  const nightDashboardUndo = useMemo(
+    () => getLastNightDashboardUndo(game),
+    [game],
   )
 
   const updateGame = useCallback((newGame: Game) => {
@@ -421,7 +428,17 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     const role = getRole(roleId)
     if (!role || !role.NightAction) {
       // Role has no night action component — auto-skip
-      const newGame = skipNightAction(game, roleId, playerId, systemStepId)
+      const checkpointGame = addNightDashboardUndoCheckpoint(game, {
+        playerId,
+        roleId,
+        systemStepId,
+      })
+      const newGame = skipNightAction(
+        checkpointGame,
+        roleId,
+        playerId,
+        systemStepId,
+      )
       const readyGame = processAutoSkips(newGame)
       updateGame(readyGame)
       setScreen({ type: 'night_dashboard' })
@@ -435,6 +452,15 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     setScreen({ type: 'night_follow_up', followUp })
   }
 
+  const handleUndoLastNightDashboardStep = () => {
+    const undoneGame = undoLastNightDashboardStep(game)
+    if (!undoneGame) return
+
+    setPipelineUI(null)
+    updateGame(undoneGame)
+    setScreen({ type: 'night_dashboard' })
+  }
+
   const handleReplayNightAction = (
     playerId: string,
     roleId: string,
@@ -446,8 +472,14 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   const handleNightActionComplete = (result: NightActionResult) => {
     if (screen.type !== 'night_action') return
 
+    const checkpointGame = addNightDashboardUndoCheckpoint(game, {
+      playerId: screen.playerId,
+      roleId: screen.roleId,
+      systemStepId: screen.systemStepId,
+    })
+
     // Apply direct entries/effects (not the intent)
-    const newGame = applyNightAction(game, result)
+    const newGame = applyNightAction(checkpointGame, result)
     updateGame(newGame)
 
     const intents: Intent[] = [
@@ -492,8 +524,13 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   const handleNightActionSkip = () => {
     if (screen.type !== 'night_action') return
 
+    const checkpointGame = addNightDashboardUndoCheckpoint(game, {
+      playerId: screen.playerId,
+      roleId: screen.roleId,
+      systemStepId: screen.systemStepId,
+    })
     const newGame = skipNightAction(
-      game,
+      checkpointGame,
       screen.roleId,
       screen.playerId,
       screen.systemStepId,
@@ -726,6 +763,12 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   // ========================================================================
 
   const handleNightFollowUpComplete = (result: NightFollowUpResult) => {
+    if (screen.type !== 'night_follow_up') return
+
+    const checkpointGame = addNightDashboardUndoCheckpoint(game, {
+      playerId: screen.followUp.playerId,
+      label: screen.followUp.label,
+    })
     const changes = {
       entries: result.entries,
       stateUpdates: result.stateUpdates,
@@ -734,7 +777,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       changeAlignments: result.changeAlignments,
       changeRoles: result.changeRoles,
     }
-    const newGame = applyPipelineChanges(game, changes)
+    const newGame = applyPipelineChanges(checkpointGame, changes)
     updateGame(newGame)
 
     if (result.winner) {
@@ -1016,8 +1059,13 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
               })
             }}
             onSkipNightAction={(playerId, roleId, systemStepId) => {
+              const checkpointGame = addNightDashboardUndoCheckpoint(game, {
+                playerId,
+                roleId,
+                systemStepId,
+              })
               const newGame = skipNightAction(
-                game,
+                checkpointGame,
                 roleId,
                 playerId,
                 systemStepId,
@@ -1027,6 +1075,8 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
               setScreen({ type: 'night_dashboard' })
             }}
             onOpenNightFollowUp={handleOpenNightFollowUp}
+            undoPreview={nightDashboardUndo}
+            onUndoLastStep={handleUndoLastNightDashboardStep}
             onStartDay={handleStartDay}
             onMainMenu={onMainMenu}
             onShowRoleCard={handleShowRoleCard}

@@ -16,6 +16,15 @@ const en = {
   spyMalfunctionTitle: 'The Grimoire',
   spyMalfunctionDescription:
     'The Spy is poisoned or drunk, so they should not see the true Grimoire! To maintain the illusion, do not hand them the device. Show them a physical Grimoire with false information instead.',
+  spyInfoPingsTitle: 'Information Pings',
+  spyInfoPingsDescription:
+    'These are the two-player clues prepared for first-night information roles.',
+  shownTo: 'shown to',
+  shownRole: 'Shown role',
+  correctPing: 'Correct',
+  wrongPing: 'Wrong',
+  noTargetInfo: 'This role was shown that there was no valid target.',
+  arbitraryInfo: 'Arbitrary',
 
   // First night: evil team
   evilTeamTitle: 'Your Evil Team',

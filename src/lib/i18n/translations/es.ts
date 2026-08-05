@@ -262,6 +262,11 @@ const es: Translations = {
     demonCreationDeathsConfirm: 'Confirmar Muertes Nocturnas',
     allActionsComplete: 'Todas las acciones nocturnas han sido procesadas',
     proceedToDay: 'Proceder al Día',
+    undoLastDashboardStep: 'Volver al Paso Anterior',
+    undoLastDashboardStepTitle: '¿Volver al paso anterior?',
+    undoLastDashboardStepDescription:
+      'Esto borrará el último paso completado del panel nocturno y cualquier efecto, muerte, omisión o seguimiento automático que haya causado.',
+    confirmUndoLastDashboardStep: 'Volver',
     goodTwinLabel: 'Gemelo Bueno',
     evilTwinLabel: 'Gemelo Malvado',
 
@@ -290,7 +295,7 @@ const es: Translations = {
     // Malfunction Config
     stepConfigureMalfunction: 'Configurar Mal Funcionamiento',
     playerIsMalfunctioning:
-      'Este jugador está envenenado o borracho, por lo que su habilidad da información falsa. Como Cuentacuentos, debes seleccionar la información falsa que recibirá.',
+      'Este jugador está envenenado o borracho, por lo que su habilidad falla. Como Cuentacuentos, elige qué información recibirá; puede ser verdadera o falsa.',
     chooseFalseNumber: '¿Qué número debería ver?',
     chooseFalseResult: '¿Qué resultado debería ver?',
     chooseFalseTarget: '¿A qué jugador le dirán que es el rol?',
@@ -570,9 +575,9 @@ const es: Translations = {
     p1_roundNominateLabel: 'Nominaciones',
     p1_conceptsTitle: 'Conceptos Clave',
     p1_conceptPoison:
-      '**Envenenamiento** — La habilidad de un jugador envenenado da información incorrecta (o no funciona). Ellos no saben que están envenenados.',
+      '**Envenenamiento** — La habilidad de un jugador envenenado falla. Cualquier información que reciba la elige el Cuentacuentos y puede ser verdadera o falsa. El jugador no sabe que está envenenado.',
     p1_conceptDrunk:
-      '**Ebriedad** — Como estar envenenado, pero permanente. El Borracho cree que tiene un rol distinto.',
+      '**Ebriedad** — Como estar envenenado, pero permanente. El Borracho cree que tiene un rol distinto, y cualquier información que reciba puede ser verdadera o falsa.',
     p1_conceptDead:
       '**Jugadores muertos** — Los jugadores muertos aún pueden hablar, debatir y votar **una vez** (luego pierden su voto para siempre).',
     p1_conceptStoryteller:

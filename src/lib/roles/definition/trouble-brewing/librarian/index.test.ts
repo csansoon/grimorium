@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import definition from '.'
 import { perceive } from '../../../../pipeline/perception'
-import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
   makePlayer,
   makeState,
@@ -10,24 +9,8 @@ import {
   resetPlayerCounter,
 } from '../../../../__tests__/helpers'
 
-vi.mock('../../../../effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return {
-    ...actual,
-    getEffect: (effectId: string) => {
-      if (testEffects[effectId]) return testEffects[effectId]
-      return (actual.getEffect as (id: string) => EffectDefinition | undefined)(
-        effectId,
-      )
-    },
-  }
-})
-
-const testEffects: Record<string, EffectDefinition> = {}
-
 beforeEach(() => {
   resetPlayerCounter()
-  for (const key of Object.keys(testEffects)) delete testEffects[key]
 })
 
 describe('Librarian', () => {
@@ -106,21 +89,11 @@ describe('Librarian', () => {
     })
 
     it('evil player appearing as outsider creates false positive', () => {
-      testEffects['appears_outsider'] = {
-        id: 'appears_outsider' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'team',
-            modify: (p) => ({ ...p, team: 'outsider' }),
-          },
-        ],
-      }
-
       const librarian = makePlayer({ id: 'p1', roleId: 'librarian' })
       const imp = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'imp' }),
-        'appears_outsider',
+        'misregister',
+        { perceiveAs: { team: 'outsider' } },
       )
       const state = makeState({ players: [librarian, imp] })
 
@@ -129,21 +102,11 @@ describe('Librarian', () => {
     })
 
     it('outsider appearing as townsfolk creates false negative', () => {
-      testEffects['appears_townsfolk'] = {
-        id: 'appears_townsfolk' as EffectId,
-        icon: 'user',
-        perceptionModifiers: [
-          {
-            context: 'team',
-            modify: (p) => ({ ...p, team: 'townsfolk' }),
-          },
-        ],
-      }
-
       const librarian = makePlayer({ id: 'p1', roleId: 'librarian' })
       const saint = addEffectTo(
         makePlayer({ id: 'p2', roleId: 'saint' }),
-        'appears_townsfolk',
+        'misregister',
+        { perceiveAs: { team: 'townsfolk' } },
       )
       const state = makeState({ players: [librarian, saint] })
 

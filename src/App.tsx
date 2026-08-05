@@ -12,7 +12,6 @@ import {
   saveGame,
   setCurrentGameId,
   getGame,
-  clearCurrentGame,
 } from './lib/storage'
 import {
   MainMenu,
@@ -304,7 +303,6 @@ function App() {
         key={gameId}
         initialGame={game}
         onMainMenu={() => {
-          clearCurrentGame()
           navigate('/')
         }}
       />

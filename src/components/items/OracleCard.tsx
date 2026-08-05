@@ -48,7 +48,7 @@ export function OracleCard({
         {/* Title */}
         <h1
           className={cn(
-            'font-tarot text-lg sm:text-3xl font-bold text-center uppercase tracking-[0.22em] sm:tracking-widest-xl mb-2',
+            'font-tarot text-base sm:text-2xl md:text-3xl font-bold text-center uppercase tracking-normal leading-tight mb-2 max-w-full break-words',
             team.colors.cardText,
           )}
           style={{ textShadow: team.colors.cardIconGlow }}
@@ -59,7 +59,7 @@ export function OracleCard({
         {/* Subtitle (role name) */}
         <p
           className={cn(
-            'text-center text-[11px] tracking-[0.22em] sm:tracking-widest uppercase mb-3 sm:mb-6',
+            'text-center text-[11px] tracking-normal uppercase mb-3 sm:mb-6 max-w-full break-words',
             team.colors.cardTeamBadge,
           )}
         >
@@ -149,20 +149,20 @@ export function VisionReveal({
   const team = getTeam(teamId)
 
   return (
-    <div className='text-center py-2 sm:py-4'>
+    <div className='w-full text-center py-1 sm:py-3'>
       {/* Player name cards */}
-      <div className='space-y-2 mb-4 sm:mb-6'>
+      <div className='space-y-2 mb-3 sm:mb-5'>
         {players.map((name, i) => (
           <div
             key={i}
             className={cn(
-              'px-4 py-2.5 rounded-lg border text-center',
+              'px-3 py-2 rounded-lg border text-center min-w-0',
               team.colors.cardWinBg,
             )}
           >
             <span
               className={cn(
-                'font-tarot text-lg tracking-wide uppercase',
+                'font-tarot text-base sm:text-lg tracking-normal uppercase leading-tight break-words',
                 team.colors.cardText,
               )}
             >
@@ -181,7 +181,7 @@ export function VisionReveal({
         />
         <p
           className={cn(
-            'font-tarot text-lg sm:text-xl uppercase tracking-wider leading-relaxed',
+            'font-tarot text-base sm:text-lg md:text-xl uppercase tracking-normal leading-tight max-w-full px-1 break-words',
             team.colors.cardText,
           )}
           style={{ textShadow: team.colors.cardIconGlow }}

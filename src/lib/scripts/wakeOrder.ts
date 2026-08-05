@@ -1,7 +1,7 @@
 import { RoleId, RoleDefinition } from '../roles/types'
 import { ScriptWakeEntry, ScriptWakeOrder } from './types'
 
-type WakePhase = 'firstNight' | 'otherNights'
+export type WakePhase = 'firstNight' | 'otherNights'
 
 type WakeBucket =
   | 'disruption'
@@ -239,6 +239,17 @@ export function applyCanonicalWakeOrder(
     ...role,
     canonicalWakeOrder: ROLE_CANONICAL_WAKE_ORDER[role.id],
   }
+}
+
+export function getRoleFallbackWakeOrder(
+  role: Pick<RoleDefinition, 'canonicalWakeOrder' | 'nightOrder'>,
+  phase: WakePhase,
+): number {
+  return (
+    role.canonicalWakeOrder?.[phase] ??
+    role.nightOrder ??
+    Number.MAX_SAFE_INTEGER
+  )
 }
 
 export function deriveWakeOrderFromRoles(
