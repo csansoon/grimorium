@@ -1,8 +1,12 @@
+import type { ScriptDefinition } from './scripts/types'
+
 // ============================================================================
 // CORE TYPES
 // ============================================================================
 
-export type Team = 'townsfolk' | 'outsider' | 'minion' | 'demon'
+export type Alignment = 'good' | 'evil'
+export type RoleTeam = 'townsfolk' | 'outsider' | 'minion' | 'demon'
+export type WinningTeam = 'townsfolk' | 'demon'
 
 export type Phase = 'setup' | 'night' | 'day' | 'ended'
 
@@ -26,6 +30,9 @@ export type PlayerState = {
   id: string
   name: string
   roleId: string
+  baseRoleId?: string
+  baseAlignment?: Alignment
+  currentAlignment?: Alignment
   effects: EffectInstance[]
 }
 
@@ -37,7 +44,7 @@ export type GameState = {
   phase: Phase
   round: number // 0 = setup, 1+ = actual rounds
   players: PlayerState[]
-  winner: Team | null
+  winner: WinningTeam | null
 }
 
 // ============================================================================
@@ -60,17 +67,21 @@ export type RichMessage = MessagePart[]
 export type EventType =
   | 'game_created'
   | 'night_started'
+  | 'night_queue_directive'
+  | 'grimoire_reviewed'
   | 'role_revealed'
   | 'night_action'
   | 'night_skipped'
   | 'night_resolved'
   | 'day_started'
   | 'nomination'
+  | 'nomination_canceled'
   | 'vote'
   | 'execution'
   | 'virgin_execution'
   | 'virgin_spent'
   | 'slayer_shot'
+  | 'artist_question'
   | 'effect_added'
   | 'effect_removed'
   | 'role_changed'
@@ -95,7 +106,9 @@ export type Game = {
   id: string
   name: string
   scriptId: string
+  scriptSnapshot?: ScriptDefinition
   createdAt: number
+  storytellerNotes?: string
   history: HistoryEntry[]
 }
 

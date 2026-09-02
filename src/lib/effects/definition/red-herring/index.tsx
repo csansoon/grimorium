@@ -84,12 +84,12 @@ const definition: EffectDefinition = {
   defaultType: 'marker',
   perceptionModifiers: [
     {
-      context: 'team',
+      context: 'roleTeam',
       observerRoles: ['fortune_teller'],
       modify: (perception, _target, observer, _state, effectData) => {
         // Only affect the specific Fortune Teller this Red Herring was assigned to
         if (effectData?.fortuneTellerId !== observer.id) return perception
-        return { ...perception, team: 'demon' }
+        return { ...perception, roleTeam: 'demon' }
       },
     },
   ],

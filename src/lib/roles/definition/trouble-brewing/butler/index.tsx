@@ -40,7 +40,7 @@ registerRoleTranslations('butler', 'es', es)
  */
 const definition: RoleDefinition = {
   id: 'butler',
-  team: 'outsider',
+  roleTeam: 'outsider',
   icon: 'conciergeBell',
   nightOrder: 35, // Late — the Butler's choice doesn't interact with other night abilities
   chaos: 20,

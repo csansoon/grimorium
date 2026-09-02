@@ -10,7 +10,7 @@ registerRoleTranslations('soldier', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'soldier',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'shield',
   nightOrder: null, // Soldier doesn't wake at night - passive ability
   chaos: 15,

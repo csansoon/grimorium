@@ -1,13 +1,23 @@
 import { GameState, PlayerState, EffectInstance } from '../types'
-import { getRole } from '../roles/index'
 import { getEffect, resolveCanRegisterAs } from '../effects'
+import { getCurrentRoleId, getCurrentRoleTeam } from '../identity'
 import { isEvilTeam, TeamId } from '../teams'
 import { Perception, PerceptionContext } from './types'
+
+type RawPerception = Perception & { team?: TeamId }
+
+function normalizePerception(perception: RawPerception): Perception {
+  const { team, ...rest } = perception
+  return {
+    ...rest,
+    roleTeam: team ?? rest.roleTeam ?? 'townsfolk',
+  }
+}
 
 /**
  * Determine how a target player is perceived by an observer player.
  *
- * Starts with the target's actual role/team/alignment, then applies
+ * Starts with the target's actual role/roleTeam/alignment, then applies
  * any perception modifiers from the target's active effects.
  *
  * This is the core abstraction that decouples information-gathering roles
@@ -15,7 +25,7 @@ import { Perception, PerceptionContext } from './types'
  *
  * @param targetPlayer  - The player being observed
  * @param observerPlayer - The player whose information ability is querying
- * @param context - What aspect is being queried: "alignment", "team", or "role"
+ * @param context - What aspect is being queried: "alignment", "roleTeam", or "role"
  * @param state - Current game state
  * @returns The (possibly modified) perception of the target player
  */
@@ -25,13 +35,12 @@ export function perceive(
   context: PerceptionContext,
   state: GameState,
 ): Perception {
-  const role = getRole(targetPlayer.roleId)
-  const team = role?.team ?? 'townsfolk'
+  const roleTeam = getCurrentRoleTeam(targetPlayer) ?? 'townsfolk'
 
   let perception: Perception = {
-    roleId: targetPlayer.roleId,
-    team,
-    alignment: isEvilTeam(team) ? 'evil' : 'good',
+    roleId: getCurrentRoleId(targetPlayer),
+    roleTeam,
+    alignment: isEvilTeam(roleTeam) ? 'evil' : 'good',
   }
 
   // Collect and apply perception modifiers from the target's effects
@@ -48,16 +57,19 @@ export function perceive(
 
       // Check if this modifier is restricted to specific observer roles
       if (modifier.observerRoles) {
-        if (!modifier.observerRoles.includes(observerPlayer.roleId)) continue
+        if (!modifier.observerRoles.includes(getCurrentRoleId(observerPlayer)))
+          continue
       }
 
       // Apply the modification
-      perception = modifier.modify(
-        perception,
-        targetPlayer,
-        observerPlayer,
-        state,
-        effectInstance.data,
+      perception = normalizePerception(
+        modifier.modify(
+          perception,
+          targetPlayer,
+          observerPlayer,
+          state,
+          effectInstance.data,
+        ) as RawPerception,
       )
     }
   }
@@ -66,21 +78,21 @@ export function perceive(
 }
 
 /**
- * Check whether a player could potentially register as a given team.
+ * Check whether a player could potentially register as a given roleTeam.
  *
  * Returns true if the player has any active effect whose `canRegisterAs.teams`
- * includes the target team. This is used by narrator-setup UIs (e.g., Investigator)
+ * includes the target roleTeam. This is used by narrator-setup UIs (e.g., Investigator)
  * to allow players with misregistration effects (e.g., Recluse) as valid picks
  * without requiring the narrator to pre-configure the effect's perceiveAs data.
  *
- * This does NOT check the player's actual team or current perception — use
+ * This does NOT check the player's actual roleTeam or current perception — use
  * `perceive()` for that. This only checks static declarations on effects.
  */
-export function canRegisterAsTeam(player: PlayerState, team: TeamId): boolean {
+export function canRegisterAsTeam(player: PlayerState, roleTeam: TeamId): boolean {
   for (const effectInstance of player.effects) {
     const effectDef = getEffect(effectInstance.type)
     const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)
-    if (canRegisterAs?.teams?.includes(team)) return true
+    if (canRegisterAs?.teams?.includes(roleTeam)) return true
   }
   return false
 }
@@ -115,7 +127,7 @@ export function canRegisterAsAlignment(
  * any specific role or effect.
  *
  * - "alignment" context: checks `canRegisterAs.alignments`
- * - "team" context: checks `canRegisterAs.teams`
+ * - "roleTeam" context: checks `canRegisterAs.teams`
  * - "role" context: checks both (misregistration at any level affects role perception)
  */
 export function getAmbiguousPlayers(
@@ -129,7 +141,10 @@ export function getAmbiguousPlayers(
       if (!canRegisterAs) continue
       if (context === 'alignment' && canRegisterAs.alignments?.length)
         return true
-      if (context === 'team' && canRegisterAs.teams?.length) return true
+      if (
+        context === 'roleTeam' && canRegisterAs.teams?.length
+      )
+        return true
       if (
         context === 'role' &&
         (canRegisterAs.teams?.length || canRegisterAs.alignments?.length)

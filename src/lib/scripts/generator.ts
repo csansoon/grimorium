@@ -1,6 +1,7 @@
 import { RoleId } from '../roles/types'
 import { TeamId } from '../teams/types'
 import { getRole } from '../roles'
+import { getRoleTeamId } from '../identity'
 import {
   ScriptDefinition,
   RoleDistribution,
@@ -83,7 +84,7 @@ function tryGenerateValidPool(
   for (const roleId of script.roles) {
     const role = getRole(roleId)
     if (role) {
-      rolesByTeam[role.team].push(roleId)
+      rolesByTeam[getRoleTeamId(role) ?? 'townsfolk'].push(roleId)
     }
   }
 

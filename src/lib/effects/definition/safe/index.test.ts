@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import definition from '.'
 import { KillIntent } from '../../../pipeline/types'
+import { DEMON_CREATION_ARBITRARY_DEATH_CAUSE } from '../../../nightSystem'
 import {
   makePlayer,
   makeState,
@@ -46,6 +47,22 @@ describe('Safe effect', () => {
         sourceId: 'p1',
         targetId: 'p3',
         cause: 'demon',
+      }
+
+      expect(handler.appliesTo(intent, protectedPlayer, state)).toBe(false)
+    })
+
+    it('does not apply for arbitrary deaths after demon creation', () => {
+      const protectedPlayer = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'villager' }),
+        'safe',
+      )
+      const state = makeState({ players: [protectedPlayer] })
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'p1',
+        targetId: 'p2',
+        cause: DEMON_CREATION_ARBITRARY_DEATH_CAUSE,
       }
 
       expect(handler.appliesTo(intent, protectedPlayer, state)).toBe(false)

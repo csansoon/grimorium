@@ -1,7 +1,7 @@
 import { EffectDefinition } from '../../types'
 import { IntentHandler, NominateIntent } from '../../../pipeline/types'
 import { PlayerState } from '../../../types'
-import { getRole } from '../../../roles'
+import { getCurrentRoleTeam } from '../../../identity'
 import { registerEffectTranslations } from '../../../i18n'
 
 import en from './i18n/en'
@@ -13,7 +13,7 @@ registerEffectTranslations('pure', 'es', es)
 /**
  * Determine a player's actual team.
  *
- * Normally this is just getRole(player.roleId).team. However, effects like
+ * Normally this is just the player's current roleTeam. However, effects like
  * Drunk change the player's roleId to a different role (e.g., a Townsfolk)
  * while storing the real role in effect data as `actualRole`. When present,
  * we use the actual role to determine the team instead of the displayed roleId.
@@ -21,14 +21,14 @@ registerEffectTranslations('pure', 'es', es)
  * This avoids importing from the perception/pipeline module (which would
  * create a circular dependency: effects → pipeline → effects).
  */
-function getActualTeam(player: PlayerState): string {
+function getActualRoleTeam(player: PlayerState): string {
   for (const eff of player.effects) {
     const actualRole = eff.data?.actualRole as string | undefined
     if (actualRole) {
-      return getRole(actualRole)?.team ?? 'townsfolk'
+      return getCurrentRoleTeam({ ...player, roleId: actualRole }) ?? 'townsfolk'
     }
   }
-  return getRole(player.roleId)?.team ?? 'townsfolk'
+  return getCurrentRoleTeam(player) ?? 'townsfolk'
 }
 
 const pureHandler: IntentHandler = {
@@ -45,7 +45,7 @@ const pureHandler: IntentHandler = {
     const nominator = state.players.find((p) => p.id === nom.nominatorId)
     if (!nominator) return { action: 'allow' }
 
-    const isTownsfolk = getActualTeam(nominator) === 'townsfolk'
+    const isTownsfolk = getActualRoleTeam(nominator) === 'townsfolk'
 
     if (isTownsfolk) {
       // Townsfolk nominates Virgin → Nominator is executed immediately
@@ -124,6 +124,9 @@ const definition: EffectDefinition = {
   id: 'pure',
   icon: 'flowerLotus',
   defaultType: 'passive',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   handlers: [pureHandler],
 }
 

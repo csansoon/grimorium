@@ -4,6 +4,7 @@ import { TeamBackground } from '../items'
 import { RoleCard } from '../items/RoleCard'
 import { cn } from '../../lib/utils'
 import { getRole } from '../../lib/roles'
+import { getRoleTeamId } from '../../lib/identity'
 import { getTeam } from '../../lib/teams'
 import { useI18n } from '../../lib/i18n'
 
@@ -47,7 +48,7 @@ export function DeathRevealScreen({ deaths, onContinue }: Props) {
     if (!currentDeath) return null
 
     const role = getRole(currentDeath.roleId)
-    const teamId = role?.team ?? 'townsfolk'
+    const teamId = getRoleTeamId(role) ?? 'townsfolk'
     const team = getTeam(teamId)
 
     return (

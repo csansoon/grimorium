@@ -26,7 +26,7 @@ registerRoleTranslations('monk', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'monk',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'church',
   nightOrder: 20, // Monk wakes before the Demon
   chaos: 25,

@@ -1,7 +1,5 @@
-const es = {
+export default {
   name: 'Envenenado',
-  description:
-    'La habilidad de este jugador falla esta noche. Los roles de información reciben info errónea, las habilidades pasivas fallan.',
-} as const
+  description: 'Este jugador está envenenado y su habilidad falla.',
+}
 
-export default es

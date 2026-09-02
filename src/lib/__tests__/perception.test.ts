@@ -64,7 +64,7 @@ describe('base perception', () => {
 
     const result = perceive(target, observer, 'alignment', state)
     expect(result.alignment).toBe('good')
-    expect(result.team).toBe('townsfolk')
+    expect(result.roleTeam).toBe('townsfolk')
     expect(result.roleId).toBe('washerwoman')
   })
 
@@ -75,7 +75,7 @@ describe('base perception', () => {
 
     const result = perceive(target, observer, 'alignment', state)
     expect(result.alignment).toBe('evil')
-    expect(result.team).toBe('demon')
+    expect(result.roleTeam).toBe('demon')
     expect(result.roleId).toBe('imp')
   })
 
@@ -86,7 +86,7 @@ describe('base perception', () => {
 
     const result = perceive(target, observer, 'alignment', state)
     expect(result.alignment).toBe('good')
-    expect(result.team).toBe('outsider')
+    expect(result.roleTeam).toBe('outsider')
   })
 
   it('returns base perception for player with no effects', () => {
@@ -94,8 +94,8 @@ describe('base perception', () => {
     const observer = makePlayer({ id: 'p2', roleId: 'empath' })
     const state = makeState({ players: [target, observer] })
 
-    const result = perceive(target, observer, 'team', state)
-    expect(result.team).toBe('townsfolk')
+    const result = perceive(target, observer, 'roleTeam', state)
+    expect(result.roleTeam).toBe('townsfolk')
     expect(result.alignment).toBe('good')
     expect(result.roleId).toBe('villager')
   })
@@ -110,7 +110,7 @@ describe('base perception', () => {
 
     const result = perceive(target, observer, 'alignment', state)
     expect(result.alignment).toBe('good')
-    expect(result.team).toBe('townsfolk')
+    expect(result.roleTeam).toBe('townsfolk')
   })
 })
 
@@ -144,11 +144,11 @@ describe('perception modifiers', () => {
     const result = perceive(target, observer, 'alignment', state)
     expect(result.alignment).toBe('evil')
     // Team and role should be unchanged
-    expect(result.team).toBe('outsider')
+    expect(result.roleTeam).toBe('outsider')
     expect(result.roleId).toBe('saint')
   })
 
-  it("modifier with context 'alignment' does NOT fire for 'team' queries", () => {
+  it("modifier with context 'alignment' does NOT fire for 'roleTeam' queries", () => {
     const alignmentModifier: PerceptionModifier = {
       context: 'alignment',
       modify: (perception) => ({
@@ -171,15 +171,15 @@ describe('perception modifiers', () => {
     const observer = makePlayer({ id: 'p2', roleId: 'washerwoman' })
     const state = makeState({ players: [target, observer] })
 
-    const result = perceive(target, observer, 'team', state)
+    const result = perceive(target, observer, 'roleTeam', state)
     // Should still be outsider because modifier only applies to "alignment" context
-    expect(result.team).toBe('outsider')
+    expect(result.roleTeam).toBe('outsider')
     expect(result.alignment).toBe('good')
   })
 
   it('modifier with context array fires for all listed contexts', () => {
     const broadModifier: PerceptionModifier = {
-      context: ['alignment', 'team'],
+      context: ['alignment', 'roleTeam'],
       modify: (perception) => ({
         ...perception,
         alignment: 'evil',
@@ -205,12 +205,12 @@ describe('perception modifiers', () => {
     expect(alignResult.alignment).toBe('evil')
 
     // Should fire for team
-    const teamResult = perceive(target, observer, 'team', state)
-    expect(teamResult.team).toBe('minion')
+    const teamResult = perceive(target, observer, 'roleTeam', state)
+    expect(teamResult.roleTeam).toBe('minion')
 
     // Should NOT fire for role
     const roleResult = perceive(target, observer, 'role', state)
-    expect(roleResult.team).toBe('outsider') // Unchanged
+    expect(roleResult.roleTeam).toBe('outsider') // Unchanged
   })
 
   it('modifier with observerRoles only fires for matching observer', () => {
@@ -260,7 +260,7 @@ describe('perception modifiers', () => {
       modify: (perception) => ({
         ...perception,
         // This should see team as "minion" from the first modifier
-        alignment: perception.team === 'minion' ? 'evil' : perception.alignment,
+        alignment: perception.roleTeam === 'minion' ? 'evil' : perception.alignment,
       }),
     }
 
@@ -278,13 +278,13 @@ describe('perception modifiers', () => {
     const state = makeState({ players: [target, observer] })
 
     const result = perceive(target, observer, 'role', state)
-    expect(result.team).toBe('minion')
+    expect(result.roleTeam).toBe('minion')
     expect(result.alignment).toBe('evil') // Second modifier saw team="minion"
   })
 
   it('modifier receives effectData from the effect instance', () => {
     const dataModifier: PerceptionModifier = {
-      context: ['alignment', 'team', 'role'],
+      context: ['alignment', 'roleTeam', 'role'],
       modify: (perception, _target, _observer, _state, effectData) => {
         const overrides = effectData?.perceiveAs as
           | Partial<Perception>
@@ -311,7 +311,7 @@ describe('perception modifiers', () => {
     const state = makeState({ players: [target, observer] })
 
     const result = perceive(target, observer, 'role', state)
-    expect(result.team).toBe('demon')
+    expect(result.roleTeam).toBe('demon')
     expect(result.alignment).toBe('evil')
     expect(result.roleId).toBe('imp')
   })
@@ -464,7 +464,7 @@ describe('getAmbiguousPlayers', () => {
     )
     const villager = makePlayer({ id: 'p2', roleId: 'villager' })
 
-    const result = getAmbiguousPlayers([recluse, villager], 'team')
+    const result = getAmbiguousPlayers([recluse, villager], 'roleTeam')
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('p1')
   })

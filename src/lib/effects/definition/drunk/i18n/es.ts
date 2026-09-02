@@ -1,7 +1,5 @@
-const es = {
+export default {
   name: 'Borracho',
-  description:
-    'Este jugador cree ser un Aldeano, pero en realidad es el Borracho. Su habilidad falla permanentemente.',
-} as const
+  description: 'Este jugador está borracho y recibe información poco fiable.',
+}
 
-export default es

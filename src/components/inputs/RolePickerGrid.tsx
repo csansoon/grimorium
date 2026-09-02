@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { RoleDefinition } from '../../lib/roles/types'
+import { getRoleTeamId } from '../../lib/identity'
 import { getTeam, TeamId } from '../../lib/teams'
 import { GameState, PlayerState, hasEffect } from '../../lib/types'
 import { getEffect } from '../../lib/effects'
@@ -64,7 +65,7 @@ export function RolePickerGrid({
       demon: [],
     }
     for (const role of roles) {
-      grouped[role.team].push(role)
+      grouped[getRoleTeamId(role) ?? 'townsfolk'].push(role)
     }
     return grouped
   }, [roles])

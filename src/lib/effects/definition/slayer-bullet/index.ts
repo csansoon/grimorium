@@ -23,6 +23,9 @@ const definition: EffectDefinition = {
   id: 'slayer_bullet',
   icon: 'crosshair',
   defaultType: 'buff',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   dayActions: [slayerDayAction],
 }
 

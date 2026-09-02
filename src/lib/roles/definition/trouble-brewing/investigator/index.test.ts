@@ -96,8 +96,8 @@ describe('Investigator', () => {
       // Imp is demon, not minion
       const imp = makePlayer({ id: 'p2', roleId: 'imp' })
       const stateWithImp = makeState({ players: [investigator, imp] })
-      const perception = perceive(imp, investigator, 'team', stateWithImp)
-      expect(perception.team).toBe('demon') // imp is demon, not minion
+      const perception = perceive(imp, investigator, 'roleTeam', stateWithImp)
+      expect(perception.roleTeam).toBe('demon') // imp is demon, not minion
     })
 
     it('good player appearing as minion creates false positive', () => {
@@ -106,7 +106,7 @@ describe('Investigator', () => {
         icon: 'user',
         perceptionModifiers: [
           {
-            context: 'team',
+            context: 'roleTeam',
             modify: (p) => ({ ...p, team: 'minion' }),
           },
         ],
@@ -122,8 +122,8 @@ describe('Investigator', () => {
       )
       const state = makeState({ players: [investigator, villager] })
 
-      const perception = perceive(villager, investigator, 'team', state)
-      expect(perception.team).toBe('minion') // false positive
+      const perception = perceive(villager, investigator, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('minion') // false positive
     })
 
     it('Recluse with misregister can register as minion', () => {
@@ -144,8 +144,8 @@ describe('Investigator', () => {
       const state = makeState({ players: [investigator, recluse] })
 
       // perceive returns outsider (actual team) without perceiveAs config
-      const perception = perceive(recluse, investigator, 'team', state)
-      expect(perception.team).toBe('outsider')
+      const perception = perceive(recluse, investigator, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('outsider')
 
       // But canRegisterAsTeam returns true (declared by instance data)
       expect(canRegisterAsTeam(recluse, 'minion')).toBe(true)
@@ -170,8 +170,8 @@ describe('Investigator', () => {
       )
       const state = makeState({ players: [investigator, recluse] })
 
-      const perception = perceive(recluse, investigator, 'team', state)
-      expect(perception.team).toBe('minion')
+      const perception = perceive(recluse, investigator, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('minion')
     })
 
     it('role shown is affected by role perception modifiers', () => {

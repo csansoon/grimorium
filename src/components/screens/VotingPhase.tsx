@@ -231,7 +231,7 @@ export function VotingPhase({
                       {t.game.nominee}
                     </span>
                   )}
-                  {isDead && !ghostVoteSpent && canVote && !isNominee && (
+                  {isDead && !ghostVoteSpent && canVote && (
                     <span className='text-blue-400/80 text-xs inline-flex items-center gap-1 bg-blue-900/20 px-1.5 py-0.5 rounded'>
                       <Icon name='ghost' size='xs' />
                       {t.game.ghostVoteAvailable}
@@ -243,7 +243,7 @@ export function VotingPhase({
                       {t.game.ghostVoteSpent}
                     </span>
                   )}
-                  {!isDead && !canVote && !isNominee && (
+                  {!isDead && !canVote && (
                     <span className='text-parchment-500/50 text-xs inline-flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded'>
                       {t.game.cannotVote}
                     </span>
@@ -262,23 +262,21 @@ export function VotingPhase({
                     </span>
                   </div>
                 )}
-                {!isNominee && (
-                  <button
-                    onClick={() => handleToggleVote(player.id)}
-                    disabled={!canVote}
-                    className={cn(
-                      'w-full py-2.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.97] min-h-[48px]',
-                      voted
-                        ? 'bg-red-600 text-white'
-                        : canVote
-                          ? 'bg-white/5 text-parchment-400 hover:bg-white/10'
-                          : 'bg-transparent text-parchment-500/30 border border-white/5 cursor-not-allowed',
-                    )}
-                  >
-                    <Icon name={voted ? 'check' : 'minus'} size='sm' />
-                    <span>{voted ? t.game.voteAction : t.game.dontVote}</span>
-                  </button>
-                )}
+                <button
+                  onClick={() => handleToggleVote(player.id)}
+                  disabled={!canVote}
+                  className={cn(
+                    'w-full py-2.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 active:scale-[0.97] min-h-[48px]',
+                    voted
+                      ? 'bg-red-600 text-white'
+                      : canVote
+                        ? 'bg-white/5 text-parchment-400 hover:bg-white/10'
+                        : 'bg-transparent text-parchment-500/30 border border-white/5 cursor-not-allowed',
+                  )}
+                >
+                  <Icon name={voted ? 'check' : 'minus'} size='sm' />
+                  <span>{voted ? t.game.voteAction : t.game.dontVote}</span>
+                </button>
               </div>
             )
           })}

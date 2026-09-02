@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { RoleDefinition, SetupActionProps } from '../../../types'
+import { getRoleTeamId } from '../../../../identity'
 import { getAllRoles } from '../../../index'
 import {
   useI18n,
@@ -42,7 +43,9 @@ function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
 
   // Get all Townsfolk roles for the narrator to choose from
-  const townsfolkRoles = getAllRoles().filter((r) => r.team === 'townsfolk')
+  const townsfolkRoles = getAllRoles().filter(
+    (role) => getRoleTeamId(role) === 'townsfolk',
+  )
 
   const handleSelect = (roleId: string) => {
     setSelectedRole((prev) => (prev === roleId ? null : roleId))
@@ -127,7 +130,7 @@ function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
 
 const definition: RoleDefinition = {
   id: 'drunk',
-  team: 'outsider',
+  roleTeam: 'outsider',
   icon: 'beer',
   nightOrder: null, // Never wakes as "Drunk"
   chaos: 60,

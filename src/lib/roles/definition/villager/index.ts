@@ -10,7 +10,7 @@ registerRoleTranslations('villager', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'villager',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'user',
   nightOrder: null, // Doesn't wake at night
   chaos: 0,

@@ -10,7 +10,7 @@ registerRoleTranslations('slayer', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'slayer',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'crosshair',
   nightOrder: null, // Doesn't wake at night - day ability
   chaos: 30,

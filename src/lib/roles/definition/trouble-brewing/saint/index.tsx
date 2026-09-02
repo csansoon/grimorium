@@ -10,7 +10,7 @@ registerRoleTranslations('saint', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'saint',
-  team: 'outsider',
+  roleTeam: 'outsider',
   icon: 'starNorth',
   nightOrder: null, // Doesn't wake at night — passive ability
   chaos: 50,

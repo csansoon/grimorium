@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react'
 import { GameState, PlayerState, hasEffect } from '../../lib/types'
-import { getRole } from '../../lib/roles'
+import {
+  getCurrentRole,
+  getCurrentRoleId,
+  getRoleTeamId,
+} from '../../lib/identity'
 import { getTeam } from '../../lib/teams'
 import { useI18n, getRoleName } from '../../lib/i18n'
 import { Icon, Badge, IconName } from '../atoms'
@@ -29,15 +33,16 @@ function PlayerRow({
   player: PlayerState
   onClick: () => void
 }) {
-  const role = getRole(player.roleId)
-  const team = role ? getTeam(role.team) : null
+  const role = getCurrentRole(player)
+  const roleTeamId = getRoleTeamId(role)
+  const team = roleTeamId ? getTeam(roleTeamId) : null
   const isDead = hasEffect(player, 'dead')
 
   const { language } = useI18n()
 
   const roleName = useMemo(() => {
-    return getRoleName(player.roleId, language)
-  }, [player.roleId, language])
+    return getRoleName(getCurrentRoleId(player), language)
+  }, [player, language])
 
   const effectBadges = useMemo(() => {
     return filterVisibleEffects(player.effects).map((e) => {

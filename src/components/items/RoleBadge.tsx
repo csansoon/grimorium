@@ -1,4 +1,5 @@
 import { getRole } from '../../lib/roles'
+import { getRoleTeamId } from '../../lib/identity'
 import { useI18n, getRoleName as getRegistryRoleName } from '../../lib/i18n'
 import { Badge, Icon } from '../atoms'
 import { cn } from '../../lib/utils'
@@ -26,7 +27,11 @@ export function RoleBadge({
     lg: 'text-base px-4 py-1.5',
   }
 
-  const teamVariant = role.team as 'townsfolk' | 'outsider' | 'minion' | 'demon'
+  const teamVariant = (getRoleTeamId(role) ?? 'townsfolk') as
+    | 'townsfolk'
+    | 'outsider'
+    | 'minion'
+    | 'demon'
 
   const roleName = getRegistryRoleName(roleId, language)
 

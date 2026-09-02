@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { GameState, PlayerState } from '../../lib/types'
 import { getRole, getAllRoles } from '../../lib/roles'
+import { getRoleTeamId } from '../../lib/identity'
 import { getEffect, resolveCanRegisterAs } from '../../lib/effects'
 import {
   useI18n,
@@ -70,10 +71,10 @@ export function PerceptionConfigStep({
     }))
   }
 
-  const handleToggleTeam = (playerId: string, team: TeamId | null) => {
+  const handleToggleRoleTeam = (playerId: string, roleTeam: TeamId | null) => {
     setOverrides((prev) => ({
       ...prev,
-      [playerId]: team ? { team } : null,
+      [playerId]: roleTeam ? { roleTeam } : null,
     }))
   }
 
@@ -121,7 +122,9 @@ export function PerceptionConfigStep({
         {ambiguousPlayers.map((player) => {
           const role = getRole(player.roleId)
           const isOverriddenEvil = overrides[player.id]?.alignment === 'evil'
-          const overriddenTeam = overrides[player.id]?.team as TeamId | undefined
+          const overriddenTeam = overrides[player.id]?.roleTeam as
+            | TeamId
+            | undefined
           const overriddenRole = overrides[player.id]?.roleId as string | undefined
 
           // Find the effect that grants misregistration for display
@@ -131,7 +134,7 @@ export function PerceptionConfigStep({
             if (!canReg) return false
             if (context === 'alignment' && canReg.alignments?.length)
               return true
-            if (context === 'team' && canReg.teams?.length) return true
+            if (context === 'roleTeam' && canReg.teams?.length) return true
             if (
               context === 'role' &&
               (canReg.teams?.length || canReg.alignments?.length)
@@ -146,7 +149,7 @@ export function PerceptionConfigStep({
             ? getRegistryEffectName(effectDef.id, language)
             : ''
 
-          const actualTeam = (role?.team ?? 'townsfolk') as TeamId
+          const actualTeam = (getRoleTeamId(role) ?? 'townsfolk') as TeamId
 
           const canRegTeams = misregisterEffect
             ? (resolveCanRegisterAs(misregisterEffect, effectDef)?.teams ?? [])
@@ -160,10 +163,20 @@ export function PerceptionConfigStep({
             ? (resolveCanRegisterAs(misregisterEffect, effectDef)?.alignments ?? [])
             : []
 
-          const validRolesForOverride = getAllRoles().filter(r => {
-            if (allowedTeams.includes(r.team)) return true
-            if (allowedAlignments.includes('evil') && (r.team === 'minion' || r.team === 'demon')) return true
-            if (allowedAlignments.includes('good') && (r.team === 'townsfolk' || r.team === 'outsider')) return true
+          const validRolesForOverride = getAllRoles().filter((r) => {
+            const roleTeam = getRoleTeamId(r)
+            if (!roleTeam) return false
+            if (allowedTeams.includes(roleTeam)) return true
+            if (
+              allowedAlignments.includes('evil') &&
+              (roleTeam === 'minion' || roleTeam === 'demon')
+            )
+              return true
+            if (
+              allowedAlignments.includes('good') &&
+              (roleTeam === 'townsfolk' || roleTeam === 'outsider')
+            )
+              return true
             return false
           })
 
@@ -226,10 +239,10 @@ export function PerceptionConfigStep({
               )}
 
               {/* Team toggle for "team" context — actual team + misregister teams */}
-              {context === 'team' && (
+              {context === 'roleTeam' && (
                 <div className='flex gap-2 flex-wrap'>
                   <button
-                    onClick={() => handleToggleTeam(player.id, null)}
+                    onClick={() => handleToggleRoleTeam(player.id, null)}
                     className={cn(
                       'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors border min-w-0',
                       !overriddenTeam
@@ -242,7 +255,7 @@ export function PerceptionConfigStep({
                   {canRegTeams.map((team) => (
                     <button
                       key={team}
-                      onClick={() => handleToggleTeam(player.id, team)}
+                      onClick={() => handleToggleRoleTeam(player.id, team)}
                       className={cn(
                         'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors border min-w-0',
                         overriddenTeam === team

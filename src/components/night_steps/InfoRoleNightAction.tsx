@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
-import { GameState, PlayerState } from '../../lib/types'
+import { Game, GameState, PlayerState } from '../../lib/types'
+import { getRoleTeamId } from '../../lib/identity'
 import { RoleDefinition, NightActionResult } from '../../lib/roles/types'
-import { getRole, getAllRoles } from '../../lib/roles/index'
+import { getRole, getRolesForGame } from '../../lib/roles/index'
 import { getTeam, TeamId } from '../../lib/teams'
 import {
   useI18n,
@@ -37,7 +38,11 @@ import {
   perceive,
   canRegisterAsTeam,
 } from '../../lib/pipeline'
-import { isMalfunctioning } from '../../lib/effects'
+import { getPreparedNightActionData } from '../../lib/game'
+import {
+  getFalseInfoMode,
+  shouldForceFalseInfo,
+} from '../../lib/roles/runtime-helpers'
 
 // ============================================================================
 // CONFIG TYPE
@@ -76,33 +81,67 @@ type Phase =
   | 'no_target_view'
 
 type Props = {
+  game: Game
   config: InfoRoleConfig
   state: GameState
   player: PlayerState
   onComplete: (result: NightActionResult) => void
+  mode?: 'night' | 'prepare'
 }
 
-export function InfoRoleNightAction({ config, state, player, onComplete }: Props) {
+type PreparedInfoRoleData = {
+  action: 'see_target' | 'no_target'
+  shownPlayers?: string[]
+  targetId?: string
+  shownRoleId?: string
+  malfunctioned?: boolean
+}
+
+export function InfoRoleNightAction({
+  game,
+  config,
+  state,
+  player,
+  onComplete,
+  mode = 'night',
+}: Props) {
   const { t, language } = useI18n()
   const roleT = getRoleTranslations(config.roleId, language)
   const labels = config.getLabels(roleT)
-  const [phase, setPhase] = useState<Phase>('step_list')
+  const preparedData =
+    mode === 'night'
+      ? getPreparedNightActionData<PreparedInfoRoleData>(
+          game,
+          player.id,
+          config.roleId,
+        )
+      : null
+  const [phase, setPhase] = useState<Phase>(
+    mode === 'prepare' ? 'select_players' : 'step_list',
+  )
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
   const [selectedTargetPlayer, setSelectedTargetPlayer] = useState<string | null>(null)
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
   const [selectPlayersDone, setSelectPlayersDone] = useState(false)
   const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
 
-  const malfunctioning = isMalfunctioning(player)
+  const falseInfoMode = getFalseInfoMode(state, player)
+  const falseInfo = shouldForceFalseInfo(state, player)
+  const shouldUsePreparedData = Boolean(preparedData && !falseInfo)
   const allPlayers = state.players
 
   // Annotation to highlight the current player in the picker
   const currentPlayerAnnotation = useMemo(() => ({
     [player.id]: t.game.currentPlayer,
   }), [player.id, t])
-
   // All defined roles of target team (for malfunction role picker)
-  const targetTeamAllRoles = getAllRoles().filter((r) => r.team === config.targetTeam)
+  const targetTeamAllRoles = useMemo(
+    () =>
+      getRolesForGame(game).filter(
+        (role) => getRoleTeamId(role) === config.targetTeam,
+      ),
+    [game, config.targetTeam],
+  )
 
   // ================================================================
   // Player classification for smart grouping
@@ -110,8 +149,11 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
 
   /** Players whose actual team or canRegisterAs includes the target team */
   const isTargetTeamPlayer = (p: PlayerState): boolean => {
-    const perception = perceive(p, player, 'team', state)
-    return perception.team === config.targetTeam || canRegisterAsTeam(p, config.targetTeam)
+    const perception = perceive(p, player, 'roleTeam', state)
+    return (
+      perception.roleTeam === config.targetTeam ||
+      canRegisterAsTeam(p, config.targetTeam)
+    )
   }
 
   const targetGroupPlayers = useMemo(
@@ -156,8 +198,11 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   const targetsInSelection = selectedPlayers.filter((playerId) => {
     const p = state.players.find((pl) => pl.id === playerId)
     if (!p) return false
-    const perception = perceive(p, player, 'team', state)
-    return perception.team === config.targetTeam || canRegisterAsTeam(p, config.targetTeam)
+    const perception = perceive(p, player, 'roleTeam', state)
+    return (
+      perception.roleTeam === config.targetTeam ||
+      canRegisterAsTeam(p, config.targetTeam)
+    )
   })
 
   // ================================================================
@@ -172,12 +217,12 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
     for (const pid of targetsInSelection) {
       const p = state.players.find((pl) => pl.id === pid)
       if (!p) continue
-      const pTeam = perceive(p, player, 'team', state)
+      const pTeam = perceive(p, player, 'roleTeam', state)
 
       // If the player's actual team matches, show their perceived role
       // If the player can only register as target team (via misregistration), show ALL target team roles
       const pRoles =
-        pTeam.team === config.targetTeam
+        pTeam.roleTeam === config.targetTeam
           ? (() => {
             const rp = perceive(p, player, 'role', state)
             const r = getRole(rp.roleId)
@@ -249,10 +294,18 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   }
 
   const handleCompleteSelectPlayers = () => {
-    if (malfunctioning) {
+    if (falseInfo) {
       if (!canCompleteMalfunctionSelect) return
+      if (mode === 'prepare') {
+        setPhase('configure_malfunction')
+        return
+      }
     } else {
       if (!canCompleteHealthySetup) return
+      if (mode === 'prepare') {
+        handleComplete()
+        return
+      }
     }
     setSelectPlayersDone(true)
     setPhase('step_list')
@@ -261,7 +314,39 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   const handleCompleteMalfunctionConfig = () => {
     if (!selectedRoleId) return
     // Auto-assign target player for history (arbitrary — info is false)
-    if (!selectedTargetPlayer) setSelectedTargetPlayer(selectedPlayers[0])
+    const fallbackTargetPlayer = selectedTargetPlayer ?? selectedPlayers[0]
+    if (!selectedTargetPlayer) setSelectedTargetPlayer(fallbackTargetPlayer)
+    if (mode === 'prepare') {
+      onComplete({
+        entries: [
+          {
+            type: 'night_action',
+            message: [
+              {
+                type: 'i18n',
+                key: config.historyKeys.discovered,
+                params: {
+                  player: player.id,
+                  player1: selectedPlayers[0],
+                  player2: selectedPlayers[1],
+                  role: selectedRoleId,
+                },
+              },
+            ],
+            data: {
+              roleId: config.roleId,
+              playerId: player.id,
+              action: 'see_target',
+              shownPlayers: selectedPlayers,
+              targetId: fallbackTargetPlayer,
+              shownRoleId: selectedRoleId,
+              malfunctioned: true,
+            },
+          },
+        ],
+      })
+      return
+    }
     setMalfunctionConfigDone(true)
     setPhase('step_list')
   }
@@ -282,7 +367,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
             roleId: config.roleId,
             playerId: player.id,
             action: 'no_target',
-            ...(malfunctioning ? { malfunctioned: true } : {}),
+            ...(falseInfo ? { malfunctioned: true } : {}),
           },
         },
       ],
@@ -319,11 +404,127 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
             shownPlayers: selectedPlayers,
             targetId: selectedTargetPlayer,
             shownRoleId: selectedRoleId,
-            ...(malfunctioning ? { malfunctioned: true } : {}),
+            ...(falseInfo ? { malfunctioned: true } : {}),
           },
         },
       ],
     })
+  }
+
+  if (shouldUsePreparedData && preparedData) {
+    if (preparedData.action === 'no_target') {
+      return (
+        <PlayerFacingScreen playerName={player.name}>
+          <NightActionLayout
+            player={player}
+            title={labels.infoTitle}
+            description={labels.noTargetMessage}
+          >
+            <RoleRevealBadge
+              icon='sparkles'
+              roleName={labels.noTargetTitle}
+            />
+
+            <HandbackButton
+              onClick={handleCompleteNoTarget}
+              fullWidth
+              size='lg'
+              variant='night'
+            >
+              <Icon name='check' size='md' className='mr-2' />
+              {t.common.iUnderstandMyRole}
+            </HandbackButton>
+          </NightActionLayout>
+        </PlayerFacingScreen>
+      )
+    }
+
+    const preparedPlayer1 = state.players.find(
+      (p) => p.id === preparedData.shownPlayers?.[0],
+    )
+    const preparedPlayer2 = state.players.find(
+      (p) => p.id === preparedData.shownPlayers?.[1],
+    )
+    const preparedRoleId = preparedData.shownRoleId
+    if (!preparedRoleId) return null
+    const preparedRole = getRole(preparedRoleId)
+    const preparedTeamId = getRoleTeamId(preparedRole) ?? 'townsfolk'
+    const preparedTeam = getTeam(preparedTeamId)
+
+    return (
+      <PlayerFacingScreen playerName={player.name}>
+        <TeamBackground teamId={preparedTeamId}>
+          <div
+            className={`text-center text-sm mb-5 max-w-sm mx-auto ${preparedTeam.isEvil ? 'text-red-300/80' : 'text-parchment-300/80'}`}
+          >
+            <p className='uppercase tracking-widest font-semibold mb-3'>
+              {t.game.oneOfThemIsThe}
+            </p>
+            <div className='flex items-center justify-center gap-2 flex-wrap'>
+              {preparedPlayer1 && (
+                <span className='inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base'>
+                  <Icon name='user' size='sm' />
+                  <span className='font-medium'>{preparedPlayer1.name}</span>
+                </span>
+              )}
+              {preparedPlayer2 && (
+                <span className='inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 text-base'>
+                  <Icon name='user' size='sm' />
+                  <span className='font-medium'>{preparedPlayer2.name}</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <RoleCard roleId={preparedRoleId} />
+
+          <HandbackCardLink
+            onClick={() => {
+              if (!preparedData.shownPlayers?.[0] || !preparedData.shownPlayers?.[1]) {
+                return
+              }
+
+              const player1Id = preparedData.shownPlayers[0]
+              const player2Id = preparedData.shownPlayers[1]
+
+              onComplete({
+                entries: [
+                  {
+                    type: 'night_action',
+                    message: [
+                      {
+                        type: 'i18n',
+                        key: config.historyKeys.discovered,
+                        params: {
+                          player: player.id,
+                          player1: player1Id,
+                          player2: player2Id,
+                          role: preparedRoleId,
+                        },
+                      },
+                    ],
+                    data: {
+                      roleId: config.roleId,
+                      playerId: player.id,
+                      action: 'see_target',
+                      shownPlayers: preparedData.shownPlayers,
+                      targetId: preparedData.targetId,
+                      shownRoleId: preparedRoleId,
+                      ...(preparedData.malfunctioned
+                        ? { malfunctioned: true }
+                        : {}),
+                    },
+                  },
+                ],
+              })
+            }}
+            isEvil={preparedTeam.isEvil}
+          >
+            {t.common.continue}
+          </HandbackCardLink>
+        </TeamBackground>
+      </PlayerFacingScreen>
+    )
   }
 
   const getLocalRoleName = (roleId: string) => getRoleName(roleId, language)
@@ -350,7 +551,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
       audience: 'narrator' as const,
     })
 
-    if (malfunctioning) {
+    if (falseInfo) {
       result.push({
         id: 'configure_malfunction',
         icon: 'flask',
@@ -369,7 +570,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
     })
 
     return result
-  }, [selectPlayersDone, malfunctioning, malfunctionConfigDone, t, config.icon])
+  }, [selectPlayersDone, falseInfo, malfunctionConfigDone, t, config.icon])
 
   const handleSelectStep = (stepId: string) => {
     if (stepId === 'select_players') setPhase('select_players')
@@ -396,14 +597,16 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   // ================================================================
   // Phase: Select Players (healthy, no target team among other players)
   // ================================================================
-  if (phase === 'select_players' && !malfunctioning && !hasTargetTeam) {
+  if (phase === 'select_players' && !falseInfo && !hasTargetTeam) {
     return (
       <NarratorSetupLayout
         audience='narrator'
         icon={config.icon}
         roleName={getLocalRoleName(config.roleId)}
         playerName={getPlayerName(player.id)}
-        onShowToPlayer={() => setPhase('no_target_view')}
+        onShowToPlayer={() =>
+          mode === 'prepare' ? handleCompleteNoTarget() : setPhase('no_target_view')
+        }
         showToPlayerLabel={labels.noTargetConfirm}
       >
         <div className='flex-1 flex items-center justify-center'>
@@ -420,13 +623,14 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   // ================================================================
   // Phase: Select Players (healthy — with constraints + role picking)
   // ================================================================
-  if (phase === 'select_players' && !malfunctioning) {
+  if (phase === 'select_players' && !falseInfo) {
     return (
       <NarratorSetupLayout
         audience='narrator'
         icon={config.icon}
         roleName={getLocalRoleName(config.roleId)}
         playerName={getPlayerName(player.id)}
+        falseInfoMode={falseInfoMode}
         onShowToPlayer={handleCompleteSelectPlayers}
         showToPlayerDisabled={!canCompleteHealthySetup}
         showToPlayerLabel={t.common.confirm}
@@ -478,7 +682,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   // ================================================================
   // Phase: Select Players (malfunctioning — free selection)
   // ================================================================
-  if (phase === 'select_players' && malfunctioning) {
+  if (phase === 'select_players' && falseInfo) {
     return (
       <NarratorSetupLayout
         audience='narrator'
@@ -498,11 +702,15 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
               className='text-amber-400 flex-shrink-0'
             />
             <p className='text-sm text-amber-300 font-medium'>
-              {t.game.malfunctionWarning}
+              {falseInfoMode === 'vortox'
+                ? t.game.falseInfoRequired
+                : t.game.malfunctionWarning}
             </p>
           </div>
           <p className='text-xs text-amber-400/70 mt-1 ml-7'>
-            {t.game.playerIsMalfunctioning}
+            {falseInfoMode === 'vortox'
+              ? t.game.falseInfoReminder
+              : t.game.arbitraryInfoReminder}
           </p>
         </div>
 
@@ -555,11 +763,15 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
               className='text-amber-400 flex-shrink-0'
             />
             <p className='text-sm text-amber-300 font-medium'>
-              {t.game.malfunctionWarning}
+              {falseInfoMode === 'vortox'
+                ? t.game.falseInfoRequired
+                : t.game.malfunctionWarning}
             </p>
           </div>
           <p className='text-xs text-amber-400/70 mt-1 ml-7'>
-            {t.game.playerIsMalfunctioning}
+            {falseInfoMode === 'vortox'
+              ? t.game.falseInfoReminder
+              : t.game.arbitraryInfoReminder}
           </p>
         </div>
 
@@ -587,6 +799,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
           player={player}
           title={labels.infoTitle}
           description={labels.noTargetMessage}
+          falseInfoMode={falseInfoMode}
         >
           <RoleRevealBadge
             icon='sparkles'
@@ -616,7 +829,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   if (!selectedRoleId) return null
 
   const shownRole = getRole(selectedRoleId)
-  const shownTeamId = shownRole?.team ?? 'townsfolk'
+  const shownTeamId = getRoleTeamId(shownRole) ?? 'townsfolk'
   const shownTeam = getTeam(shownTeamId)
 
   return (

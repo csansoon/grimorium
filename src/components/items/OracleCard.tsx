@@ -41,38 +41,40 @@ export function OracleCard({
 
   return (
     <CardShell teamId={teamId} icon={icon}>
-      {/* Icon with arcane seal */}
-      <CardIcon icon={icon} teamId={teamId} />
+      <div className='h-full flex flex-col'>
+        {/* Icon with arcane seal */}
+        <CardIcon icon={icon} teamId={teamId} />
 
-      {/* Title */}
-      <h1
-        className={cn(
-          'font-tarot text-xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2',
-          team.colors.cardText,
-        )}
-        style={{ textShadow: team.colors.cardIconGlow }}
-      >
-        {title}
-      </h1>
+        {/* Title */}
+        <h1
+          className={cn(
+            'font-tarot text-lg sm:text-3xl font-bold text-center uppercase tracking-[0.22em] sm:tracking-widest-xl mb-2',
+            team.colors.cardText,
+          )}
+          style={{ textShadow: team.colors.cardIconGlow }}
+        >
+          {title}
+        </h1>
 
-      {/* Subtitle (role name) */}
-      <p
-        className={cn(
-          'text-center text-xs tracking-widest uppercase mb-3 sm:mb-6',
-          team.colors.cardTeamBadge,
-        )}
-      >
-        {subtitle}
-      </p>
+        {/* Subtitle (role name) */}
+        <p
+          className={cn(
+            'text-center text-[11px] tracking-[0.22em] sm:tracking-widest uppercase mb-3 sm:mb-6',
+            team.colors.cardTeamBadge,
+          )}
+        >
+          {subtitle}
+        </p>
 
-      {/* Divider — team-specific icon */}
-      <MysticDivider
-        icon={team.colors.cardDividerIcon}
-        iconClassName={cn(team.colors.cardWinAccent, 'opacity-50')}
-      />
+        {/* Divider — team-specific icon */}
+        <MysticDivider
+          icon={team.colors.cardDividerIcon}
+          iconClassName={cn(team.colors.cardWinAccent, 'opacity-50')}
+        />
 
-      {/* Result content */}
-      {children}
+        {/* Result content */}
+        <div className='flex-1 min-h-0 flex items-center'>{children}</div>
+      </div>
     </CardShell>
   )
 }
@@ -107,13 +109,13 @@ export function NumberReveal({ value, label, teamId }: NumberRevealProps) {
       {/* Large number */}
       <div
         className={cn(
-          'inline-flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 rounded-full',
+          'inline-flex items-center justify-center w-16 h-16 sm:w-28 sm:h-28 rounded-full',
           team.colors.cardWinBg,
         )}
       >
         <span
           className={cn(
-            'font-tarot text-5xl sm:text-7xl font-bold',
+            'font-tarot text-4xl sm:text-7xl font-bold',
             team.colors.cardWinAccent,
           )}
           style={{ textShadow: team.colors.cardIconGlow }}

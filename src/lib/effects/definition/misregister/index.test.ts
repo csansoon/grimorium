@@ -29,8 +29,8 @@ describe('Misregister', () => {
       const alignment = perceive(recluse, observer, 'alignment', state)
       expect(alignment.alignment).toBe('good')
 
-      const team = perceive(recluse, observer, 'team', state)
-      expect(team.team).toBe('outsider')
+      const team = perceive(recluse, observer, 'roleTeam', state)
+      expect(team.roleTeam).toBe('outsider')
 
       const role = perceive(recluse, observer, 'role', state)
       expect(role.roleId).toBe('recluse')
@@ -48,7 +48,7 @@ describe('Misregister', () => {
       const perception = perceive(recluse, observer, 'alignment', state)
       expect(perception.alignment).toBe('evil')
       // Team and role should remain unchanged
-      expect(perception.team).toBe('outsider')
+      expect(perception.roleTeam).toBe('outsider')
       expect(perception.roleId).toBe('recluse')
     })
 
@@ -64,8 +64,8 @@ describe('Misregister', () => {
       )
       const state = makeState({ players: [observer, recluse] })
 
-      const perception = perceive(recluse, observer, 'team', state)
-      expect(perception.team).toBe('minion')
+      const perception = perceive(recluse, observer, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('minion')
       // Alignment and role unchanged
       expect(perception.alignment).toBe('good')
       expect(perception.roleId).toBe('recluse')
@@ -83,8 +83,8 @@ describe('Misregister', () => {
       )
       const state = makeState({ players: [observer, recluse] })
 
-      const perception = perceive(recluse, observer, 'team', state)
-      expect(perception.team).toBe('demon')
+      const perception = perceive(recluse, observer, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('demon')
     })
 
     it('registers as a specific Minion role when perceiveAs overrides roleId', () => {
@@ -104,7 +104,7 @@ describe('Misregister', () => {
 
       const perception = perceive(recluse, observer, 'role', state)
       expect(perception.roleId).toBe('imp')
-      expect(perception.team).toBe('demon')
+      expect(perception.roleTeam).toBe('demon')
       expect(perception.alignment).toBe('evil')
     })
 
@@ -123,10 +123,10 @@ describe('Misregister', () => {
       expect(perceive(recluse, observer, 'alignment', state).alignment).toBe(
         'evil',
       )
-      expect(perceive(recluse, observer, 'team', state).team).toBe('minion')
+      expect(perceive(recluse, observer, 'roleTeam', state).roleTeam).toBe('minion')
       const rolePerception = perceive(recluse, observer, 'role', state)
       expect(rolePerception.alignment).toBe('evil')
-      expect(rolePerception.team).toBe('minion')
+      expect(rolePerception.roleTeam).toBe('minion')
     })
 
     it('works regardless of observer role (not restricted)', () => {
@@ -166,7 +166,7 @@ describe('Misregister', () => {
 
       const perception = perceive(recluse, observer, 'role', state)
       expect(perception.roleId).toBe('imp')
-      expect(perception.team).toBe('demon')
+      expect(perception.roleTeam).toBe('demon')
     })
 
     it('only overrides fields specified in perceiveAs (partial overrides)', () => {
@@ -180,7 +180,7 @@ describe('Misregister', () => {
 
       const perception = perceive(recluse, observer, 'alignment', state)
       expect(perception.alignment).toBe('evil')
-      expect(perception.team).toBe('outsider') // unchanged
+      expect(perception.roleTeam).toBe('outsider') // unchanged
       expect(perception.roleId).toBe('recluse') // unchanged
     })
   })
@@ -201,7 +201,7 @@ describe('Misregister', () => {
 
       const perception = perceive(spy, observer, 'alignment', state)
       expect(perception.alignment).toBe('good')
-      expect(perception.team).toBe('minion')
+      expect(perception.roleTeam).toBe('minion')
       expect(perception.roleId).toBe('spy')
     })
 
@@ -217,8 +217,8 @@ describe('Misregister', () => {
       )
       const state = makeState({ players: [observer, spy] })
 
-      const perception = perceive(spy, observer, 'team', state)
-      expect(perception.team).toBe('townsfolk')
+      const perception = perceive(spy, observer, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('townsfolk')
       expect(perception.alignment).toBe('evil')
       expect(perception.roleId).toBe('spy')
     })
@@ -244,7 +244,7 @@ describe('Misregister', () => {
 
       const perception = perceive(spy, observer, 'role', state)
       expect(perception.roleId).toBe('washerwoman')
-      expect(perception.team).toBe('townsfolk')
+      expect(perception.roleTeam).toBe('townsfolk')
       expect(perception.alignment).toBe('good')
     })
   })

@@ -1,4 +1,5 @@
 import { getRole } from './roles'
+import { getRoleTeamId } from './identity'
 
 export type RoleAssignmentInput = {
   /** Ordered list of player names */
@@ -45,13 +46,13 @@ export function resolveRoleAssignments(
   // Step 2: Ensure at least one demon role is assigned when randomizing
   const hasDemonAssigned = finalAssignments.some((a) => {
     const role = getRole(a.roleId)
-    return role?.team === 'demon'
+    return getRoleTeamId(role) === 'demon'
   })
 
   if (!hasDemonAssigned && unassignedPlayers.length > 0) {
     const demonIndex = remainingRoles.findIndex((roleId) => {
       const role = getRole(roleId)
-      return role?.team === 'demon'
+      return getRoleTeamId(role) === 'demon'
     })
 
     if (demonIndex !== -1) {

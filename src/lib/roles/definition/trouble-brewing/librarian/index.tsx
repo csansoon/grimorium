@@ -33,7 +33,7 @@ const librarianConfig: InfoRoleConfig = {
 
 const definition: RoleDefinition = {
   id: 'librarian',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'bookMarked',
   nightOrder: 11,
   chaos: 15,

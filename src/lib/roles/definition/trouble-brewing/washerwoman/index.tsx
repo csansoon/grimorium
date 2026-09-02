@@ -33,7 +33,7 @@ const washerwomanConfig: InfoRoleConfig = {
 
 const definition: RoleDefinition = {
   id: 'washerwoman',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'shirt',
   nightOrder: 10,
   chaos: 10,

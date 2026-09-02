@@ -174,7 +174,7 @@ describe('Ravenkeeper', () => {
 
       const perception = perceive(target, rk, 'role', state)
       expect(perception.roleId).toBe('imp')
-      expect(perception.team).toBe('demon')
+      expect(perception.roleTeam).toBe('demon')
     })
 
     it('sees deceived role when target has role perception modifier', () => {
@@ -198,7 +198,7 @@ describe('Ravenkeeper', () => {
 
       const perception = perceive(target, rk, 'role', state)
       expect(perception.roleId).toBe('chef') // deceived
-      expect(perception.team).toBe('townsfolk') // deceived
+      expect(perception.roleTeam).toBe('townsfolk') // deceived
     })
 
     it('good player with demon-like role modifier appears as demon', () => {
@@ -222,7 +222,7 @@ describe('Ravenkeeper', () => {
 
       const perception = perceive(recluse, rk, 'role', state)
       expect(perception.roleId).toBe('imp')
-      expect(perception.team).toBe('demon')
+      expect(perception.roleTeam).toBe('demon')
     })
   })
 })

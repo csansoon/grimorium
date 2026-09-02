@@ -10,7 +10,7 @@ registerRoleTranslations('recluse', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'recluse',
-  team: 'outsider',
+  roleTeam: 'outsider',
   icon: 'candleHolderLit',
   nightOrder: null, // Doesn't wake at night — passive ability
   chaos: 55,

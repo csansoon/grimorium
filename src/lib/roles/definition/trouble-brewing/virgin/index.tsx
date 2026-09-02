@@ -10,7 +10,7 @@ registerRoleTranslations('virgin', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'virgin',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'flower',
   nightOrder: null, // Doesn't wake at night - passive ability
   chaos: 35,

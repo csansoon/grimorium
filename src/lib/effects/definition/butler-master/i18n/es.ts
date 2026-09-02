@@ -1,10 +1,8 @@
-const es = {
-  name: 'Amo',
-  description:
-    'Este jugador es el Mayordomo — solo puede votar si su amo elegido también está votando.',
-  configSelectMaster: 'Selecciona al Amo',
+export default {
+  name: 'Amo del Mayordomo',
+  description: 'El mayordomo solo puede votar si su amo vota.',
+  configSelectMaster: 'Selecciona amo',
   configCancel: 'Cancelar',
   configSave: 'Guardar',
-} as const
+}
 
-export default es

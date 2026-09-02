@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Game, GameState, PlayerState } from '../../lib/types'
 import { getRole } from '../../lib/roles'
+import { getRoleTeamId } from '../../lib/identity'
 import { getTeam } from '../../lib/teams'
 import { useI18n, getRoleName } from '../../lib/i18n'
 import { Button, Icon, BackButton } from '../atoms'
@@ -124,7 +125,8 @@ function PlayerRevealRow({
 }) {
   const { t, language } = useI18n()
   const role = getRole(player.roleId)
-  const team = role ? getTeam(role.team) : null
+  const roleTeamId = getRoleTeamId(role)
+  const team = roleTeamId ? getTeam(roleTeamId) : null
 
   const roleName = useMemo(() => {
     return getRoleName(player.roleId, language)

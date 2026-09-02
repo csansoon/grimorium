@@ -1,18 +1,17 @@
-const en = {
+export default {
   name: 'Misregister',
-  description:
-    'This player might register differently to information abilities.',
-  mightRegisterAs: 'Might register as:',
+  description: 'May register as a different alignment or team.',
+  mightRegisterAs: 'Might register as',
   alignment_good: 'Good',
   alignment_evil: 'Evil',
   team_townsfolk: 'Townsfolk',
   team_outsider: 'Outsider',
   team_minion: 'Minion',
   team_demon: 'Demon',
-  configAlignments: 'Alignments',
+  configTitle: 'Configure misregistration',
   configTeams: 'Teams',
+  configAlignments: 'Alignments',
   configCancel: 'Cancel',
   configSave: 'Save',
-} as const
+}
 
-export default en

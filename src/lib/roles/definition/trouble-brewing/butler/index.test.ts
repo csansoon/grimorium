@@ -17,7 +17,7 @@ describe('Butler', () => {
 
   describe('basic properties', () => {
     it('is an outsider', () => {
-      expect(definition.team).toBe('outsider')
+      expect(definition.roleTeam).toBe('outsider')
     })
 
     it('has a night action', () => {

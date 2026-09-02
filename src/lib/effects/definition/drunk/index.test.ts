@@ -33,7 +33,7 @@ describe('Drunk effect', () => {
       expect(definition.perceptionModifiers).toHaveLength(1)
       const modifier = definition.perceptionModifiers![0]
       expect(modifier.context).toContain('role')
-      expect(modifier.context).toContain('team')
+      expect(modifier.context).toContain('roleTeam')
     })
 
     it('makes the player perceive as Drunk role', () => {
@@ -50,7 +50,7 @@ describe('Drunk effect', () => {
 
       const perception = perceive(drunkPlayer, observer, 'role', state)
       expect(perception.roleId).toBe('drunk')
-      expect(perception.team).toBe('outsider')
+      expect(perception.roleTeam).toBe('outsider')
     })
 
     it('makes the player perceive as Outsider team', () => {
@@ -64,8 +64,8 @@ describe('Drunk effect', () => {
       const observer = makePlayer({ id: 'p2', roleId: 'investigator' })
       const state = makeState({ players: [drunkPlayer, observer] })
 
-      const perception = perceive(drunkPlayer, observer, 'team', state)
-      expect(perception.team).toBe('outsider')
+      const perception = perceive(drunkPlayer, observer, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('outsider')
     })
 
     it('does not affect alignment perception (Drunk is still good)', () => {

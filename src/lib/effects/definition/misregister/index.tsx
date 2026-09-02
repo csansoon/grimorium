@@ -215,13 +215,23 @@ const definition: EffectDefinition = {
   id: 'misregister',
   icon: 'drama',
   defaultType: 'perception',
+  persistence: {
+    targetRoleChange: 'remove',
+  },
   perceptionModifiers: [
     {
-      context: ['alignment', 'team', 'role'],
+      context: ['alignment', 'roleTeam', 'role'],
       modify: (perception, _target, _observer, _state, effectData) => {
-        const overrides = effectData?.perceiveAs as
-          | Partial<Perception>
+        const rawOverrides = effectData?.perceiveAs as
+          | (Partial<Perception> & { team?: Perception['roleTeam'] })
           | undefined
+        const overrides = rawOverrides?.team
+          ? {
+              ...rawOverrides,
+              roleTeam: rawOverrides.roleTeam ?? rawOverrides.team,
+              team: undefined,
+            }
+          : rawOverrides
         if (!overrides) return perception
         return { ...perception, ...overrides }
       },

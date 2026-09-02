@@ -9,6 +9,7 @@ import {
   addEffectTo,
   resetPlayerCounter,
 } from './helpers'
+import type { ScriptDefinition } from '../scripts'
 import { EffectDefinition, EffectId } from '../effects/types'
 
 // ============================================================================
@@ -76,6 +77,7 @@ describe('getAvailableNightFollowUps', () => {
     expect(result[0].playerName).toBe('Scarlet')
     expect(result[0].icon).toBe('sparkles')
     expect(result[0].label).toBe('Your role has changed!')
+    expect(result[0].placement).toBe('before_player_action')
     expect(result[0].ActionComponent).toBeDefined()
   })
 
@@ -242,6 +244,220 @@ describe('getNightRolesStatus', () => {
     const washerwoman = result.find((r) => r.roleId === 'washerwoman')
     expect(washerwoman).toBeDefined()
     expect(washerwoman!.status).toBe('done')
+  })
+
+  it('returns night actions in script wake order', () => {
+    const players = [
+      makePlayer({ id: 'p1', roleId: 'empath', name: 'Empath' }),
+      makePlayer({ id: 'p2', roleId: 'imp', name: 'Imp' }),
+    ]
+    const game = {
+      ...makeGameWithHistory(
+        [
+          {
+            type: 'game_created',
+            stateOverrides: { phase: 'night', round: 2 },
+          },
+          { type: 'night_started' },
+        ],
+        makeState({
+          phase: 'night',
+          round: 2,
+          players,
+        }),
+      ),
+      scriptId: 'trouble-brewing' as const,
+    }
+
+    const result = getNightRolesStatus(game)
+    expect(result.map((entry) => entry.roleId)).toEqual(['imp', 'empath'])
+  })
+
+  it('excludes skip-directed roles and prepends immediate-directed roles', () => {
+    const players = [
+      makePlayer({ id: 'p1', roleId: 'empath', name: 'Empath' }),
+      makePlayer({ id: 'p2', roleId: 'imp', name: 'Imp' }),
+      makePlayer({ id: 'p3', roleId: 'monk', name: 'Monk' }),
+    ]
+    const scriptSnapshot: ScriptDefinition = {
+      id: 'test-custom',
+      source: 'custom',
+      name: 'Test Custom',
+      icon: 'moon',
+      roles: ['monk', 'empath', 'imp'],
+      enforceDistribution: false,
+      wakeOrder: {
+        firstNight: [],
+        otherNights: [
+          { roleId: 'monk' },
+          { roleId: 'empath' },
+          { roleId: 'imp' },
+        ],
+      },
+      isOfficial: false,
+    }
+
+    const game = {
+      ...makeGameWithHistory(
+        [
+          {
+            type: 'game_created',
+            stateOverrides: { phase: 'night', round: 2 },
+          },
+          { type: 'night_started' },
+          {
+            type: 'night_queue_directive',
+            data: {
+              playerId: 'p2',
+              roleId: 'imp',
+              directive: 'immediate',
+            },
+          },
+          {
+            type: 'night_queue_directive',
+            data: {
+              playerId: 'p3',
+              roleId: 'monk',
+              directive: 'skip',
+            },
+          },
+        ],
+        makeState({
+          phase: 'night',
+          round: 2,
+          players,
+        }),
+      ),
+      scriptId: 'custom',
+      scriptSnapshot,
+    }
+
+    const result = getNightRolesStatus(game)
+    expect(result.map((entry) => `${entry.playerId}:${entry.roleId}:${entry.status}`)).toEqual([
+      'p2:imp:pending',
+      'p1:empath:pending',
+    ])
+  })
+
+  it('omits dead pending roles unless an ability specifically keeps them waking', () => {
+    const players = [
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'imp', name: 'Imp' }), 'dead'),
+      makePlayer({ id: 'p2', roleId: 'empath', name: 'Empath' }),
+      makePlayer({ id: 'p3', roleId: 'villager', name: 'Villager' }),
+    ]
+    const scriptSnapshot: ScriptDefinition = {
+      id: 'test-custom',
+      source: 'custom',
+      name: 'Test Custom',
+      icon: 'moon',
+      roles: ['imp', 'empath'],
+      enforceDistribution: false,
+      wakeOrder: {
+        firstNight: [],
+        otherNights: [{ roleId: 'imp' }, { roleId: 'empath' }],
+      },
+      isOfficial: false,
+    }
+
+    const game = {
+      ...makeGameWithHistory(
+        [
+          {
+            type: 'game_created',
+            stateOverrides: { phase: 'night', round: 2 },
+          },
+          { type: 'night_started' },
+        ],
+        makeState({
+          phase: 'night',
+          round: 2,
+          players,
+        }),
+      ),
+      scriptId: 'custom',
+      scriptSnapshot,
+    }
+
+    const result = getNightRolesStatus(game)
+    expect(result.map((entry) => `${entry.playerId}:${entry.roleId}:${entry.status}`)).toEqual([
+      'p2:empath:pending',
+    ])
+  })
+
+  it('keeps skipped night actions visible with skipped status', () => {
+    const players = [
+      makePlayer({ id: 'p1', roleId: 'imp', name: 'Imp' }),
+      makePlayer({ id: 'p2', roleId: 'empath', name: 'Empath' }),
+      makePlayer({ id: 'p3', roleId: 'villager', name: 'Villager' }),
+    ]
+    const game = {
+      ...makeGameWithHistory(
+        [
+          {
+            type: 'game_created',
+            stateOverrides: { phase: 'night', round: 2 },
+          },
+          { type: 'night_started' },
+          {
+            type: 'night_skipped',
+            data: { roleId: 'imp', playerId: 'p1' },
+          },
+        ],
+        makeState({
+          phase: 'night',
+          round: 2,
+          players,
+        }),
+      ),
+      scriptId: 'trouble-brewing' as const,
+    }
+
+    const result = getNightRolesStatus(game)
+    expect(result.map((entry) => `${entry.playerId}:${entry.roleId}:${entry.status}`)).toEqual([
+      'p1:imp:skipped',
+      'p2:empath:pending',
+    ])
+  })
+
+  it('labels suppressed under-seven passive minion info as minion info', () => {
+    const baron = makePlayer({ id: 'baron', roleId: 'baron', name: 'Baron' })
+    const imp = makePlayer({ id: 'imp', roleId: 'imp', name: 'Imp' })
+    const state = makeState({
+      phase: 'night',
+      round: 1,
+      players: [
+        baron,
+        imp,
+        makePlayer({ roleId: 'washerwoman' }),
+        makePlayer({ roleId: 'chef' }),
+        makePlayer({ roleId: 'empath' }),
+        makePlayer({ roleId: 'butler' }),
+      ],
+    })
+
+    const game = makeGameWithHistory(
+      [
+        {
+          type: 'night_started',
+          data: { round: 1 },
+          stateOverrides: state,
+        },
+        {
+          type: 'night_skipped',
+          data: { roleId: 'baron', playerId: 'baron' },
+          stateOverrides: state,
+        },
+      ],
+      state,
+    )
+
+    const result = getNightRolesStatus(game)
+    expect(result[0]).toMatchObject({
+      roleId: 'baron',
+      status: 'skipped',
+      dashboardKind: 'minion_info',
+      skippedReasonCode: 'evil_info_under_seven',
+    })
   })
 })
 

@@ -1,7 +1,5 @@
-const en = {
+export default {
   name: 'Poisoned',
-  description:
-    "This player's ability malfunctions tonight. Information roles get wrong info, passive abilities fail.",
-} as const
+  description: 'This player is poisoned and their ability malfunctions.',
+}
 
-export default en

@@ -14,7 +14,7 @@ it('Drunk has no nightOrder (never wakes as Drunk)', () => {
 })
 
 it('Drunk is an outsider', () => {
-  expect(definition.team).toBe('outsider')
+  expect(definition.roleTeam).toBe('outsider')
 })
 
 it('Drunk has a SetupAction for choosing believed role', () => {

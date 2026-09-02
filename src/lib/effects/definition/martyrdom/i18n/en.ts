@@ -1,6 +1,5 @@
-const en = {
+export default {
   name: 'Martyrdom',
-  description: 'If this player is executed, the evil team wins.',
-} as const
+  description: 'If this player is executed, evil wins.',
+}
 
-export default en

@@ -7,6 +7,7 @@ import {
   getPlayer,
 } from '../../lib/types'
 import { getRole } from '../../lib/roles'
+import { getCurrentAlignment, getRoleTeamId } from '../../lib/identity'
 import { getTeam, TeamId } from '../../lib/teams'
 import {
   getEffect,
@@ -268,18 +269,19 @@ function PlayerDetailContent({
 }) {
   const { t, language } = useI18n()
   const role = getRole(player.roleId)
-  const team = role ? getTeam(role.team) : null
+  const roleTeamId = getRoleTeamId(role) as TeamId | undefined
+  const team = roleTeamId ? getTeam(roleTeamId) : null
   const isDead = hasEffect(player, 'dead')
   const isDrunk = hasEffect(player, 'drunk')
-  const isEvil = team?.isEvil ?? false
+  const alignment = getCurrentAlignment(player)
+  const isEvil = alignment === 'evil'
 
-  const teamId = role?.team as TeamId | undefined
   const roleName = role ? getRegistryRoleName(role.id, language) : t.ui.unknown
   const roleDescription = role
     ? getRegistryRoleDescription(role.id, language)
     : ''
-  const teamName = teamId ? t.teams[teamId]?.name : ''
-  const winCondition = teamId ? t.teams[teamId]?.winCondition : ''
+  const teamName = roleTeamId ? t.teams[roleTeamId]?.name : ''
+  const winCondition = roleTeamId ? t.teams[roleTeamId]?.winCondition : ''
   const getEffectName = (effectType: string) =>
     getRegistryEffectName(effectType, language)
 
@@ -307,11 +309,19 @@ function PlayerDetailContent({
           </Badge>
         )}
         {role && (
-          <Badge variant={role.team}>
+          <Badge variant={getRoleTeamId(role) ?? 'townsfolk'}>
             <Icon name={role.icon} size='xs' className='mr-1' />
             {roleName}
           </Badge>
         )}
+        <Badge variant={alignment === 'evil' ? 'demon' : 'townsfolk'}>
+          <Icon
+            name={alignment === 'evil' ? 'thumbsDown' : 'thumbsUp'}
+            size='xs'
+            className='mr-1'
+          />
+          {alignment === 'evil' ? 'Evil alignment' : 'Good alignment'}
+        </Badge>
       </div>
 
       {role && (
@@ -324,6 +334,14 @@ function PlayerDetailContent({
             <span className='text-xs text-parchment-500'>({teamName})</span>
           </div>
           <div className='bg-white/5 rounded-lg p-4 border border-white/10'>
+            <div className='mb-3 flex flex-wrap gap-2'>
+              <Badge variant={getRoleTeamId(role) ?? 'townsfolk'}>
+                Role team: {teamName}
+              </Badge>
+              <Badge variant={alignment === 'evil' ? 'demon' : 'townsfolk'}>
+                Alignment: {alignment}
+              </Badge>
+            </div>
             <p className='text-parchment-200 text-sm leading-relaxed'>
               {roleDescription}
             </p>

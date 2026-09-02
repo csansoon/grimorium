@@ -32,11 +32,11 @@ const definition: EffectDefinition = {
   poisonsAbility: true,
   perceptionModifiers: [
     {
-      context: ['role', 'team'],
+      context: ['role', 'roleTeam'],
       modify: (perception) => ({
         ...perception,
         roleId: 'drunk',
-        team: 'outsider',
+        roleTeam: 'outsider',
       }),
     },
   ],

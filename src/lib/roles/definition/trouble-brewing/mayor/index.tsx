@@ -12,7 +12,7 @@ registerRoleTranslations('mayor', 'es', es)
 
 const definition: RoleDefinition = {
   id: 'mayor',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'landmark',
   nightOrder: null, // Doesn't wake at night — passive ability
   chaos: 45,

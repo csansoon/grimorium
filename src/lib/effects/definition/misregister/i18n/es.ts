@@ -1,18 +1,17 @@
-const es = {
+export default {
   name: 'Registro Falso',
-  description:
-    'Este jugador podría registrarse de forma diferente ante habilidades de información.',
-  mightRegisterAs: 'Podría registrarse como:',
+  description: 'Puede registrarse como otra alineación o equipo.',
+  mightRegisterAs: 'Puede registrarse como',
   alignment_good: 'Bueno',
-  alignment_evil: 'Malvado',
-  team_townsfolk: 'Aldeano',
+  alignment_evil: 'Malo',
+  team_townsfolk: 'Pueblerino',
   team_outsider: 'Forastero',
-  team_minion: 'Secuaz',
+  team_minion: 'Esbirro',
   team_demon: 'Demonio',
-  configAlignments: 'Alineamientos',
+  configTitle: 'Configurar registro falso',
   configTeams: 'Equipos',
+  configAlignments: 'Alineaciones',
   configCancel: 'Cancelar',
   configSave: 'Guardar',
-} as const
+}
 
-export default es

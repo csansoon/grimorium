@@ -1,5 +1,5 @@
 import type { FC } from 'react'
-import { GameState, PlayerState, HistoryEntry, Game } from '../types'
+import { GameState, PlayerState, HistoryEntry, Game, Alignment } from '../types'
 import { EffectToAdd } from '../roles/types'
 import { IconName } from '../../components/atoms/icon'
 import { TeamId } from '../teams/types'
@@ -39,6 +39,7 @@ export type StateChanges = {
   addEffects?: Record<string, EffectToAdd[]>
   removeEffects?: Record<string, string[]>
   changeRoles?: Record<string, string> // playerId -> new roleId
+  changeAlignments?: Record<string, Alignment> // playerId -> new alignment
 }
 
 // ============================================================================
@@ -108,13 +109,19 @@ export type DayActionProps = {
 
 export type DayActionResult = {
   entries: Omit<HistoryEntry, 'id' | 'timestamp' | 'stateAfter'>[]
+  stateUpdates?: Partial<GameState>
   addEffects?: Record<string, EffectToAdd[]>
   removeEffects?: Record<string, string[]>
+  changeRoles?: Record<string, string>
+  changeAlignments?: Record<string, Alignment>
+  intent?: Intent
+  winner?: 'townsfolk' | 'demon'
 }
 
 export type DayActionDefinition = {
   id: string
   icon: IconName
+  category?: 'standard' | 'resolution'
   // Functions receive the translations object and return localized strings
   getLabel: (t: Record<string, any>) => string
   getDescription: (t: Record<string, any>) => string
@@ -156,8 +163,12 @@ export type NightFollowUpProps = {
  */
 export type NightFollowUpResult = {
   entries: Omit<HistoryEntry, 'id' | 'timestamp' | 'stateAfter'>[]
+  stateUpdates?: Partial<GameState>
   addEffects?: Record<string, EffectToAdd[]>
   removeEffects?: Record<string, string[]>
+  changeRoles?: Record<string, string>
+  changeAlignments?: Record<string, Alignment>
+  winner?: 'townsfolk' | 'demon'
 }
 
 /**
@@ -173,6 +184,7 @@ export type NightFollowUpDefinition = {
   icon: IconName
   getLabel: (t: Record<string, any>) => string
   condition: (player: PlayerState, state: GameState, game: Game) => boolean
+  placement?: 'after_actions' | 'before_player_action'
   ActionComponent: FC<NightFollowUpProps>
 }
 
@@ -185,6 +197,7 @@ export type AvailableNightFollowUp = {
   playerName: string
   icon: IconName
   label: string
+  placement?: 'after_actions' | 'before_player_action'
   ActionComponent: FC<NightFollowUpProps>
 }
 
@@ -210,19 +223,19 @@ export type WinConditionCheck = {
  * What aspect of a player is being queried by an information role.
  *
  * - "alignment": Is this player good or evil? (Chef, Empath)
- * - "team":      What team does this player belong to? (Washerwoman, Librarian, Investigator)
+ * - "roleTeam":  What character category does this player belong to? (Washerwoman, Librarian, Investigator)
  * - "role":      What specific role is this player? (Undertaker, Fortune Teller)
  */
-export type PerceptionContext = 'alignment' | 'team' | 'role'
+export type PerceptionContext = 'alignment' | 'roleTeam' | 'role'
 
 /**
  * The result of perceiving a player — what an information role "sees".
- * This may differ from the player's actual role/team/alignment due to
+ * This may differ from the player's actual role/roleTeam/alignment due to
  * perception modifiers (e.g., Recluse registering as evil, Spy registering as good).
  */
 export type Perception = {
   roleId: string
-  team: TeamId
+  roleTeam: TeamId
   alignment: 'good' | 'evil'
 }
 

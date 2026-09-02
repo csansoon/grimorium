@@ -71,7 +71,7 @@ describe('Poisoner', () => {
 
   describe('role definition', () => {
     it('is a minion', () => {
-      expect(definition.team).toBe('minion')
+      expect(definition.roleTeam).toBe('minion')
     })
 
     it('has a NightAction component', () => {

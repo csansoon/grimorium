@@ -92,8 +92,8 @@ describe('Washerwoman', () => {
       const villager = makePlayer({ id: 'p2', roleId: 'villager' })
       const state = makeState({ players: [washerwoman, villager] })
 
-      const perception = perceive(villager, washerwoman, 'team', state)
-      expect(perception.team).toBe('townsfolk')
+      const perception = perceive(villager, washerwoman, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('townsfolk')
     })
 
     it('does not identify outsider as townsfolk', () => {
@@ -101,8 +101,8 @@ describe('Washerwoman', () => {
       const saint = makePlayer({ id: 'p2', roleId: 'saint' })
       const state = makeState({ players: [washerwoman, saint] })
 
-      const perception = perceive(saint, washerwoman, 'team', state)
-      expect(perception.team).toBe('outsider')
+      const perception = perceive(saint, washerwoman, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('outsider')
     })
 
     it('deceiving player appearing as townsfolk creates false positive', () => {
@@ -111,7 +111,7 @@ describe('Washerwoman', () => {
         icon: 'user',
         perceptionModifiers: [
           {
-            context: 'team',
+            context: 'roleTeam',
             modify: (p) => ({ ...p, team: 'townsfolk' }),
           },
         ],
@@ -124,8 +124,8 @@ describe('Washerwoman', () => {
       )
       const state = makeState({ players: [washerwoman, imp] })
 
-      const perception = perceive(imp, washerwoman, 'team', state)
-      expect(perception.team).toBe('townsfolk') // false positive
+      const perception = perceive(imp, washerwoman, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('townsfolk') // false positive
     })
 
     it('townsfolk appearing as another team creates false negative', () => {
@@ -134,7 +134,7 @@ describe('Washerwoman', () => {
         icon: 'user',
         perceptionModifiers: [
           {
-            context: 'team',
+            context: 'roleTeam',
             modify: (p) => ({ ...p, team: 'outsider' }),
           },
         ],
@@ -147,8 +147,8 @@ describe('Washerwoman', () => {
       )
       const state = makeState({ players: [washerwoman, villager] })
 
-      const perception = perceive(villager, washerwoman, 'team', state)
-      expect(perception.team).toBe('outsider') // false negative
+      const perception = perceive(villager, washerwoman, 'roleTeam', state)
+      expect(perception.roleTeam).toBe('outsider') // false negative
     })
 
     it('role shown is affected by role perception modifiers', () => {

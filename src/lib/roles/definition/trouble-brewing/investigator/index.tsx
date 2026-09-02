@@ -33,7 +33,7 @@ const investigatorConfig: InfoRoleConfig = {
 
 const definition: RoleDefinition = {
   id: 'investigator',
-  team: 'townsfolk',
+  roleTeam: 'townsfolk',
   icon: 'search',
   nightOrder: 12,
   chaos: 15,

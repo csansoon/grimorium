@@ -1,4 +1,5 @@
 import { RoleDefinition } from '../../../lib/roles'
+import { getRoleTeamId } from '../../../lib/identity'
 import { CardIcon } from './CardIcon'
 
 /**
@@ -6,5 +7,5 @@ import { CardIcon } from './CardIcon'
  * This wrapper exists for backward compatibility.
  */
 export function RoleIcon({ role }: { role: RoleDefinition }) {
-  return <CardIcon icon={role.icon} teamId={role.team} />
+  return <CardIcon icon={role.icon} teamId={getRoleTeamId(role) ?? 'townsfolk'} />
 }

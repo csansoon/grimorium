@@ -4,10 +4,11 @@ import { AvailableDayAction } from '../../lib/pipeline/types'
 import { useI18n, interpolate } from '../../lib/i18n'
 import { Button, Icon } from '../atoms'
 import { Grimoire } from '../items/Grimoire'
-import { MysticDivider } from '../items'
+import { MysticDivider, StorytellerGrimoireBoard } from '../items'
 import { ScreenFooter } from '../layouts/ScreenFooter'
 import { cn } from '../../lib/utils'
-import { BlockStatus } from '../../lib/game'
+import { BlockStatus, getVoteThreshold } from '../../lib/game'
+import { getAlivePlayers } from '../../lib/types'
 
 type NightSummary = {
   deaths: string[]
@@ -46,6 +47,9 @@ export function DayPhase({
   const { t } = useI18n()
   const [summaryExpanded, setSummaryExpanded] = useState(true)
   const [grimoireExpanded, setGrimoireExpanded] = useState(false)
+  const [grimoireView, setGrimoireView] = useState<'circle' | 'list'>('circle')
+  const aliveCount = getAlivePlayers(state).length
+  const voteThreshold = getVoteThreshold(state)
 
   const deadPlayers = nightSummary
     ? nightSummary.deaths
@@ -83,6 +87,24 @@ export function DayPhase({
             <p className='text-parchment-400 text-sm'>
               {t.game.discussionAndNominations}
             </p>
+            <div className='mt-4 flex items-center justify-center gap-3'>
+              <div className='min-w-[84px] rounded-xl border border-emerald-500/25 bg-emerald-900/15 px-3 py-2'>
+                <div className='text-lg font-bold text-emerald-300 leading-none'>
+                  {aliveCount}
+                </div>
+                <div className='text-[10px] uppercase tracking-[0.18em] text-emerald-200/70 mt-1'>
+                  {t.game.alivePlayersLabel}
+                </div>
+              </div>
+              <div className='min-w-[84px] rounded-xl border border-amber-500/25 bg-amber-900/15 px-3 py-2'>
+                <div className='text-lg font-bold text-amber-300 leading-none'>
+                  {voteThreshold}
+                </div>
+                <div className='text-[10px] uppercase tracking-[0.18em] text-amber-200/70 mt-1'>
+                  {t.game.blockThresholdLabel}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -261,13 +283,46 @@ export function DayPhase({
           </button>
           {grimoireExpanded && (
             <div className='bg-white/5 rounded-xl border border-white/10 overflow-hidden'>
-              <Grimoire
-                state={state}
-                compact
-                onPlayerSelect={onOpenGrimoirePlayer}
-                onShowRoleCard={onShowRoleCard}
-                onEditEffects={onEditEffects}
-              />
+              <div className='flex gap-2 p-3 border-b border-white/10 bg-black/10'>
+                <button
+                  onClick={() => setGrimoireView('circle')}
+                  className={cn(
+                    'flex-1 rounded-lg border px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] transition-colors',
+                    grimoireView === 'circle'
+                      ? 'border-mystic-gold/35 bg-mystic-gold/10 text-mystic-gold'
+                      : 'border-white/10 text-parchment-500 hover:border-white/20 hover:text-parchment-300',
+                  )}
+                >
+                  {t.game.grimoireViewCircle}
+                </button>
+                <button
+                  onClick={() => setGrimoireView('list')}
+                  className={cn(
+                    'flex-1 rounded-lg border px-3 py-2 text-xs font-medium uppercase tracking-[0.18em] transition-colors',
+                    grimoireView === 'list'
+                      ? 'border-mystic-gold/35 bg-mystic-gold/10 text-mystic-gold'
+                      : 'border-white/10 text-parchment-500 hover:border-white/20 hover:text-parchment-300',
+                  )}
+                >
+                  {t.game.grimoireViewList}
+                </button>
+              </div>
+              {grimoireView === 'circle' ? (
+                <div className='p-3'>
+                  <StorytellerGrimoireBoard
+                    state={state}
+                    onPlayerSelect={onOpenGrimoirePlayer}
+                  />
+                </div>
+              ) : (
+                <Grimoire
+                  state={state}
+                  compact
+                  onPlayerSelect={onOpenGrimoirePlayer}
+                  onShowRoleCard={onShowRoleCard}
+                  onEditEffects={onEditEffects}
+                />
+              )}
             </div>
           )}
         </div>

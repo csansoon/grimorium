@@ -129,7 +129,7 @@ describe('Undertaker', () => {
 
       const perception = perceive(executed, undertaker, 'role', state)
       expect(perception.roleId).toBe('imp')
-      expect(perception.team).toBe('demon')
+      expect(perception.roleTeam).toBe('demon')
     })
 
     it('sees deceived role when target has role perception modifier', () => {
@@ -153,7 +153,7 @@ describe('Undertaker', () => {
 
       const perception = perceive(executed, undertaker, 'role', state)
       expect(perception.roleId).toBe('villager') // deceived
-      expect(perception.team).toBe('townsfolk') // deceived
+      expect(perception.roleTeam).toBe('townsfolk') // deceived
     })
   })
 })

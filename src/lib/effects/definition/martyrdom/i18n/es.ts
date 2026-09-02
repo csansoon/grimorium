@@ -1,6 +1,5 @@
-const es = {
+export default {
   name: 'Martirio',
-  description: 'Si este jugador es ejecutado, el equipo malvado gana.',
-} as const
+  description: 'Si este jugador es ejecutado, el mal gana.',
+}
 
-export default es

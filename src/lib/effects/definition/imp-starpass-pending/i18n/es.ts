@@ -1,7 +1,5 @@
-const es = {
-  name: 'Pase Pendiente',
-  description:
-    'El Diablo está intentando pasar el rol de Demonio a un Secuaz.',
-} as const
+export default {
+  name: 'Starpass Pendiente',
+  description: 'Selecciona un esbirro vivo para que sea el nuevo Imp.',
+}
 
-export default es

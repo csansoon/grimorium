@@ -126,7 +126,7 @@ describe('Spy', () => {
       )
       const villager = makePlayer({ id: 'v1', roleId: 'villager' })
 
-      const ambiguous = getAmbiguousPlayers([spy, villager], 'team')
+      const ambiguous = getAmbiguousPlayers([spy, villager], 'roleTeam')
       expect(ambiguous).toHaveLength(1)
       expect(ambiguous[0].id).toBe('s1')
     })

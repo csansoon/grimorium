@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { getRole } from '../../lib/roles'
-import { SCRIPTS } from '../../lib/scripts'
+import { getAllRoles, getRole } from '../../lib/roles'
 import { RoleId } from '../../lib/roles/types'
+import { getRoleTeamId } from '../../lib/identity'
 import { getTeam, TeamId } from '../../lib/teams'
 import { useI18n, getRoleName, getRoleDescription } from '../../lib/i18n'
 import { Icon, BackButton } from '../atoms'
@@ -12,6 +12,7 @@ import { cn } from '../../lib/utils'
 
 type Props = {
   selectedRoleId: RoleId | null
+  roleIds?: string[]
   onBack: () => void
   onSelectRole: (roleId: RoleId) => void
   onDeselectRole: () => void
@@ -21,14 +22,14 @@ const TEAM_ORDER: TeamId[] = ['townsfolk', 'outsider', 'minion', 'demon']
 
 export function RolesLibrary({
   selectedRoleId,
+  roleIds,
   onBack,
   onSelectRole,
   onDeselectRole,
 }: Props) {
   const { t, language } = useI18n()
 
-  // Get all roles from the Trouble Brewing script (currently the only one)
-  const scriptRoles = SCRIPTS['trouble-brewing'].roles
+  const scriptRoles = roleIds ?? getAllRoles().map((role) => role.id)
 
   // Group roles by team
   const rolesByTeam = TEAM_ORDER.map((teamId) => {
@@ -37,7 +38,7 @@ export function RolesLibrary({
       .map((roleId) => getRole(roleId))
       .filter(
         (role): role is NonNullable<ReturnType<typeof getRole>> =>
-          role !== undefined && role.team === teamId,
+          role !== undefined && getRoleTeamId(role) === teamId,
       )
     return { teamId, team, roles }
   }).filter((group) => group.roles.length > 0)
@@ -51,7 +52,7 @@ export function RolesLibrary({
   // If a role is selected, show its full RoleCard with prev/next navigation
   if (selectedRoleId) {
     const selectedRole = getRole(selectedRoleId)
-    const selectedTeamId = selectedRole?.team ?? 'townsfolk'
+    const selectedTeamId = getRoleTeamId(selectedRole) ?? 'townsfolk'
     const selectedTeam = getTeam(selectedTeamId)
 
     const currentIndex = allRoleIds.indexOf(selectedRoleId)

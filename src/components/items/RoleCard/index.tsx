@@ -1,4 +1,5 @@
 import { getRole } from '../../../lib/roles'
+import { getRoleTeamId } from '../../../lib/identity'
 import { getTeam, TeamId } from '../../../lib/teams'
 import {
   useI18n,
@@ -69,8 +70,8 @@ export function RoleCard({ roleId }: Props) {
     )
   }
 
-  const team = getTeam(role.team)
-  const teamId = role.team as TeamId
+  const teamId = (getRoleTeamId(role) ?? 'townsfolk') as TeamId
+  const team = getTeam(teamId)
 
   const teamTranslation = t.teams[teamId]
 
@@ -89,7 +90,7 @@ export function RoleCard({ roleId }: Props) {
         {/* Role Name */}
         <h1
           className={cn(
-            'font-tarot text-xl sm:text-3xl font-bold text-center uppercase tracking-widest-xl mb-2',
+            'font-tarot text-lg sm:text-3xl font-bold text-center uppercase tracking-[0.22em] sm:tracking-widest-xl mb-2',
             team.colors.cardText,
           )}
           style={{ textShadow: team.colors.cardIconGlow }}
@@ -109,7 +110,7 @@ export function RoleCard({ roleId }: Props) {
       </div>
 
       {/* Middle: Divider + Quote + Lines — centered in remaining space */}
-      <div className='flex-1 flex flex-col items-center justify-center p-4 sm:p-2'>
+      <div className='flex-1 flex flex-col items-center justify-center p-3 sm:p-2'>
         {/* Icon-tagged ability/condition lines */}
         {roleLines.length > 0 && (
           <div className='w-full space-y-1.5 sm:space-y-2'>
@@ -124,7 +125,7 @@ export function RoleCard({ roleId }: Props) {
                 </span>
                 <span
                   className={cn(
-                    'text-xs sm:text-sm leading-snug',
+                    'text-[11px] sm:text-sm leading-snug',
                     team.colors.cardText,
                     line.type === 'WIN' ? 'opacity-90 font-medium' : 'opacity-70',
                   )}
@@ -152,4 +153,3 @@ export function RoleCard({ roleId }: Props) {
     </CardShell>
   )
 }
-

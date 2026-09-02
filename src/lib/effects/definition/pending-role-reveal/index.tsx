@@ -4,7 +4,6 @@ import {
   NightFollowUpProps,
 } from '../../../pipeline/types'
 import { getRole } from '../../../roles'
-import { getTeam } from '../../../teams'
 import { RoleCard } from '../../../../components/items/RoleCard'
 import {
   TeamBackground,
@@ -12,6 +11,7 @@ import {
 import { PlayerFacingScreen } from '../../../../components/layouts/PlayerFacingScreen'
 import { HandbackCardLink } from '../../../../components/layouts'
 import { useI18n } from '../../../i18n'
+import { getCurrentAlignment, getRoleTeamId } from '../../../identity'
 import { cn } from '../../../../lib/utils'
 import { registerEffectTranslations } from '../../../i18n'
 
@@ -37,8 +37,8 @@ function RoleChangeRevealAction({
   if (!player) return null
 
   const role = getRole(player.roleId)
-  const teamId = role?.team ?? 'townsfolk'
-  const team = getTeam(teamId)
+  const teamId = getRoleTeamId(role) ?? 'townsfolk'
+  const isEvil = getCurrentAlignment(player) === 'evil'
 
   const handleComplete = () => {
     onComplete({
@@ -68,7 +68,7 @@ function RoleChangeRevealAction({
         <p
           className={cn(
             'text-center text-xs uppercase tracking-widest font-semibold mb-4',
-            team.isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
+            isEvil ? 'text-red-300/80' : 'text-parchment-300/80',
           )}
         >
           {t.game.yourRoleHasChanged}
@@ -76,7 +76,7 @@ function RoleChangeRevealAction({
 
         <RoleCard roleId={player.roleId} />
 
-        <HandbackCardLink onClick={handleComplete} isEvil={team.isEvil}>
+        <HandbackCardLink onClick={handleComplete} isEvil={isEvil}>
           {t.common.continue}
         </HandbackCardLink>
       </TeamBackground>
@@ -88,6 +88,7 @@ const roleChangeFollowUp: NightFollowUpDefinition = {
   id: 'role_change_reveal',
   icon: 'sparkles',
   getLabel: (t) => t.game.yourRoleHasChanged,
+  placement: 'before_player_action',
   // If the effect exists on the player, the reveal is needed
   condition: () => true,
   ActionComponent: RoleChangeRevealAction,
