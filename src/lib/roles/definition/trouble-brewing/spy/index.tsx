@@ -19,7 +19,7 @@ import { Button, Icon } from '../../../../../components/atoms'
 import { Grimoire } from '../../../../../components/items/Grimoire'
 import { isAlive } from '../../../../types'
 import { isMalfunctioning } from '../../../../effects'
-
+import { receivesEvilStartingInfo } from '../../../../scripts'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -70,7 +70,8 @@ const definition: RoleDefinition = {
       id: 'show_evil_team',
       icon: 'swords',
       getLabel: (t) => t.game.stepShowEvilTeam,
-      condition: (_game, _player, state) => state.round === 1,
+      condition: (_game, _player, state) =>
+        state.round === 1 && receivesEvilStartingInfo(state.players.length),
       audience: 'player_reveal',
     },
     {
@@ -89,6 +90,8 @@ const definition: RoleDefinition = {
     const [showEvilTeamDone, setShowEvilTeamDone] = useState(false)
 
     const isFirstNight = state.round === 1
+    const showStartingInfo =
+      isFirstNight && receivesEvilStartingInfo(state.players.length)
     const malfunctioning = isMalfunctioning(player)
     const roleT = getRoleTranslations('spy', language)
 
@@ -122,7 +125,7 @@ const definition: RoleDefinition = {
     if (phase === 'step_list') {
       const steps: NightStep[] = []
 
-      if (isFirstNight) {
+      if (showStartingInfo) {
         steps.push({
           id: 'show_evil_team',
           icon: 'swords',
@@ -199,7 +202,7 @@ const definition: RoleDefinition = {
           player={player}
           title={roleT.spyMalfunctionTitle}
           description={roleT.spyMalfunctionDescription}
-          audience="narrator"
+          audience='narrator'
         >
           <div className='text-center mb-6'>
             <div className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-900/30 border border-amber-600/30'>
@@ -239,7 +242,12 @@ const definition: RoleDefinition = {
             />
           </div>
 
-          <HandbackButton onClick={handleComplete} fullWidth size='lg' variant='evil'>
+          <HandbackButton
+            onClick={handleComplete}
+            fullWidth
+            size='lg'
+            variant='evil'
+          >
             <Icon name='check' size='md' className='mr-2' />
             {t.common.continue}
           </HandbackButton>

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { RoleDefinition } from '../../types'
 import { isAlive, hasEffect } from '../../../types'
 import { isMalfunctioning } from '../../../effects'
+import { receivesEvilStartingInfo } from '../../../scripts'
 import {
   useI18n,
   interpolate,
@@ -28,9 +29,7 @@ import {
   RoleCard,
 } from '../../../../components/items'
 import { Button, Icon } from '../../../../components/atoms'
-import {
-  HandbackButton,
-} from '../../../../components/layouts'
+import { HandbackButton } from '../../../../components/layouts'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -75,28 +74,38 @@ const definition: RoleDefinition = {
   icon: 'flameKindling',
   nightOrder: 30,
   chaos: 30,
-  shouldWake: (_game, player) => isAlive(player),
+  shouldWake: (game, player) => {
+    if (!isAlive(player)) return false
+    const state = game.history.at(-1)?.stateAfter
+    return (
+      !!state &&
+      (state.round > 1 || receivesEvilStartingInfo(state.players.length))
+    )
+  },
 
   nightSteps: [
     {
       id: 'show_minions',
       icon: 'users',
       getLabel: (t) => t.game.stepShowMinions,
-      condition: (_game, _player, state) => state.round === 1,
+      condition: (_game, _player, state) =>
+        state.round === 1 && receivesEvilStartingInfo(state.players.length),
       audience: 'player_reveal',
     },
     {
       id: 'select_bluffs',
       icon: 'shuffle',
       getLabel: (t) => t.game.stepSelectBluffs,
-      condition: (_game, _player, state) => state.round === 1,
+      condition: (_game, _player, state) =>
+        state.round === 1 && receivesEvilStartingInfo(state.players.length),
       audience: 'narrator',
     },
     {
       id: 'show_bluffs',
       icon: 'eye',
       getLabel: (t) => t.game.stepShowBluffs,
-      condition: (_game, _player, state) => state.round === 1,
+      condition: (_game, _player, state) =>
+        state.round === 1 && receivesEvilStartingInfo(state.players.length),
       audience: 'player_reveal',
     },
     {
@@ -116,6 +125,8 @@ const definition: RoleDefinition = {
     const { t, language } = useI18n()
     const roleT = getRoleTranslations('imp', language)
     const isFirstNight = state.round === 1
+    const showStartingInfo =
+      isFirstNight && receivesEvilStartingInfo(state.players.length)
 
     // Detect if this player just became the Imp (has pending_role_reveal)
     const isPendingRoleReveal = hasEffect(player, 'pending_role_reveal')
@@ -186,7 +197,7 @@ const definition: RoleDefinition = {
         ]
       }
 
-      if (isFirstNight) {
+      if (showStartingInfo) {
         return [
           {
             id: 'show_minions',
@@ -223,7 +234,7 @@ const definition: RoleDefinition = {
       ]
     }, [
       isPendingRoleReveal,
-      isFirstNight,
+      showStartingInfo,
       showMinionsDone,
       selectBluffsDone,
       t,

@@ -16,8 +16,14 @@ describe('Imp', () => {
   // ================================================================
 
   describe('shouldWake', () => {
-    it('wakes on the first night', () => {
+    it('wakes for starting information with at least 7 players', () => {
       const player = makePlayer({ id: 'p1', roleId: 'imp' })
+      const players = [
+        player,
+        ...Array.from({ length: 6 }, (_, index) =>
+          makePlayer({ id: `other-${index}` }),
+        ),
+      ]
       const game = makeGameWithHistory(
         [
           {
@@ -26,9 +32,25 @@ describe('Imp', () => {
             stateOverrides: { round: 1 },
           },
         ],
-        makeState({ round: 1, players: [player] }),
+        makeState({ round: 1, players }),
       )
       expect(definition.shouldWake!(game, player)).toBe(true)
+    })
+
+    it('does not wake for starting information with only 5 or 6 players', () => {
+      const player = makePlayer({ id: 'p1', roleId: 'imp' })
+      const players = [
+        player,
+        ...Array.from({ length: 5 }, (_, index) =>
+          makePlayer({ id: `other-${index}` }),
+        ),
+      ]
+      const game = makeGameWithHistory(
+        [{ type: 'night_started', stateOverrides: { round: 1 } }],
+        makeState({ round: 1, players }),
+      )
+
+      expect(definition.shouldWake!(game, player)).toBe(false)
     })
 
     it('wakes when alive on later rounds', () => {
@@ -72,8 +94,14 @@ describe('Imp', () => {
   describe('nightSteps', () => {
     it('has first-night steps that are conditional on round 1', () => {
       const player = makePlayer({ id: 'p1', roleId: 'imp' })
-      const firstNightState = makeState({ round: 1, players: [player] })
-      const laterNightState = makeState({ round: 2, players: [player] })
+      const players = [
+        player,
+        ...Array.from({ length: 6 }, (_, index) =>
+          makePlayer({ id: `other-${index}` }),
+        ),
+      ]
+      const firstNightState = makeState({ round: 1, players })
+      const laterNightState = makeState({ round: 2, players })
       const game = makeGameWithHistory(
         [
           {

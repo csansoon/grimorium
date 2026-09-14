@@ -21,7 +21,7 @@ import { Button, Icon } from '../../../../../components/atoms'
 import { isAlive } from '../../../../types'
 import type { PlayerState } from '../../../../types'
 import { isMalfunctioning } from '../../../../effects'
-
+import { receivesEvilStartingInfo } from '../../../../scripts'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -34,12 +34,12 @@ type Phase = 'step_list' | 'show_evil_team' | 'choose_target'
 export function createPoisonResult(
   player: PlayerState,
   target: PlayerState,
-  isFirstNight: boolean,
+  includeStartingInfo: boolean,
 ): NightActionResult {
   const malfunctioning = isMalfunctioning(player)
   const entries: NightActionResult['entries'] = []
 
-  if (isFirstNight) {
+  if (includeStartingInfo) {
     entries.push({
       type: 'night_action',
       message: [
@@ -122,7 +122,8 @@ const definition: RoleDefinition = {
       id: 'show_evil_team',
       icon: 'swords',
       getLabel: (t) => t.game.stepShowEvilTeam,
-      condition: (_game, _player, state) => state.round === 1,
+      condition: (_game, _player, state) =>
+        state.round === 1 && receivesEvilStartingInfo(state.players.length),
       audience: 'player_reveal',
     },
     {
@@ -142,6 +143,8 @@ const definition: RoleDefinition = {
     const [showEvilTeamDone, setShowEvilTeamDone] = useState(false)
 
     const isFirstNight = state.round === 1
+    const showStartingInfo =
+      isFirstNight && receivesEvilStartingInfo(state.players.length)
     const roleT = getRoleTranslations('poisoner', language)
 
     // "choose a player" includes the Poisoner and dead players.
@@ -153,7 +156,7 @@ const definition: RoleDefinition = {
       const target = state.players.find((p) => p.id === selectedTarget)
       if (!target) return
 
-      onComplete(createPoisonResult(player, target, isFirstNight))
+      onComplete(createPoisonResult(player, target, showStartingInfo))
     }
 
     // ================================================================
@@ -163,7 +166,7 @@ const definition: RoleDefinition = {
     if (phase === 'step_list') {
       const steps: NightStep[] = []
 
-      if (isFirstNight) {
+      if (showStartingInfo) {
         steps.push({
           id: 'show_evil_team',
           icon: 'swords',
@@ -238,7 +241,9 @@ const definition: RoleDefinition = {
       <NightActionLayout
         player={player}
         title={roleT.info}
-        description={interpolate(roleT.selectPlayerToPoison, { player: player.name })}
+        description={interpolate(roleT.selectPlayerToPoison, {
+          player: player.name,
+        })}
         audience='player_choice'
       >
         <div className='mb-6'>

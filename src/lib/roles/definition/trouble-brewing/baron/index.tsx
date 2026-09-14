@@ -16,7 +16,7 @@ import {
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import { Icon } from '../../../../../components/atoms'
-
+import { receivesEvilStartingInfo } from '../../../../scripts'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -48,7 +48,7 @@ const definition: RoleDefinition = {
 
   shouldWake: (game) => {
     const state = game.history.at(-1)?.stateAfter
-    return state?.round === 1
+    return state?.round === 1 && receivesEvilStartingInfo(state.players.length)
   },
 
   nightSteps: [
@@ -56,7 +56,8 @@ const definition: RoleDefinition = {
       id: 'show_evil_team',
       icon: 'swords',
       getLabel: (t) => t.game.stepShowEvilTeam,
-      condition: (_game, _player, state) => state.round === 1,
+      condition: (_game, _player, state) =>
+        state.round === 1 && receivesEvilStartingInfo(state.players.length),
       audience: 'player_reveal',
     },
   ],
@@ -130,14 +131,15 @@ const definition: RoleDefinition = {
           description={roleT.evilTeamDescription}
         >
           <div className='mb-6'>
-            <EvilTeamReveal
-              state={state}
-              viewer={player}
-              viewerType='minion'
-            />
+            <EvilTeamReveal state={state} viewer={player} viewerType='minion' />
           </div>
 
-          <HandbackButton onClick={handleComplete} fullWidth size='lg' variant='evil'>
+          <HandbackButton
+            onClick={handleComplete}
+            fullWidth
+            size='lg'
+            variant='evil'
+          >
             <Icon name='check' size='md' className='mr-2' />
             {t.common.continue}
           </HandbackButton>

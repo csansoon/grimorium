@@ -8,6 +8,11 @@ export type { GeneratorPreset, GeneratedPool } from './types'
 export const MIN_BASE_PLAYERS = 5
 export const MAX_BASE_PLAYERS = 15
 
+/** Minions and the Demon do not learn each other in a 5- or 6-player game. */
+export function receivesEvilStartingInfo(playerCount: number): boolean {
+  return playerCount >= 7
+}
+
 // ============================================================================
 // ALL ROLE IDS (static list to avoid circular dependency with roles module)
 // ============================================================================
@@ -141,10 +146,7 @@ export function applyDistributionModifiers(
   for (const modifier of modifiers) {
     if (!modifier) continue
     for (const [teamId, delta] of Object.entries(modifier)) {
-      result[teamId as TeamId] = Math.max(
-        0,
-        result[teamId as TeamId] + delta,
-      )
+      result[teamId as TeamId] = Math.max(0, result[teamId as TeamId] + delta)
     }
   }
 
