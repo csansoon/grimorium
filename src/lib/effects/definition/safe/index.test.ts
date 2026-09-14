@@ -117,4 +117,8 @@ describe('Safe effect', () => {
       }
     })
   })
+
+  it('runs before optional death redirection', () => {
+    expect(handler.priority).toBe(5)
+  })
 })

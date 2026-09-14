@@ -153,6 +153,28 @@ describe('default resolvers', () => {
 // ============================================================================
 
 describe('handler behavior', () => {
+  it('protects a Mayor without asking the Storyteller to redirect', () => {
+    let mayor = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'mayor' }),
+      'deflect',
+    )
+    mayor = addEffectTo(mayor, 'safe')
+    const demon = makePlayer({ id: 'p2', roleId: 'imp' })
+    const state = makeState({
+      phase: 'night',
+      round: 2,
+      players: [mayor, demon],
+    })
+
+    const result = resolveIntent(
+      { type: 'kill', sourceId: 'p2', targetId: 'p1', cause: 'demon' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('prevented')
+  })
+
   it('allow handler merges stateChanges and continues', () => {
     // Safe effect on a player NOT targeted — handler doesn't apply, kill resolves
     const players = [

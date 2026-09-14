@@ -191,9 +191,8 @@ describe('Deflect effect', () => {
   // ================================================================
 
   describe('priority', () => {
-    it('has lower priority than safe (runs before safe)', () => {
-      // Deflect priority 5, Safe priority 10 — lower number runs first
-      expect(handler.priority).toBe(5)
+    it('runs after protection', () => {
+      expect(handler.priority).toBe(10)
     })
   })
 })
