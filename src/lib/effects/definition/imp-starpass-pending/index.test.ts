@@ -276,13 +276,37 @@ describe('ImpStarpassPending effect', () => {
 
       const resumed = result.resume('minion0')
       if (resumed.action === 'allow') {
-        expect(resumed.stateChanges?.entries).toHaveLength(1)
-        expect(resumed.stateChanges!.entries[0].type).toBe('role_changed')
-        expect(resumed.stateChanges!.entries[0].data).toEqual({
+        const roleChange = resumed.stateChanges?.entries.find(
+          (entry) => entry.type === 'role_changed',
+        )
+        expect(roleChange?.data).toEqual({
           playerId: 'minion0',
           fromRole: 'poisoner',
           toRole: 'imp',
         })
+      }
+    })
+
+    it('marks the new Imp as already handled on the star-pass night', () => {
+      const { imp, state, game } = makeScenario()
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'imp',
+        targetId: 'imp',
+        cause: 'imp_self_kill',
+      }
+
+      const result = handler.handle(intent, imp, state, game)
+      if (result.action !== 'request_ui') throw new Error('Expected request_ui')
+      const resumed = result.resume('minion0')
+
+      if (resumed.action === 'allow') {
+        expect(resumed.stateChanges?.entries).toContainEqual(
+          expect.objectContaining({
+            type: 'night_skipped',
+            data: expect.objectContaining({ playerId: 'minion0' }),
+          }),
+        )
       }
     })
 

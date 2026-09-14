@@ -89,6 +89,25 @@ const demonSuccessorHandler: IntentHandler = {
               toRole: target.roleId,
             },
           },
+          ...(state.phase === 'night'
+            ? [
+                {
+                  type: 'night_skipped' as const,
+                  message: [
+                    {
+                      type: 'i18n' as const,
+                      key: 'history.noActionTonight',
+                      params: { role: target.roleId },
+                    },
+                  ],
+                  data: {
+                    roleId: target.roleId,
+                    playerId: effectPlayer.id,
+                    reason: 'became_demon_after_demon_action',
+                  },
+                },
+              ]
+            : []),
         ],
         changeRoles: {
           [effectPlayer.id]: target.roleId,

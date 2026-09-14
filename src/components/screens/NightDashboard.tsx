@@ -68,14 +68,16 @@ export function NightDashboard({
     const nightActions = getNightRolesStatus(game)
     const followUps = getAvailableNightFollowUps(state, game, t)
 
-    const result: NightDashboardItem[] = nightActions.map((data) => ({
-      type: 'night_action' as const,
-      data,
-    }))
+    const result: NightDashboardItem[] = []
 
-    // Append follow-ups after regular night actions
+    // Role-change information must be delivered before the new character's
+    // normal action. These are player-facing handoff screens, not actions.
     for (const followUp of followUps) {
       result.push({ type: 'night_follow_up' as const, data: followUp })
+    }
+
+    for (const data of nightActions) {
+      result.push({ type: 'night_action' as const, data })
     }
 
     return result

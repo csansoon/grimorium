@@ -273,5 +273,46 @@ describe('DemonSuccessor effect', () => {
         expect(result.stateChanges?.changeRoles).toEqual({ sw: 'imp' })
       }
     })
+
+    it('does not grant a second Demon action when conversion happens at night', () => {
+      const { sw, state, game } = makeScenario({ aliveCount: 6 })
+      state.phase = 'night'
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'demon',
+        targetId: 'demon',
+        cause: 'demon',
+      }
+
+      const result = handler.handle(intent, sw, state, game)
+
+      if (result.action === 'allow') {
+        expect(result.stateChanges?.entries).toContainEqual(
+          expect.objectContaining({
+            type: 'night_skipped',
+            data: expect.objectContaining({ playerId: 'sw' }),
+          }),
+        )
+      }
+    })
+
+    it('leaves a daytime successor available to act that night', () => {
+      const { sw, state, game } = makeScenario({ aliveCount: 6 })
+      const intent: ExecuteIntent = {
+        type: 'execute',
+        playerId: 'demon',
+        cause: 'execution',
+      }
+
+      const result = handler.handle(intent, sw, state, game)
+
+      if (result.action === 'allow') {
+        expect(
+          result.stateChanges?.entries.some(
+            (entry) => entry.type === 'night_skipped',
+          ),
+        ).toBe(false)
+      }
+    })
   })
 })

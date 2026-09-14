@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { RoleDefinition } from '../../types'
-import { isAlive, hasEffect } from '../../../types'
+import { isAlive } from '../../../types'
 import { isMalfunctioning } from '../../../effects'
 import { receivesEvilStartingInfo } from '../../../scripts'
 import {
@@ -12,7 +12,7 @@ import {
   getRoleTranslations,
 } from '../../../i18n'
 import { getRole, getAllRoles } from '../../index'
-import { isGoodTeam, getTeam } from '../../../teams'
+import { isGoodTeam } from '../../../teams'
 import { DefaultRoleReveal } from '../../../../components/items/DefaultRoleReveal'
 import {
   NightActionLayout,
@@ -26,7 +26,6 @@ import {
   StepSection,
   MysticDivider,
   EvilTeamReveal,
-  RoleCard,
 } from '../../../../components/items'
 import { Button, Icon } from '../../../../components/atoms'
 import { HandbackButton } from '../../../../components/layouts'
@@ -45,8 +44,6 @@ type Phase =
   | 'show_bluffs'
   // Kill phases (subsequent nights)
   | 'choose_victim'
-  // Role change reveal (when this player just became the Imp)
-  | 'show_new_role'
 
 /**
  * The Imp — Demon role.
@@ -128,9 +125,6 @@ const definition: RoleDefinition = {
     const showStartingInfo =
       isFirstNight && receivesEvilStartingInfo(state.players.length)
 
-    // Detect if this player just became the Imp (has pending_role_reveal)
-    const isPendingRoleReveal = hasEffect(player, 'pending_role_reveal')
-
     const [phase, setPhase] = useState<Phase>('step_list')
     const [showMinionsDone, setShowMinionsDone] = useState(false)
     const [selectedBluffs, setSelectedBluffs] = useState<string[]>([])
@@ -184,19 +178,6 @@ const definition: RoleDefinition = {
     // ================================================================
 
     const steps: NightStep[] = useMemo(() => {
-      // Role change reveal: single step to show the new role
-      if (isPendingRoleReveal) {
-        return [
-          {
-            id: 'show_new_role',
-            icon: 'sparkles',
-            label: t.game.yourRoleHasChanged,
-            status: 'pending',
-            audience: 'player_reveal' as const,
-          },
-        ]
-      }
-
       if (showStartingInfo) {
         return [
           {
@@ -232,13 +213,7 @@ const definition: RoleDefinition = {
           audience: 'player_choice' as const,
         },
       ]
-    }, [
-      isPendingRoleReveal,
-      showStartingInfo,
-      showMinionsDone,
-      selectBluffsDone,
-      t,
-    ])
+    }, [showStartingInfo, showMinionsDone, selectBluffsDone, t])
 
     const handleSelectStep = (stepId: string) => {
       setPhase(stepId as Phase)
@@ -366,32 +341,6 @@ const definition: RoleDefinition = {
     // Role change reveal handler (when this player just became the Imp)
     // ================================================================
 
-    const handleRoleRevealComplete = () => {
-      onComplete({
-        entries: [
-          {
-            type: 'night_action',
-            message: [
-              {
-                type: 'i18n',
-                key: 'history.roleChanged',
-                params: {
-                  player: player.id,
-                  role: player.roleId,
-                },
-              },
-            ],
-            data: {
-              roleId: 'imp',
-              playerId: player.id,
-              action: 'role_change_revealed',
-            },
-          },
-        ],
-        removeEffects: { [player.id]: ['pending_role_reveal'] },
-      })
-    }
-
     // ================================================================
     // Bluff toggle handler
     // ================================================================
@@ -421,40 +370,6 @@ const definition: RoleDefinition = {
           steps={steps}
           onSelectStep={handleSelectStep}
         />
-      )
-    }
-
-    // ================================================================
-    // RENDER: Show New Role (player-facing role change reveal)
-    // ================================================================
-
-    if (phase === 'show_new_role') {
-      const role = getRole(player.roleId)
-      const teamId = role?.team ?? 'demon'
-      const team = getTeam(teamId)
-
-      return (
-        <PlayerFacingScreen playerName={player.name}>
-          <NightActionLayout
-            player={player}
-            title={t.game.yourRoleHasChanged}
-            description={roleT.roleChangedDescription}
-          >
-            <div className='mb-6 flex justify-center'>
-              <RoleCard roleId={player.roleId} />
-            </div>
-
-            <HandbackButton
-              onClick={handleRoleRevealComplete}
-              fullWidth
-              size='lg'
-              variant={team.isEvil ? 'evil' : 'default'}
-            >
-              <Icon name='check' size='md' className='mr-2' />
-              {t.common.continue}
-            </HandbackButton>
-          </NightActionLayout>
-        </PlayerFacingScreen>
       )
     }
 

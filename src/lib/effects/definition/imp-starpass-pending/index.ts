@@ -113,6 +113,21 @@ const starpassHandler: IntentHandler = {
                   toRole: 'imp',
                 },
               },
+              {
+                type: 'night_skipped',
+                message: [
+                  {
+                    type: 'i18n',
+                    key: 'history.noActionTonight',
+                    params: { role: 'imp' },
+                  },
+                ],
+                data: {
+                  roleId: 'imp',
+                  playerId: newImpId,
+                  reason: 'became_demon_after_imp_action',
+                },
+              },
             ],
             changeRoles: {
               [newImpId]: 'imp',
