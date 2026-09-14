@@ -27,6 +27,7 @@ import {
   getBlockStatus,
   getVoteBenchmark,
   hasVirginExecutionToday,
+  finishVirginExecutionDay,
 } from '../../lib/game'
 import { isAlive } from '../../lib/types'
 import {
@@ -347,8 +348,13 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         (id) => !newPlayerSet.has(id),
       )
 
-      if (deaths.length > 0) {
-        // Virgin triggered — skip voting, go back to day (no further nominations)
+      const virginTriggered = newGame.history
+        .slice(game.history.length)
+        .some((entry) => entry.type === 'virgin_execution')
+
+      if (virginTriggered && deaths.length > 0) {
+        // The Virgin's execution immediately ends the day. Advance the game
+        // before the public death card so Continue leads straight into night.
         const deadPlayers = deaths
           .map((id) => newState.players.find((p) => p.id === id))
           .filter(Boolean)
@@ -357,10 +363,12 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             playerName: p!.name,
             roleId: p!.roleId,
           }))
+        const nightGame = finishVirginExecutionDay(newGame)
+        updateGame(nightGame)
         setScreen({
           type: 'death_reveal',
           deaths: deadPlayers,
-          next: { type: 'day' },
+          next: { type: 'night_dashboard' },
         })
       } else {
         // Show voting screen for this nominee

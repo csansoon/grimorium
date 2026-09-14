@@ -12,6 +12,7 @@ import {
   getBlockStatus,
   getVoteBenchmark,
   getLastNightDeaths,
+  finishVirginExecutionDay,
   addEffectToPlayer,
   removeEffectFromPlayer,
 } from '../game'
@@ -459,6 +460,32 @@ describe('nominate', () => {
 
     const updated = nominate(game, 'nonexistent', 'p5')
     expect(updated).toBe(game)
+  })
+
+  it('ends the day immediately after the Virgin executes a Townsfolk', () => {
+    const townsfolk = makePlayer({ id: 'p1', roleId: 'chef' })
+    const virgin = addEffectTo(
+      makePlayer({ id: 'p2', roleId: 'virgin' }),
+      'pure',
+    )
+    const imp = makePlayer({ id: 'p3', roleId: 'imp' })
+    const extra = makePlayer({ id: 'p4', roleId: 'saint' })
+    const game = makeGameWithHistory(
+      [
+        { type: 'game_created' },
+        { type: 'day_started', stateOverrides: { phase: 'day', round: 1 } },
+      ],
+      makeState({ players: [townsfolk, virgin, imp, extra] }),
+    )
+
+    const afterNomination = nominate(game, townsfolk.id, virgin.id)
+    const updated = finishVirginExecutionDay(afterNomination)
+
+    expect(getCurrentState(updated).phase).toBe('night')
+    expect(getCurrentState(updated).round).toBe(2)
+    expect(updated.history.some((entry) => entry.type === 'execution')).toBe(
+      false,
+    )
   })
 })
 

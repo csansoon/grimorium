@@ -637,6 +637,15 @@ export function hasVirginExecutionToday(game: Game): boolean {
 }
 
 /**
+ * A successful Virgin ability executes immediately and ends the day. There is
+ * no second execution and no remaining nomination window.
+ */
+export function finishVirginExecutionDay(game: Game): Game {
+  if (!hasVirginExecutionToday(game)) return game
+  return processAutoSkips(startNight(game))
+}
+
+/**
  * Get the vote threshold: the minimum number of votes needed to go on the block.
  * This is at least half the alive players (rounded up).
  */
