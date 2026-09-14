@@ -57,6 +57,9 @@ function findExecutedPlayerId(game: {
       if (entry.type === 'execution') {
         return entry.data.playerId as string
       }
+      if (entry.type === 'virgin_execution') {
+        return entry.data.nominatorId as string
+      }
     }
   }
 
