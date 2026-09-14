@@ -152,6 +152,44 @@ export function getDeadPlayers(state: GameState): PlayerState[] {
 }
 
 /**
+ * Remove effects created by an ability whose source has died or changed
+ * character. Character abilities cease immediately in both cases.
+ */
+export function removeEffectsFromInactiveSources(
+  previousState: GameState,
+  nextState: GameState,
+): GameState {
+  const inactiveSourceIds = new Set<string>()
+
+  for (const previousPlayer of previousState.players) {
+    const nextPlayer = nextState.players.find(
+      (player) => player.id === previousPlayer.id,
+    )
+    if (
+      nextPlayer &&
+      ((isAlive(previousPlayer) && !isAlive(nextPlayer)) ||
+        previousPlayer.roleId !== nextPlayer.roleId)
+    ) {
+      inactiveSourceIds.add(previousPlayer.id)
+    }
+  }
+
+  if (inactiveSourceIds.size === 0) return nextState
+
+  return {
+    ...nextState,
+    players: nextState.players.map((player) => ({
+      ...player,
+      effects: player.effects.filter(
+        (effect) =>
+          !effect.sourcePlayerId ||
+          !inactiveSourceIds.has(effect.sourcePlayerId),
+      ),
+    })),
+  }
+}
+
+/**
  * Get the alive neighbors of a player in circular seating order.
  * Dead players are skipped, and the next alive player in each direction is returned.
  * @returns [leftNeighbor, rightNeighbor] - can be the same player if only 2 alive

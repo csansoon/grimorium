@@ -9,6 +9,7 @@ import {
   hasEffect,
   getAlivePlayers,
   isAlive,
+  removeEffectsFromInactiveSources,
 } from './types'
 import { getRole } from './roles'
 import { RoleDefinition, NightActionResult, EffectToAdd } from './roles/types'
@@ -164,6 +165,8 @@ export function addHistoryEntry(
       }),
     }
   }
+
+  newState = removeEffectsFromInactiveSources(currentState, newState)
 
   const historyEntry: HistoryEntry = {
     id: generateId(),

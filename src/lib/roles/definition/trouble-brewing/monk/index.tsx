@@ -94,6 +94,7 @@ const definition: RoleDefinition = {
               {
                 type: 'safe',
                 data: { source: 'monk' },
+                sourcePlayerId: player.id,
                 expiresAt: 'end_of_night',
               },
             ],
@@ -129,8 +130,10 @@ const definition: RoleDefinition = {
       <NightActionLayout
         player={player}
         title={roleT.info}
-        description={interpolate(roleT.selectPlayerToProtect, { player: player.name })}
-        audience="player_choice"
+        description={interpolate(roleT.selectPlayerToProtect, {
+          player: player.name,
+        })}
+        audience='player_choice'
       >
         <div className='mb-6'>
           <PlayerPickerList

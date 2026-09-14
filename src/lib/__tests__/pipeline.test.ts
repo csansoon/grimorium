@@ -153,6 +153,25 @@ describe('default resolvers', () => {
 // ============================================================================
 
 describe('handler behavior', () => {
+  it('ignores passive ability handlers owned by dead players', () => {
+    let virgin = addEffectTo(makePlayer({ id: 'p2', roleId: 'virgin' }), 'pure')
+    virgin = addEffectTo(virgin, 'dead')
+    const nominator = makePlayer({ id: 'p1', roleId: 'washerwoman' })
+    const state = makeState({ phase: 'day', players: [nominator, virgin] })
+
+    const result = resolveIntent(
+      { type: 'nominate', nominatorId: 'p1', nomineeId: 'p2' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.entries).toHaveLength(1)
+      expect(result.stateChanges.entries[0].type).toBe('nomination')
+    }
+  })
+
   it('protects a Mayor without asking the Storyteller to redirect', () => {
     let mayor = addEffectTo(
       makePlayer({ id: 'p1', roleId: 'mayor' }),

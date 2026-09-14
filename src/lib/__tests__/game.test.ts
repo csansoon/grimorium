@@ -367,6 +367,60 @@ describe('applyNightAction', () => {
   })
 })
 
+describe('sourced effects', () => {
+  it('removes an ability effect when its source dies', () => {
+    const monk = makePlayer({ id: 'monk', roleId: 'monk' })
+    const protectedPlayer = addEffectTo(
+      makePlayer({ id: 'target' }),
+      'safe',
+      undefined,
+      'end_of_night',
+    )
+    protectedPlayer.effects[0] = {
+      ...protectedPlayer.effects[0],
+      sourcePlayerId: monk.id,
+    }
+    const game = makeGame(makeState({ players: [monk, protectedPlayer] }))
+
+    const updated = addHistoryEntry(
+      game,
+      { type: 'effect_added', message: [], data: {} },
+      undefined,
+      { monk: [{ type: 'dead', expiresAt: 'never' }] },
+    )
+
+    const target = getCurrentState(updated).players.find(
+      (player) => player.id === 'target',
+    )!
+    expect(hasEffect(target, 'safe')).toBe(false)
+  })
+
+  it('removes an ability effect when its source changes character', () => {
+    const source = makePlayer({ id: 'source', roleId: 'monk' })
+    const target = addEffectTo(makePlayer({ id: 'target' }), 'safe')
+    target.effects[0] = { ...target.effects[0], sourcePlayerId: source.id }
+    const game = makeGame(makeState({ players: [source, target] }))
+
+    const updated = addHistoryEntry(
+      game,
+      { type: 'role_changed', message: [], data: {} },
+      undefined,
+      undefined,
+      undefined,
+      { source: 'imp' },
+    )
+
+    expect(
+      hasEffect(
+        getCurrentState(updated).players.find(
+          (player) => player.id === 'target',
+        )!,
+        'safe',
+      ),
+    ).toBe(false)
+  })
+})
+
 describe('skipNightAction', () => {
   it('records a skip entry', () => {
     const players = makeStandardPlayers()
