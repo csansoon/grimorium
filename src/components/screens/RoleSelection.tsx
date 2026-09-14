@@ -8,10 +8,7 @@ import {
   getRecommendedDistribution,
   applyDistributionModifiers,
 } from '../../lib/scripts'
-import {
-  GeneratedPool,
-  GeneratorPreset,
-} from '../../lib/scripts/types'
+import { GeneratedPool, GeneratorPreset } from '../../lib/scripts/types'
 import {
   generateRolePools,
   selectPresetPools,
@@ -37,6 +34,24 @@ type Props = {
 const TEAM_ORDER: TeamId[] = ['townsfolk', 'outsider', 'minion', 'demon']
 
 type SelectionMode = 'generate' | 'manual'
+
+export function isOfficialRoleSelectionValid(
+  roleCounts: Record<string, number>,
+  teamCounts: Record<TeamId, number>,
+  recommended: Record<TeamId, number> | null,
+  playerCount: number,
+): boolean {
+  if (!recommended) return false
+  const totalRoles = Object.values(roleCounts).reduce(
+    (sum, count) => sum + count,
+    0,
+  )
+  return (
+    totalRoles === playerCount &&
+    Object.values(roleCounts).every((count) => count <= 1) &&
+    TEAM_ORDER.every((teamId) => teamCounts[teamId] === recommended[teamId])
+  )
+}
 
 export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
   const { t, language } = useI18n()
@@ -80,15 +95,13 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
   const recommended = useMemo(() => {
     const base = getRecommendedDistribution(players.length)
     if (!base) return null
-    const modifiers = Object.entries(roleCounts).flatMap(
-      ([roleId, count]) => {
-        const role = ROLES[roleId as keyof typeof ROLES]
-        return Array(count).fill(role?.distributionModifier) as (
-          | Partial<Record<TeamId, number>>
-          | undefined
-        )[]
-      },
-    )
+    const modifiers = Object.entries(roleCounts).flatMap(([roleId, count]) => {
+      const role = ROLES[roleId as keyof typeof ROLES]
+      return Array(count).fill(role?.distributionModifier) as (
+        | Partial<Record<TeamId, number>>
+        | undefined
+      )[]
+    })
     return applyDistributionModifiers(base, modifiers)
   }, [players.length, roleCounts])
 
@@ -187,7 +200,14 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
     onNext(selectedRoles)
   }
 
-  const canProceed = totalRoles >= players.length && impCount >= 1
+  const canProceed = script.enforceDistribution
+    ? isOfficialRoleSelectionValid(
+        roleCounts,
+        teamCounts,
+        recommended,
+        players.length,
+      )
+    : totalRoles >= players.length && impCount >= 1
 
   // ── Render ─────────────────────────────────────────────────────────
 
@@ -253,10 +273,26 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
       )}
 
       {/* Warnings */}
-      {totalRoles > 0 && (totalRoles < players.length || impCount < 1) && (
+      {totalRoles > 0 && !canProceed && (
         <div className='px-4 py-2 bg-mystic-crimson/20 border-b border-red-500/30'>
           <div className='max-w-lg mx-auto space-y-1'>
-            {totalRoles < players.length && (
+            {script.enforceDistribution && totalRoles !== players.length && (
+              <div className='flex items-center gap-2 text-red-300 text-xs'>
+                <Icon name='alertTriangle' size='sm' />
+                {interpolate(t.newGame.needExactlyRoles, {
+                  count: players.length,
+                })}
+              </div>
+            )}
+            {script.enforceDistribution &&
+              totalRoles === players.length &&
+              !canProceed && (
+                <div className='flex items-center gap-2 text-red-300 text-xs'>
+                  <Icon name='alertTriangle' size='sm' />
+                  {t.newGame.matchDistribution}
+                </div>
+              )}
+            {!script.enforceDistribution && totalRoles < players.length && (
               <div className='flex items-center gap-2 text-red-300 text-xs'>
                 <Icon name='alertTriangle' size='sm' />
                 {interpolate(t.newGame.needAtLeastRoles, {
@@ -264,7 +300,7 @@ export function RoleSelection({ players, scriptId, onNext, onBack }: Props) {
                 })}
               </div>
             )}
-            {impCount < 1 && (
+            {!script.enforceDistribution && impCount < 1 && (
               <div className='flex items-center gap-2 text-red-300 text-xs'>
                 <Icon name='alertTriangle' size='sm' />
                 {t.newGame.needAtLeastImp}
@@ -537,9 +573,7 @@ function GenerateView({
           const name =
             t.scripts[preset.id as keyof typeof t.scripts] ?? preset.id
           const desc =
-            t.scripts[
-              `${preset.id}Description` as keyof typeof t.scripts
-            ] ?? ''
+            t.scripts[`${preset.id}Description` as keyof typeof t.scripts] ?? ''
 
           return (
             <button
@@ -648,9 +682,7 @@ function GenerateView({
           {/* Use This Pool button */}
           <div className='px-4 pb-3'>
             <button
-              onClick={() =>
-                onApply(activePool, String(presetName))
-              }
+              onClick={() => onApply(activePool, String(presetName))}
               className={cn(
                 'w-full rounded-lg border-2 py-2.5 text-sm font-tarot tracking-wider uppercase transition-all',
                 'hover:bg-white/5 active:scale-[0.98]',
@@ -770,10 +802,8 @@ function TeamSection({
     return t.teams[key]?.name ?? tid
   }
 
-  const isMatch =
-    recommendedCount !== null && teamCount === recommendedCount
-  const isOver =
-    recommendedCount !== null && teamCount > recommendedCount
+  const isMatch = recommendedCount !== null && teamCount === recommendedCount
+  const isOver = recommendedCount !== null && teamCount > recommendedCount
 
   return (
     <div>
@@ -790,10 +820,7 @@ function TeamSection({
             {getTeamName(teamId)}
           </span>
           {teamCount > 0 && (
-            <Badge
-              variant={teamId}
-              className='text-[10px] px-1.5 py-0 ml-auto'
-            >
+            <Badge variant={teamId} className='text-[10px] px-1.5 py-0 ml-auto'>
               {teamCount}
               {recommendedCount !== null && (
                 <span className='opacity-60'>/{recommendedCount}</span>
@@ -801,11 +828,7 @@ function TeamSection({
             </Badge>
           )}
           {isMatch && (
-            <Icon
-              name='check'
-              size='xs'
-              className='text-green-400 ml-auto'
-            />
+            <Icon name='check' size='xs' className='text-green-400 ml-auto' />
           )}
           {isOver && (
             <Icon
@@ -899,11 +922,7 @@ function RoleCard({
                 team.colors.badge,
               )}
             >
-              <Icon
-                name='check'
-                size='xs'
-                className={team.colors.badgeText}
-              />
+              <Icon name='check' size='xs' className={team.colors.badgeText} />
             </div>
           </div>
         )}
@@ -920,9 +939,7 @@ function RoleCard({
           <Icon
             name={role.icon}
             size='md'
-            className={
-              isSelected ? team.colors.text : 'text-parchment-500'
-            }
+            className={isSelected ? team.colors.text : 'text-parchment-500'}
           />
         </div>
         <div

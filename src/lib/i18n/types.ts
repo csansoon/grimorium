@@ -53,6 +53,8 @@ export type Translations = {
     step2Subtitle: string
     needAtLeastRoles: string
     needAtLeastImp: string
+    needExactlyRoles: string
+    matchDistribution: string
     nextAssignRoles: string
     suggested: string
 
