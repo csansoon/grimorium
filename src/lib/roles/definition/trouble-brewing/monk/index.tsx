@@ -53,10 +53,8 @@ const definition: RoleDefinition = {
 
     const roleT = getRoleTranslations('monk', language)
 
-    // Can only protect other alive players (not themselves)
-    const otherAlivePlayers = state.players.filter(
-      (p) => isAlive(p) && p.id !== player.id,
-    )
+    // "another player" includes dead players, but never the Monk.
+    const otherPlayers = state.players.filter((p) => p.id !== player.id)
 
     const malfunctioning = isMalfunctioning(player)
 
@@ -136,7 +134,7 @@ const definition: RoleDefinition = {
       >
         <div className='mb-6'>
           <PlayerPickerList
-            players={otherAlivePlayers}
+            players={otherPlayers}
             selected={selectedTarget ? [selectedTarget] : []}
             onSelect={setSelectedTarget}
             selectionCount={1}

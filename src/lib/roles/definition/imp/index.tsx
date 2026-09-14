@@ -126,7 +126,8 @@ const definition: RoleDefinition = {
     const [selectBluffsDone, setSelectBluffsDone] = useState(false)
     const [selectedTarget, setSelectedTarget] = useState<string | null>(null)
 
-    const alivePlayers = state.players.filter((p) => isAlive(p))
+    // "choose a player" includes dead players and the Imp themself.
+    const selectablePlayers = state.players
 
     const malfunctioning = isMalfunctioning(player)
 
@@ -621,7 +622,7 @@ const definition: RoleDefinition = {
       >
         <div className='mb-6'>
           <PlayerPickerList
-            players={alivePlayers}
+            players={selectablePlayers}
             selected={selectedTarget ? [selectedTarget] : []}
             onSelect={setSelectedTarget}
             selectionCount={1}

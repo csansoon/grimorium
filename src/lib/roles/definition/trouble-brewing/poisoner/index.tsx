@@ -144,9 +144,8 @@ const definition: RoleDefinition = {
     const isFirstNight = state.round === 1
     const roleT = getRoleTranslations('poisoner', language)
 
-    const alivePlayers = state.players.filter(
-      (p) => isAlive(p) && p.id !== player.id,
-    )
+    // "choose a player" includes the Poisoner and dead players.
+    const selectablePlayers = state.players
 
     const handleConfirm = () => {
       if (!selectedTarget) return
@@ -244,7 +243,7 @@ const definition: RoleDefinition = {
       >
         <div className='mb-6'>
           <PlayerPickerList
-            players={alivePlayers}
+            players={selectablePlayers}
             selected={selectedTarget ? [selectedTarget] : []}
             onSelect={setSelectedTarget}
             selectionCount={1}

@@ -15,7 +15,6 @@ import {
 import type { NightStep } from '../../../../../components/layouts'
 import { PlayerPickerList } from '../../../../../components/inputs'
 import { Button, Icon } from '../../../../../components/atoms'
-import { isAlive } from '../../../../types'
 import { isMalfunctioning } from '../../../../effects'
 
 import en from './i18n/en'
@@ -65,10 +64,8 @@ const definition: RoleDefinition = {
 
     const roleT = getRoleTranslations('butler', language)
 
-    // Can choose any alive player except themselves
-    const otherAlivePlayers = state.players.filter(
-      (p) => isAlive(p) && p.id !== player.id,
-    )
+    // "choose a player (not yourself)" includes dead players.
+    const otherPlayers = state.players.filter((p) => p.id !== player.id)
 
     const malfunctioning = isMalfunctioning(player)
 
@@ -152,7 +149,7 @@ const definition: RoleDefinition = {
       >
         <div className='mb-6'>
           <PlayerPickerList
-            players={otherAlivePlayers}
+            players={otherPlayers}
             selected={selectedMaster ? [selectedMaster] : []}
             onSelect={setSelectedMaster}
             selectionCount={1}
