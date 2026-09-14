@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { RoleDefinition, SetupActionProps } from '../../../types'
+import {
+  RoleDefinition,
+  SetupActionProps,
+  SetupActionResult,
+} from '../../../types'
 import { getAllRoles } from '../../../index'
 import {
   useI18n,
@@ -26,6 +30,29 @@ export function getDrunkBelievedRoleOptions(state: GameState) {
       role.id !== 'villager' &&
       !rolesInPlay.has(role.id),
   )
+}
+
+export function createDrunkSetupResult(
+  playerId: string,
+  believedRoleId: string,
+): SetupActionResult {
+  return {
+    changeRole: believedRoleId,
+    addEffects: {
+      [playerId]: [
+        {
+          type: 'drunk',
+          data: { actualRole: 'drunk' },
+          expiresAt: 'never',
+        },
+        // The bullet is the one-use UI marker for the ability the Drunk
+        // believes they have. Malfunction handling makes the shot miss.
+        ...(believedRoleId === 'slayer'
+          ? [{ type: 'slayer_bullet', expiresAt: 'never' as const }]
+          : []),
+      ],
+    },
+  }
 }
 
 /**
@@ -63,18 +90,7 @@ function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
   const handleConfirm = () => {
     if (!selectedRole) return
 
-    onComplete({
-      changeRole: selectedRole,
-      addEffects: {
-        [player.id]: [
-          {
-            type: 'drunk',
-            data: { actualRole: 'drunk' },
-            expiresAt: 'never',
-          },
-        ],
-      },
-    })
+    onComplete(createDrunkSetupResult(player.id, selectedRole))
   }
 
   return (

@@ -1,5 +1,8 @@
 import { it, expect } from 'vitest'
-import definition, { getDrunkBelievedRoleOptions } from '.'
+import definition, {
+  createDrunkSetupResult,
+  getDrunkBelievedRoleOptions,
+} from '.'
 import { makePlayer, makeState } from '../../../../__tests__/helpers'
 
 // The Drunk's ability malfunction behavior is tested in Drunk.test.ts (effects).
@@ -37,4 +40,23 @@ it('only offers official Townsfolk characters that are not in play', () => {
   expect(options.map((role) => role.id)).not.toContain('chef')
   expect(options.map((role) => role.id)).not.toContain('villager')
   expect(options.map((role) => role.id)).toContain('empath')
+})
+
+it('gives a Drunk Slayer one apparent shot', () => {
+  const result = createDrunkSetupResult('drunk-player', 'slayer')
+
+  expect(result.addEffects?.['drunk-player']).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ type: 'drunk' }),
+      expect.objectContaining({ type: 'slayer_bullet' }),
+    ]),
+  )
+})
+
+it('does not grant another believed role its passive effects', () => {
+  const result = createDrunkSetupResult('drunk-player', 'soldier')
+
+  expect(
+    result.addEffects?.['drunk-player']?.map((effect) => effect.type),
+  ).toEqual(['drunk'])
 })
