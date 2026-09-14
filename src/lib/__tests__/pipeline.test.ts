@@ -153,6 +153,38 @@ describe('default resolvers', () => {
 // ============================================================================
 
 describe('handler behavior', () => {
+  it('makes the Scarlet Woman the Imp on a 5+ alive star-pass without UI', () => {
+    let imp = addEffectTo(
+      makePlayer({ id: 'imp', roleId: 'imp' }),
+      'imp_starpass_pending',
+    )
+    let scarletWoman = addEffectTo(
+      makePlayer({ id: 'sw', roleId: 'scarlet_woman' }),
+      'demon_successor',
+    )
+    const others = Array.from({ length: 3 }, (_, index) =>
+      makePlayer({ id: `p${index}` }),
+    )
+    const state = makeState({ players: [imp, scarletWoman, ...others] })
+
+    const result = resolveIntent(
+      {
+        type: 'kill',
+        sourceId: imp.id,
+        targetId: imp.id,
+        cause: 'imp_self_kill',
+      },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.changeRoles).toEqual({ sw: 'imp' })
+      expect(result.stateChanges.addEffects?.imp?.[0].type).toBe('dead')
+    }
+  })
+
   it('ignores passive ability handlers owned by dead players', () => {
     let virgin = addEffectTo(makePlayer({ id: 'p2', roleId: 'virgin' }), 'pure')
     virgin = addEffectTo(virgin, 'dead')

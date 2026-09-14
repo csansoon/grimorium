@@ -135,7 +135,7 @@ describe('DemonSuccessor effect', () => {
       expect(handler.appliesTo(intent, sw, state)).toBe(false)
     })
 
-    it('does not apply for voluntary Imp self-kill (imp_self_kill cause)', () => {
+    it('takes priority for a voluntary Imp self-kill at 5+ alive', () => {
       const { sw, state } = makeScenario({ aliveCount: 6 })
       const intent: KillIntent = {
         type: 'kill',
@@ -144,7 +144,7 @@ describe('DemonSuccessor effect', () => {
         cause: 'imp_self_kill',
       }
 
-      expect(handler.appliesTo(intent, sw, state)).toBe(false)
+      expect(handler.appliesTo(intent, sw, state)).toBe(true)
     })
 
     it('does not apply when the successor is the target', () => {

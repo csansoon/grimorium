@@ -30,14 +30,6 @@ const demonSuccessorHandler: IntentHandler = {
   intentType: ['kill', 'execute'],
   priority: 15,
   appliesTo: (intent, effectPlayer, state) => {
-    // Skip for voluntary Imp self-kill starpass — the narrator manually
-    // chooses who becomes the new Imp via the starpass handler.
-    if (
-      intent.type === 'kill' &&
-      (intent as KillIntent).cause === 'imp_self_kill'
-    )
-      return false
-
     // Get the target of the intent
     let targetId: string
     if (intent.type === 'kill') {

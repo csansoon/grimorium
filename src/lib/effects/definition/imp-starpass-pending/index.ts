@@ -1,7 +1,7 @@
 import { EffectDefinition } from '../../types'
 import { IntentHandler, KillIntent } from '../../../pipeline/types'
 import { StarpassSelectUI } from '../../../../components/items/StarpassSelectUI'
-import { isAlive } from '../../../types'
+import { getAlivePlayers, hasEffect, isAlive } from '../../../types'
 import { getRole } from '../../../roles'
 import { registerEffectTranslations } from '../../../i18n'
 
@@ -28,10 +28,27 @@ registerEffectTranslations('imp_starpass_pending', 'es', es)
 const starpassHandler: IntentHandler = {
   intentType: 'kill',
   priority: 20,
-  appliesTo: (intent, effectPlayer) => {
+  appliesTo: (intent, effectPlayer, state) => {
     if (intent.type !== 'kill') return false
     const kill = intent as KillIntent
-    return kill.cause === 'imp_self_kill' && kill.targetId === effectPlayer.id
+    if (kill.cause !== 'imp_self_kill' || kill.targetId !== effectPlayer.id) {
+      return false
+    }
+
+    // With 5+ alive, a healthy Scarlet Woman must become the Imp. Her
+    // earlier demon_successor handler performs the mandatory conversion,
+    // so the Storyteller is not offered an illegal choice of Minion.
+    const hasMandatoryScarletWoman =
+      getAlivePlayers(state).length >= 5 &&
+      state.players.some(
+        (player) =>
+          isAlive(player) &&
+          !hasEffect(player, 'poisoned') &&
+          !hasEffect(player, 'drunk') &&
+          hasEffect(player, 'demon_successor'),
+      )
+
+    return !hasMandatoryScarletWoman
   },
   handle: (_intent, effectPlayer, state) => {
     // Find alive minions
@@ -57,12 +74,22 @@ const starpassHandler: IntentHandler = {
         // E.g., if the Poisoner becomes the Imp, poison they applied is removed.
         const sourcedEffectRemovals: Record<string, string[]> = {}
         for (const p of state.players) {
-          const sourced = p.effects.filter(
-            (e) => e.sourcePlayerId === newImpId,
-          )
+          const sourced = p.effects.filter((e) => e.sourcePlayerId === newImpId)
           if (sourced.length > 0) {
             sourcedEffectRemovals[p.id] = sourced.map((e) => e.type)
           }
+        }
+
+        const roleGrantedEffects = newImpPlayer
+          ? (getRole(newImpPlayer.roleId)?.initialEffects ?? []).map(
+              (effect) => effect.type,
+            )
+          : []
+        if (roleGrantedEffects.length > 0) {
+          sourcedEffectRemovals[newImpId] = [
+            ...(sourcedEffectRemovals[newImpId] ?? []),
+            ...roleGrantedEffects,
+          ]
         }
 
         return {
@@ -91,9 +118,7 @@ const starpassHandler: IntentHandler = {
               [newImpId]: 'imp',
             },
             addEffects: {
-              [newImpId]: [
-                { type: 'pending_role_reveal', expiresAt: 'never' },
-              ],
+              [newImpId]: [{ type: 'pending_role_reveal', expiresAt: 'never' }],
             },
             removeEffects: {
               [effectPlayer.id]: ['imp_starpass_pending'],
