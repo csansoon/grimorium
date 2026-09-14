@@ -71,10 +71,11 @@ const en: Translations = {
   },
 
   game: {
-    narratorGiveDevice: 'Give the device to {player} to see their role.',
+    narratorGiveDevice:
+      'Show the screen to {player} so they can see their role.',
     narratorWakePlayer: 'Wake {player} ({role}) for their night action.',
     narratorRoleChanged:
-      'Give the device to {player} — their role has changed.',
+      'Wake {player} and show them the screen — their role has changed.',
     readyShowToPlayer: 'Ready - Show to Player',
     yourRoleHasChanged: 'Your role has changed!',
 
@@ -154,10 +155,11 @@ const en: Translations = {
     showToPlayer: 'Show to Player',
     oneOfThemIsThe: 'One of them is the...',
 
-    // Return device interstitial
-    returnDeviceToNarrator: 'Return the device to the Storyteller',
-    returnDeviceDescription: 'Please hand the device back before continuing.',
-    returnDeviceReady: 'Storyteller Ready',
+    // Private reveal interstitial
+    returnDeviceToNarrator: 'Hide the screen from the player',
+    returnDeviceDescription:
+      'Make sure only the Storyteller can see the screen before continuing.',
+    returnDeviceReady: 'Screen Is Private',
 
     // Role Revelation
     roleRevelation: 'Role Revelation',
@@ -278,9 +280,9 @@ const en: Translations = {
     alreadyNominated: 'Already nominated today',
     alreadyBeenNominated: 'Already been nominated today',
 
-    // Hand device interstitial
-    handDeviceTo: 'Hand the device to {player}',
-    tapWhenReady: 'Tap when ready to show',
+    // Private reveal interstitial
+    handDeviceTo: 'Wake {player} and show them the screen',
+    tapWhenReady: 'Tap when they are ready to look',
 
     // Audience indicators
     audienceNarrator: 'Storyteller',

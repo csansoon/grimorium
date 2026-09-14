@@ -71,10 +71,11 @@ const es: Translations = {
   },
 
   game: {
-    narratorGiveDevice: 'Dale el dispositivo a {player} para que vea su rol.',
+    narratorGiveDevice: 'Muestra la pantalla a {player} para que vea su rol.',
     narratorWakePlayer:
       'Despierta a {player} ({role}) para su acción nocturna.',
-    narratorRoleChanged: 'Dale el dispositivo a {player} — su rol ha cambiado.',
+    narratorRoleChanged:
+      'Despierta a {player} y muéstrale la pantalla — su rol ha cambiado.',
     readyShowToPlayer: 'Listo - Mostrar al Jugador',
     yourRoleHasChanged: '¡Tu rol ha cambiado!',
 
@@ -153,11 +154,11 @@ const es: Translations = {
     showToPlayer: 'Mostrar al Jugador',
     oneOfThemIsThe: 'Uno de ellos es el/la...',
 
-    // Return device interstitial
-    returnDeviceToNarrator: 'Devuelve el dispositivo al Cuentacuentos',
+    // Private reveal interstitial
+    returnDeviceToNarrator: 'Oculta la pantalla al jugador',
     returnDeviceDescription:
-      'Por favor, devuelve el dispositivo antes de continuar.',
-    returnDeviceReady: 'Cuentacuentos Listo',
+      'Asegúrate de que solo el Cuentacuentos pueda ver la pantalla antes de continuar.',
+    returnDeviceReady: 'La Pantalla Es Privada',
 
     // Role Revelation
     roleRevelation: 'Revelación de Roles',
@@ -279,9 +280,9 @@ const es: Translations = {
     alreadyNominated: 'Ya nominó hoy',
     alreadyBeenNominated: 'Ya fue nominado/a hoy',
 
-    // Hand device interstitial
-    handDeviceTo: 'Entrega el dispositivo a {player}',
-    tapWhenReady: 'Toca cuando estés listo para mostrar',
+    // Private reveal interstitial
+    handDeviceTo: 'Despierta a {player} y muéstrale la pantalla',
+    tapWhenReady: 'Toca cuando esté listo para mirar',
 
     // Audience indicators
     audienceNarrator: 'Cuentacuentos',

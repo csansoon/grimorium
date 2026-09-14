@@ -13,7 +13,7 @@ export function ReturnDeviceScreen({ onReady }: Props) {
       <div className='text-center max-w-sm'>
         <div className='mb-6'>
           <Icon
-            name='smartphone'
+            name='shield'
             size='4xl'
             className='text-mystic-gold/80 mx-auto'
           />
