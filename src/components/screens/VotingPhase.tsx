@@ -11,10 +11,8 @@ type Props = {
   state: GameState
   nomineeId: string
   blockStatus: BlockStatus
-  onVoteComplete: (
-    voteCount: number,
-    votedIds?: string[],
-  ) => void
+  voteBenchmark: number
+  onVoteComplete: (voteCount: number, votedIds?: string[]) => void
   onCancel: () => void
 }
 
@@ -35,6 +33,7 @@ export function VotingPhase({
   state,
   nomineeId,
   blockStatus,
+  voteBenchmark,
   onVoteComplete,
   onCancel,
 }: Props) {
@@ -42,7 +41,10 @@ export function VotingPhase({
   const butlerT = getRoleTranslations('butler', language)
   const nominee = state.players.find((p) => p.id === nomineeId)
 
-  const canPlayerVote = (player: PlayerState, currentVotes?: Record<string, boolean>): boolean => {
+  const canPlayerVote = (
+    player: PlayerState,
+    currentVotes?: Record<string, boolean>,
+  ): boolean => {
     // Check all effects for voting restrictions
     for (const effect of player.effects) {
       const def = getEffect(effect.type)
@@ -93,12 +95,18 @@ export function VotingPhase({
   const meetsThreshold = voteCount >= threshold
 
   // Determine execution preview
-  type VoteOutcome = 'goes_on_block' | 'replaces_block' | 'tied' | 'not_enough' | 'below_block'
+  type VoteOutcome =
+    | 'goes_on_block'
+    | 'replaces_block'
+    | 'tied'
+    | 'not_enough'
+    | 'below_block'
   const getOutcome = (): VoteOutcome => {
     if (!meetsThreshold) return 'not_enough'
-    if (!blockStatus) return 'goes_on_block'
-    if (voteCount > blockStatus.voteCount) return 'replaces_block'
-    if (voteCount === blockStatus.voteCount) return 'tied'
+    if (voteCount > voteBenchmark) {
+      return blockStatus ? 'replaces_block' : 'goes_on_block'
+    }
+    if (voteCount === voteBenchmark && voteBenchmark > 0) return 'tied'
     return 'below_block'
   }
   const outcome = getOutcome()
@@ -146,10 +154,12 @@ export function VotingPhase({
       <div className='px-4 max-w-lg mx-auto w-full'>
         <div className='flex justify-around py-4 border-b border-white/10'>
           <div className='text-center'>
-            <div className={cn(
-              'text-3xl font-bold',
-              meetsThreshold ? 'text-green-400' : 'text-red-400',
-            )}>
+            <div
+              className={cn(
+                'text-3xl font-bold',
+                meetsThreshold ? 'text-green-400' : 'text-red-400',
+              )}
+            >
               {voteCount}
             </div>
             <div className='text-parchment-400/70 text-xs uppercase tracking-wider'>
@@ -221,7 +231,11 @@ export function VotingPhase({
               >
                 <div className='flex items-center gap-2 mb-2'>
                   {isDead && (
-                    <Icon name='skull' size='sm' className='text-parchment-500' />
+                    <Icon
+                      name='skull'
+                      size='sm'
+                      className='text-parchment-500'
+                    />
                   )}
                   <span className='text-parchment-200 text-sm flex-1'>
                     {player.name}
@@ -251,14 +265,22 @@ export function VotingPhase({
                 </div>
                 {butlerMaster && (
                   <div className='flex items-center gap-1.5 mb-2 px-2 py-1 rounded bg-amber-900/30 border border-amber-500/30'>
-                    <Icon name='handHeart' size='sm' className='text-amber-400' />
+                    <Icon
+                      name='handHeart'
+                      size='sm'
+                      className='text-amber-400'
+                    />
                     <span className='text-amber-300 text-xs font-medium'>
                       {interpolate(butlerT.masterLabel ?? '', {
                         player: butlerMaster.name,
                       })}
                     </span>
                     <span className='text-amber-400/60 text-xs ml-auto'>
-                      {isDead ? t.game.butlerDeadWarning : isRestrictedButler ? t.game.butlerCannotVote : butlerT.voteRestriction}
+                      {isDead
+                        ? t.game.butlerDeadWarning
+                        : isRestrictedButler
+                          ? t.game.butlerCannotVote
+                          : butlerT.voteRestriction}
                     </span>
                   </div>
                 )}
@@ -306,14 +328,10 @@ export function VotingPhase({
             </p>
           )}
           {outcome === 'tied' && (
-            <p className='text-amber-200 text-sm'>
-              {t.game.tiedNoExecution}
-            </p>
+            <p className='text-amber-200 text-sm'>{t.game.tiedNoExecution}</p>
           )}
           {(outcome === 'not_enough' || outcome === 'below_block') && (
-            <p className='text-red-200 text-sm'>
-              {t.game.notEnoughVotes}
-            </p>
+            <p className='text-red-200 text-sm'>{t.game.notEnoughVotes}</p>
           )}
         </div>
       </div>

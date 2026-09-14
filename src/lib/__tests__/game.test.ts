@@ -9,6 +9,8 @@ import {
   skipNightAction,
   nominate,
   resolveVote,
+  getBlockStatus,
+  getVoteBenchmark,
   addEffectToPlayer,
   removeEffectFromPlayer,
 } from '../game'
@@ -429,7 +431,12 @@ describe('resolveVote', () => {
     const afterFirst = resolveVote(game, 'p5', 3, ['p1', 'p2', 'p3'])
 
     // Second nomination: p4 gets 4 votes (higher, replaces)
-    const afterSecond = resolveVote(afterFirst, 'p4', 4, ['p1', 'p2', 'p3', 'p5'])
+    const afterSecond = resolveVote(afterFirst, 'p4', 4, [
+      'p1',
+      'p2',
+      'p3',
+      'p5',
+    ])
 
     const voteEntries = afterSecond.history.filter((e) => e.type === 'vote')
     const lastVote = voteEntries[voteEntries.length - 1]
@@ -451,6 +458,25 @@ describe('resolveVote', () => {
     // Should have a clearsBlock entry
     const clearEntry = voteEntries.find((e) => e.data.clearsBlock === true)
     expect(clearEntry).toBeDefined()
+    expect(getBlockStatus(afterSecond)).toBeNull()
+    expect(getVoteBenchmark(afterSecond)).toBe(3)
+  })
+
+  it('requires later nominees to beat a tied high-water tally', () => {
+    const players = makeStandardPlayers()
+    const game = makeDayGame(players)
+    const afterFirst = resolveVote(game, 'p5', 3)
+    const afterTie = resolveVote(afterFirst, 'p4', 3)
+
+    const afterSameTally = resolveVote(afterTie, 'p3', 3)
+    expect(getBlockStatus(afterSameTally)).toBeNull()
+    expect(getVoteBenchmark(afterSameTally)).toBe(3)
+
+    const afterHigherTally = resolveVote(afterSameTally, 'p2', 4)
+    expect(getBlockStatus(afterHigherTally)).toMatchObject({
+      playerId: 'p2',
+      voteCount: 4,
+    })
   })
 
   it('fails with 0 votes', () => {

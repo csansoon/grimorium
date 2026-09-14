@@ -28,7 +28,11 @@ export type PlayerSetup = {
   roleId: string
 }
 
-export function createGame(name: string, scriptId: string, players: PlayerSetup[]): Game {
+export function createGame(
+  name: string,
+  scriptId: string,
+  players: PlayerSetup[],
+): Game {
   const gameId = generateId()
 
   const playerStates: PlayerState[] = players.map((p) => {
@@ -335,7 +339,6 @@ function findLastEventIndex(game: Game, eventType: string): number {
   return -1
 }
 
-
 // ============================================================================
 // PHASE TRANSITIONS
 // ============================================================================
@@ -573,10 +576,30 @@ export function getBlockStatus(game: Game): BlockStatus {
         playerName: entry.data.nomineeName as string,
         voteCount: entry.data.voteCount as number,
       }
+    } else if (entry.type === 'vote' && entry.data.clearsBlock === true) {
+      block = null
     }
   }
 
   return block
+}
+
+/**
+ * The largest qualifying vote tally reached today. A tie removes everyone
+ * from the block, but the tally remains the number later nominees must beat.
+ */
+export function getVoteBenchmark(game: Game): number {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return 0
+
+  let benchmark = 0
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    const entry = game.history[i]
+    if (entry.type === 'vote' && entry.data.meetsThreshold === true) {
+      benchmark = Math.max(benchmark, entry.data.voteCount as number)
+    }
+  }
+  return benchmark
 }
 
 /**
@@ -639,20 +662,17 @@ export function resolveVote(
 
   const threshold = getVoteThreshold(state)
   const meetsThreshold = voteCount >= threshold
-  const currentBlock = getBlockStatus(game)
+  const voteBenchmark = getVoteBenchmark(game)
 
   // Determine if this vote replaces the current block
   let replacesBlock = false
   let clearsBlock = false
 
   if (meetsThreshold) {
-    if (!currentBlock) {
-      // No one on the block — this player takes it
-      replacesBlock = true
-    } else if (voteCount > currentBlock.voteCount) {
+    if (voteCount > voteBenchmark) {
       // Strictly more votes — replaces the block
       replacesBlock = true
-    } else if (voteCount === currentBlock.voteCount) {
+    } else if (voteCount === voteBenchmark && voteBenchmark > 0) {
       // Tie — clears the block (nobody executed)
       clearsBlock = true
     }
@@ -675,9 +695,7 @@ export function resolveVote(
   }
 
   // Build history message
-  const messageKey = replacesBlock
-    ? 'history.votePassed'
-    : 'history.voteFailed'
+  const messageKey = replacesBlock ? 'history.votePassed' : 'history.voteFailed'
 
   const updatedGame = addHistoryEntry(
     game,
@@ -716,30 +734,27 @@ export function resolveVote(
 
   // If there's a tie, record a separate entry clearing the block
   if (clearsBlock) {
-    return addHistoryEntry(
-      updatedGame,
-      {
-        type: 'vote',
-        message: [
-          {
-            type: 'i18n',
-            key: 'history.voteTied',
-            params: { player: nomineeId },
-          },
-        ],
-        data: {
-          nomineeId,
-          nomineeName: nominee.name,
-          voteCount,
-          threshold,
-          meetsThreshold: true,
-          replacesBlock: false,
-          clearsBlock: true,
-          // A tie clear means we need to reset the block.
-          // We track this by marking no entry as replacesBlock after this point.
+    return addHistoryEntry(updatedGame, {
+      type: 'vote',
+      message: [
+        {
+          type: 'i18n',
+          key: 'history.voteTied',
+          params: { player: nomineeId },
         },
+      ],
+      data: {
+        nomineeId,
+        nomineeName: nominee.name,
+        voteCount,
+        threshold,
+        meetsThreshold: true,
+        replacesBlock: false,
+        clearsBlock: true,
+        // A tie clear means we need to reset the block.
+        // We track this by marking no entry as replacesBlock after this point.
       },
-    )
+    })
   }
 
   return updatedGame
@@ -784,11 +799,7 @@ export function executeAtEndOfDay(game: Game): Game {
     cause: 'execution',
   }
 
-  const result = resolveIntent(
-    executeIntent,
-    getCurrentState(game),
-    game,
-  )
+  const result = resolveIntent(executeIntent, getCurrentState(game), game)
 
   // Executions don't require UI input, so result is always resolved or prevented
   if (result.type === 'needs_input') {

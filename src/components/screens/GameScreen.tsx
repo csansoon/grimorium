@@ -25,6 +25,7 @@ import {
   getNominatorsToday,
   getNomineesToday,
   getBlockStatus,
+  getVoteBenchmark,
   hasVirginExecutionToday,
 } from '../../lib/game'
 import { isAlive } from '../../lib/types'
@@ -101,8 +102,6 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     intent: import('../../lib/pipeline/types').Intent
     onResult: (result: unknown) => void
   } | null>(null)
-
-
 
   // Player-facing state — set by PlayerFacingScreen wrapper inside NightAction components
   const [isPlayerFacing, setIsPlayerFacing] = useState(false)
@@ -293,11 +292,19 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       const deadPlayers = deaths
         .map((id) => state.players.find((p) => p.id === id))
         .filter(Boolean)
-        .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
+        .map((p) => ({
+          playerId: p!.id,
+          playerName: p!.name,
+          roleId: p!.roleId,
+        }))
 
       if (deadPlayers.length > 0) {
         // Death reveal goes straight to day — dawn announcement is redundant
-        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: { type: 'day' } })
+        setScreen({
+          type: 'death_reveal',
+          deaths: deadPlayers,
+          next: { type: 'day' },
+        })
       } else {
         // No deaths: show dawn screen with "no one died" message
         setScreen({ type: 'dawn', deaths, round: state.round })
@@ -330,17 +337,31 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       setScreen({ type: 'game_over' })
     } else {
       // Check if the virgin killed someone
-      const oldPlayerSet = new Set(state.players.filter(isAlive).map(p => p.id))
-      const newPlayerSet = new Set(newState.players.filter(isAlive).map(p => p.id))
-      const deaths = Array.from(oldPlayerSet).filter(id => !newPlayerSet.has(id))
+      const oldPlayerSet = new Set(
+        state.players.filter(isAlive).map((p) => p.id),
+      )
+      const newPlayerSet = new Set(
+        newState.players.filter(isAlive).map((p) => p.id),
+      )
+      const deaths = Array.from(oldPlayerSet).filter(
+        (id) => !newPlayerSet.has(id),
+      )
 
       if (deaths.length > 0) {
         // Virgin triggered — skip voting, go back to day (no further nominations)
         const deadPlayers = deaths
           .map((id) => newState.players.find((p) => p.id === id))
           .filter(Boolean)
-          .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
-        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: { type: 'day' } })
+          .map((p) => ({
+            playerId: p!.id,
+            playerName: p!.name,
+            roleId: p!.roleId,
+          }))
+        setScreen({
+          type: 'death_reveal',
+          deaths: deadPlayers,
+          next: { type: 'day' },
+        })
       } else {
         // Show voting screen for this nominee
         setScreen({ type: 'voting', nomineeId })
@@ -348,18 +369,10 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     }
   }
 
-  const handleVoteComplete = (
-    voteCount: number,
-    votedIds?: string[],
-  ) => {
+  const handleVoteComplete = (voteCount: number, votedIds?: string[]) => {
     if (screen.type !== 'voting') return
 
-    const newGame = resolveVote(
-      game,
-      screen.nomineeId,
-      voteCount,
-      votedIds,
-    )
+    const newGame = resolveVote(game, screen.nomineeId, voteCount, votedIds)
     updateGame(newGame)
 
     // No execution here — deferred to end of day
@@ -368,15 +381,25 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
   const handleEndDay = () => {
     // Check who is alive before execution
-    const preExecAliveIds = new Set(state.players.filter(p => !p.effects.some(e => e.type === 'dead')).map(p => p.id))
+    const preExecAliveIds = new Set(
+      state.players
+        .filter((p) => !p.effects.some((e) => e.type === 'dead'))
+        .map((p) => p.id),
+    )
 
     // Execute whoever is on the block (deferred execution)
     let currentGame = executeAtEndOfDay(game)
 
     // Check who is alive after
     const postState = getCurrentState(currentGame)
-    const postExecAliveIds = new Set(postState.players.filter(p => !p.effects.some(e => e.type === 'dead')).map(p => p.id))
-    const deaths = Array.from(preExecAliveIds).filter(id => !postExecAliveIds.has(id))
+    const postExecAliveIds = new Set(
+      postState.players
+        .filter((p) => !p.effects.some((e) => e.type === 'dead'))
+        .map((p) => p.id),
+    )
+    const deaths = Array.from(preExecAliveIds).filter(
+      (id) => !postExecAliveIds.has(id),
+    )
 
     // Check win conditions after execution
     const postExecWinner = checkWinCondition(postState, currentGame)
@@ -407,8 +430,16 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       const deadPlayers = deaths
         .map((id) => postState.players.find((p) => p.id === id))
         .filter(Boolean)
-        .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
-      setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nightDashboardScreen })
+        .map((p) => ({
+          playerId: p!.id,
+          playerName: p!.name,
+          roleId: p!.roleId,
+        }))
+      setScreen({
+        type: 'death_reveal',
+        deaths: deadPlayers,
+        next: nightDashboardScreen,
+      })
     } else {
       setScreen(nightDashboardScreen)
     }
@@ -447,9 +478,15 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       setScreen({ type: 'game_over' })
     } else {
       // Check if action caused any deaths
-      const oldPlayerSet = new Set(state.players.filter(isAlive).map(p => p.id))
-      const newPlayerSet = new Set(newState.players.filter(isAlive).map(p => p.id))
-      const deaths = Array.from(oldPlayerSet).filter(id => !newPlayerSet.has(id))
+      const oldPlayerSet = new Set(
+        state.players.filter(isAlive).map((p) => p.id),
+      )
+      const newPlayerSet = new Set(
+        newState.players.filter(isAlive).map((p) => p.id),
+      )
+      const deaths = Array.from(oldPlayerSet).filter(
+        (id) => !newPlayerSet.has(id),
+      )
 
       const nextScreen: Screen = { type: 'day' }
 
@@ -457,8 +494,16 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         const deadPlayers = deaths
           .map((id) => newState.players.find((p) => p.id === id))
           .filter(Boolean)
-          .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
-        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nextScreen })
+          .map((p) => ({
+            playerId: p!.id,
+            playerName: p!.name,
+            roleId: p!.roleId,
+          }))
+        setScreen({
+          type: 'death_reveal',
+          deaths: deadPlayers,
+          next: nextScreen,
+        })
       } else {
         setScreen(nextScreen)
       }
@@ -758,6 +803,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             state={state}
             nomineeId={screen.nomineeId}
             blockStatus={getBlockStatus(game)}
+            voteBenchmark={getVoteBenchmark(game)}
             onVoteComplete={handleVoteComplete}
             onCancel={handleCancelVote}
           />
