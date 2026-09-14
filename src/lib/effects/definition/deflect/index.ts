@@ -15,7 +15,7 @@ const deflectHandler: IntentHandler = {
   appliesTo: (intent, effectPlayer) => {
     return (
       intent.type === 'kill' &&
-      intent.cause === 'demon' &&
+      (intent.cause === 'demon' || intent.cause === 'imp_self_kill') &&
       intent.targetId === effectPlayer.id
     )
   },

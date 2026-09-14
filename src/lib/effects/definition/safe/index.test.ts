@@ -66,6 +66,22 @@ describe('Safe effect', () => {
 
       expect(handler.appliesTo(intent, protectedPlayer, state)).toBe(false)
     })
+
+    it('still protects an Imp who chooses themself', () => {
+      const protectedImp = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'imp' }),
+        'safe',
+      )
+      const state = makeState({ players: [protectedImp] })
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'p2',
+        targetId: 'p2',
+        cause: 'imp_self_kill',
+      }
+
+      expect(handler.appliesTo(intent, protectedImp, state)).toBe(true)
+    })
   })
 
   // ================================================================
