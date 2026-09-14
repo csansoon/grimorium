@@ -200,7 +200,7 @@ const en: Translations = {
     // Malfunction Config
     stepConfigureMalfunction: 'Configure Malfunction',
     playerIsMalfunctioning:
-      'This player is poisoned or drunk, so their ability yields false information. As the Storyteller, you must select the false information they will receive.',
+      'This player is poisoned or drunk. Choose any information their ability could normally produce; it may be true or false.',
     chooseFalseNumber: 'What number should they see?',
     chooseFalseResult: 'What result should they see?',
     chooseFalseTarget: 'Which player should they be told is the role?',

@@ -3,15 +3,9 @@ import { GameState, PlayerState } from '../../lib/types'
 import { RoleDefinition, NightActionResult } from '../../lib/roles/types'
 import { getRole, getAllRoles } from '../../lib/roles/index'
 import { getTeam, TeamId } from '../../lib/teams'
-import {
-  useI18n,
-  getRoleName,
-  getRoleTranslations,
-} from '../../lib/i18n'
+import { useI18n, getRoleName, getRoleTranslations } from '../../lib/i18n'
 import { RoleCard } from '../items/RoleCard'
-import {
-  TeamBackground,
-} from '../items/TeamBackground'
+import { TeamBackground } from '../items/TeamBackground'
 import {
   NightActionLayout,
   NarratorSetupLayout,
@@ -21,22 +15,11 @@ import {
   HandbackButton,
 } from '../layouts'
 import type { NightStep } from '../layouts'
-import {
-  StepSection,
-  AlertBox,
-  InfoBox,
-  RoleRevealBadge,
-} from '../items'
-import {
-  PlayerPickerList,
-  RolePickerGrid,
-} from '../inputs'
+import { StepSection, AlertBox, InfoBox, RoleRevealBadge } from '../items'
+import { PlayerPickerList, RolePickerGrid } from '../inputs'
 import { Icon } from '../atoms'
 import { IconName } from '../atoms/icon'
-import {
-  perceive,
-  canRegisterAsTeam,
-} from '../../lib/pipeline'
+import { perceive, canRegisterAsTeam } from '../../lib/pipeline'
 import { isMalfunctioning } from '../../lib/effects'
 
 // ============================================================================
@@ -48,6 +31,8 @@ export type InfoRoleConfig = {
   icon: IconName
   /** The team this role looks for (townsfolk, outsider, minion) */
   targetTeam: TeamId
+  /** Only Librarian may legally learn that zero matching characters are in play. */
+  allowZeroResult?: boolean
   /** i18n keys for history entries */
   historyKeys: {
     discovered: string
@@ -82,13 +67,20 @@ type Props = {
   onComplete: (result: NightActionResult) => void
 }
 
-export function InfoRoleNightAction({ config, state, player, onComplete }: Props) {
+export function InfoRoleNightAction({
+  config,
+  state,
+  player,
+  onComplete,
+}: Props) {
   const { t, language } = useI18n()
   const roleT = getRoleTranslations(config.roleId, language)
   const labels = config.getLabels(roleT)
   const [phase, setPhase] = useState<Phase>('step_list')
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
-  const [selectedTargetPlayer, setSelectedTargetPlayer] = useState<string | null>(null)
+  const [selectedTargetPlayer, setSelectedTargetPlayer] = useState<
+    string | null
+  >(null)
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null)
   const [selectPlayersDone, setSelectPlayersDone] = useState(false)
   const [malfunctionConfigDone, setMalfunctionConfigDone] = useState(false)
@@ -97,12 +89,17 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   const allPlayers = state.players
 
   // Annotation to highlight the current player in the picker
-  const currentPlayerAnnotation = useMemo(() => ({
-    [player.id]: t.game.currentPlayer,
-  }), [player.id, t])
+  const currentPlayerAnnotation = useMemo(
+    () => ({
+      [player.id]: t.game.currentPlayer,
+    }),
+    [player.id, t],
+  )
 
   // All defined roles of target team (for malfunction role picker)
-  const targetTeamAllRoles = getAllRoles().filter((r) => r.team === config.targetTeam)
+  const targetTeamAllRoles = getAllRoles().filter(
+    (r) => r.team === config.targetTeam,
+  )
 
   // ================================================================
   // Player classification for smart grouping
@@ -111,7 +108,10 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   /** Players whose actual team or canRegisterAs includes the target team */
   const isTargetTeamPlayer = (p: PlayerState): boolean => {
     const perception = perceive(p, player, 'team', state)
-    return perception.team === config.targetTeam || canRegisterAsTeam(p, config.targetTeam)
+    return (
+      perception.team === config.targetTeam ||
+      canRegisterAsTeam(p, config.targetTeam)
+    )
   }
 
   const targetGroupPlayers = useMemo(
@@ -135,7 +135,9 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
 
     if (selectedPlayers.length === 1) {
       const selectedId = selectedPlayers[0]
-      const selectedIsTarget = targetGroupPlayers.some((p) => p.id === selectedId)
+      const selectedIsTarget = targetGroupPlayers.some(
+        (p) => p.id === selectedId,
+      )
 
       if (!selectedIsTarget) {
         // Selected one from "other" group — must pick from "target" group next
@@ -157,7 +159,10 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
     const p = state.players.find((pl) => pl.id === playerId)
     if (!p) return false
     const perception = perceive(p, player, 'team', state)
-    return perception.team === config.targetTeam || canRegisterAsTeam(p, config.targetTeam)
+    return (
+      perception.team === config.targetTeam ||
+      canRegisterAsTeam(p, config.targetTeam)
+    )
   })
 
   // ================================================================
@@ -179,10 +184,10 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
       const pRoles =
         pTeam.team === config.targetTeam
           ? (() => {
-            const rp = perceive(p, player, 'role', state)
-            const r = getRole(rp.roleId)
-            return r ? [r] : []
-          })()
+              const rp = perceive(p, player, 'role', state)
+              const r = getRole(rp.roleId)
+              return r ? [r] : []
+            })()
           : targetTeamAllRoles
 
       for (const role of pRoles) {
@@ -332,7 +337,9 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
     return state.players.find((p) => p.id === playerId)?.name ?? t.ui.unknown
   }
 
-  const targetTeamName = t.teams[config.targetTeam as keyof typeof t.teams]?.name ?? config.targetTeam
+  const targetTeamName =
+    t.teams[config.targetTeam as keyof typeof t.teams]?.name ??
+    config.targetTeam
   const otherGroupLabel = t.game.otherPlayers ?? 'Other Players'
 
   // ================================================================
@@ -396,7 +403,12 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
   // ================================================================
   // Phase: Select Players (healthy, no target team among other players)
   // ================================================================
-  if (phase === 'select_players' && !malfunctioning && !hasTargetTeam) {
+  if (
+    phase === 'select_players' &&
+    !malfunctioning &&
+    !hasTargetTeam &&
+    config.allowZeroResult
+  ) {
     return (
       <NarratorSetupLayout
         audience='narrator'
@@ -445,8 +457,14 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
             disabled={disabledPlayerIds}
             annotations={currentPlayerAnnotation}
             groups={[
-              { label: targetTeamName, playerIds: targetGroupPlayers.map((p) => p.id) },
-              { label: otherGroupLabel, playerIds: otherGroupPlayers.map((p) => p.id) },
+              {
+                label: targetTeamName,
+                playerIds: targetGroupPlayers.map((p) => p.id),
+              },
+              {
+                label: otherGroupLabel,
+                playerIds: otherGroupPlayers.map((p) => p.id),
+              },
             ]}
           />
         </StepSection>
@@ -458,8 +476,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
               state={state}
               selected={selectedRoleId ? [selectedRoleId] : []}
               onSelect={(roleId) => {
-                const pids =
-                  targetRoleOptions.roleToPlayers.get(roleId)
+                const pids = targetRoleOptions.roleToPlayers.get(roleId)
                 if (pids?.[0]) handleSelectRole(pids[0], roleId)
               }}
               selectionCount={1}
@@ -521,14 +538,16 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
           />
         </StepSection>
 
-        <div className='mt-4 pt-4 border-t border-parchment-700/30 text-center'>
-          <button
-            onClick={() => setPhase('no_target_view')}
-            className='text-sm text-amber-400 hover:text-amber-300 underline underline-offset-2'
-          >
-            {labels.showNoTargetLink}
-          </button>
-        </div>
+        {config.allowZeroResult && (
+          <div className='mt-4 pt-4 border-t border-parchment-700/30 text-center'>
+            <button
+              onClick={() => setPhase('no_target_view')}
+              className='text-sm text-amber-400 hover:text-amber-300 underline underline-offset-2'
+            >
+              {labels.showNoTargetLink}
+            </button>
+          </div>
+        )}
       </NarratorSetupLayout>
     )
   }
@@ -588,10 +607,7 @@ export function InfoRoleNightAction({ config, state, player, onComplete }: Props
           title={labels.infoTitle}
           description={labels.noTargetMessage}
         >
-          <RoleRevealBadge
-            icon='sparkles'
-            roleName={labels.noTargetTitle}
-          />
+          <RoleRevealBadge icon='sparkles' roleName={labels.noTargetTitle} />
 
           <HandbackButton
             onClick={handleCompleteNoTarget}

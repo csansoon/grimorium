@@ -201,7 +201,7 @@ const es: Translations = {
     // Malfunction Config
     stepConfigureMalfunction: 'Configurar Mal Funcionamiento',
     playerIsMalfunctioning:
-      'Este jugador está envenenado o borracho, por lo que su habilidad da información falsa. Como Cuentacuentos, debes seleccionar la información falsa que recibirá.',
+      'Este jugador está envenenado o borracho. Elige cualquier información que su habilidad pudiera producir normalmente; puede ser verdadera o falsa.',
     chooseFalseNumber: '¿Qué número debería ver?',
     chooseFalseResult: '¿Qué resultado debería ver?',
     chooseFalseTarget: '¿A qué jugador le dirán que es el rol?',
