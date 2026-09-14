@@ -14,7 +14,6 @@ import {
 } from '../../../../../components/layouts'
 import type { NightStep } from '../../../../../components/layouts'
 import {
-  PerceptionConfigStep,
   MalfunctionConfigStep,
   OracleCard,
   NumberReveal,
@@ -24,10 +23,9 @@ import { GameState, PlayerState, isAlive } from '../../../../types'
 import {
   perceive,
   getAmbiguousPlayers,
-  applyPerceptionOverrides,
+  canRegisterAsAlignment,
 } from '../../../../pipeline'
 import { isMalfunctioning } from '../../../../effects'
-import { Perception } from '../../../../pipeline/types'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -73,6 +71,47 @@ export function countEvilPairs(
   }
 
   return evilPairs
+}
+
+/**
+ * Return every legal Chef total when characters may register differently for
+ * separate adjacent-pair checks. Every optional edge is an independent
+ * registration occurrence, so all totals between min and max are legal.
+ */
+export function getPossibleEvilPairRange(
+  state: GameState,
+  observer: PlayerState,
+): { min: number; max: number } {
+  const alivePlayers = state.players.filter(isAlive)
+  if (alivePlayers.length < 2) return { min: 0, max: 0 }
+
+  let min = 0
+  let max = 0
+  const possibleAlignments = (target: PlayerState) => {
+    const actual = perceive(target, observer, 'alignment', state).alignment
+    const values = new Set<'good' | 'evil'>([actual])
+    if (canRegisterAsAlignment(target, 'good')) values.add('good')
+    if (canRegisterAsAlignment(target, 'evil')) values.add('evil')
+    return values
+  }
+
+  for (let index = 0; index < alivePlayers.length; index++) {
+    const current = possibleAlignments(alivePlayers[index])
+    const next = possibleAlignments(
+      alivePlayers[(index + 1) % alivePlayers.length],
+    )
+    if (
+      current.size === 1 &&
+      current.has('evil') &&
+      next.size === 1 &&
+      next.has('evil')
+    ) {
+      min++
+    }
+    if (current.has('evil') && next.has('evil')) max++
+  }
+
+  return { min, max }
 }
 
 type Phase =
@@ -121,9 +160,9 @@ const definition: RoleDefinition = {
   NightAction: ({ state, player, onComplete }) => {
     const { t, language } = useI18n()
     const [phase, setPhase] = useState<Phase>('step_list')
-    const [perceptionOverrides, setPerceptionOverrides] = useState<
-      Record<string, Partial<Perception>>
-    >({})
+    const [registrationValue, setRegistrationValue] = useState<number | null>(
+      null,
+    )
     const [malfunctionValue, setMalfunctionValue] = useState<number | null>(
       null,
     )
@@ -198,10 +237,8 @@ const definition: RoleDefinition = {
       }
     }
 
-    const handlePerceptionComplete = (
-      overrides: Record<string, Partial<Perception>>,
-    ) => {
-      setPerceptionOverrides(overrides)
+    const handlePerceptionComplete = (value: number) => {
+      setRegistrationValue(value)
       setPerceptionConfigDone(true)
       setPhase('step_list')
     }
@@ -212,20 +249,18 @@ const definition: RoleDefinition = {
       setPhase('step_list')
     }
 
-    // Apply perception overrides and calculate evil pairs
-    const effectiveState = useMemo(
-      () => applyPerceptionOverrides(state, perceptionOverrides),
-      [state, perceptionOverrides],
+    const calculatedEvilPairs = useMemo(() => {
+      return countEvilPairs(state, player)
+    }, [state, player])
+
+    const registrationRange = useMemo(
+      () => getPossibleEvilPairRange(state, player),
+      [state, player],
     )
 
-    const calculatedEvilPairs = useMemo(() => {
-      const effectiveObserver =
-        effectiveState.players.find((p) => p.id === player.id) ?? player
-      return countEvilPairs(effectiveState, effectiveObserver)
-    }, [effectiveState, player])
-
     // Use malfunction value if set, otherwise use calculated value
-    const displayedEvilPairs = malfunctionValue ?? calculatedEvilPairs
+    const displayedEvilPairs =
+      malfunctionValue ?? registrationValue ?? calculatedEvilPairs
 
     const handleComplete = () => {
       onComplete({
@@ -253,10 +288,12 @@ const definition: RoleDefinition = {
                     actualEvilPairs: calculatedEvilPairs,
                   }
                 : {}),
-              perceptionOverrides:
-                Object.keys(perceptionOverrides).length > 0
-                  ? perceptionOverrides
-                  : undefined,
+              ...(registrationValue !== null
+                ? {
+                    registrationConfigured: true,
+                    actualEvilPairs: calculatedEvilPairs,
+                  }
+                : {}),
             },
           },
         ],
@@ -286,7 +323,7 @@ const definition: RoleDefinition = {
           playerName={player.name}
           numberRange={{
             min: 0,
-            max: Math.floor(state.players.filter(isAlive).length / 2),
+            max: state.players.filter(isAlive).length,
           }}
           onComplete={handleMalfunctionComplete}
         />
@@ -296,13 +333,13 @@ const definition: RoleDefinition = {
     // Phase: Configure Perceptions
     if (phase === 'configure_perceptions') {
       return (
-        <PerceptionConfigStep
-          ambiguousPlayers={ambiguousPlayers}
-          context='alignment'
-          state={state}
+        <MalfunctionConfigStep
+          type='number'
           roleIcon='chefHat'
           roleName={getRoleName('chef', language)}
           playerName={player.name}
+          numberRange={registrationRange}
+          reason='registration'
           onComplete={handlePerceptionComplete}
         />
       )

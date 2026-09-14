@@ -14,6 +14,7 @@ type NumberProps = {
   roleName: string
   playerName: string
   numberRange: { min: number; max: number }
+  reason?: 'malfunction' | 'registration'
   onComplete: (result: number) => void
 }
 
@@ -24,6 +25,7 @@ type BooleanProps = {
   playerName: string
   trueLabel: string
   falseLabel: string
+  reason?: 'malfunction' | 'registration'
   onComplete: (result: boolean) => void
 }
 
@@ -33,6 +35,7 @@ type RoleProps = {
   roleName: string
   playerName: string
   state: GameState
+  reason?: 'malfunction' | 'registration'
   onComplete: (result: string) => void
 }
 
@@ -49,6 +52,7 @@ type Props = NumberProps | BooleanProps | RoleProps
  */
 export function MalfunctionConfigStep(props: Props) {
   const { t } = useI18n()
+  const isRegistrationChoice = props.reason === 'registration'
 
   return (
     <NarratorSetupLayout
@@ -60,16 +64,20 @@ export function MalfunctionConfigStep(props: Props) {
       <div className='rounded-xl border border-amber-500/30 bg-amber-900/20 p-3 mb-4'>
         <div className='flex items-center gap-2'>
           <Icon
-            name='flask'
+            name={isRegistrationChoice ? 'hatGlasses' : 'flask'}
             size='md'
             className='text-amber-400 flex-shrink-0'
           />
           <p className='text-sm text-amber-300 font-medium'>
-            {t.game.malfunctionWarning}
+            {isRegistrationChoice
+              ? t.game.registrationResultTitle
+              : t.game.malfunctionWarning}
           </p>
         </div>
         <p className='text-xs text-amber-400/70 mt-1 ml-7'>
-          {t.game.playerIsMalfunctioning}
+          {isRegistrationChoice
+            ? t.game.registrationResultDescription
+            : t.game.playerIsMalfunctioning}
         </p>
       </div>
 

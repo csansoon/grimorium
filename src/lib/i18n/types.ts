@@ -212,6 +212,8 @@ export type Translations = {
     chooseFalseRole: string
     keepOriginalRole: string
     malfunctionWarning: string
+    registrationResultTitle: string
+    registrationResultDescription: string
 
     // Setup Actions
     setupActions: string

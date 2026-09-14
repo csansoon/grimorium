@@ -207,6 +207,9 @@ const en: Translations = {
     chooseFalseRole: 'What role should they see?',
     keepOriginalRole: 'Keep {role}',
     malfunctionWarning: 'Malfunctioning',
+    registrationResultTitle: 'Choose Registration Result',
+    registrationResultDescription:
+      'This character may register differently for each adjacent pair. Choose any legal total for this Chef reading.',
 
     // Setup Actions
     setupActions: 'Setup Actions',

@@ -208,6 +208,9 @@ const es: Translations = {
     chooseFalseRole: '¿Qué rol debería ver?',
     keepOriginalRole: 'Mantener {role}',
     malfunctionWarning: 'Mal Funcionamiento',
+    registrationResultTitle: 'Elegir Resultado de Registro',
+    registrationResultDescription:
+      'Este personaje puede registrarse de forma distinta para cada pareja adyacente. Elige cualquier total legal para esta lectura del Chef.',
 
     // Setup Actions
     setupActions: 'Acciones de Configuración',
