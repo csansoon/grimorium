@@ -12,9 +12,7 @@ import {
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import { RoleCard } from '../../../../../components/items/RoleCard'
 import { PerceptionConfigStep } from '../../../../../components/items'
-import {
-  TeamBackground,
-} from '../../../../../components/items/TeamBackground'
+import { TeamBackground } from '../../../../../components/items/TeamBackground'
 import {
   NightStepListLayout,
   PlayerFacingScreen,
@@ -54,7 +52,7 @@ function findExecutedPlayerId(game: {
   if (lastDayStartIndex !== -1) {
     for (let i = lastDayStartIndex; i < game.history.length; i++) {
       const entry = game.history[i]
-      if (entry.type === 'execution') {
+      if (entry.type === 'execution' && entry.data.died !== false) {
         return entry.data.playerId as string
       }
       if (entry.type === 'virgin_execution') {

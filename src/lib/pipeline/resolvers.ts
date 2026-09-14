@@ -5,7 +5,7 @@ import {
   ExecuteIntent,
   StateChanges,
 } from './types'
-import { GameState } from '../types'
+import { GameState, isAlive } from '../types'
 
 // ============================================================================
 // DEFAULT RESOLVERS
@@ -20,8 +20,11 @@ type IntentResolver = (intent: Intent, state: GameState) => StateChanges
  * Default kill resolution: add a "dead" effect to the target.
  * No history entry needed — death announcements happen in startDay().
  */
-function resolveKill(intent: Intent, _state: GameState): StateChanges {
+function resolveKill(intent: Intent, state: GameState): StateChanges {
   const kill = intent as KillIntent
+  const target = state.players.find((player) => player.id === kill.targetId)
+  if (!target || !isAlive(target)) return { entries: [] }
+
   return {
     entries: [],
     addEffects: {
@@ -69,8 +72,11 @@ function resolveNominate(intent: Intent, _state: GameState): StateChanges {
 /**
  * Default execution resolution: kill the player and record the execution.
  */
-function resolveExecute(intent: Intent, _state: GameState): StateChanges {
+function resolveExecute(intent: Intent, state: GameState): StateChanges {
   const exec = intent as ExecuteIntent
+  const target = state.players.find((player) => player.id === exec.playerId)
+  const died = !!target && isAlive(target)
+
   return {
     entries: [
       {
@@ -82,18 +88,20 @@ function resolveExecute(intent: Intent, _state: GameState): StateChanges {
             params: { player: exec.playerId },
           },
         ],
-        data: { playerId: exec.playerId },
+        data: { playerId: exec.playerId, died },
       },
     ],
-    addEffects: {
-      [exec.playerId]: [
-        {
-          type: 'dead',
-          data: { cause: exec.cause },
-          expiresAt: 'never',
-        },
-      ],
-    },
+    addEffects: died
+      ? {
+          [exec.playerId]: [
+            {
+              type: 'dead',
+              data: { cause: exec.cause },
+              expiresAt: 'never',
+            },
+          ],
+        }
+      : undefined,
   }
 }
 

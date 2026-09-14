@@ -27,7 +27,8 @@ export function NominationScreen({
 
   const alivePlayers = getAlivePlayers(state)
 
-  const nomineeCandidates = alivePlayers
+  // Dead players may be nominated; only nominators must be alive.
+  const nomineeCandidates = state.players
 
   const handleSelectNominator = (playerId: string) => {
     setNominator(playerId)
@@ -45,7 +46,7 @@ export function NominationScreen({
   const nominatorAnnotations = useMemo(() => {
     if (!nominatorsToday || nominatorsToday.size === 0) return undefined
     const annotations: Record<string, string> = {}
-    for (const player of alivePlayers) {
+    for (const player of nomineeCandidates) {
       if (nominatorsToday.has(player.id)) {
         annotations[player.id] = t.game.alreadyNominated
       }
@@ -63,7 +64,7 @@ export function NominationScreen({
       }
     }
     return Object.keys(annotations).length > 0 ? annotations : undefined
-  }, [nomineesToday, alivePlayers, t])
+  }, [nomineesToday, nomineeCandidates, t])
 
   // Build disabled sets for enforcement
   const disabledNominators = useMemo(() => {
@@ -139,14 +140,11 @@ export function NominationScreen({
             <p className='text-parchment-200 text-sm'>
               <span className='font-medium text-parchment-100'>
                 {alivePlayers.find((p) => p.id === nominator)?.name}
-              </span>
-              {' '}
-              {t.game.nominatesVerb}
-              {' '}
+              </span>{' '}
+              {t.game.nominatesVerb}{' '}
               <span className='font-medium text-red-300'>
-                {alivePlayers.find((p) => p.id === nominee)?.name}
-              </span>
-              {' '}
+                {nomineeCandidates.find((p) => p.id === nominee)?.name}
+              </span>{' '}
               {t.game.forExecution}
             </p>
           </div>

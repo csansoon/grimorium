@@ -94,8 +94,56 @@ describe('default resolvers', () => {
     expect(result.type).toBe('resolved')
     if (result.type === 'resolved') {
       expect(result.stateChanges.entries[0].type).toBe('execution')
+      expect(result.stateChanges.entries[0].data.died).toBe(true)
       expect(result.stateChanges.addEffects?.['p1']).toBeDefined()
       expect(result.stateChanges.addEffects!['p1'][0].type).toBe('dead')
+    }
+  })
+
+  it('killing an already-dead player causes no new death', () => {
+    const deadTarget = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'villager' }),
+      'dead',
+    )
+    const demon = makePlayer({ id: 'p2', roleId: 'imp' })
+    const state = makeState({
+      phase: 'night',
+      round: 2,
+      players: [deadTarget, demon],
+    })
+
+    const result = resolveIntent(
+      { type: 'kill', sourceId: 'p2', targetId: 'p1', cause: 'demon' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.addEffects).toBeUndefined()
+    }
+  })
+
+  it('records an already-dead player as executed without killing them again', () => {
+    const deadTarget = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'villager' }),
+      'dead',
+    )
+    const state = makeState({ phase: 'day', round: 2, players: [deadTarget] })
+
+    const result = resolveIntent(
+      { type: 'execute', playerId: 'p1', cause: 'execution' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.entries[0]).toMatchObject({
+        type: 'execution',
+        data: { playerId: 'p1', died: false },
+      })
+      expect(result.stateChanges.addEffects).toBeUndefined()
     }
   })
 })
