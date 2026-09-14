@@ -8,6 +8,7 @@ import {
   applyNightAction,
   skipNightAction,
   nominate,
+  resolveNomination,
   resolveVote,
   getBlockStatus,
   getVoteBenchmark,
@@ -460,6 +461,28 @@ describe('nominate', () => {
 
     const updated = nominate(game, 'nonexistent', 'p5')
     expect(updated).toBe(game)
+  })
+
+  it('preserves a Storyteller prompt when a Spy nominates the Virgin', () => {
+    const spy = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'spy' }),
+      'misregister',
+      {
+        canRegisterAs: {
+          teams: ['townsfolk', 'outsider'],
+          alignments: ['good'],
+        },
+      },
+    )
+    const virgin = addEffectTo(
+      makePlayer({ id: 'p2', roleId: 'virgin' }),
+      'pure',
+    )
+    const game = makeGame(
+      makeState({ phase: 'day', round: 1, players: [spy, virgin] }),
+    )
+
+    expect(resolveNomination(game, spy.id, virgin.id)?.type).toBe('needs_input')
   })
 
   it('ends the day immediately after the Virgin executes a Townsfolk', () => {

@@ -214,6 +214,10 @@ export type Translations = {
     malfunctionWarning: string
     registrationResultTitle: string
     registrationResultDescription: string
+    virginRegistrationTitle: string
+    virginRegistrationDescription: string
+    registerAsTownsfolk: string
+    registerNormally: string
 
     // Setup Actions
     setupActions: string

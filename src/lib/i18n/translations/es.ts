@@ -211,6 +211,11 @@ const es: Translations = {
     registrationResultTitle: 'Elegir Resultado de Registro',
     registrationResultDescription:
       'Este personaje puede registrarse de forma distinta para cada pareja adyacente. Elige cualquier total legal para esta lectura del Chef.',
+    virginRegistrationTitle: 'Registro de la Virgen',
+    virginRegistrationDescription:
+      '¿Debe {player} registrarse como Aldeano para esta nominación?',
+    registerAsTownsfolk: 'Registrar como Aldeano',
+    registerNormally: 'Registrar como su personaje real',
 
     // Setup Actions
     setupActions: 'Acciones de Configuración',

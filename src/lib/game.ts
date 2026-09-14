@@ -18,7 +18,7 @@ import {
   applyPipelineChanges,
   checkDynamicWinConditions,
 } from './pipeline'
-import { NominateIntent, ExecuteIntent } from './pipeline/types'
+import { ExecuteIntent, PipelineResult } from './pipeline/types'
 import { trackEvent } from './analytics'
 
 // ============================================================================
@@ -524,27 +524,34 @@ export function nominate(
   nominatorId: string,
   nomineeId: string,
 ): Game {
-  const state = getCurrentState(game)
-  const nominator = state.players.find((p) => p.id === nominatorId)
-  const nominee = state.players.find((p) => p.id === nomineeId)
+  const result = resolveNomination(game, nominatorId, nomineeId)
+  if (!result) return game
 
-  if (!nominator || !nominee) return game
-
-  const intent: NominateIntent = {
-    type: 'nominate',
-    nominatorId,
-    nomineeId,
-  }
-
-  const result = resolveIntent(intent, state, game)
-
-  // Nominations never require UI input, so result is always resolved or prevented
+  // Callers without a screen orchestrator cannot resolve registration prompts.
   if (result.type === 'needs_input') {
     // This shouldn't happen, but handle gracefully
     return game
   }
 
   return applyPipelineChanges(game, result.stateChanges)
+}
+
+/** Resolve a nomination while preserving any Storyteller registration prompt. */
+export function resolveNomination(
+  game: Game,
+  nominatorId: string,
+  nomineeId: string,
+): PipelineResult | null {
+  const state = getCurrentState(game)
+  const nominator = state.players.find((p) => p.id === nominatorId)
+  const nominee = state.players.find((p) => p.id === nomineeId)
+  if (!nominator || !nominee) return null
+
+  return resolveIntent(
+    { type: 'nominate', nominatorId, nomineeId },
+    state,
+    game,
+  )
 }
 
 // ============================================================================

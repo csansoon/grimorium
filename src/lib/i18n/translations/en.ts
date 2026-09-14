@@ -210,6 +210,11 @@ const en: Translations = {
     registrationResultTitle: 'Choose Registration Result',
     registrationResultDescription:
       'This character may register differently for each adjacent pair. Choose any legal total for this Chef reading.',
+    virginRegistrationTitle: 'Virgin Registration',
+    virginRegistrationDescription:
+      'Should {player} register as a Townsfolk for this nomination?',
+    registerAsTownsfolk: 'Register as Townsfolk',
+    registerNormally: 'Register as their actual character',
 
     // Setup Actions
     setupActions: 'Setup Actions',

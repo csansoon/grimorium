@@ -215,6 +215,75 @@ describe('Pure effect', () => {
   })
 
   // ================================================================
+  // HANDLER — SPY REGISTRATION (Storyteller choice)
+  // ================================================================
+
+  describe('spy nominates virgin', () => {
+    function makeScenario() {
+      const spy = addEffectTo(
+        makePlayer({ id: 'p1', roleId: 'spy' }),
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['townsfolk', 'outsider'],
+            alignments: ['good'],
+          },
+        },
+      )
+      const virgin = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'virgin' }),
+        'pure',
+      )
+      const state = makeState({
+        phase: 'day',
+        round: 1,
+        players: [spy, virgin],
+      })
+      const intent: NominateIntent = {
+        type: 'nominate',
+        nominatorId: spy.id,
+        nomineeId: virgin.id,
+      }
+
+      return { spy, virgin, state, game: makeGame(state), intent }
+    }
+
+    it('asks the Storyteller how the Spy registers for this nomination', () => {
+      const { virgin, state, game, intent } = makeScenario()
+
+      expect(handler.handle(intent, virgin, state, game).action).toBe(
+        'request_ui',
+      )
+    })
+
+    it('executes the Spy when registered as Townsfolk', () => {
+      const { spy, virgin, state, game, intent } = makeScenario()
+      const prompt = handler.handle(intent, virgin, state, game)
+      expect(prompt.action).toBe('request_ui')
+      if (prompt.action !== 'request_ui') return
+
+      const result = prompt.resume(true)
+      expect(result.action).toBe('prevent')
+      if (result.action !== 'prevent') return
+      expect(result.stateChanges?.addEffects?.[spy.id]?.[0].type).toBe('dead')
+      expect(result.stateChanges?.entries[0].type).toBe('virgin_execution')
+    })
+
+    it('allows the nomination when the Spy registers normally', () => {
+      const { virgin, state, game, intent } = makeScenario()
+      const prompt = handler.handle(intent, virgin, state, game)
+      expect(prompt.action).toBe('request_ui')
+      if (prompt.action !== 'request_ui') return
+
+      const result = prompt.resume(false)
+      expect(result.action).toBe('allow')
+      if (result.action !== 'allow') return
+      expect(result.stateChanges?.removeEffects?.[virgin.id]).toContain('pure')
+      expect(result.stateChanges?.entries[0].type).toBe('virgin_spent')
+    })
+  })
+
+  // ================================================================
   // HANDLER — NON-TOWNSFOLK NOMINATOR (allow, spend purity)
   // ================================================================
 

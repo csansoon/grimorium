@@ -10,7 +10,7 @@ import {
   startDay,
   applyNightAction,
   skipNightAction,
-  nominate,
+  resolveNomination,
   resolveVote,
   executeAtEndOfDay,
   endGame,
@@ -326,55 +326,51 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   }
 
   const handleNominate = (nominatorId: string, nomineeId: string) => {
-    const newGame = nominate(game, nominatorId, nomineeId)
-    updateGame(newGame)
+    const result = resolveNomination(game, nominatorId, nomineeId)
+    if (!result) return
 
-    const newState = getCurrentState(newGame)
-    // Check if an effect intercepted (e.g., Virgin killing the nominator)
-    const winner = checkWinCondition(newState, newGame)
-    if (winner) {
-      const finalGame = endGame(newGame, winner)
-      updateGame(finalGame)
-      setScreen({ type: 'game_over' })
-    } else {
-      // Check if the virgin killed someone
-      const oldPlayerSet = new Set(
-        state.players.filter(isAlive).map((p) => p.id),
-      )
-      const newPlayerSet = new Set(
-        newState.players.filter(isAlive).map((p) => p.id),
-      )
-      const deaths = Array.from(oldPlayerSet).filter(
-        (id) => !newPlayerSet.has(id),
-      )
-
-      const virginTriggered = newGame.history
-        .slice(game.history.length)
-        .some((entry) => entry.type === 'virgin_execution')
-
-      if (virginTriggered && deaths.length > 0) {
-        // The Virgin's execution immediately ends the day. Advance the game
-        // before the public death card so Continue leads straight into night.
-        const deadPlayers = deaths
-          .map((id) => newState.players.find((p) => p.id === id))
-          .filter(Boolean)
-          .map((p) => ({
-            playerId: p!.id,
-            playerName: p!.name,
-            roleId: p!.roleId,
-          }))
-        const nightGame = finishVirginExecutionDay(newGame)
-        updateGame(nightGame)
-        setScreen({
-          type: 'death_reveal',
-          deaths: deadPlayers,
-          next: { type: 'night_dashboard' },
-        })
+    processPipelineResult(result, game, (newGame) => {
+      const newState = getCurrentState(newGame)
+      const winner = checkWinCondition(newState, newGame)
+      if (winner) {
+        const finalGame = endGame(newGame, winner)
+        updateGame(finalGame)
+        setScreen({ type: 'game_over' })
       } else {
-        // Show voting screen for this nominee
-        setScreen({ type: 'voting', nomineeId })
+        const oldPlayerSet = new Set(
+          state.players.filter(isAlive).map((p) => p.id),
+        )
+        const newPlayerSet = new Set(
+          newState.players.filter(isAlive).map((p) => p.id),
+        )
+        const deaths = Array.from(oldPlayerSet).filter(
+          (id) => !newPlayerSet.has(id),
+        )
+        const virginTriggered = newGame.history
+          .slice(game.history.length)
+          .some((entry) => entry.type === 'virgin_execution')
+
+        if (virginTriggered && deaths.length > 0) {
+          const deadPlayers = deaths
+            .map((id) => newState.players.find((p) => p.id === id))
+            .filter(Boolean)
+            .map((p) => ({
+              playerId: p!.id,
+              playerName: p!.name,
+              roleId: p!.roleId,
+            }))
+          const nightGame = finishVirginExecutionDay(newGame)
+          updateGame(nightGame)
+          setScreen({
+            type: 'death_reveal',
+            deaths: deadPlayers,
+            next: { type: 'night_dashboard' },
+          })
+        } else {
+          setScreen({ type: 'voting', nomineeId })
+        }
       }
-    }
+    })
   }
 
   const handleVoteComplete = (voteCount: number, votedIds?: string[]) => {
