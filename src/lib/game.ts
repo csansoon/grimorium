@@ -8,6 +8,7 @@ import {
   getCurrentState,
   hasEffect,
   getAlivePlayers,
+  isAlive,
 } from './types'
 import { getRole } from './roles'
 import { RoleDefinition, NightActionResult, EffectToAdd } from './roles/types'
@@ -349,6 +350,9 @@ export function startNight(game: Game): Game {
 
   // Expire effects that should end at end of day (e.g., Poisoner's poison)
   const stateAfterExpiration = expireEffects(state, 'end_of_day')
+  const alivePlayerIds = stateAfterExpiration.players
+    .filter(isAlive)
+    .map((player) => player.id)
 
   return addHistoryEntry(
     game,
@@ -361,7 +365,7 @@ export function startNight(game: Game): Game {
           params: { round: newRound },
         },
       ],
-      data: { round: newRound },
+      data: { round: newRound, alivePlayerIds },
     },
     {
       phase: 'night',
@@ -379,34 +383,32 @@ export function startDay(game: Game): Game {
     data: {},
   })
 
-  // Find who died tonight
+  // Find who transitioned from alive to dead during this night. The reason
+  // could be a direct Demon kill, a Mayor redirect, or another interaction;
+  // action log shape is deliberately irrelevant.
   const nightStartIndex = findLastEventIndex(updatedGame, 'night_started')
-  const deathEffects: string[] = []
-
-  for (let i = nightStartIndex + 1; i < updatedGame.history.length; i++) {
-    const entry = updatedGame.history[i]
-    if (entry.type === 'night_action' && entry.data.action === 'kill') {
-      deathEffects.push(entry.data.targetId as string)
-    }
-  }
+  const nightStartState = updatedGame.history[nightStartIndex]?.stateAfter
+  const aliveAtNightStart = new Set(
+    nightStartState?.players.filter(isAlive).map((player) => player.id) ?? [],
+  )
+  const currentState = getCurrentState(updatedGame)
+  const deaths = currentState.players.filter(
+    (player) => aliveAtNightStart.has(player.id) && !isAlive(player),
+  )
 
   // Announce deaths
-  const currentState = getCurrentState(updatedGame)
-  for (const playerId of deathEffects) {
-    const player = currentState.players.find((p) => p.id === playerId)
-    if (player && hasEffect(player, 'dead')) {
-      updatedGame = addHistoryEntry(updatedGame, {
-        type: 'effect_added',
-        message: [
-          {
-            type: 'i18n',
-            key: 'history.diedInNight',
-            params: { player: player.id },
-          },
-        ],
-        data: { playerId: player.id, effectType: 'dead' },
-      })
-    }
+  for (const player of deaths) {
+    updatedGame = addHistoryEntry(updatedGame, {
+      type: 'effect_added',
+      message: [
+        {
+          type: 'i18n',
+          key: 'history.diedInNight',
+          params: { player: player.id },
+        },
+      ],
+      data: { playerId: player.id, effectType: 'dead', source: 'night' },
+    })
   }
 
   // Expire effects that should end at end of night (e.g., Monk's protection)

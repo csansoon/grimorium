@@ -11,6 +11,7 @@ import {
   resolveVote,
   getBlockStatus,
   getVoteBenchmark,
+  getLastNightDeaths,
   addEffectToPlayer,
   removeEffectFromPlayer,
 } from '../game'
@@ -235,6 +236,37 @@ describe('startDay', () => {
     const state = getCurrentState(updated)
     const p1 = state.players.find((p) => p.id === 'p1')!
     expect(hasEffect(p1, 'safe')).toBe(true)
+  })
+
+  it('announces every player who became dead during the night', () => {
+    const players = makeStandardPlayers()
+    let game = startNight(
+      makeGame(makeState({ phase: 'day', round: 1, players })),
+    )
+    game = addHistoryEntry(
+      game,
+      {
+        type: 'night_action',
+        message: [],
+        data: { action: 'kill_redirected', redirectTargetId: 'p3' },
+      },
+      undefined,
+      { p3: [{ type: 'dead', expiresAt: 'never' }] },
+    )
+
+    const updated = startDay(game)
+
+    expect(getLastNightDeaths(updated)).toEqual(['p3'])
+  })
+
+  it('does not announce players who were already dead before night', () => {
+    const players = makeStandardPlayers()
+    players[0] = addEffectTo(players[0], 'dead')
+    const game = startNight(
+      makeGame(makeState({ phase: 'day', round: 1, players })),
+    )
+
+    expect(getLastNightDeaths(startDay(game))).toEqual([])
   })
 })
 
