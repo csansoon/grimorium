@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { RoleDefinition } from '../../../types'
+import { NightActionResult, RoleDefinition } from '../../../types'
 import {
   useI18n,
   interpolate,
@@ -19,6 +19,8 @@ import type { NightStep } from '../../../../../components/layouts'
 import { PlayerPickerList } from '../../../../../components/inputs'
 import { Button, Icon } from '../../../../../components/atoms'
 import { isAlive } from '../../../../types'
+import type { PlayerState } from '../../../../types'
+import { isMalfunctioning } from '../../../../effects'
 
 
 import en from './i18n/en'
@@ -28,6 +30,70 @@ registerRoleTranslations('poisoner', 'en', en)
 registerRoleTranslations('poisoner', 'es', es)
 
 type Phase = 'step_list' | 'show_evil_team' | 'choose_target'
+
+export function createPoisonResult(
+  player: PlayerState,
+  target: PlayerState,
+  isFirstNight: boolean,
+): NightActionResult {
+  const malfunctioning = isMalfunctioning(player)
+  const entries: NightActionResult['entries'] = []
+
+  if (isFirstNight) {
+    entries.push({
+      type: 'night_action',
+      message: [
+        {
+          type: 'i18n',
+          key: 'roles.poisoner.history.shownEvilTeam',
+          params: { player: player.id },
+        },
+      ],
+      data: {
+        roleId: 'poisoner',
+        playerId: player.id,
+        action: 'first_night_info',
+      },
+    })
+  }
+
+  entries.push({
+    type: 'night_action',
+    message: [
+      {
+        type: 'i18n',
+        key: 'roles.poisoner.history.poisonedPlayer',
+        params: {
+          player: player.id,
+          target: target.id,
+        },
+      },
+    ],
+    data: {
+      roleId: 'poisoner',
+      playerId: player.id,
+      action: 'poison',
+      targetId: target.id,
+      ...(malfunctioning ? { malfunctioned: true } : {}),
+    },
+  })
+
+  return {
+    entries,
+    addEffects: malfunctioning
+      ? undefined
+      : {
+          [target.id]: [
+            {
+              type: 'poisoned',
+              sourcePlayerId: player.id,
+              data: { source: 'poisoner' },
+              expiresAt: 'end_of_day',
+            },
+          ],
+        },
+  }
+}
 
 /**
  * The Poisoner — Minion role.
@@ -88,60 +154,7 @@ const definition: RoleDefinition = {
       const target = state.players.find((p) => p.id === selectedTarget)
       if (!target) return
 
-      const entries = []
-
-      // On first night, include the evil team reveal history entry
-      if (isFirstNight) {
-        entries.push({
-          type: 'night_action' as const,
-          message: [
-            {
-              type: 'i18n' as const,
-              key: 'roles.poisoner.history.shownEvilTeam',
-              params: { player: player.id },
-            },
-          ],
-          data: {
-            roleId: 'poisoner',
-            playerId: player.id,
-            action: 'first_night_info',
-          },
-        })
-      }
-
-      entries.push({
-        type: 'night_action' as const,
-        message: [
-          {
-            type: 'i18n' as const,
-            key: 'roles.poisoner.history.poisonedPlayer',
-            params: {
-              player: player.id,
-              target: target.id,
-            },
-          },
-        ],
-        data: {
-          roleId: 'poisoner',
-          playerId: player.id,
-          action: 'poison',
-          targetId: target.id,
-        },
-      })
-
-      onComplete({
-        entries,
-        addEffects: {
-          [target.id]: [
-            {
-              type: 'poisoned',
-              sourcePlayerId: player.id,
-              data: { source: 'poisoner' },
-              expiresAt: 'end_of_day',
-            },
-          ],
-        },
-      })
+      onComplete(createPoisonResult(player, target, isFirstNight))
     }
 
     // ================================================================

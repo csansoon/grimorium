@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import definition from '.'
+import definition, { createPoisonResult } from '.'
 import {
   makePlayer,
   makeState,
@@ -81,5 +81,40 @@ describe('Poisoner', () => {
     it('has nightOrder 5 (wakes before most roles)', () => {
       expect(definition.nightOrder).toBe(5)
     })
+  })
+
+  describe('poison resolution', () => {
+    it('applies poison when the Poisoner is healthy', () => {
+      const poisoner = makePlayer({ id: 'p1', roleId: 'poisoner' })
+      const target = makePlayer({ id: 'p2', roleId: 'chef' })
+
+      const result = createPoisonResult(poisoner, target, false)
+
+      expect(result.addEffects?.p2?.[0]).toMatchObject({
+        type: 'poisoned',
+        sourcePlayerId: 'p1',
+        expiresAt: 'end_of_day',
+      })
+    })
+
+    it.each(['poisoned', 'drunk'] as const)(
+      'does not apply poison when the Poisoner is %s',
+      (malfunctionEffect) => {
+        const poisoner = addEffectTo(
+          makePlayer({ id: 'p1', roleId: 'poisoner' }),
+          malfunctionEffect,
+        )
+        const target = makePlayer({ id: 'p2', roleId: 'chef' })
+
+        const result = createPoisonResult(poisoner, target, false)
+
+        expect(result.addEffects).toBeUndefined()
+        expect(result.entries[0].data).toMatchObject({
+          action: 'poison',
+          targetId: 'p2',
+          malfunctioned: true,
+        })
+      },
+    )
   })
 })
