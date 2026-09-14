@@ -16,6 +16,19 @@ type Props = {
   onCancel: () => void
 }
 
+export function canPlayerVote(
+  player: PlayerState,
+  state: GameState,
+  currentVotes?: Record<string, boolean>,
+): boolean {
+  for (const effect of player.effects) {
+    const def = getEffect(effect.type)
+    if (!def?.preventsVoting) continue
+    if (!def.canVote || !def.canVote(player, state, currentVotes)) return false
+  }
+  return true
+}
+
 /**
  * Get the Butler's master player name, if this player has the butler_master effect.
  * Returns null if the player is not the Butler or has no master assigned.
@@ -40,25 +53,6 @@ export function VotingPhase({
   const { t, language } = useI18n()
   const butlerT = getRoleTranslations('butler', language)
   const nominee = state.players.find((p) => p.id === nomineeId)
-
-  const canPlayerVote = (
-    player: PlayerState,
-    currentVotes?: Record<string, boolean>,
-  ): boolean => {
-    // Check all effects for voting restrictions
-    for (const effect of player.effects) {
-      const def = getEffect(effect.type)
-      if (!def) continue
-      if (def.preventsVoting) {
-        // If the effect has a canVote function, defer to it (e.g., dead players get one vote)
-        if (def.canVote) {
-          return def.canVote(player, state, currentVotes)
-        }
-        return false
-      }
-    }
-    return true
-  }
 
   const sortedPlayers = useMemo(() => {
     const idx = state.players.findIndex((p) => p.id === nomineeId)
@@ -86,9 +80,27 @@ export function VotingPhase({
   const handleToggleVote = (playerId: string) => {
     const player = state.players.find((p) => p.id === playerId)
     // We pass the current votes to check if the toggle is valid
-    if (!player || !canPlayerVote(player, votes)) return
+    if (!player || !canPlayerVote(player, state, votes)) return
 
-    setVotes({ ...votes, [playerId]: !votes[playerId] })
+    setVotes((currentVotes) => {
+      const nextVotes = {
+        ...currentVotes,
+        [playerId]: !currentVotes[playerId],
+      }
+
+      // If a master lowers their hand, every living Butler bound to that
+      // master must lower theirs too. This keeps the digital tally legal
+      // without asking the Storyteller to repair it manually.
+      if (!nextVotes[playerId]) {
+        for (const possibleButler of state.players) {
+          if (hasEffect(possibleButler, 'dead')) continue
+          const master = getButlerMaster(possibleButler, state)
+          if (master?.id === playerId) nextVotes[possibleButler.id] = false
+        }
+      }
+
+      return nextVotes
+    })
   }
 
   const voteCount = Object.values(votes).filter(Boolean).length
@@ -207,7 +219,7 @@ export function VotingPhase({
             const isNominee = player.id === nomineeId
             const butlerMaster = getButlerMaster(player, state)
             const voted = votes[player.id]
-            const canVote = canPlayerVote(player, votes)
+            const canVote = canPlayerVote(player, state, votes)
             const ghostVoteSpent = isDead && hasEffect(player, 'used_dead_vote')
 
             // Specifically for displaying the proper translation, we do a manual check if they have the master assignment.

@@ -15,6 +15,7 @@ import {
 import type { NightStep } from '../../../../../components/layouts'
 import { PlayerPickerList } from '../../../../../components/inputs'
 import { Button, Icon } from '../../../../../components/atoms'
+import { isAlive } from '../../../../types'
 import { isMalfunctioning } from '../../../../effects'
 
 import en from './i18n/en'
@@ -43,6 +44,7 @@ const definition: RoleDefinition = {
   icon: 'conciergeBell',
   nightOrder: 35, // Late — the Butler's choice doesn't interact with other night abilities
   chaos: 20,
+  shouldWake: (_game, player) => isAlive(player),
 
   nightSteps: [
     {
@@ -144,8 +146,10 @@ const definition: RoleDefinition = {
       <NightActionLayout
         player={player}
         title={roleT.info}
-        description={interpolate(roleT.selectPlayerAsMaster, { player: player.name })}
-        audience="player_choice"
+        description={interpolate(roleT.selectPlayerAsMaster, {
+          player: player.name,
+        })}
+        audience='player_choice'
       >
         <div className='mb-6'>
           <PlayerPickerList
