@@ -183,6 +183,13 @@ export type Translations = {
     actionPending: string
     allActionsComplete: string
     proceedToDay: string
+    minionStartingInfo: string
+    minionStartingInfoDescription: string
+    demonStartingInfo: string
+    demonStartingInfoDescription: string
+    selectDemonBluffs: string
+    selectDemonBluffsDescription: string
+    theseAreYourBluffs: string
 
     // Night Steps
     nightSteps: string
@@ -343,6 +350,7 @@ export type Translations = {
     effectRemoved: string
     roleChanged: string
     setupAction: string
+    evilStartingInfoShown: string
   }
 
   // Scripts

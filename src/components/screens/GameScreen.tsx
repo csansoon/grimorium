@@ -28,6 +28,7 @@ import {
   getVoteBenchmark,
   hasVirginExecutionToday,
   finishVirginExecutionDay,
+  EvilStartingInfoStatus,
 } from '../../lib/game'
 import { isAlive } from '../../lib/types'
 import {
@@ -58,6 +59,7 @@ import { NightActionResult, SetupActionResult } from '../../lib/roles/types'
 import type { FC } from 'react'
 import { SetupActionsScreen } from './SetupActionsScreen'
 import { DawnScreen } from './DawnScreen'
+import { EvilStartingInfoScreen } from './EvilStartingInfoScreen'
 import { DeathRevealScreen, DeathRevealEntry } from './DeathRevealScreen'
 import { PlayerFacingContext } from '../context/PlayerFacingContext'
 import { PlayerFacingScreen } from '../layouts/PlayerFacingScreen'
@@ -73,6 +75,7 @@ type Screen =
   | { type: 'role_revelation' }
   | { type: 'showing_role'; playerId: string }
   | { type: 'night_dashboard' }
+  | { type: 'starting_info'; status: EvilStartingInfoStatus }
   | { type: 'night_action'; playerId: string; roleId: string }
   | { type: 'night_follow_up'; followUp: AvailableNightFollowUp }
   | { type: 'dawn'; deaths: string[]; round: number }
@@ -217,6 +220,16 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     }
 
     setScreen({ type: 'night_action', playerId, roleId })
+  }
+
+  const handleOpenStartingInfo = (status: EvilStartingInfoStatus) => {
+    setScreen({ type: 'starting_info', status })
+  }
+
+  const handleStartingInfoComplete = (result: NightActionResult) => {
+    const newGame = applyNightAction(game, result)
+    updateGame(newGame)
+    setScreen({ type: 'night_dashboard' })
   }
 
   const handleOpenNightFollowUp = (followUp: AvailableNightFollowUp) => {
@@ -669,6 +682,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
           <NightDashboard
             game={game}
             state={state}
+            onOpenStartingInfo={handleOpenStartingInfo}
             onOpenNightAction={handleOpenNightAction}
             onOpenNightFollowUp={handleOpenNightFollowUp}
             onStartDay={handleStartDay}
@@ -681,6 +695,20 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             }}
           />
         )
+
+      case 'starting_info': {
+        const player = getPlayer(state, screen.status.playerId)
+        if (!player) return null
+        return (
+          <EvilStartingInfoScreen
+            game={game}
+            state={state}
+            player={player}
+            kind={screen.status.kind}
+            onComplete={handleStartingInfoComplete}
+          />
+        )
+      }
 
       case 'night_follow_up': {
         const FollowUpComponent = screen.followUp.ActionComponent

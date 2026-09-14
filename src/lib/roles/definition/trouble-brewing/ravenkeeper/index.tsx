@@ -84,7 +84,9 @@ const definition: RoleDefinition = {
   id: 'ravenkeeper',
   team: 'townsfolk',
   icon: 'birdHouse',
-  nightOrder: 35,
+  nightOrder: 40,
+  firstNightOrder: null,
+  otherNightOrder: 40,
   chaos: 30,
 
   shouldWake: (game: Game, player: PlayerState) => {

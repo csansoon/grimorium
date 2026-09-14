@@ -42,7 +42,9 @@ const definition: RoleDefinition = {
   id: 'butler',
   team: 'outsider',
   icon: 'conciergeBell',
-  nightOrder: 35, // Late — the Butler's choice doesn't interact with other night abilities
+  nightOrder: 80,
+  firstNightOrder: 80,
+  otherNightOrder: 80,
   chaos: 20,
   shouldWake: (_game, player) => isAlive(player),
 

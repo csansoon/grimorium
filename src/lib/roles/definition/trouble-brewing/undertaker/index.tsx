@@ -74,7 +74,9 @@ const definition: RoleDefinition = {
   id: 'undertaker',
   team: 'townsfolk',
   icon: 'shovel',
-  nightOrder: 40, // Wakes late, after deaths are resolved
+  nightOrder: 70,
+  firstNightOrder: null,
+  otherNightOrder: 70,
   chaos: 20,
 
   // Only wake if alive, not first night, AND there was an execution during the day

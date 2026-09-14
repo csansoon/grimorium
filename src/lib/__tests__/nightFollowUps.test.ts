@@ -230,18 +230,17 @@ describe('getNightRolesStatus', () => {
 
     const result = getNightRolesStatus(game)
 
-    // Should only contain the washerwoman action (done),
-    // and potentially the imp if it should wake.
+    // First-night-only characters are excluded entirely on later nights,
+    // even if legacy history contains an action for them.
     // NO role_change_reveal items should be present.
     const hasRoleChangeReveal = result.some(
       (r: any) => r.actionType === 'role_change_reveal',
     )
     expect(hasRoleChangeReveal).toBe(false)
 
-    // The washerwoman should be "done"
+    // The Washerwoman has no other-night slot.
     const washerwoman = result.find((r) => r.roleId === 'washerwoman')
-    expect(washerwoman).toBeDefined()
-    expect(washerwoman!.status).toBe('done')
+    expect(washerwoman).toBeUndefined()
   })
 })
 

@@ -178,6 +178,16 @@ const en: Translations = {
     actionPending: 'Pending',
     allActionsComplete: 'All night actions have been processed',
     proceedToDay: 'Proceed to Day',
+    minionStartingInfo: 'Minion Information',
+    minionStartingInfoDescription:
+      'These players are on your evil team. Remember who your Demon is.',
+    demonStartingInfo: 'Demon Information',
+    demonStartingInfoDescription:
+      'These are your Minions and three good characters that are not in play.',
+    selectDemonBluffs: 'Choose the Demon Bluffs',
+    selectDemonBluffsDescription:
+      'Before waking the Demon, select three out-of-play good characters.',
+    theseAreYourBluffs: 'These characters are not in play:',
 
     // Night Steps
     nightSteps: 'Night Steps',
@@ -344,6 +354,7 @@ const en: Translations = {
     effectRemoved: 'Storyteller removed {effect} from {player}',
     roleChanged: '{player} became the {role}',
     setupAction: 'Setup: {player} configured as {role}',
+    evilStartingInfoShown: '{player} received their evil starting information',
   },
 
   scripts: {

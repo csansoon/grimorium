@@ -243,24 +243,40 @@ export function applySetupAction(
  */
 function getPlayersWithNightRoles(
   state: GameState,
-): { player: PlayerState; role: RoleDefinition }[] {
-  const result: { player: PlayerState; role: RoleDefinition }[] = []
+): { player: PlayerState; role: RoleDefinition; order: number }[] {
+  const result: { player: PlayerState; role: RoleDefinition; order: number }[] =
+    []
 
   for (const player of state.players) {
     const role = getRole(player.roleId)
-    if (role && role.nightOrder !== null) {
-      result.push({ player, role })
+    if (role) {
+      const order = getRoleNightOrder(role, state.round)
+      if (order !== null) result.push({ player, role, order })
     }
   }
 
-  // Sort by nightOrder (stable sort preserves player order for ties)
-  result.sort((a, b) => (a.role.nightOrder ?? 0) - (b.role.nightOrder ?? 0))
+  // Stable sort preserves seating order for characters sharing a slot.
+  result.sort((a, b) => a.order - b.order)
 
   return result
 }
 
+export function getRoleNightOrder(
+  role: RoleDefinition,
+  round: number,
+): number | null {
+  const override = round === 1 ? role.firstNightOrder : role.otherNightOrder
+  return override === undefined ? role.nightOrder : override
+}
+
 export type GameStep =
   | { type: 'role_reveal'; playerId: string }
+  | {
+      type: 'starting_info'
+      playerId: string
+      roleId: string
+      kind: 'minion' | 'demon'
+    }
   | { type: 'night_action'; playerId: string; roleId: string }
   | { type: 'night_action_skip'; playerId: string; roleId: string }
   | { type: 'night_waiting' }
@@ -294,6 +310,18 @@ export function getNextStep(game: Game): GameStep {
   }
 
   if (state.phase === 'night') {
+    const startingInfo = getEvilStartingInfoStatus(game).find(
+      (status) => status.status === 'pending',
+    )
+    if (startingInfo) {
+      return {
+        type: 'starting_info',
+        playerId: startingInfo.playerId,
+        roleId: startingInfo.roleId,
+        kind: startingInfo.kind,
+      }
+    }
+
     // Find which players have acted this night (tracked by playerId)
     const nightStartIndex = findLastEventIndex(game, 'night_started')
     const actedPlayerIds = new Set(
@@ -980,6 +1008,60 @@ export type NightRoleStatus = {
   playerId: string
   playerName: string
   status: 'pending' | 'done'
+}
+
+export type EvilStartingInfoStatus = {
+  kind: 'minion' | 'demon'
+  playerId: string
+  playerName: string
+  roleId: string
+  status: 'pending' | 'done'
+}
+
+/**
+ * First-night evil information, in official order: all Minions learn the evil
+ * team before the Demon learns their Minions and three bluffs. On a shared
+ * phone each Minion gets an individual private reveal.
+ */
+export function getEvilStartingInfoStatus(
+  game: Game,
+): EvilStartingInfoStatus[] {
+  const state = getCurrentState(game)
+  if (
+    state.phase !== 'night' ||
+    state.round !== 1 ||
+    state.players.length < 7
+  ) {
+    return []
+  }
+
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  const completed = new Set(
+    game.history
+      .slice(nightStartIndex + 1)
+      .filter((entry) => entry.type === 'starting_info')
+      .map((entry) => entry.data.playerId as string),
+  )
+
+  const makeStatus = (
+    player: PlayerState,
+    kind: EvilStartingInfoStatus['kind'],
+  ): EvilStartingInfoStatus => ({
+    kind,
+    playerId: player.id,
+    playerName: player.name,
+    roleId: player.roleId,
+    status: completed.has(player.id) ? 'done' : 'pending',
+  })
+
+  const minions = state.players
+    .filter((player) => getRole(player.roleId)?.team === 'minion')
+    .map((player) => makeStatus(player, 'minion'))
+  const demons = state.players
+    .filter((player) => getRole(player.roleId)?.team === 'demon')
+    .map((player) => makeStatus(player, 'demon'))
+
+  return [...minions, ...demons]
 }
 
 /**

@@ -145,6 +145,11 @@ export type RoleDefinition = {
   // Night order - lower numbers wake first, null means doesn't wake at night
   nightOrder: number | null
 
+  // Optional edition-sheet overrides. Explicit null excludes the role on that
+  // kind of night; undefined falls back to nightOrder for custom characters.
+  firstNightOrder?: number | null
+  otherNightOrder?: number | null
+
   // Chaos metric (0-100) — how much chaos this role introduces to the game.
   // Used by the role pool generator to rank pools by complexity.
   chaos: number

@@ -60,6 +60,7 @@ export type RichMessage = MessagePart[]
 export type EventType =
   | 'game_created'
   | 'night_started'
+  | 'starting_info'
   | 'role_revealed'
   | 'night_action'
   | 'night_skipped'

@@ -36,7 +36,9 @@ const definition: RoleDefinition = {
   id: 'librarian',
   team: 'townsfolk',
   icon: 'bookMarked',
-  nightOrder: 11,
+  nightOrder: 30,
+  firstNightOrder: 30,
+  otherNightOrder: null,
   chaos: 15,
   shouldWake: (game, player) =>
     isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,

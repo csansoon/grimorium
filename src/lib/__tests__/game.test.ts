@@ -16,8 +16,11 @@ import {
   finishVirginExecutionDay,
   addEffectToPlayer,
   removeEffectFromPlayer,
+  getEvilStartingInfoStatus,
+  getRoleNightOrder,
 } from '../game'
 import { getCurrentState, hasEffect, PlayerState } from '../types'
+import { getRole } from '../roles'
 import {
   makePlayer,
   makeGame,
@@ -677,5 +680,136 @@ describe('manual effect management', () => {
     const state = getCurrentState(updated)
     const p1 = state.players.find((p) => p.id === 'p1')!
     expect(hasEffect(p1, 'safe')).toBe(false)
+  })
+})
+
+// ============================================================================
+// OFFICIAL NIGHT ORDER
+// ============================================================================
+
+describe('Trouble Brewing night order', () => {
+  it('uses the official first-night character order', () => {
+    const expected = [
+      ['poisoner', 10],
+      ['washerwoman', 20],
+      ['librarian', 30],
+      ['investigator', 40],
+      ['chef', 50],
+      ['empath', 60],
+      ['fortune_teller', 70],
+      ['butler', 80],
+      ['spy', 90],
+    ] as const
+
+    expect(
+      expected.map(([roleId]) => [
+        roleId,
+        getRoleNightOrder(getRole(roleId)!, 1),
+      ]),
+    ).toEqual(expected)
+    expect(getRoleNightOrder(getRole('imp')!, 1)).toBeNull()
+    expect(getRoleNightOrder(getRole('monk')!, 1)).toBeNull()
+    expect(getRoleNightOrder(getRole('ravenkeeper')!, 1)).toBeNull()
+    expect(getRoleNightOrder(getRole('undertaker')!, 1)).toBeNull()
+  })
+
+  it('uses the official other-night character order', () => {
+    const expected = [
+      ['poisoner', 10],
+      ['monk', 20],
+      ['imp', 30],
+      ['ravenkeeper', 40],
+      ['empath', 50],
+      ['fortune_teller', 60],
+      ['undertaker', 70],
+      ['butler', 80],
+      ['spy', 90],
+    ] as const
+
+    expect(
+      expected.map(([roleId]) => [
+        roleId,
+        getRoleNightOrder(getRole(roleId)!, 2),
+      ]),
+    ).toEqual(expected)
+    expect(getRoleNightOrder(getRole('washerwoman')!, 2)).toBeNull()
+    expect(getRoleNightOrder(getRole('chef')!, 2)).toBeNull()
+  })
+
+  it('places every Minion briefing before the Demon briefing', () => {
+    const players = [
+      makePlayer({ id: 'poisoner', roleId: 'poisoner' }),
+      makePlayer({ id: 'chef', roleId: 'chef' }),
+      makePlayer({ id: 'spy', roleId: 'spy' }),
+      makePlayer({ id: 'imp', roleId: 'imp' }),
+      makePlayer({ id: 'empath', roleId: 'empath' }),
+      makePlayer({ id: 'slayer', roleId: 'slayer' }),
+      makePlayer({ id: 'saint', roleId: 'saint' }),
+    ]
+    const game = makeGameWithHistory(
+      [
+        {
+          type: 'night_started',
+          stateOverrides: { phase: 'night', round: 1 },
+        },
+      ],
+      makeState({ phase: 'night', round: 1, players }),
+    )
+
+    expect(
+      getEvilStartingInfoStatus(game).map(({ roleId, kind }) => ({
+        roleId,
+        kind,
+      })),
+    ).toEqual([
+      { roleId: 'poisoner', kind: 'minion' },
+      { roleId: 'spy', kind: 'minion' },
+      { roleId: 'imp', kind: 'demon' },
+    ])
+    expect(getNextStep(game)).toEqual({
+      type: 'starting_info',
+      playerId: 'poisoner',
+      roleId: 'poisoner',
+      kind: 'minion',
+    })
+  })
+
+  it('tracks briefings separately from character actions', () => {
+    const players = [
+      makePlayer({ id: 'poisoner', roleId: 'poisoner' }),
+      makePlayer({ id: 'imp', roleId: 'imp' }),
+      ...Array.from({ length: 5 }, (_, index) =>
+        makePlayer({ id: `good-${index}`, roleId: 'chef' }),
+      ),
+    ]
+    const game = makeGameWithHistory(
+      [
+        {
+          type: 'night_started',
+          stateOverrides: { phase: 'night', round: 1 },
+        },
+        { type: 'starting_info', data: { playerId: 'poisoner' } },
+      ],
+      makeState({ phase: 'night', round: 1, players }),
+    )
+
+    const statuses = getEvilStartingInfoStatus(game)
+    expect(
+      statuses.find((status) => status.playerId === 'poisoner')?.status,
+    ).toBe('done')
+    expect(statuses.find((status) => status.playerId === 'imp')?.status).toBe(
+      'pending',
+    )
+  })
+
+  it('omits evil starting information in a 5- or 6-player game', () => {
+    const players = [
+      makePlayer({ roleId: 'poisoner' }),
+      makePlayer({ roleId: 'imp' }),
+      ...Array.from({ length: 4 }, () => makePlayer({ roleId: 'chef' })),
+    ]
+    const game = makeGame(makeState({ phase: 'night', round: 1, players }))
+
+    expect(getEvilStartingInfoStatus(game)).toEqual([])
   })
 })

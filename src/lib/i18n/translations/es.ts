@@ -179,6 +179,16 @@ const es: Translations = {
     actionPending: 'Pendiente',
     allActionsComplete: 'Todas las acciones nocturnas han sido procesadas',
     proceedToDay: 'Proceder al Día',
+    minionStartingInfo: 'Información de Esbirro',
+    minionStartingInfoDescription:
+      'Estos jugadores están en tu equipo malvado. Recuerda quién es tu Demonio.',
+    demonStartingInfo: 'Información de Demonio',
+    demonStartingInfoDescription:
+      'Estos son tus Esbirros y tres personajes buenos que no están en juego.',
+    selectDemonBluffs: 'Elige los Faroles del Demonio',
+    selectDemonBluffsDescription:
+      'Antes de despertar al Demonio, selecciona tres personajes buenos que no estén en juego.',
+    theseAreYourBluffs: 'Estos personajes no están en juego:',
 
     // Night Steps
     nightSteps: 'Pasos Nocturnos',
@@ -345,6 +355,8 @@ const es: Translations = {
     effectRemoved: 'El Cuentacuentos eliminó {effect} de {player}',
     roleChanged: '{player} se convirtió en el/la {role}',
     setupAction: 'Configuración: {player} configurado como {role}',
+    evilStartingInfoShown:
+      '{player} recibió su información inicial del equipo malvado',
   },
 
   scripts: {

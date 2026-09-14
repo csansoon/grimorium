@@ -16,7 +16,7 @@ describe('Poisoner', () => {
   // ================================================================
 
   describe('shouldWake', () => {
-    it('wakes on the first night (to see evil team info)', () => {
+    it('wakes on the first night to poison after evil starting info', () => {
       const player = makePlayer({ id: 'p1', roleId: 'poisoner' })
       const game = makeGameWithHistory(
         [
@@ -78,8 +78,9 @@ describe('Poisoner', () => {
       expect(definition.NightAction).toBeDefined()
     })
 
-    it('has nightOrder 5 (wakes before most roles)', () => {
-      expect(definition.nightOrder).toBe(5)
+    it('acts first among character abilities on every night', () => {
+      expect(definition.firstNightOrder).toBe(10)
+      expect(definition.otherNightOrder).toBe(10)
     })
   })
 
@@ -88,7 +89,7 @@ describe('Poisoner', () => {
       const poisoner = makePlayer({ id: 'p1', roleId: 'poisoner' })
       const target = makePlayer({ id: 'p2', roleId: 'chef' })
 
-      const result = createPoisonResult(poisoner, target, false)
+      const result = createPoisonResult(poisoner, target)
 
       expect(result.addEffects?.p2?.[0]).toMatchObject({
         type: 'poisoned',
@@ -106,7 +107,7 @@ describe('Poisoner', () => {
         )
         const target = makePlayer({ id: 'p2', roleId: 'chef' })
 
-        const result = createPoisonResult(poisoner, target, false)
+        const result = createPoisonResult(poisoner, target)
 
         expect(result.addEffects).toBeUndefined()
         expect(result.entries[0].data).toMatchObject({
