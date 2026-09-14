@@ -5,6 +5,9 @@ import { TeamId } from '../teams/types'
 export type { ScriptId, ScriptDefinition, RoleDistribution } from './types'
 export type { GeneratorPreset, GeneratedPool } from './types'
 
+export const MIN_BASE_PLAYERS = 5
+export const MAX_BASE_PLAYERS = 15
+
 // ============================================================================
 // ALL ROLE IDS (static list to avoid circular dependency with roles module)
 // ============================================================================
@@ -59,7 +62,6 @@ export const SCRIPTS: Record<ScriptId, ScriptDefinition> = {
       'mayor',
       'saint',
       'recluse',
-      'villager',
       'scarlet_woman',
       'poisoner',
       'drunk',

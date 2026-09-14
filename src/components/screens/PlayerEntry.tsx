@@ -4,6 +4,7 @@ import { useI18n } from '../../lib/i18n'
 import { Button, Icon, BackButton } from '../atoms'
 import { ScreenFooter } from '../layouts/ScreenFooter'
 import { getLastGamePlayers } from '../../lib/storage'
+import { MAX_BASE_PLAYERS, MIN_BASE_PLAYERS } from '../../lib/scripts'
 
 type Props = {
   onNext: (players: string[]) => void
@@ -15,9 +16,6 @@ type PlayerItem = {
   name: string
 }
 
-const MIN_PLAYERS = 5
-const MAX_PLAYERS = 20
-
 let _nextId = 0
 function makePlayerItem(name: string): PlayerItem {
   return { id: `p-${_nextId++}`, name }
@@ -28,17 +26,19 @@ export function PlayerEntry({ onNext, onBack }: Props) {
   const [players, setPlayers] = useState<PlayerItem[]>(() => {
     _nextId = 0
     const lastPlayers = getLastGamePlayers()
-    if (lastPlayers.length >= MIN_PLAYERS)
-      return lastPlayers.map((n) => makePlayerItem(n))
+    if (lastPlayers.length >= MIN_BASE_PLAYERS)
+      return lastPlayers
+        .slice(0, MAX_BASE_PLAYERS)
+        .map((n) => makePlayerItem(n))
     if (lastPlayers.length > 0) {
       return [
         ...lastPlayers.map((n) => makePlayerItem(n)),
-        ...Array(MIN_PLAYERS - lastPlayers.length)
+        ...Array(MIN_BASE_PLAYERS - lastPlayers.length)
           .fill('')
           .map(() => makePlayerItem('')),
       ]
     }
-    return Array(MIN_PLAYERS)
+    return Array(MIN_BASE_PLAYERS)
       .fill('')
       .map(() => makePlayerItem(''))
   })
@@ -154,7 +154,7 @@ export function PlayerEntry({ onNext, onBack }: Props) {
     prevLengthRef.current = players.length
   }, [players.length])
 
-  const maxPlayersReached = players.length >= MAX_PLAYERS
+  const maxPlayersReached = players.length >= MAX_BASE_PLAYERS
 
   const addPlayer = () => {
     if (maxPlayersReached) return
@@ -166,19 +166,19 @@ export function PlayerEntry({ onNext, onBack }: Props) {
   }
 
   const removePlayer = (index: number) => {
-    if (players.length <= MIN_PLAYERS) return
+    if (players.length <= MIN_BASE_PLAYERS) return
     setPlayers(players.filter((_, i) => i !== index))
   }
 
   const handleNext = () => {
     const validPlayers = players.filter((p) => p.name.trim().length > 0)
-    if (validPlayers.length >= MIN_PLAYERS) {
+    if (validPlayers.length >= MIN_BASE_PLAYERS) {
       onNext(validPlayers.map((p) => p.name))
     }
   }
 
   const validCount = players.filter((p) => p.name.trim().length > 0).length
-  const canProceed = validCount >= MIN_PLAYERS
+  const canProceed = validCount >= MIN_BASE_PLAYERS
 
   return (
     <div className='min-h-app bg-gradient-to-b from-grimoire-purple via-grimoire-dark to-grimoire-darker flex flex-col'>
@@ -246,7 +246,7 @@ export function PlayerEntry({ onNext, onBack }: Props) {
                 placeholder={`${t.newGame.playerPlaceholder} ${index + 1}`}
                 className='flex-1 bg-white/5 border border-parchment-500/30 text-parchment-100 placeholder-parchment-500 rounded-lg px-4 py-3 focus:outline-none focus:border-mystic-gold/50 focus:ring-1 focus:ring-mystic-gold/30 transition-colors'
               />
-              {players.length > MIN_PLAYERS && (
+              {players.length > MIN_BASE_PLAYERS && (
                 <button
                   onClick={() => removePlayer(index)}
                   className='p-3 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors'
