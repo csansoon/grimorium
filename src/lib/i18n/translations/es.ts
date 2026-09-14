@@ -132,6 +132,10 @@ const es: Translations = {
     selectSlayer: 'Seleccionar Matador',
     selectTarget: 'Seleccionar Objetivo',
     confirmSlayerShot: 'Confirmar Disparo',
+    slayerRegistrationTitle: 'Registro del Matador',
+    slayerRegistrationDescription:
+      'Este jugador puede registrarse como el Demonio. Decide cómo se registra para este disparo del Matador.',
+    registerAsDemon: 'Registrar como Demonio',
 
     goodWins: '¡Gana el Bien!',
     evilWins: '¡Gana el Mal!',

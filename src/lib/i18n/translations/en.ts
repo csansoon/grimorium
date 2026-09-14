@@ -133,6 +133,10 @@ const en: Translations = {
     selectSlayer: 'Select Slayer',
     selectTarget: 'Select Target',
     confirmSlayerShot: 'Confirm Shot',
+    slayerRegistrationTitle: 'Slayer Registration',
+    slayerRegistrationDescription:
+      'This player may register as the Demon. Decide how they register for this Slayer shot.',
+    registerAsDemon: 'Register as Demon',
 
     goodWins: 'Good Wins!',
     evilWins: 'Evil Wins!',

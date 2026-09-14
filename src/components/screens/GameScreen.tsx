@@ -471,17 +471,18 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       addEffects: result.addEffects,
       removeEffects: result.removeEffects,
     }
-    const newGame = applyPipelineChanges(game, changes)
-    updateGame(newGame)
+    const directGame = applyPipelineChanges(game, changes)
 
-    const newState = getCurrentState(newGame)
-    const winner = checkWinCondition(newState, newGame)
-    if (winner) {
-      const finalGame = endGame(newGame, winner)
-      updateGame(finalGame)
-      setScreen({ type: 'game_over' })
-    } else {
-      // Check if action caused any deaths
+    const finishDayAction = (newGame: Game) => {
+      const newState = getCurrentState(newGame)
+      const winner = checkWinCondition(newState, newGame)
+      if (winner) {
+        const finalGame = endGame(newGame, winner)
+        updateGame(finalGame)
+        setScreen({ type: 'game_over' })
+        return
+      }
+
       const oldPlayerSet = new Set(
         state.players.filter(isAlive).map((p) => p.id),
       )
@@ -511,6 +512,18 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       } else {
         setScreen(nextScreen)
       }
+    }
+
+    if (result.intent) {
+      const pipelineResult = resolveIntent(
+        result.intent,
+        getCurrentState(directGame),
+        directGame,
+      )
+      processPipelineResult(pipelineResult, directGame, finishDayAction)
+    } else {
+      updateGame(directGame)
+      finishDayAction(directGame)
     }
   }
 

@@ -50,6 +50,22 @@ describe('Safe effect', () => {
 
       expect(handler.appliesTo(intent, protectedPlayer, state)).toBe(false)
     })
+
+    it('does not protect against a Slayer shot', () => {
+      const protectedPlayer = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'recluse' }),
+        'safe',
+      )
+      const state = makeState({ players: [protectedPlayer] })
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'p1',
+        targetId: 'p2',
+        cause: 'slayer',
+      }
+
+      expect(handler.appliesTo(intent, protectedPlayer, state)).toBe(false)
+    })
   })
 
   // ================================================================

@@ -137,6 +137,9 @@ export type Translations = {
     selectSlayer: string
     selectTarget: string
     confirmSlayerShot: string
+    slayerRegistrationTitle: string
+    slayerRegistrationDescription: string
+    registerAsDemon: string
 
     // Game Over
     goodWins: string

@@ -13,7 +13,11 @@ const deflectHandler: IntentHandler = {
   intentType: 'kill',
   priority: 10, // After protection; a protected Mayor cannot die or redirect
   appliesTo: (intent, effectPlayer) => {
-    return intent.type === 'kill' && intent.targetId === effectPlayer.id
+    return (
+      intent.type === 'kill' &&
+      intent.cause === 'demon' &&
+      intent.targetId === effectPlayer.id
+    )
   },
   handle: (intent, effectPlayer) => {
     const kill = intent as KillIntent
