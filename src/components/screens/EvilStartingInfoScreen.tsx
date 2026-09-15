@@ -146,7 +146,7 @@ export function EvilStartingInfoScreen({
         }
       >
         <div className='mb-6'>
-          <EvilTeamReveal state={state} viewer={player} viewerType={kind} />
+          <EvilTeamReveal state={state} viewer={player} />
         </div>
 
         {kind === 'demon' && (

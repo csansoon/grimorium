@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createGame, PlayerSetup } from './lib/game'
-import {
-  saveGame,
-  setCurrentGameId,
-  getGame,
-  clearCurrentGame,
-} from './lib/storage'
+import { saveGame, setCurrentGameId, getGame } from './lib/storage'
 import {
   MainMenu,
   PlayerEntry,
@@ -21,6 +16,7 @@ import { useRouter } from './hooks/useRouter'
 import { RoleId } from './lib/roles/types'
 import { getRole } from './lib/roles'
 import { ScriptId } from './lib/scripts'
+import { returnToMainMenu } from './lib/navigation'
 
 // Internal screens for the new-game wizard (not routed — stays on "/")
 type NewGameScreen =
@@ -28,11 +24,11 @@ type NewGameScreen =
   | { type: 'new_game_script'; players: string[] }
   | { type: 'new_game_roles'; players: string[]; scriptId: ScriptId }
   | {
-    type: 'new_game_assign'
-    players: string[]
-    scriptId: ScriptId
-    selectedRoles: string[]
-  }
+      type: 'new_game_assign'
+      players: string[]
+      scriptId: ScriptId
+      selectedRoles: string[]
+    }
 
 function App() {
   const { path, navigate, replace } = useRouter()
@@ -143,10 +139,7 @@ function App() {
       <GameScreen
         key={gameId}
         initialGame={game}
-        onMainMenu={() => {
-          clearCurrentGame()
-          navigate('/')
-        }}
+        onMainMenu={() => returnToMainMenu(navigate)}
       />
     )
   }

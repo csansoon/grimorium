@@ -430,7 +430,7 @@ const es: Translations = {
     p1_roundNominateLabel: 'Nominaciones',
     p1_conceptsTitle: 'Conceptos Clave',
     p1_conceptPoison:
-      '**Envenenamiento** — La habilidad de un jugador envenenado da información incorrecta (o no funciona). Ellos no saben que están envenenados.',
+      '**Envenenamiento** — Un jugador envenenado no tiene habilidad. El Cuentacuentos finge que funciona y puede darle información arbitraria, verdadera o falsa. El jugador no sabe que está envenenado.',
     p1_conceptDrunk:
       '**Ebriedad** — Como estar envenenado, pero permanente. El Borracho cree que tiene un rol distinto.',
     p1_conceptDead:
@@ -474,7 +474,7 @@ const es: Translations = {
     p2_night5:
       'La aplicación maneja todos los tiempos, efectos de estado y caducidades automáticamente.',
     p2_nightTip:
-      'Si un rol tiene un **mal funcionamiento**, la aplicación te pedirá que proporciones información falsa.',
+      'Si un rol tiene un **mal funcionamiento**, la aplicación te permite dar cualquier resultado que su habilidad pudiera producir normalmente, ya sea verdadero o falso.',
     p2_dayTitle: 'Fase de Día y Amanecer',
     p2_day1: '**Amanecer:** La aplicación anuncia las muertes de la noche.',
     p2_day2: '**Fase de Día:** Los jugadores discuten.',
@@ -548,7 +548,7 @@ const es: Translations = {
     p4_pitfalls2:
       '❌ No olvides de que los jugadores muertos pueden emitir un último voto, de todas formas el software lleva el conteo.',
     p4_pitfalls3:
-      '❌ No te estreses con los roles de Desinformación — la aplicación te avisará para dar resultados falsos.',
+      '❌ No te estreses con la información de roles que funcionan mal: la aplicación te permite elegir cualquier resultado válido, verdadero o falso.',
     p4_pitfalls4:
       '✅ Usa el botón de Omitir sin miedo en aquellos roles que no sea necesaria acción la noche en curso.',
   },

@@ -26,6 +26,8 @@ export type EffectId =
   | 'drunk'
   | 'butler_master'
   | 'imp_starpass_pending'
+  | 'info_ping_correct'
+  | 'info_ping_wrong'
 
 /**
  * Semantic type of an effect for badge styling.

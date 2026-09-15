@@ -4,9 +4,18 @@ const es = {
     'Cada noche, puedes mirar el Grimorio. Podrías registrarte como bueno y como un Aldeano o Forastero, incluso estando muerto.',
   quote: 'Sé lo que ellos saben. Simplemente no saben que yo lo sé.',
   lines: [
-    { type: 'NIGHT', text: 'Cada noche, puedes mirar el Grimorio del Cuentacuentos.' },
-    { type: 'ADVICE', text: 'El Grimorio contiene los roles reales y el estado de todos los jugadores.' },
-    { type: 'PASSIVE', text: 'Puedes registrarte como bueno, como Aldeano o como Forastero.' },
+    {
+      type: 'NIGHT',
+      text: 'Cada noche, puedes mirar el Grimorio del Cuentacuentos.',
+    },
+    {
+      type: 'ADVICE',
+      text: 'El Grimorio contiene los roles reales y el estado de todos los jugadores.',
+    },
+    {
+      type: 'PASSIVE',
+      text: 'Puedes registrarte como bueno, como Aldeano o como Forastero.',
+    },
     { type: 'WIN', text: 'Mantén vivo a tu Demonio para ganar.' },
   ],
 
@@ -15,7 +24,7 @@ const es = {
   spyGrimoireDescription: 'Puedes ver a todos los jugadores y sus roles.',
   spyMalfunctionTitle: 'El Grimorio',
   spyMalfunctionDescription:
-    'El Espía está envenenado o borracho, ¡así que no debería ver el Grimorio real! Para mantener la ilusión, no le entregues el dispositivo. Muéstrale un Grimorio físico con información falsa en su lugar.',
+    'El Espía está envenenado o borracho, así que no tiene habilidad y no debería ver el Grimorio real. Para mantener la ilusión, muéstrale un Grimorio físico alternativo que puede contener información verdadera o falsa.',
 
   // First night: evil team
   evilTeamTitle: 'Tu Equipo Malvado',

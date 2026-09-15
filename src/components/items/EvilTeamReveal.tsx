@@ -1,7 +1,6 @@
-import { useMemo } from 'react'
 import { GameState, PlayerState } from '../../lib/types'
 import { getRole } from '../../lib/roles'
-import { useI18n, getRoleName } from '../../lib/i18n'
+import { useI18n } from '../../lib/i18n'
 import { Icon } from '../atoms'
 
 // ============================================================================
@@ -13,14 +12,27 @@ type EvilTeamRevealProps = {
   state: GameState
   /** The player viewing this screen (excluded from the list) */
   viewer: PlayerState
-  /** "demon" shows minions + demon info; "minion" shows other minions + demons */
-  viewerType: 'demon' | 'minion'
 }
 
-type TeamMember = {
-  player: PlayerState
-  showRole: boolean
-  teamLabel: string
+export type EvilTeamMember = {
+  playerId: string
+  playerName: string
+  team: 'minion' | 'demon'
+}
+
+export function getEvilTeamMembers(
+  state: GameState,
+  viewer: PlayerState,
+): EvilTeamMember[] {
+  return state.players
+    .filter((player) => player.id !== viewer.id)
+    .flatMap((player) => {
+      const team = getRole(player.roleId)?.team
+      return team === 'minion' || team === 'demon'
+        ? [{ playerId: player.id, playerName: player.name, team }]
+        : []
+    })
+    .sort((a, b) => Number(b.team === 'demon') - Number(a.team === 'demon'))
 }
 
 // ============================================================================
@@ -30,51 +42,13 @@ type TeamMember = {
 /**
  * Shared component for first-night evil team revelation.
  *
- * - When viewerType is "demon": Shows minion players (name only, no role).
- * - When viewerType is "minion": Shows other minions (name only) and demons
- *   (name + role name, since minions learn the Demon's identity).
+ * Evil players learn which players are Minions and Demons, but never their
+ * specific characters. The view-model deliberately omits role IDs so the
+ * player-facing screen cannot accidentally reveal them.
  */
-export function EvilTeamReveal({
-  state,
-  viewer,
-  viewerType,
-}: EvilTeamRevealProps) {
-  const { t, language } = useI18n()
-
-  const teamMembers: TeamMember[] = useMemo(() => {
-    const members: TeamMember[] = []
-
-    for (const p of state.players) {
-      if (p.id === viewer.id) continue
-      const role = getRole(p.roleId)
-      if (!role) continue
-
-      if (role.team === 'minion') {
-        members.push({
-          player: p,
-          showRole: false, // Never show minion roles
-          teamLabel: t.teams.minion.name,
-        })
-      } else if (role.team === 'demon') {
-        members.push({
-          player: p,
-          showRole: viewerType === 'minion', // Minions learn the Demon role
-          teamLabel: t.teams.demon.name,
-        })
-      }
-    }
-
-    // Sort: demons first (when viewer is minion), then minions
-    members.sort((a, b) => {
-      const aRole = getRole(a.player.roleId)
-      const bRole = getRole(b.player.roleId)
-      if (aRole?.team === 'demon' && bRole?.team !== 'demon') return -1
-      if (aRole?.team !== 'demon' && bRole?.team === 'demon') return 1
-      return 0
-    })
-
-    return members
-  }, [state.players, viewer.id, viewerType, t, language])
+export function EvilTeamReveal({ state, viewer }: EvilTeamRevealProps) {
+  const { t } = useI18n()
+  const teamMembers = getEvilTeamMembers(state, viewer)
 
   if (teamMembers.length === 0) {
     return (
@@ -87,12 +61,11 @@ export function EvilTeamReveal({
   return (
     <div className='space-y-3'>
       {teamMembers.map((member) => {
-        const role = getRole(member.player.roleId)
-        const isDemon = role?.team === 'demon'
+        const isDemon = member.team === 'demon'
 
         return (
           <div
-            key={member.player.id}
+            key={member.playerId}
             className={`p-4 rounded-lg flex items-center gap-3 ${
               isDemon
                 ? 'bg-red-900/30 border border-red-700/40'
@@ -117,14 +90,12 @@ export function EvilTeamReveal({
             {/* Player info */}
             <div>
               <div className='text-parchment-100 font-medium'>
-                {member.player.name}
+                {member.playerName}
               </div>
               <div
                 className={`text-xs ${isDemon ? 'text-red-400/70' : 'text-orange-400/70'}`}
               >
-                {member.showRole && role
-                  ? getRoleName(role.id, language)
-                  : member.teamLabel}
+                {t.teams[member.team].name}
               </div>
             </div>
           </div>

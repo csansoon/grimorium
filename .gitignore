@@ -14,6 +14,8 @@ dist-ssr
 *.local
 .pnpm-store
 .cursor
+bun.lock
+bun.lockb
 
 # Editor directories and files
 .vscode/*
@@ -30,4 +32,3 @@ dist-ssr
 dev-dist
 
 TODO.md
-

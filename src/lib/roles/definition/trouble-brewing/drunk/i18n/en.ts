@@ -2,11 +2,17 @@ const en = {
   name: 'Drunk',
   description:
     'You do not know you are the Drunk. You think you are a Townsfolk character, but you are not.',
-  quote: 'The warmest nights are the ones you can\'t quite remember.',
+  quote: "The warmest nights are the ones you can't quite remember.",
   lines: [
     { type: 'PASSIVE', text: 'You believe you are a Townsfolk. You are not.' },
-    { type: 'CAVEAT', text: 'Instead of this card, you see another role\'s card.' },
-    { type: 'CAVEAT', text: 'Whatever ability you think you have doesn\'t work. Your information is always false.' },
+    {
+      type: 'CAVEAT',
+      text: "Instead of this card, you see another role's card.",
+    },
+    {
+      type: 'CAVEAT',
+      text: 'Whatever ability you think you have does not work. The Storyteller may give you true or false information.',
+    },
     { type: 'WIN', text: 'Execute the Demon to win.' },
   ],
 

@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react'
 import { GameState, PlayerState } from '../../lib/types'
-import { RoleDefinition, NightActionResult } from '../../lib/roles/types'
+import {
+  EffectToAdd,
+  RoleDefinition,
+  NightActionResult,
+} from '../../lib/roles/types'
 import { getRole, getAllRoles } from '../../lib/roles/index'
 import { getTeam, TeamId } from '../../lib/teams'
 import { useI18n, getRoleName, getRoleTranslations } from '../../lib/i18n'
@@ -65,6 +69,29 @@ type Props = {
   state: GameState
   player: PlayerState
   onComplete: (result: NightActionResult) => void
+}
+
+export function buildInfoPingEffects(
+  shownPlayerIds: string[],
+  targetPlayerId: string,
+  sourceRoleId: string,
+  shownRoleId: string,
+): Record<string, EffectToAdd[]> {
+  return Object.fromEntries(
+    shownPlayerIds.map((playerId) => [
+      playerId,
+      [
+        {
+          type:
+            playerId === targetPlayerId
+              ? 'info_ping_correct'
+              : 'info_ping_wrong',
+          data: { sourceRoleId, shownRoleId },
+          expiresAt: 'never' as const,
+        },
+      ],
+    ]),
+  )
 }
 
 export function InfoRoleNightAction({
@@ -217,8 +244,12 @@ export function InfoRoleNightAction({
   // Malfunction flow: can proceed from select_players when 2 players selected
   const canCompleteMalfunctionSelect = selectedPlayers.length === 2
 
-  // Malfunction flow: can proceed from configure_malfunction when role selected
-  const canCompleteMalfunctionConfig = selectedRoleId !== null
+  // Malfunction flow: the Storyteller must choose both the claimed role and
+  // which of the two players should carry that claim in the Grimoire.
+  const canCompleteMalfunctionConfig =
+    selectedRoleId !== null &&
+    selectedTargetPlayer !== null &&
+    selectedPlayers.includes(selectedTargetPlayer)
 
   // ================================================================
   // Handlers
@@ -253,6 +284,10 @@ export function InfoRoleNightAction({
     setSelectedRoleId((prev) => (prev === roleId ? null : roleId))
   }
 
+  const handleMalfunctionSelectTarget = (playerId: string) => {
+    setSelectedTargetPlayer((prev) => (prev === playerId ? null : playerId))
+  }
+
   const handleCompleteSelectPlayers = () => {
     if (malfunctioning) {
       if (!canCompleteMalfunctionSelect) return
@@ -264,9 +299,7 @@ export function InfoRoleNightAction({
   }
 
   const handleCompleteMalfunctionConfig = () => {
-    if (!selectedRoleId) return
-    // Auto-assign target player for history (arbitrary — info is false)
-    if (!selectedTargetPlayer) setSelectedTargetPlayer(selectedPlayers[0])
+    if (!canCompleteMalfunctionConfig) return
     setMalfunctionConfigDone(true)
     setPhase('step_list')
   }
@@ -328,6 +361,12 @@ export function InfoRoleNightAction({
           },
         },
       ],
+      addEffects: buildInfoPingEffects(
+        selectedPlayers,
+        selectedTargetPlayer,
+        config.roleId,
+        selectedRoleId,
+      ),
     })
   }
 
@@ -590,6 +629,18 @@ export function InfoRoleNightAction({
             onSelect={handleMalfunctionSelectRole}
             selectionCount={1}
             colorMode='team'
+          />
+        </StepSection>
+
+        <StepSection step={2} label={t.game.chooseFalseTarget}>
+          <PlayerPickerList
+            players={allPlayers.filter((candidate) =>
+              selectedPlayers.includes(candidate.id),
+            )}
+            selected={selectedTargetPlayer ? [selectedTargetPlayer] : []}
+            onSelect={handleMalfunctionSelectTarget}
+            selectionCount={1}
+            variant='blue'
           />
         </StepSection>
       </NarratorSetupLayout>

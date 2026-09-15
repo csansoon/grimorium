@@ -429,7 +429,7 @@ const en: Translations = {
     p1_roundNominateLabel: 'Nominations',
     p1_conceptsTitle: 'Key Concepts',
     p1_conceptPoison:
-      "**Poisoning** — A poisoned player's ability gives wrong information (or doesn't work). They don't know they're poisoned.",
+      "**Poisoning** — A poisoned player has no ability. The Storyteller pretends it works and may give arbitrary true or false information. The player does not know they're poisoned.",
     p1_conceptDrunk:
       "**Drunkenness** — Like poisoning, but permanent. The Drunk thinks they're a different role entirely.",
     p1_conceptDead:
@@ -473,7 +473,7 @@ const en: Translations = {
     p2_night5:
       'The app handles all timing, status effects, and expiration automatically.',
     p2_nightTip:
-      'If a role is **malfunctioning**, the app prompts you to provide false information.',
+      'If a role is **malfunctioning**, the app lets you provide any result their ability could normally produce, whether true or false.',
     p2_dayTitle: 'Dawn & Day Phase',
     p2_day1: '**Dawn:** The app announces overnight deaths.',
     p2_day2: '**Day Phase:** Players discuss.',
@@ -543,7 +543,7 @@ const en: Translations = {
     p4_pitfalls2:
       "❌ Don't forget that dead players get one final vote — the app tracks this, but remind players.",
     p4_pitfalls3:
-      "❌ Don't stress about misinformation from malfunctioning roles — the app will prompt you to provide false info.",
+      "❌ Don't stress about information from malfunctioning roles — the app lets you choose any legal result, whether true or false.",
     p4_pitfalls4:
       '✅ Use the "Skip" option when a role doesn\'t need to act (the app supports this).',
   },
