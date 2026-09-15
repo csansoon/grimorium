@@ -16,6 +16,7 @@ import Poisoned from './definition/poisoned'
 import Drunk from './definition/drunk'
 import ButlerMaster from './definition/butler-master'
 import ImpStarpassPending from './definition/imp-starpass-pending'
+import { InfoPingCorrect, InfoPingWrong } from './definition/info-ping'
 
 export const EFFECTS: Record<EffectId, EffectDefinition> = {
   dead: Dead,
@@ -33,6 +34,8 @@ export const EFFECTS: Record<EffectId, EffectDefinition> = {
   drunk: Drunk,
   butler_master: ButlerMaster,
   imp_starpass_pending: ImpStarpassPending,
+  info_ping_correct: InfoPingCorrect,
+  info_ping_wrong: InfoPingWrong,
 }
 
 export function getEffect(effectId: string): EffectDefinition | undefined {

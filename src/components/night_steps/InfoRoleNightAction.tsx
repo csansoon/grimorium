@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react'
 import { GameState, PlayerState } from '../../lib/types'
-import { RoleDefinition, NightActionResult } from '../../lib/roles/types'
+import {
+  EffectToAdd,
+  RoleDefinition,
+  NightActionResult,
+} from '../../lib/roles/types'
 import { getRole, getAllRoles } from '../../lib/roles/index'
 import { getTeam, TeamId } from '../../lib/teams'
 import { useI18n, getRoleName, getRoleTranslations } from '../../lib/i18n'
@@ -65,6 +69,29 @@ type Props = {
   state: GameState
   player: PlayerState
   onComplete: (result: NightActionResult) => void
+}
+
+export function buildInfoPingEffects(
+  shownPlayerIds: string[],
+  targetPlayerId: string,
+  sourceRoleId: string,
+  shownRoleId: string,
+): Record<string, EffectToAdd[]> {
+  return Object.fromEntries(
+    shownPlayerIds.map((playerId) => [
+      playerId,
+      [
+        {
+          type:
+            playerId === targetPlayerId
+              ? 'info_ping_correct'
+              : 'info_ping_wrong',
+          data: { sourceRoleId, shownRoleId },
+          expiresAt: 'never' as const,
+        },
+      ],
+    ]),
+  )
 }
 
 export function InfoRoleNightAction({
@@ -329,6 +356,12 @@ export function InfoRoleNightAction({
           },
         },
       ],
+      addEffects: buildInfoPingEffects(
+        selectedPlayers,
+        selectedTargetPlayer,
+        config.roleId,
+        selectedRoleId,
+      ),
     })
   }
 
