@@ -265,7 +265,8 @@ export function InfoRoleNightAction({
 
   const handleCompleteMalfunctionConfig = () => {
     if (!selectedRoleId) return
-    // Auto-assign target player for history (arbitrary — info is false)
+    // Auto-assign a legal target for history; malfunction information may be
+    // true or false at the Storyteller's discretion.
     if (!selectedTargetPlayer) setSelectedTargetPlayer(selectedPlayers[0])
     setMalfunctionConfigDone(true)
     setPhase('step_list')
