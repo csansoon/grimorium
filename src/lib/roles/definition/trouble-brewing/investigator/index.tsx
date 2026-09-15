@@ -35,7 +35,9 @@ const definition: RoleDefinition = {
   id: 'investigator',
   team: 'townsfolk',
   icon: 'search',
-  nightOrder: 12,
+  nightOrder: 40,
+  firstNightOrder: 40,
+  otherNightOrder: null,
   chaos: 15,
   shouldWake: (game, player) =>
     isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,

@@ -1,8 +1,14 @@
 import { EffectDefinition } from '../../types'
-import { IntentHandler, NominateIntent } from '../../../pipeline/types'
+import {
+  HandlerResult,
+  IntentHandler,
+  NominateIntent,
+} from '../../../pipeline/types'
 import { PlayerState } from '../../../types'
 import { getRole } from '../../../roles'
+import { isMalfunctioning } from '../..'
 import { registerEffectTranslations } from '../../../i18n'
+import { VirginRegistrationUI } from '../../../../components/items/VirginRegistrationUI'
 
 import en from './i18n/en'
 import es from './i18n/es'
@@ -31,6 +37,84 @@ function getActualTeam(player: PlayerState): string {
   return getRole(player.roleId)?.team ?? 'townsfolk'
 }
 
+function canRegisterAsTownsfolk(player: PlayerState): boolean {
+  return player.effects.some((effect) => {
+    const canRegisterAs = effect.data?.canRegisterAs as
+      | { teams?: string[] }
+      | undefined
+    return canRegisterAs?.teams?.includes('townsfolk') === true
+  })
+}
+
+function triggerVirgin(
+  nom: NominateIntent,
+  effectPlayer: PlayerState,
+): HandlerResult {
+  return {
+    action: 'prevent',
+    reason: 'virgin_triggered',
+    stateChanges: {
+      entries: [
+        {
+          type: 'virgin_execution',
+          message: [
+            {
+              type: 'i18n',
+              key: 'roles.virgin.history.townsfolkExecuted',
+              params: { nominator: nom.nominatorId },
+            },
+          ],
+          data: {
+            nominatorId: nom.nominatorId,
+            nomineeId: nom.nomineeId,
+            virginTriggered: true,
+          },
+        },
+      ],
+      stateUpdates: { phase: 'day' },
+      addEffects: {
+        [nom.nominatorId]: [
+          {
+            type: 'dead',
+            data: { cause: 'virgin' },
+            expiresAt: 'never',
+          },
+        ],
+      },
+      removeEffects: { [effectPlayer.id]: ['pure'] },
+    },
+  }
+}
+
+function spendVirgin(
+  nom: NominateIntent,
+  effectPlayer: PlayerState,
+): HandlerResult {
+  return {
+    action: 'allow',
+    stateChanges: {
+      entries: [
+        {
+          type: 'virgin_spent',
+          message: [
+            {
+              type: 'i18n',
+              key: 'roles.virgin.history.lostPurity',
+              params: { nominator: nom.nominatorId },
+            },
+          ],
+          data: {
+            nominatorId: nom.nominatorId,
+            nomineeId: nom.nomineeId,
+            virginTriggered: false,
+          },
+        },
+      ],
+      removeEffects: { [effectPlayer.id]: ['pure'] },
+    },
+  }
+}
+
 const pureHandler: IntentHandler = {
   intentType: 'nominate',
   priority: 10,
@@ -48,75 +132,21 @@ const pureHandler: IntentHandler = {
     const isTownsfolk = getActualTeam(nominator) === 'townsfolk'
 
     if (isTownsfolk) {
-      // Townsfolk nominates Virgin → Nominator is executed immediately
+      return triggerVirgin(nom, effectPlayer)
+    }
+
+    if (!isMalfunctioning(nominator) && canRegisterAsTownsfolk(nominator)) {
       return {
-        action: 'prevent',
-        reason: 'virgin_triggered',
-        stateChanges: {
-          entries: [
-            {
-              type: 'virgin_execution',
-              message: [
-                {
-                  type: 'i18n',
-                  key: 'roles.virgin.history.townsfolkExecuted',
-                  params: {
-                    nominator: nom.nominatorId,
-                  },
-                },
-              ],
-              data: {
-                nominatorId: nom.nominatorId,
-                nomineeId: nom.nomineeId,
-                virginTriggered: true,
-              },
-            },
-          ],
-          stateUpdates: { phase: 'day' },
-          addEffects: {
-            [nom.nominatorId]: [
-              {
-                type: 'dead',
-                data: { cause: 'virgin' },
-                expiresAt: 'never',
-              },
-            ],
-          },
-          removeEffects: {
-            [effectPlayer.id]: ['pure'],
-          },
-        },
-      }
-    } else {
-      // Non-townsfolk nominates Virgin → loses purity, nomination proceeds
-      return {
-        action: 'allow',
-        stateChanges: {
-          entries: [
-            {
-              type: 'virgin_spent',
-              message: [
-                {
-                  type: 'i18n',
-                  key: 'roles.virgin.history.lostPurity',
-                  params: {
-                    nominator: nom.nominatorId,
-                  },
-                },
-              ],
-              data: {
-                nominatorId: nom.nominatorId,
-                nomineeId: nom.nomineeId,
-                virginTriggered: false,
-              },
-            },
-          ],
-          removeEffects: {
-            [effectPlayer.id]: ['pure'],
-          },
-        },
+        action: 'request_ui',
+        UIComponent: VirginRegistrationUI,
+        resume: (registersAsTownsfolk: unknown) =>
+          registersAsTownsfolk
+            ? triggerVirgin(nom, effectPlayer)
+            : spendVirgin(nom, effectPlayer),
       }
     }
+
+    return spendVirgin(nom, effectPlayer)
   },
 }
 

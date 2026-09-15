@@ -34,9 +34,14 @@ describe('Butler', () => {
   // ================================================================
 
   describe('shouldWake', () => {
-    it('wakes on the first night (no shouldWake restriction)', () => {
-      // Butler has no shouldWake function — it always wakes
-      expect(definition.shouldWake).toBeUndefined()
+    it('wakes on the first night while alive', () => {
+      const butler = makePlayer({ id: 'butler', roleId: 'butler' })
+      const game = makeGameWithHistory(
+        [{ type: 'night_started', stateOverrides: { round: 1 } }],
+        makeState({ round: 1, players: [butler] }),
+      )
+
+      expect(definition.shouldWake!(game, butler)).toBe(true)
     })
 
     it('has a nightOrder so it appears in the night dashboard', () => {
@@ -86,9 +91,7 @@ describe('Butler', () => {
       expect(definition.NightAction).toBeDefined()
     })
 
-    it('poisoned Butler still wakes (shouldWake is undefined)', () => {
-      // Butler has no shouldWake, so poisoned/drunk Butler still wakes
-      // to maintain the charade — just the effect isn't applied.
+    it('poisoned Butler still wakes', () => {
       const butler = addEffectTo(
         makePlayer({ id: 'butler', roleId: 'butler' }),
         'poisoned',
@@ -104,11 +107,20 @@ describe('Butler', () => {
         makeState({ round: 2, players: [butler] }),
       )
 
-      // No shouldWake means always wakes (dead effect would prevent via preventsNightWake)
-      expect(definition.shouldWake).toBeUndefined()
-      // The player is alive and has no dead effect, so they'll wake
-      expect(butler.effects.some((e) => e.type === 'dead')).toBe(false)
-      expect(game).toBeDefined() // Game is valid
+      expect(definition.shouldWake!(game, butler)).toBe(true)
+    })
+
+    it('dead Butler does not wake', () => {
+      const butler = addEffectTo(
+        makePlayer({ id: 'butler', roleId: 'butler' }),
+        'dead',
+      )
+      const game = makeGameWithHistory(
+        [{ type: 'night_started', stateOverrides: { round: 2 } }],
+        makeState({ round: 2, players: [butler] }),
+      )
+
+      expect(definition.shouldWake!(game, butler)).toBe(false)
     })
   })
 })

@@ -12,9 +12,7 @@ import {
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import { RoleCard } from '../../../../../components/items/RoleCard'
 import { PerceptionConfigStep } from '../../../../../components/items'
-import {
-  TeamBackground,
-} from '../../../../../components/items/TeamBackground'
+import { TeamBackground } from '../../../../../components/items/TeamBackground'
 import {
   NightStepListLayout,
   PlayerFacingScreen,
@@ -54,8 +52,11 @@ function findExecutedPlayerId(game: {
   if (lastDayStartIndex !== -1) {
     for (let i = lastDayStartIndex; i < game.history.length; i++) {
       const entry = game.history[i]
-      if (entry.type === 'execution') {
+      if (entry.type === 'execution' && entry.data.died !== false) {
         return entry.data.playerId as string
+      }
+      if (entry.type === 'virgin_execution') {
+        return entry.data.nominatorId as string
       }
     }
   }
@@ -73,7 +74,9 @@ const definition: RoleDefinition = {
   id: 'undertaker',
   team: 'townsfolk',
   icon: 'shovel',
-  nightOrder: 40, // Wakes late, after deaths are resolved
+  nightOrder: 70,
+  firstNightOrder: null,
+  otherNightOrder: 70,
   chaos: 20,
 
   // Only wake if alive, not first night, AND there was an execution during the day

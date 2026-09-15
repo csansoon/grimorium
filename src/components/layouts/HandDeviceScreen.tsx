@@ -13,11 +13,7 @@ export function HandDeviceScreen({ playerName, onReady }: Props) {
     <div className='min-h-app bg-gradient-to-b from-indigo-950 via-grimoire-purple to-grimoire-darker flex flex-col items-center justify-center px-6'>
       <div className='text-center max-w-sm'>
         <div className='mb-6'>
-          <Icon
-            name='smartphone'
-            size='4xl'
-            className='text-indigo-400/80 mx-auto'
-          />
+          <Icon name='eye' size='4xl' className='text-indigo-400/80 mx-auto' />
         </div>
         <h1 className='font-tarot text-2xl text-parchment-100 tracking-widest-xl uppercase mb-3'>
           {interpolate(t.game.handDeviceTo, { player: playerName })}

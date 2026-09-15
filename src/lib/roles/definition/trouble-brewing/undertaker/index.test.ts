@@ -115,6 +115,53 @@ describe('Undertaker', () => {
       )
       expect(definition.shouldWake!(game, player)).toBe(true)
     })
+
+    it('wakes after the Virgin executes their Townsfolk nominator', () => {
+      const player = makePlayer({ id: 'p1', roleId: 'undertaker' })
+      const game = makeGameWithHistory(
+        [
+          {
+            type: 'day_started',
+            data: { round: 1 },
+            stateOverrides: { round: 1, phase: 'day' },
+          },
+          {
+            type: 'virgin_execution',
+            data: { nominatorId: 'p2', nomineeId: 'p3' },
+          },
+          {
+            type: 'night_started',
+            data: { round: 2 },
+            stateOverrides: { round: 2, phase: 'night' },
+          },
+        ],
+        makeState({ round: 2, players: [player] }),
+      )
+
+      expect(definition.shouldWake!(game, player)).toBe(true)
+    })
+
+    it('does not wake when an already-dead player was executed', () => {
+      const player = makePlayer({ id: 'p1', roleId: 'undertaker' })
+      const game = makeGameWithHistory(
+        [
+          {
+            type: 'day_started',
+            data: { round: 1 },
+            stateOverrides: { round: 1, phase: 'day' },
+          },
+          { type: 'execution', data: { playerId: 'p2', died: false } },
+          {
+            type: 'night_started',
+            data: { round: 2 },
+            stateOverrides: { round: 2, phase: 'night' },
+          },
+        ],
+        makeState({ round: 2, players: [player] }),
+      )
+
+      expect(definition.shouldWake!(game, player)).toBe(false)
+    })
   })
 
   // ================================================================

@@ -94,8 +94,56 @@ describe('default resolvers', () => {
     expect(result.type).toBe('resolved')
     if (result.type === 'resolved') {
       expect(result.stateChanges.entries[0].type).toBe('execution')
+      expect(result.stateChanges.entries[0].data.died).toBe(true)
       expect(result.stateChanges.addEffects?.['p1']).toBeDefined()
       expect(result.stateChanges.addEffects!['p1'][0].type).toBe('dead')
+    }
+  })
+
+  it('killing an already-dead player causes no new death', () => {
+    const deadTarget = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'villager' }),
+      'dead',
+    )
+    const demon = makePlayer({ id: 'p2', roleId: 'imp' })
+    const state = makeState({
+      phase: 'night',
+      round: 2,
+      players: [deadTarget, demon],
+    })
+
+    const result = resolveIntent(
+      { type: 'kill', sourceId: 'p2', targetId: 'p1', cause: 'demon' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.addEffects).toBeUndefined()
+    }
+  })
+
+  it('records an already-dead player as executed without killing them again', () => {
+    const deadTarget = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'villager' }),
+      'dead',
+    )
+    const state = makeState({ phase: 'day', round: 2, players: [deadTarget] })
+
+    const result = resolveIntent(
+      { type: 'execute', playerId: 'p1', cause: 'execution' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.entries[0]).toMatchObject({
+        type: 'execution',
+        data: { playerId: 'p1', died: false },
+      })
+      expect(result.stateChanges.addEffects).toBeUndefined()
     }
   })
 })
@@ -105,6 +153,79 @@ describe('default resolvers', () => {
 // ============================================================================
 
 describe('handler behavior', () => {
+  it('makes the Scarlet Woman the Imp on a 5+ alive star-pass without UI', () => {
+    let imp = addEffectTo(
+      makePlayer({ id: 'imp', roleId: 'imp' }),
+      'imp_starpass_pending',
+    )
+    let scarletWoman = addEffectTo(
+      makePlayer({ id: 'sw', roleId: 'scarlet_woman' }),
+      'demon_successor',
+    )
+    const others = Array.from({ length: 3 }, (_, index) =>
+      makePlayer({ id: `p${index}` }),
+    )
+    const state = makeState({ players: [imp, scarletWoman, ...others] })
+
+    const result = resolveIntent(
+      {
+        type: 'kill',
+        sourceId: imp.id,
+        targetId: imp.id,
+        cause: 'imp_self_kill',
+      },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.changeRoles).toEqual({ sw: 'imp' })
+      expect(result.stateChanges.addEffects?.imp?.[0].type).toBe('dead')
+    }
+  })
+
+  it('ignores passive ability handlers owned by dead players', () => {
+    let virgin = addEffectTo(makePlayer({ id: 'p2', roleId: 'virgin' }), 'pure')
+    virgin = addEffectTo(virgin, 'dead')
+    const nominator = makePlayer({ id: 'p1', roleId: 'washerwoman' })
+    const state = makeState({ phase: 'day', players: [nominator, virgin] })
+
+    const result = resolveIntent(
+      { type: 'nominate', nominatorId: 'p1', nomineeId: 'p2' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('resolved')
+    if (result.type === 'resolved') {
+      expect(result.stateChanges.entries).toHaveLength(1)
+      expect(result.stateChanges.entries[0].type).toBe('nomination')
+    }
+  })
+
+  it('protects a Mayor without asking the Storyteller to redirect', () => {
+    let mayor = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'mayor' }),
+      'deflect',
+    )
+    mayor = addEffectTo(mayor, 'safe')
+    const demon = makePlayer({ id: 'p2', roleId: 'imp' })
+    const state = makeState({
+      phase: 'night',
+      round: 2,
+      players: [mayor, demon],
+    })
+
+    const result = resolveIntent(
+      { type: 'kill', sourceId: 'p2', targetId: 'p1', cause: 'demon' },
+      state,
+      makeGame(state),
+    )
+
+    expect(result.type).toBe('prevented')
+  })
+
   it('allow handler merges stateChanges and continues', () => {
     // Safe effect on a player NOT targeted — handler doesn't apply, kill resolves
     const players = [

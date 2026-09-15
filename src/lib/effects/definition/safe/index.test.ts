@@ -50,6 +50,38 @@ describe('Safe effect', () => {
 
       expect(handler.appliesTo(intent, protectedPlayer, state)).toBe(false)
     })
+
+    it('does not protect against a Slayer shot', () => {
+      const protectedPlayer = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'recluse' }),
+        'safe',
+      )
+      const state = makeState({ players: [protectedPlayer] })
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'p1',
+        targetId: 'p2',
+        cause: 'slayer',
+      }
+
+      expect(handler.appliesTo(intent, protectedPlayer, state)).toBe(false)
+    })
+
+    it('still protects an Imp who chooses themself', () => {
+      const protectedImp = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'imp' }),
+        'safe',
+      )
+      const state = makeState({ players: [protectedImp] })
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'p2',
+        targetId: 'p2',
+        cause: 'imp_self_kill',
+      }
+
+      expect(handler.appliesTo(intent, protectedImp, state)).toBe(true)
+    })
   })
 
   // ================================================================
@@ -116,5 +148,9 @@ describe('Safe effect', () => {
         expect(result.stateChanges!.entries![0].data.targetId).toBe('p2')
       }
     })
+  })
+
+  it('runs before optional death redirection', () => {
+    expect(handler.priority).toBe(5)
   })
 })

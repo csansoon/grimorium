@@ -110,6 +110,7 @@ export type DayActionResult = {
   entries: Omit<HistoryEntry, 'id' | 'timestamp' | 'stateAfter'>[]
   addEffects?: Record<string, EffectToAdd[]>
   removeEffects?: Record<string, string[]>
+  intent?: Intent
 }
 
 export type DayActionDefinition = {

@@ -10,7 +10,7 @@ import {
   startDay,
   applyNightAction,
   skipNightAction,
-  nominate,
+  resolveNomination,
   resolveVote,
   executeAtEndOfDay,
   endGame,
@@ -25,7 +25,10 @@ import {
   getNominatorsToday,
   getNomineesToday,
   getBlockStatus,
+  getVoteBenchmark,
   hasVirginExecutionToday,
+  finishVirginExecutionDay,
+  EvilStartingInfoStatus,
 } from '../../lib/game'
 import { isAlive } from '../../lib/types'
 import {
@@ -56,6 +59,7 @@ import { NightActionResult, SetupActionResult } from '../../lib/roles/types'
 import type { FC } from 'react'
 import { SetupActionsScreen } from './SetupActionsScreen'
 import { DawnScreen } from './DawnScreen'
+import { EvilStartingInfoScreen } from './EvilStartingInfoScreen'
 import { DeathRevealScreen, DeathRevealEntry } from './DeathRevealScreen'
 import { PlayerFacingContext } from '../context/PlayerFacingContext'
 import { PlayerFacingScreen } from '../layouts/PlayerFacingScreen'
@@ -71,6 +75,7 @@ type Screen =
   | { type: 'role_revelation' }
   | { type: 'showing_role'; playerId: string }
   | { type: 'night_dashboard' }
+  | { type: 'starting_info'; status: EvilStartingInfoStatus }
   | { type: 'night_action'; playerId: string; roleId: string }
   | { type: 'night_follow_up'; followUp: AvailableNightFollowUp }
   | { type: 'dawn'; deaths: string[]; round: number }
@@ -101,8 +106,6 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     intent: import('../../lib/pipeline/types').Intent
     onResult: (result: unknown) => void
   } | null>(null)
-
-
 
   // Player-facing state — set by PlayerFacingScreen wrapper inside NightAction components
   const [isPlayerFacing, setIsPlayerFacing] = useState(false)
@@ -219,6 +222,16 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
     setScreen({ type: 'night_action', playerId, roleId })
   }
 
+  const handleOpenStartingInfo = (status: EvilStartingInfoStatus) => {
+    setScreen({ type: 'starting_info', status })
+  }
+
+  const handleStartingInfoComplete = (result: NightActionResult) => {
+    const newGame = applyNightAction(game, result)
+    updateGame(newGame)
+    setScreen({ type: 'night_dashboard' })
+  }
+
   const handleOpenNightFollowUp = (followUp: AvailableNightFollowUp) => {
     setScreen({ type: 'night_follow_up', followUp })
   }
@@ -293,11 +306,19 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       const deadPlayers = deaths
         .map((id) => state.players.find((p) => p.id === id))
         .filter(Boolean)
-        .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
+        .map((p) => ({
+          playerId: p!.id,
+          playerName: p!.name,
+          roleId: p!.roleId,
+        }))
 
       if (deadPlayers.length > 0) {
         // Death reveal goes straight to day — dawn announcement is redundant
-        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: { type: 'day' } })
+        setScreen({
+          type: 'death_reveal',
+          deaths: deadPlayers,
+          next: { type: 'day' },
+        })
       } else {
         // No deaths: show dawn screen with "no one died" message
         setScreen({ type: 'dawn', deaths, round: state.round })
@@ -318,48 +339,57 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
   }
 
   const handleNominate = (nominatorId: string, nomineeId: string) => {
-    const newGame = nominate(game, nominatorId, nomineeId)
-    updateGame(newGame)
+    const result = resolveNomination(game, nominatorId, nomineeId)
+    if (!result) return
 
-    const newState = getCurrentState(newGame)
-    // Check if an effect intercepted (e.g., Virgin killing the nominator)
-    const winner = checkWinCondition(newState, newGame)
-    if (winner) {
-      const finalGame = endGame(newGame, winner)
-      updateGame(finalGame)
-      setScreen({ type: 'game_over' })
-    } else {
-      // Check if the virgin killed someone
-      const oldPlayerSet = new Set(state.players.filter(isAlive).map(p => p.id))
-      const newPlayerSet = new Set(newState.players.filter(isAlive).map(p => p.id))
-      const deaths = Array.from(oldPlayerSet).filter(id => !newPlayerSet.has(id))
-
-      if (deaths.length > 0) {
-        // Virgin triggered — skip voting, go back to day (no further nominations)
-        const deadPlayers = deaths
-          .map((id) => newState.players.find((p) => p.id === id))
-          .filter(Boolean)
-          .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
-        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: { type: 'day' } })
+    processPipelineResult(result, game, (newGame) => {
+      const newState = getCurrentState(newGame)
+      const winner = checkWinCondition(newState, newGame)
+      if (winner) {
+        const finalGame = endGame(newGame, winner)
+        updateGame(finalGame)
+        setScreen({ type: 'game_over' })
       } else {
-        // Show voting screen for this nominee
-        setScreen({ type: 'voting', nomineeId })
+        const oldPlayerSet = new Set(
+          state.players.filter(isAlive).map((p) => p.id),
+        )
+        const newPlayerSet = new Set(
+          newState.players.filter(isAlive).map((p) => p.id),
+        )
+        const deaths = Array.from(oldPlayerSet).filter(
+          (id) => !newPlayerSet.has(id),
+        )
+        const virginTriggered = newGame.history
+          .slice(game.history.length)
+          .some((entry) => entry.type === 'virgin_execution')
+
+        if (virginTriggered && deaths.length > 0) {
+          const deadPlayers = deaths
+            .map((id) => newState.players.find((p) => p.id === id))
+            .filter(Boolean)
+            .map((p) => ({
+              playerId: p!.id,
+              playerName: p!.name,
+              roleId: p!.roleId,
+            }))
+          const nightGame = finishVirginExecutionDay(newGame)
+          updateGame(nightGame)
+          setScreen({
+            type: 'death_reveal',
+            deaths: deadPlayers,
+            next: { type: 'night_dashboard' },
+          })
+        } else {
+          setScreen({ type: 'voting', nomineeId })
+        }
       }
-    }
+    })
   }
 
-  const handleVoteComplete = (
-    voteCount: number,
-    votedIds?: string[],
-  ) => {
+  const handleVoteComplete = (voteCount: number, votedIds?: string[]) => {
     if (screen.type !== 'voting') return
 
-    const newGame = resolveVote(
-      game,
-      screen.nomineeId,
-      voteCount,
-      votedIds,
-    )
+    const newGame = resolveVote(game, screen.nomineeId, voteCount, votedIds)
     updateGame(newGame)
 
     // No execution here — deferred to end of day
@@ -368,15 +398,25 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
 
   const handleEndDay = () => {
     // Check who is alive before execution
-    const preExecAliveIds = new Set(state.players.filter(p => !p.effects.some(e => e.type === 'dead')).map(p => p.id))
+    const preExecAliveIds = new Set(
+      state.players
+        .filter((p) => !p.effects.some((e) => e.type === 'dead'))
+        .map((p) => p.id),
+    )
 
     // Execute whoever is on the block (deferred execution)
     let currentGame = executeAtEndOfDay(game)
 
     // Check who is alive after
     const postState = getCurrentState(currentGame)
-    const postExecAliveIds = new Set(postState.players.filter(p => !p.effects.some(e => e.type === 'dead')).map(p => p.id))
-    const deaths = Array.from(preExecAliveIds).filter(id => !postExecAliveIds.has(id))
+    const postExecAliveIds = new Set(
+      postState.players
+        .filter((p) => !p.effects.some((e) => e.type === 'dead'))
+        .map((p) => p.id),
+    )
+    const deaths = Array.from(preExecAliveIds).filter(
+      (id) => !postExecAliveIds.has(id),
+    )
 
     // Check win conditions after execution
     const postExecWinner = checkWinCondition(postState, currentGame)
@@ -407,8 +447,16 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       const deadPlayers = deaths
         .map((id) => postState.players.find((p) => p.id === id))
         .filter(Boolean)
-        .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
-      setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nightDashboardScreen })
+        .map((p) => ({
+          playerId: p!.id,
+          playerName: p!.name,
+          roleId: p!.roleId,
+        }))
+      setScreen({
+        type: 'death_reveal',
+        deaths: deadPlayers,
+        next: nightDashboardScreen,
+      })
     } else {
       setScreen(nightDashboardScreen)
     }
@@ -436,20 +484,27 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
       addEffects: result.addEffects,
       removeEffects: result.removeEffects,
     }
-    const newGame = applyPipelineChanges(game, changes)
-    updateGame(newGame)
+    const directGame = applyPipelineChanges(game, changes)
 
-    const newState = getCurrentState(newGame)
-    const winner = checkWinCondition(newState, newGame)
-    if (winner) {
-      const finalGame = endGame(newGame, winner)
-      updateGame(finalGame)
-      setScreen({ type: 'game_over' })
-    } else {
-      // Check if action caused any deaths
-      const oldPlayerSet = new Set(state.players.filter(isAlive).map(p => p.id))
-      const newPlayerSet = new Set(newState.players.filter(isAlive).map(p => p.id))
-      const deaths = Array.from(oldPlayerSet).filter(id => !newPlayerSet.has(id))
+    const finishDayAction = (newGame: Game) => {
+      const newState = getCurrentState(newGame)
+      const winner = checkWinCondition(newState, newGame)
+      if (winner) {
+        const finalGame = endGame(newGame, winner)
+        updateGame(finalGame)
+        setScreen({ type: 'game_over' })
+        return
+      }
+
+      const oldPlayerSet = new Set(
+        state.players.filter(isAlive).map((p) => p.id),
+      )
+      const newPlayerSet = new Set(
+        newState.players.filter(isAlive).map((p) => p.id),
+      )
+      const deaths = Array.from(oldPlayerSet).filter(
+        (id) => !newPlayerSet.has(id),
+      )
 
       const nextScreen: Screen = { type: 'day' }
 
@@ -457,11 +512,31 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
         const deadPlayers = deaths
           .map((id) => newState.players.find((p) => p.id === id))
           .filter(Boolean)
-          .map((p) => ({ playerId: p!.id, playerName: p!.name, roleId: p!.roleId }))
-        setScreen({ type: 'death_reveal', deaths: deadPlayers, next: nextScreen })
+          .map((p) => ({
+            playerId: p!.id,
+            playerName: p!.name,
+            roleId: p!.roleId,
+          }))
+        setScreen({
+          type: 'death_reveal',
+          deaths: deadPlayers,
+          next: nextScreen,
+        })
       } else {
         setScreen(nextScreen)
       }
+    }
+
+    if (result.intent) {
+      const pipelineResult = resolveIntent(
+        result.intent,
+        getCurrentState(directGame),
+        directGame,
+      )
+      processPipelineResult(pipelineResult, directGame, finishDayAction)
+    } else {
+      updateGame(directGame)
+      finishDayAction(directGame)
     }
   }
 
@@ -607,6 +682,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
           <NightDashboard
             game={game}
             state={state}
+            onOpenStartingInfo={handleOpenStartingInfo}
             onOpenNightAction={handleOpenNightAction}
             onOpenNightFollowUp={handleOpenNightFollowUp}
             onStartDay={handleStartDay}
@@ -619,6 +695,20 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             }}
           />
         )
+
+      case 'starting_info': {
+        const player = getPlayer(state, screen.status.playerId)
+        if (!player) return null
+        return (
+          <EvilStartingInfoScreen
+            game={game}
+            state={state}
+            player={player}
+            kind={screen.status.kind}
+            onComplete={handleStartingInfoComplete}
+          />
+        )
+      }
 
       case 'night_follow_up': {
         const FollowUpComponent = screen.followUp.ActionComponent
@@ -758,6 +848,7 @@ export function GameScreen({ initialGame, onMainMenu }: Props) {
             state={state}
             nomineeId={screen.nomineeId}
             blockStatus={getBlockStatus(game)}
+            voteBenchmark={getVoteBenchmark(game)}
             onVoteComplete={handleVoteComplete}
             onCancel={handleCancelVote}
           />

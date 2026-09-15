@@ -28,7 +28,9 @@ const definition: RoleDefinition = {
   id: 'monk',
   team: 'townsfolk',
   icon: 'church',
-  nightOrder: 20, // Monk wakes before the Demon
+  nightOrder: 20,
+  firstNightOrder: null,
+  otherNightOrder: 20,
   chaos: 25,
   shouldWake: (game, player) =>
     isAlive(player) && (game.history.at(-1)?.stateAfter.round ?? 0) > 1,
@@ -53,10 +55,8 @@ const definition: RoleDefinition = {
 
     const roleT = getRoleTranslations('monk', language)
 
-    // Can only protect other alive players (not themselves)
-    const otherAlivePlayers = state.players.filter(
-      (p) => isAlive(p) && p.id !== player.id,
-    )
+    // "another player" includes dead players, but never the Monk.
+    const otherPlayers = state.players.filter((p) => p.id !== player.id)
 
     const malfunctioning = isMalfunctioning(player)
 
@@ -96,6 +96,7 @@ const definition: RoleDefinition = {
               {
                 type: 'safe',
                 data: { source: 'monk' },
+                sourcePlayerId: player.id,
                 expiresAt: 'end_of_night',
               },
             ],
@@ -131,12 +132,14 @@ const definition: RoleDefinition = {
       <NightActionLayout
         player={player}
         title={roleT.info}
-        description={interpolate(roleT.selectPlayerToProtect, { player: player.name })}
-        audience="player_choice"
+        description={interpolate(roleT.selectPlayerToProtect, {
+          player: player.name,
+        })}
+        audience='player_choice'
       >
         <div className='mb-6'>
           <PlayerPickerList
-            players={otherAlivePlayers}
+            players={otherPlayers}
             selected={selectedTarget ? [selectedTarget] : []}
             onSelect={setSelectedTarget}
             selectionCount={1}

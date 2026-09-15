@@ -135,7 +135,7 @@ describe('DemonSuccessor effect', () => {
       expect(handler.appliesTo(intent, sw, state)).toBe(false)
     })
 
-    it('does not apply for voluntary Imp self-kill (imp_self_kill cause)', () => {
+    it('takes priority for a voluntary Imp self-kill at 5+ alive', () => {
       const { sw, state } = makeScenario({ aliveCount: 6 })
       const intent: KillIntent = {
         type: 'kill',
@@ -144,7 +144,7 @@ describe('DemonSuccessor effect', () => {
         cause: 'imp_self_kill',
       }
 
-      expect(handler.appliesTo(intent, sw, state)).toBe(false)
+      expect(handler.appliesTo(intent, sw, state)).toBe(true)
     })
 
     it('does not apply when the successor is the target', () => {
@@ -271,6 +271,47 @@ describe('DemonSuccessor effect', () => {
       if (result.action === 'allow') {
         expect(result.action).toBe('allow')
         expect(result.stateChanges?.changeRoles).toEqual({ sw: 'imp' })
+      }
+    })
+
+    it('does not grant a second Demon action when conversion happens at night', () => {
+      const { sw, state, game } = makeScenario({ aliveCount: 6 })
+      state.phase = 'night'
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'demon',
+        targetId: 'demon',
+        cause: 'demon',
+      }
+
+      const result = handler.handle(intent, sw, state, game)
+
+      if (result.action === 'allow') {
+        expect(result.stateChanges?.entries).toContainEqual(
+          expect.objectContaining({
+            type: 'night_skipped',
+            data: expect.objectContaining({ playerId: 'sw' }),
+          }),
+        )
+      }
+    })
+
+    it('leaves a daytime successor available to act that night', () => {
+      const { sw, state, game } = makeScenario({ aliveCount: 6 })
+      const intent: ExecuteIntent = {
+        type: 'execute',
+        playerId: 'demon',
+        cause: 'execution',
+      }
+
+      const result = handler.handle(intent, sw, state, game)
+
+      if (result.action === 'allow') {
+        expect(
+          result.stateChanges?.entries.some(
+            (entry) => entry.type === 'night_skipped',
+          ),
+        ).toBe(false)
       }
     })
   })

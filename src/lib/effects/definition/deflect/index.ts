@@ -11,9 +11,13 @@ registerEffectTranslations('deflect', 'es', es)
 
 const deflectHandler: IntentHandler = {
   intentType: 'kill',
-  priority: 5, // Before safe (10) — redirect happens before protection check
+  priority: 10, // After protection; a protected Mayor cannot die or redirect
   appliesTo: (intent, effectPlayer) => {
-    return intent.type === 'kill' && intent.targetId === effectPlayer.id
+    return (
+      intent.type === 'kill' &&
+      (intent.cause === 'demon' || intent.cause === 'imp_self_kill') &&
+      intent.targetId === effectPlayer.id
+    )
   },
   handle: (intent, effectPlayer) => {
     const kill = intent as KillIntent

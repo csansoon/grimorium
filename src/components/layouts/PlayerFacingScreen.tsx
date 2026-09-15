@@ -1,5 +1,16 @@
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { PlayerFacingContext, HandbackContext } from '../context/PlayerFacingContext'
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
+import {
+  PlayerFacingContext,
+  HandbackContext,
+} from '../context/PlayerFacingContext'
 import { HandDeviceScreen } from './HandDeviceScreen'
 import { ReturnDeviceScreen } from './ReturnDeviceScreen'
 
@@ -9,11 +20,11 @@ import { ReturnDeviceScreen } from './ReturnDeviceScreen'
  * current view is player-facing, which hides the Grimoire and History
  * floating buttons to prevent accidental spoilers.
  *
- * When `playerName` is provided, manages the full device hand-off lifecycle:
- *   1. Shows a "Hand the device to {player}" interstitial (HandDeviceScreen)
+ * When `playerName` is provided, manages the full private-reveal lifecycle:
+ *   1. Prompts the Storyteller to wake {player} and show them the screen
  *   2. Renders the actual player-facing content (children)
- *   3. When a child calls `requestHandback(callback)`, shows a
- *      "Return device to Storyteller" interstitial (ReturnDeviceScreen)
+ *   3. When a child calls `requestHandback(callback)`, hides the information
+ *      behind a Storyteller-only confirmation screen
  *   4. Fires the stored callback only after the Storyteller confirms
  *
  * Children access `requestHandback` via the `useHandback()` hook.
@@ -49,22 +60,24 @@ export function PlayerFacingScreen({
     [playerName],
   )
 
-  const handbackCtx = useMemo(
-    () => ({ requestHandback }),
-    [requestHandback],
-  )
+  const handbackCtx = useMemo(() => ({ requestHandback }), [requestHandback])
 
   const handleHandbackReady = useCallback(() => {
     pendingCallback.current?.()
     pendingCallback.current = null
   }, [])
 
-  // State 1: Hand device to player
+  // State 1: Prepare a private player view
   if (!ready && playerName) {
-    return <HandDeviceScreen playerName={playerName} onReady={() => setReady(true)} />
+    return (
+      <HandDeviceScreen
+        playerName={playerName}
+        onReady={() => setReady(true)}
+      />
+    )
   }
 
-  // State 3: Return device to storyteller
+  // State 3: Hide private information before resuming
   if (done) {
     return <ReturnDeviceScreen onReady={handleHandbackReady} />
   }

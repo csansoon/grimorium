@@ -4,17 +4,27 @@ const en = {
     'Each night*, choose a player: they die. If you kill yourself, a Minion becomes the Imp.',
   quote: 'It does not conquer. It merely outlasts.',
   lines: [
-    { type: 'NIGHT', text: 'Each night (except the first), choose a player to kill.' },
-    { type: 'KILL', text: 'If you target yourself, you die. But one of your Minions becomes the new Imp.' },
-    { type: 'TEAM', text: 'On the first night, you learn who your Minions are.' },
+    {
+      type: 'NIGHT',
+      text: 'Each night (except the first), choose a player to kill.',
+    },
+    {
+      type: 'KILL',
+      text: 'If you target yourself, you die. But one of your Minions becomes the new Imp.',
+    },
+    {
+      type: 'TEAM',
+      text: 'On the first night, you learn who your Minions are.',
+    },
     { type: 'WIN', text: 'Keep an Imp alive to win.' },
   ],
 
   // DeflectRedirectUI
   deflectTitle: 'Kill Redirected!',
   deflectDescription:
-    'The Demon targeted {target}, but their kill was deflected. Choose who dies instead.',
+    'The Demon targeted {target}. You may choose another player to die instead.',
   deflectOriginalLabel: 'original target',
+  deflectLetMayorDie: 'Let {target} die',
 
   // Role change reveal
   roleChangedDescription:

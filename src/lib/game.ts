@@ -8,6 +8,8 @@ import {
   getCurrentState,
   hasEffect,
   getAlivePlayers,
+  isAlive,
+  removeEffectsFromInactiveSources,
 } from './types'
 import { getRole } from './roles'
 import { RoleDefinition, NightActionResult, EffectToAdd } from './roles/types'
@@ -16,7 +18,7 @@ import {
   applyPipelineChanges,
   checkDynamicWinConditions,
 } from './pipeline'
-import { NominateIntent, ExecuteIntent } from './pipeline/types'
+import { ExecuteIntent, PipelineResult } from './pipeline/types'
 import { trackEvent } from './analytics'
 
 // ============================================================================
@@ -28,7 +30,11 @@ export type PlayerSetup = {
   roleId: string
 }
 
-export function createGame(name: string, scriptId: string, players: PlayerSetup[]): Game {
+export function createGame(
+  name: string,
+  scriptId: string,
+  players: PlayerSetup[],
+): Game {
   const gameId = generateId()
 
   const playerStates: PlayerState[] = players.map((p) => {
@@ -160,6 +166,8 @@ export function addHistoryEntry(
     }
   }
 
+  newState = removeEffectsFromInactiveSources(currentState, newState)
+
   const historyEntry: HistoryEntry = {
     id: generateId(),
     timestamp: Date.now(),
@@ -235,24 +243,40 @@ export function applySetupAction(
  */
 function getPlayersWithNightRoles(
   state: GameState,
-): { player: PlayerState; role: RoleDefinition }[] {
-  const result: { player: PlayerState; role: RoleDefinition }[] = []
+): { player: PlayerState; role: RoleDefinition; order: number }[] {
+  const result: { player: PlayerState; role: RoleDefinition; order: number }[] =
+    []
 
   for (const player of state.players) {
     const role = getRole(player.roleId)
-    if (role && role.nightOrder !== null) {
-      result.push({ player, role })
+    if (role) {
+      const order = getRoleNightOrder(role, state.round)
+      if (order !== null) result.push({ player, role, order })
     }
   }
 
-  // Sort by nightOrder (stable sort preserves player order for ties)
-  result.sort((a, b) => (a.role.nightOrder ?? 0) - (b.role.nightOrder ?? 0))
+  // Stable sort preserves seating order for characters sharing a slot.
+  result.sort((a, b) => a.order - b.order)
 
   return result
 }
 
+export function getRoleNightOrder(
+  role: RoleDefinition,
+  round: number,
+): number | null {
+  const override = round === 1 ? role.firstNightOrder : role.otherNightOrder
+  return override === undefined ? role.nightOrder : override
+}
+
 export type GameStep =
   | { type: 'role_reveal'; playerId: string }
+  | {
+      type: 'starting_info'
+      playerId: string
+      roleId: string
+      kind: 'minion' | 'demon'
+    }
   | { type: 'night_action'; playerId: string; roleId: string }
   | { type: 'night_action_skip'; playerId: string; roleId: string }
   | { type: 'night_waiting' }
@@ -286,6 +310,18 @@ export function getNextStep(game: Game): GameStep {
   }
 
   if (state.phase === 'night') {
+    const startingInfo = getEvilStartingInfoStatus(game).find(
+      (status) => status.status === 'pending',
+    )
+    if (startingInfo) {
+      return {
+        type: 'starting_info',
+        playerId: startingInfo.playerId,
+        roleId: startingInfo.roleId,
+        kind: startingInfo.kind,
+      }
+    }
+
     // Find which players have acted this night (tracked by playerId)
     const nightStartIndex = findLastEventIndex(game, 'night_started')
     const actedPlayerIds = new Set(
@@ -335,7 +371,6 @@ function findLastEventIndex(game: Game, eventType: string): number {
   return -1
 }
 
-
 // ============================================================================
 // PHASE TRANSITIONS
 // ============================================================================
@@ -346,6 +381,9 @@ export function startNight(game: Game): Game {
 
   // Expire effects that should end at end of day (e.g., Poisoner's poison)
   const stateAfterExpiration = expireEffects(state, 'end_of_day')
+  const alivePlayerIds = stateAfterExpiration.players
+    .filter(isAlive)
+    .map((player) => player.id)
 
   return addHistoryEntry(
     game,
@@ -358,7 +396,7 @@ export function startNight(game: Game): Game {
           params: { round: newRound },
         },
       ],
-      data: { round: newRound },
+      data: { round: newRound, alivePlayerIds },
     },
     {
       phase: 'night',
@@ -376,34 +414,32 @@ export function startDay(game: Game): Game {
     data: {},
   })
 
-  // Find who died tonight
+  // Find who transitioned from alive to dead during this night. The reason
+  // could be a direct Demon kill, a Mayor redirect, or another interaction;
+  // action log shape is deliberately irrelevant.
   const nightStartIndex = findLastEventIndex(updatedGame, 'night_started')
-  const deathEffects: string[] = []
-
-  for (let i = nightStartIndex + 1; i < updatedGame.history.length; i++) {
-    const entry = updatedGame.history[i]
-    if (entry.type === 'night_action' && entry.data.action === 'kill') {
-      deathEffects.push(entry.data.targetId as string)
-    }
-  }
+  const nightStartState = updatedGame.history[nightStartIndex]?.stateAfter
+  const aliveAtNightStart = new Set(
+    nightStartState?.players.filter(isAlive).map((player) => player.id) ?? [],
+  )
+  const currentState = getCurrentState(updatedGame)
+  const deaths = currentState.players.filter(
+    (player) => aliveAtNightStart.has(player.id) && !isAlive(player),
+  )
 
   // Announce deaths
-  const currentState = getCurrentState(updatedGame)
-  for (const playerId of deathEffects) {
-    const player = currentState.players.find((p) => p.id === playerId)
-    if (player && hasEffect(player, 'dead')) {
-      updatedGame = addHistoryEntry(updatedGame, {
-        type: 'effect_added',
-        message: [
-          {
-            type: 'i18n',
-            key: 'history.diedInNight',
-            params: { player: player.id },
-          },
-        ],
-        data: { playerId: player.id, effectType: 'dead' },
-      })
-    }
+  for (const player of deaths) {
+    updatedGame = addHistoryEntry(updatedGame, {
+      type: 'effect_added',
+      message: [
+        {
+          type: 'i18n',
+          key: 'history.diedInNight',
+          params: { player: player.id },
+        },
+      ],
+      data: { playerId: player.id, effectType: 'dead', source: 'night' },
+    })
   }
 
   // Expire effects that should end at end of night (e.g., Monk's protection)
@@ -516,27 +552,34 @@ export function nominate(
   nominatorId: string,
   nomineeId: string,
 ): Game {
-  const state = getCurrentState(game)
-  const nominator = state.players.find((p) => p.id === nominatorId)
-  const nominee = state.players.find((p) => p.id === nomineeId)
+  const result = resolveNomination(game, nominatorId, nomineeId)
+  if (!result) return game
 
-  if (!nominator || !nominee) return game
-
-  const intent: NominateIntent = {
-    type: 'nominate',
-    nominatorId,
-    nomineeId,
-  }
-
-  const result = resolveIntent(intent, state, game)
-
-  // Nominations never require UI input, so result is always resolved or prevented
+  // Callers without a screen orchestrator cannot resolve registration prompts.
   if (result.type === 'needs_input') {
     // This shouldn't happen, but handle gracefully
     return game
   }
 
   return applyPipelineChanges(game, result.stateChanges)
+}
+
+/** Resolve a nomination while preserving any Storyteller registration prompt. */
+export function resolveNomination(
+  game: Game,
+  nominatorId: string,
+  nomineeId: string,
+): PipelineResult | null {
+  const state = getCurrentState(game)
+  const nominator = state.players.find((p) => p.id === nominatorId)
+  const nominee = state.players.find((p) => p.id === nomineeId)
+  if (!nominator || !nominee) return null
+
+  return resolveIntent(
+    { type: 'nominate', nominatorId, nomineeId },
+    state,
+    game,
+  )
 }
 
 // ============================================================================
@@ -573,10 +616,30 @@ export function getBlockStatus(game: Game): BlockStatus {
         playerName: entry.data.nomineeName as string,
         voteCount: entry.data.voteCount as number,
       }
+    } else if (entry.type === 'vote' && entry.data.clearsBlock === true) {
+      block = null
     }
   }
 
   return block
+}
+
+/**
+ * The largest qualifying vote tally reached today. A tie removes everyone
+ * from the block, but the tally remains the number later nominees must beat.
+ */
+export function getVoteBenchmark(game: Game): number {
+  const dayStartIndex = findLastEventIndex(game, 'day_started')
+  if (dayStartIndex === -1) return 0
+
+  let benchmark = 0
+  for (let i = dayStartIndex + 1; i < game.history.length; i++) {
+    const entry = game.history[i]
+    if (entry.type === 'vote' && entry.data.meetsThreshold === true) {
+      benchmark = Math.max(benchmark, entry.data.voteCount as number)
+    }
+  }
+  return benchmark
 }
 
 /**
@@ -606,6 +669,15 @@ export function hasVirginExecutionToday(game: Game): boolean {
     }
   }
   return false
+}
+
+/**
+ * A successful Virgin ability executes immediately and ends the day. There is
+ * no second execution and no remaining nomination window.
+ */
+export function finishVirginExecutionDay(game: Game): Game {
+  if (!hasVirginExecutionToday(game)) return game
+  return processAutoSkips(startNight(game))
 }
 
 /**
@@ -639,20 +711,17 @@ export function resolveVote(
 
   const threshold = getVoteThreshold(state)
   const meetsThreshold = voteCount >= threshold
-  const currentBlock = getBlockStatus(game)
+  const voteBenchmark = getVoteBenchmark(game)
 
   // Determine if this vote replaces the current block
   let replacesBlock = false
   let clearsBlock = false
 
   if (meetsThreshold) {
-    if (!currentBlock) {
-      // No one on the block — this player takes it
-      replacesBlock = true
-    } else if (voteCount > currentBlock.voteCount) {
+    if (voteCount > voteBenchmark) {
       // Strictly more votes — replaces the block
       replacesBlock = true
-    } else if (voteCount === currentBlock.voteCount) {
+    } else if (voteCount === voteBenchmark && voteBenchmark > 0) {
       // Tie — clears the block (nobody executed)
       clearsBlock = true
     }
@@ -675,9 +744,7 @@ export function resolveVote(
   }
 
   // Build history message
-  const messageKey = replacesBlock
-    ? 'history.votePassed'
-    : 'history.voteFailed'
+  const messageKey = replacesBlock ? 'history.votePassed' : 'history.voteFailed'
 
   const updatedGame = addHistoryEntry(
     game,
@@ -716,30 +783,27 @@ export function resolveVote(
 
   // If there's a tie, record a separate entry clearing the block
   if (clearsBlock) {
-    return addHistoryEntry(
-      updatedGame,
-      {
-        type: 'vote',
-        message: [
-          {
-            type: 'i18n',
-            key: 'history.voteTied',
-            params: { player: nomineeId },
-          },
-        ],
-        data: {
-          nomineeId,
-          nomineeName: nominee.name,
-          voteCount,
-          threshold,
-          meetsThreshold: true,
-          replacesBlock: false,
-          clearsBlock: true,
-          // A tie clear means we need to reset the block.
-          // We track this by marking no entry as replacesBlock after this point.
+    return addHistoryEntry(updatedGame, {
+      type: 'vote',
+      message: [
+        {
+          type: 'i18n',
+          key: 'history.voteTied',
+          params: { player: nomineeId },
         },
+      ],
+      data: {
+        nomineeId,
+        nomineeName: nominee.name,
+        voteCount,
+        threshold,
+        meetsThreshold: true,
+        replacesBlock: false,
+        clearsBlock: true,
+        // A tie clear means we need to reset the block.
+        // We track this by marking no entry as replacesBlock after this point.
       },
-    )
+    })
   }
 
   return updatedGame
@@ -784,11 +848,7 @@ export function executeAtEndOfDay(game: Game): Game {
     cause: 'execution',
   }
 
-  const result = resolveIntent(
-    executeIntent,
-    getCurrentState(game),
-    game,
-  )
+  const result = resolveIntent(executeIntent, getCurrentState(game), game)
 
   // Executions don't require UI input, so result is always resolved or prevented
   if (result.type === 'needs_input') {
@@ -948,6 +1008,60 @@ export type NightRoleStatus = {
   playerId: string
   playerName: string
   status: 'pending' | 'done'
+}
+
+export type EvilStartingInfoStatus = {
+  kind: 'minion' | 'demon'
+  playerId: string
+  playerName: string
+  roleId: string
+  status: 'pending' | 'done'
+}
+
+/**
+ * First-night evil information, in official order: all Minions learn the evil
+ * team before the Demon learns their Minions and three bluffs. On a shared
+ * phone each Minion gets an individual private reveal.
+ */
+export function getEvilStartingInfoStatus(
+  game: Game,
+): EvilStartingInfoStatus[] {
+  const state = getCurrentState(game)
+  if (
+    state.phase !== 'night' ||
+    state.round !== 1 ||
+    state.players.length < 7
+  ) {
+    return []
+  }
+
+  const nightStartIndex = findLastEventIndex(game, 'night_started')
+  const completed = new Set(
+    game.history
+      .slice(nightStartIndex + 1)
+      .filter((entry) => entry.type === 'starting_info')
+      .map((entry) => entry.data.playerId as string),
+  )
+
+  const makeStatus = (
+    player: PlayerState,
+    kind: EvilStartingInfoStatus['kind'],
+  ): EvilStartingInfoStatus => ({
+    kind,
+    playerId: player.id,
+    playerName: player.name,
+    roleId: player.roleId,
+    status: completed.has(player.id) ? 'done' : 'pending',
+  })
+
+  const minions = state.players
+    .filter((player) => getRole(player.roleId)?.team === 'minion')
+    .map((player) => makeStatus(player, 'minion'))
+  const demons = state.players
+    .filter((player) => getRole(player.roleId)?.team === 'demon')
+    .map((player) => makeStatus(player, 'demon'))
+
+  return [...minions, ...demons]
 }
 
 /**

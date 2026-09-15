@@ -4,8 +4,10 @@ import { getRole } from '../../lib/roles'
 import { getTeam } from '../../lib/teams'
 import {
   getNightRolesStatus,
+  getEvilStartingInfoStatus,
   getNightActionSummary,
   NightRoleStatus,
+  EvilStartingInfoStatus,
 } from '../../lib/game'
 import { getAvailableNightFollowUps } from '../../lib/pipeline'
 import { AvailableNightFollowUp } from '../../lib/pipeline/types'
@@ -29,6 +31,7 @@ import { cn } from '../../lib/utils'
 // ============================================================================
 
 type NightDashboardItem =
+  | { type: 'starting_info'; data: EvilStartingInfoStatus }
   | { type: 'night_action'; data: NightRoleStatus }
   | { type: 'night_follow_up'; data: AvailableNightFollowUp }
 
@@ -40,6 +43,7 @@ type Props = {
   game: Game
   state: GameState
   onOpenNightAction: (playerId: string, roleId: string) => void
+  onOpenStartingInfo: (status: EvilStartingInfoStatus) => void
   onOpenNightFollowUp: (followUp: AvailableNightFollowUp) => void
   onStartDay: () => void
   onMainMenu: () => void
@@ -52,6 +56,7 @@ export function NightDashboard({
   game,
   state,
   onOpenNightAction,
+  onOpenStartingInfo,
   onOpenNightFollowUp,
   onStartDay,
   onMainMenu,
@@ -65,17 +70,24 @@ export function NightDashboard({
 
   // Collect night actions and follow-ups separately, then merge
   const items: NightDashboardItem[] = useMemo(() => {
+    const startingInfo = getEvilStartingInfoStatus(game)
     const nightActions = getNightRolesStatus(game)
     const followUps = getAvailableNightFollowUps(state, game, t)
 
-    const result: NightDashboardItem[] = nightActions.map((data) => ({
-      type: 'night_action' as const,
-      data,
-    }))
+    const result: NightDashboardItem[] = []
 
-    // Append follow-ups after regular night actions
+    for (const data of startingInfo) {
+      result.push({ type: 'starting_info' as const, data })
+    }
+
+    // Role-change information must be delivered before the new character's
+    // normal action. These are player-facing handoff screens, not actions.
     for (const followUp of followUps) {
       result.push({ type: 'night_follow_up' as const, data: followUp })
+    }
+
+    for (const data of nightActions) {
+      result.push({ type: 'night_action' as const, data })
     }
 
     return result
@@ -83,7 +95,7 @@ export function NightDashboard({
 
   // Derive next pending item and allDone from the unified list
   const nextPendingIndex = items.findIndex((item) => {
-    if (item.type === 'night_action') return item.data.status === 'pending'
+    if (item.type !== 'night_follow_up') return item.data.status === 'pending'
     // Follow-ups are always pending (they disappear when completed)
     return true
   })
@@ -141,7 +153,15 @@ export function NightDashboard({
           </div>
           <div className='space-y-2'>
             {items.map((item, index) =>
-              item.type === 'night_action' ? (
+              item.type === 'starting_info' ? (
+                <StartingInfoRow
+                  key={`starting-info-${item.data.playerId}`}
+                  status={item.data}
+                  index={index + 1}
+                  isNext={index === nextPendingIndex}
+                  onOpen={() => onOpenStartingInfo(item.data)}
+                />
+              ) : item.type === 'night_action' ? (
                 <NightActionRow
                   key={`action-${item.data.playerId}`}
                   roleStatus={item.data}
@@ -265,6 +285,38 @@ export function NightDashboard({
   )
 }
 
+function StartingInfoRow({
+  status,
+  index,
+  isNext,
+  onOpen,
+}: {
+  status: EvilStartingInfoStatus
+  index: number
+  isNext: boolean
+  onOpen: () => void
+}) {
+  const { t } = useI18n()
+  const role = getRole(status.roleId)
+
+  return (
+    <DashboardRow
+      index={index}
+      isNext={isNext}
+      isDone={status.status === 'done'}
+      icon={status.kind === 'minion' ? 'swords' : 'flameKindling'}
+      label={
+        status.kind === 'minion'
+          ? t.game.minionStartingInfo
+          : t.game.demonStartingInfo
+      }
+      sublabel={status.playerName}
+      isEvil={role ? getTeam(role.team).isEvil : true}
+      onOpen={onOpen}
+    />
+  )
+}
+
 // ============================================================================
 // NIGHT ACTION ROW (regular night actions from roles)
 // ============================================================================
@@ -365,7 +417,7 @@ function DashboardRow({
 }) {
   const { t } = useI18n()
 
-  const isClickable = isNext || isDone
+  const isClickable = isNext || (isDone && !!onReview)
   const handleClick = () => {
     if (isNext) {
       onOpen()

@@ -1,6 +1,6 @@
 import { GameState, PlayerState, EffectInstance } from '../types'
 import { getRole } from '../roles/index'
-import { getEffect, resolveCanRegisterAs } from '../effects'
+import { getEffect, isMalfunctioning, resolveCanRegisterAs } from '../effects'
 import { isEvilTeam, TeamId } from '../teams'
 import { Perception, PerceptionContext } from './types'
 
@@ -38,6 +38,16 @@ export function perceive(
   for (const effectInstance of targetPlayer.effects) {
     const effectDef = getEffect(effectInstance.type)
     if (!effectDef?.perceptionModifiers) continue
+
+    // Misregistration is part of the target's ability, so it cannot alter
+    // perception while that player is drunk or poisoned. Other modifiers,
+    // such as the Drunk's actual Outsider identity, still apply.
+    if (
+      isMalfunctioning(targetPlayer) &&
+      resolveCanRegisterAs(effectInstance, effectDef)
+    ) {
+      continue
+    }
 
     for (const modifier of effectDef.perceptionModifiers) {
       // Check if this modifier applies to the current context
@@ -77,6 +87,8 @@ export function perceive(
  * `perceive()` for that. This only checks static declarations on effects.
  */
 export function canRegisterAsTeam(player: PlayerState, team: TeamId): boolean {
+  if (isMalfunctioning(player)) return false
+
   for (const effectInstance of player.effects) {
     const effectDef = getEffect(effectInstance.type)
     const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)
@@ -98,6 +110,8 @@ export function canRegisterAsAlignment(
   player: PlayerState,
   alignment: 'good' | 'evil',
 ): boolean {
+  if (isMalfunctioning(player)) return false
+
   for (const effectInstance of player.effects) {
     const effectDef = getEffect(effectInstance.type)
     const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)
@@ -123,6 +137,8 @@ export function getAmbiguousPlayers(
   context: PerceptionContext,
 ): PlayerState[] {
   return players.filter((player) => {
+    if (isMalfunctioning(player)) return false
+
     for (const effectInstance of player.effects) {
       const effectDef = getEffect(effectInstance.type)
       const canRegisterAs = resolveCanRegisterAs(effectInstance, effectDef)

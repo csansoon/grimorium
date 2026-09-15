@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import definition from '.'
+import definition, { librarianConfig } from '.'
 import { perceive } from '../../../../pipeline/perception'
 import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
@@ -31,6 +31,9 @@ beforeEach(() => {
 })
 
 describe('Librarian', () => {
+  it('is the starting-information role that may show a zero result', () => {
+    expect(librarianConfig.allowZeroResult).toBe(true)
+  })
   // ================================================================
   // SHOULD WAKE
   // ================================================================

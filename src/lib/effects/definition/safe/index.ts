@@ -10,9 +10,13 @@ registerEffectTranslations('safe', 'es', es)
 
 const safeHandler: IntentHandler = {
   intentType: 'kill',
-  priority: 10, // After deflect (5) so redirected kills can still be blocked
+  priority: 5, // Protection resolves before optional death redirection
   appliesTo: (intent, effectPlayer) => {
-    return intent.type === 'kill' && intent.targetId === effectPlayer.id
+    return (
+      intent.type === 'kill' &&
+      (intent.cause === 'demon' || intent.cause === 'imp_self_kill') &&
+      intent.targetId === effectPlayer.id
+    )
   },
   handle: (intent, effectPlayer) => {
     const kill = intent as KillIntent

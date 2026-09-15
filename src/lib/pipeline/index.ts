@@ -13,6 +13,8 @@ import {
   Game,
   HistoryEntry,
   generateId,
+  isAlive,
+  removeEffectsFromInactiveSources,
 } from '../types'
 import { getEffect, isMalfunctioning } from '../effects'
 import { getDefaultResolver } from './resolvers'
@@ -88,6 +90,9 @@ function collectActiveHandlers(
   const result: Array<{ handler: IntentHandler; player: PlayerState }> = []
 
   for (const player of state.players) {
+    // Character abilities normally stop when their owner dies.
+    if (!isAlive(player)) continue
+
     // Skip handlers from malfunctioning players — their passive abilities
     // don't work (e.g., Poisoned Soldier's Safe doesn't protect,
     // Drunk Virgin's Pure doesn't trigger)
@@ -362,7 +367,7 @@ function applyPlayerChanges(
   removeEffects?: Record<string, string[]>,
   changeRoles?: Record<string, string>,
 ): GameState {
-  return {
+  const nextState: GameState = {
     ...state,
     players: state.players.map((player) => {
       let effects = [...player.effects]
@@ -392,6 +397,8 @@ function applyPlayerChanges(
       return { ...player, effects, roleId }
     }),
   }
+
+  return removeEffectsFromInactiveSources(state, nextState)
 }
 
 // ============================================================================

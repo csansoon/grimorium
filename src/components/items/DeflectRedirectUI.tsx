@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { PipelineInputProps, KillIntent } from '../../lib/pipeline/types'
-import { isAlive, hasEffect } from '../../lib/types'
 import { useI18n, getRoleTranslations, interpolate } from '../../lib/i18n'
 import { PlayerPickerList } from '../inputs'
 import { Button, Icon } from '../atoms'
@@ -21,9 +20,10 @@ export function DeflectRedirectUI({
 
   const originalTarget = state.players.find((p) => p.id === kill.targetId)
 
-  // All alive players except the kill source (the demon) and safe players
-  const alivePlayers = state.players.filter(
-    (p) => isAlive(p) && p.id !== kill.sourceId && !hasEffect(p, 'safe'),
+  // The Storyteller may redirect to any other player. Choosing someone dead
+  // or protected is a legal way for nobody to die; the Demon is legal too.
+  const redirectCandidates = state.players.filter(
+    (player) => player.id !== kill.targetId,
   )
 
   return (
@@ -47,7 +47,7 @@ export function DeflectRedirectUI({
         {/* Player Selector */}
         <div className='mb-6'>
           <PlayerPickerList
-            players={alivePlayers}
+            players={redirectCandidates}
             selected={selectedTarget ? [selectedTarget] : []}
             onSelect={setSelectedTarget}
             selectionCount={1}
@@ -65,6 +65,17 @@ export function DeflectRedirectUI({
         >
           <Icon name='skull' size='md' className='mr-2' />
           {t.common.confirm}
+        </Button>
+        <Button
+          onClick={() => onComplete(kill.targetId)}
+          fullWidth
+          size='lg'
+          variant='ghost'
+          className='mt-3'
+        >
+          {interpolate(impT.deflectLetMayorDie, {
+            target: originalTarget?.name ?? '?',
+          })}
         </Button>
       </div>
     </div>

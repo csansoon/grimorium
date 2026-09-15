@@ -50,6 +50,22 @@ describe('Deflect effect', () => {
 
       expect(handler.appliesTo(intent, mayor, state)).toBe(false)
     })
+
+    it('does not redirect a Slayer shot', () => {
+      const mayor = addEffectTo(
+        makePlayer({ id: 'p2', roleId: 'mayor' }),
+        'deflect',
+      )
+      const state = makeState({ players: [mayor] })
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'p1',
+        targetId: 'p2',
+        cause: 'slayer',
+      }
+
+      expect(handler.appliesTo(intent, mayor, state)).toBe(false)
+    })
   })
 
   // ================================================================
@@ -191,9 +207,8 @@ describe('Deflect effect', () => {
   // ================================================================
 
   describe('priority', () => {
-    it('has lower priority than safe (runs before safe)', () => {
-      // Deflect priority 5, Safe priority 10 — lower number runs first
-      expect(handler.priority).toBe(5)
+    it('runs after protection', () => {
+      expect(handler.priority).toBe(10)
     })
   })
 })

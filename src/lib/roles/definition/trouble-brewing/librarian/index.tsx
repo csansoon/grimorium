@@ -13,10 +13,11 @@ import es from './i18n/es'
 registerRoleTranslations('librarian', 'en', en)
 registerRoleTranslations('librarian', 'es', es)
 
-const librarianConfig: InfoRoleConfig = {
+export const librarianConfig: InfoRoleConfig = {
   roleId: 'librarian',
   icon: 'bookMarked',
   targetTeam: 'outsider',
+  allowZeroResult: true,
   historyKeys: {
     discovered: 'roles.librarian.history.discoveredOutsider',
     noTarget: 'roles.librarian.history.noOutsiders',
@@ -35,7 +36,9 @@ const definition: RoleDefinition = {
   id: 'librarian',
   team: 'townsfolk',
   icon: 'bookMarked',
-  nightOrder: 11,
+  nightOrder: 30,
+  firstNightOrder: 30,
+  otherNightOrder: null,
   chaos: 15,
   shouldWake: (game, player) =>
     isAlive(player) && game.history.at(-1)?.stateAfter.round === 1,

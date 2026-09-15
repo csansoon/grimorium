@@ -158,7 +158,9 @@ const definition: RoleDefinition = {
   id: 'fortune_teller',
   team: 'townsfolk',
   icon: 'eye',
-  nightOrder: 15,
+  nightOrder: 70,
+  firstNightOrder: 70,
+  otherNightOrder: 60,
   chaos: 40,
   shouldWake: (_game, player) => isAlive(player),
 

@@ -1,5 +1,9 @@
 import { useState } from 'react'
-import { RoleDefinition, SetupActionProps } from '../../../types'
+import {
+  RoleDefinition,
+  SetupActionProps,
+  SetupActionResult,
+} from '../../../types'
 import { getAllRoles } from '../../../index'
 import {
   useI18n,
@@ -9,12 +13,47 @@ import {
 import { DefaultRoleReveal } from '../../../../../components/items/DefaultRoleReveal'
 import { Button, Icon } from '../../../../../components/atoms'
 import { RolePickerGrid } from '../../../../../components/inputs'
+import type { GameState } from '../../../../types'
 
 import en from './i18n/en'
 import es from './i18n/es'
 
 registerRoleTranslations('drunk', 'en', en)
 registerRoleTranslations('drunk', 'es', es)
+
+export function getDrunkBelievedRoleOptions(state: GameState) {
+  const rolesInPlay = new Set(state.players.map((player) => player.roleId))
+  return getAllRoles().filter(
+    (role): role is RoleDefinition =>
+      !!role &&
+      role.team === 'townsfolk' &&
+      role.id !== 'villager' &&
+      !rolesInPlay.has(role.id),
+  )
+}
+
+export function createDrunkSetupResult(
+  playerId: string,
+  believedRoleId: string,
+): SetupActionResult {
+  return {
+    changeRole: believedRoleId,
+    addEffects: {
+      [playerId]: [
+        {
+          type: 'drunk',
+          data: { actualRole: 'drunk' },
+          expiresAt: 'never',
+        },
+        // The bullet is the one-use UI marker for the ability the Drunk
+        // believes they have. Malfunction handling makes the shot miss.
+        ...(believedRoleId === 'slayer'
+          ? [{ type: 'slayer_bullet', expiresAt: 'never' as const }]
+          : []),
+      ],
+    },
+  }
+}
 
 /**
  * The Drunk — Outsider role.
@@ -41,8 +80,8 @@ function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
   const roleT = getRoleTranslations('drunk', language)
   const [selectedRole, setSelectedRole] = useState<string | null>(null)
 
-  // Get all Townsfolk roles for the narrator to choose from
-  const townsfolkRoles = getAllRoles().filter((r) => r.team === 'townsfolk')
+  // The Drunk must believe they are an out-of-play Townsfolk character.
+  const townsfolkRoles = getDrunkBelievedRoleOptions(state)
 
   const handleSelect = (roleId: string) => {
     setSelectedRole((prev) => (prev === roleId ? null : roleId))
@@ -51,18 +90,7 @@ function DrunkSetupAction({ player, state, onComplete }: SetupActionProps) {
   const handleConfirm = () => {
     if (!selectedRole) return
 
-    onComplete({
-      changeRole: selectedRole,
-      addEffects: {
-        [player.id]: [
-          {
-            type: 'drunk',
-            data: { actualRole: 'drunk' },
-            expiresAt: 'never',
-          },
-        ],
-      },
-    })
+    onComplete(createDrunkSetupResult(player.id, selectedRole))
   }
 
   return (

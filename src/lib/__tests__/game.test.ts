@@ -8,11 +8,19 @@ import {
   applyNightAction,
   skipNightAction,
   nominate,
+  resolveNomination,
   resolveVote,
+  getBlockStatus,
+  getVoteBenchmark,
+  getLastNightDeaths,
+  finishVirginExecutionDay,
   addEffectToPlayer,
   removeEffectFromPlayer,
+  getEvilStartingInfoStatus,
+  getRoleNightOrder,
 } from '../game'
 import { getCurrentState, hasEffect, PlayerState } from '../types'
+import { getRole } from '../roles'
 import {
   makePlayer,
   makeGame,
@@ -234,6 +242,37 @@ describe('startDay', () => {
     const p1 = state.players.find((p) => p.id === 'p1')!
     expect(hasEffect(p1, 'safe')).toBe(true)
   })
+
+  it('announces every player who became dead during the night', () => {
+    const players = makeStandardPlayers()
+    let game = startNight(
+      makeGame(makeState({ phase: 'day', round: 1, players })),
+    )
+    game = addHistoryEntry(
+      game,
+      {
+        type: 'night_action',
+        message: [],
+        data: { action: 'kill_redirected', redirectTargetId: 'p3' },
+      },
+      undefined,
+      { p3: [{ type: 'dead', expiresAt: 'never' }] },
+    )
+
+    const updated = startDay(game)
+
+    expect(getLastNightDeaths(updated)).toEqual(['p3'])
+  })
+
+  it('does not announce players who were already dead before night', () => {
+    const players = makeStandardPlayers()
+    players[0] = addEffectTo(players[0], 'dead')
+    const game = startNight(
+      makeGame(makeState({ phase: 'day', round: 1, players })),
+    )
+
+    expect(getLastNightDeaths(startDay(game))).toEqual([])
+  })
 })
 
 // ============================================================================
@@ -333,6 +372,60 @@ describe('applyNightAction', () => {
   })
 })
 
+describe('sourced effects', () => {
+  it('removes an ability effect when its source dies', () => {
+    const monk = makePlayer({ id: 'monk', roleId: 'monk' })
+    const protectedPlayer = addEffectTo(
+      makePlayer({ id: 'target' }),
+      'safe',
+      undefined,
+      'end_of_night',
+    )
+    protectedPlayer.effects[0] = {
+      ...protectedPlayer.effects[0],
+      sourcePlayerId: monk.id,
+    }
+    const game = makeGame(makeState({ players: [monk, protectedPlayer] }))
+
+    const updated = addHistoryEntry(
+      game,
+      { type: 'effect_added', message: [], data: {} },
+      undefined,
+      { monk: [{ type: 'dead', expiresAt: 'never' }] },
+    )
+
+    const target = getCurrentState(updated).players.find(
+      (player) => player.id === 'target',
+    )!
+    expect(hasEffect(target, 'safe')).toBe(false)
+  })
+
+  it('removes an ability effect when its source changes character', () => {
+    const source = makePlayer({ id: 'source', roleId: 'monk' })
+    const target = addEffectTo(makePlayer({ id: 'target' }), 'safe')
+    target.effects[0] = { ...target.effects[0], sourcePlayerId: source.id }
+    const game = makeGame(makeState({ players: [source, target] }))
+
+    const updated = addHistoryEntry(
+      game,
+      { type: 'role_changed', message: [], data: {} },
+      undefined,
+      undefined,
+      undefined,
+      { source: 'imp' },
+    )
+
+    expect(
+      hasEffect(
+        getCurrentState(updated).players.find(
+          (player) => player.id === 'target',
+        )!,
+        'safe',
+      ),
+    ).toBe(false)
+  })
+})
+
 describe('skipNightAction', () => {
   it('records a skip entry', () => {
     const players = makeStandardPlayers()
@@ -371,6 +464,80 @@ describe('nominate', () => {
 
     const updated = nominate(game, 'nonexistent', 'p5')
     expect(updated).toBe(game)
+  })
+
+  it('preserves a Storyteller prompt when a Spy nominates the Virgin', () => {
+    const spy = addEffectTo(
+      makePlayer({ id: 'p1', roleId: 'spy' }),
+      'misregister',
+      {
+        canRegisterAs: {
+          teams: ['townsfolk', 'outsider'],
+          alignments: ['good'],
+        },
+      },
+    )
+    const virgin = addEffectTo(
+      makePlayer({ id: 'p2', roleId: 'virgin' }),
+      'pure',
+    )
+    const game = makeGame(
+      makeState({ phase: 'day', round: 1, players: [spy, virgin] }),
+    )
+
+    expect(resolveNomination(game, spy.id, virgin.id)?.type).toBe('needs_input')
+  })
+
+  it('does not let a poisoned Spy register as Townsfolk to the Virgin', () => {
+    const spy = addEffectTo(
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'spy' }), 'misregister', {
+        canRegisterAs: {
+          teams: ['townsfolk', 'outsider'],
+          alignments: ['good'],
+        },
+      }),
+      'poisoned',
+    )
+    const virgin = addEffectTo(
+      makePlayer({ id: 'p2', roleId: 'virgin' }),
+      'pure',
+    )
+    const game = makeGame(
+      makeState({ phase: 'day', round: 1, players: [spy, virgin] }),
+    )
+
+    const result = resolveNomination(game, spy.id, virgin.id)
+
+    expect(result?.type).toBe('resolved')
+    if (result?.type !== 'resolved') return
+    expect(result.stateChanges.addEffects?.[spy.id]).toBeUndefined()
+    expect(result.stateChanges.removeEffects?.[virgin.id]).toContain('pure')
+  })
+
+  it('ends the day immediately after the Virgin executes a Townsfolk', () => {
+    const townsfolk = makePlayer({ id: 'p1', roleId: 'chef' })
+    const virgin = addEffectTo(
+      makePlayer({ id: 'p2', roleId: 'virgin' }),
+      'pure',
+    )
+    const imp = makePlayer({ id: 'p3', roleId: 'imp' })
+    const extra = makePlayer({ id: 'p4', roleId: 'saint' })
+    const game = makeGameWithHistory(
+      [
+        { type: 'game_created' },
+        { type: 'day_started', stateOverrides: { phase: 'day', round: 1 } },
+      ],
+      makeState({ players: [townsfolk, virgin, imp, extra] }),
+    )
+
+    const afterNomination = nominate(game, townsfolk.id, virgin.id)
+    const updated = finishVirginExecutionDay(afterNomination)
+
+    expect(getCurrentState(updated).phase).toBe('night')
+    expect(getCurrentState(updated).round).toBe(2)
+    expect(updated.history.some((entry) => entry.type === 'execution')).toBe(
+      false,
+    )
   })
 })
 
@@ -429,7 +596,12 @@ describe('resolveVote', () => {
     const afterFirst = resolveVote(game, 'p5', 3, ['p1', 'p2', 'p3'])
 
     // Second nomination: p4 gets 4 votes (higher, replaces)
-    const afterSecond = resolveVote(afterFirst, 'p4', 4, ['p1', 'p2', 'p3', 'p5'])
+    const afterSecond = resolveVote(afterFirst, 'p4', 4, [
+      'p1',
+      'p2',
+      'p3',
+      'p5',
+    ])
 
     const voteEntries = afterSecond.history.filter((e) => e.type === 'vote')
     const lastVote = voteEntries[voteEntries.length - 1]
@@ -451,6 +623,25 @@ describe('resolveVote', () => {
     // Should have a clearsBlock entry
     const clearEntry = voteEntries.find((e) => e.data.clearsBlock === true)
     expect(clearEntry).toBeDefined()
+    expect(getBlockStatus(afterSecond)).toBeNull()
+    expect(getVoteBenchmark(afterSecond)).toBe(3)
+  })
+
+  it('requires later nominees to beat a tied high-water tally', () => {
+    const players = makeStandardPlayers()
+    const game = makeDayGame(players)
+    const afterFirst = resolveVote(game, 'p5', 3)
+    const afterTie = resolveVote(afterFirst, 'p4', 3)
+
+    const afterSameTally = resolveVote(afterTie, 'p3', 3)
+    expect(getBlockStatus(afterSameTally)).toBeNull()
+    expect(getVoteBenchmark(afterSameTally)).toBe(3)
+
+    const afterHigherTally = resolveVote(afterSameTally, 'p2', 4)
+    expect(getBlockStatus(afterHigherTally)).toMatchObject({
+      playerId: 'p2',
+      voteCount: 4,
+    })
   })
 
   it('fails with 0 votes', () => {
@@ -515,5 +706,136 @@ describe('manual effect management', () => {
     const state = getCurrentState(updated)
     const p1 = state.players.find((p) => p.id === 'p1')!
     expect(hasEffect(p1, 'safe')).toBe(false)
+  })
+})
+
+// ============================================================================
+// OFFICIAL NIGHT ORDER
+// ============================================================================
+
+describe('Trouble Brewing night order', () => {
+  it('uses the official first-night character order', () => {
+    const expected = [
+      ['poisoner', 10],
+      ['washerwoman', 20],
+      ['librarian', 30],
+      ['investigator', 40],
+      ['chef', 50],
+      ['empath', 60],
+      ['fortune_teller', 70],
+      ['butler', 80],
+      ['spy', 90],
+    ] as const
+
+    expect(
+      expected.map(([roleId]) => [
+        roleId,
+        getRoleNightOrder(getRole(roleId)!, 1),
+      ]),
+    ).toEqual(expected)
+    expect(getRoleNightOrder(getRole('imp')!, 1)).toBeNull()
+    expect(getRoleNightOrder(getRole('monk')!, 1)).toBeNull()
+    expect(getRoleNightOrder(getRole('ravenkeeper')!, 1)).toBeNull()
+    expect(getRoleNightOrder(getRole('undertaker')!, 1)).toBeNull()
+  })
+
+  it('uses the official other-night character order', () => {
+    const expected = [
+      ['poisoner', 10],
+      ['monk', 20],
+      ['imp', 30],
+      ['ravenkeeper', 40],
+      ['empath', 50],
+      ['fortune_teller', 60],
+      ['undertaker', 70],
+      ['butler', 80],
+      ['spy', 90],
+    ] as const
+
+    expect(
+      expected.map(([roleId]) => [
+        roleId,
+        getRoleNightOrder(getRole(roleId)!, 2),
+      ]),
+    ).toEqual(expected)
+    expect(getRoleNightOrder(getRole('washerwoman')!, 2)).toBeNull()
+    expect(getRoleNightOrder(getRole('chef')!, 2)).toBeNull()
+  })
+
+  it('places every Minion briefing before the Demon briefing', () => {
+    const players = [
+      makePlayer({ id: 'poisoner', roleId: 'poisoner' }),
+      makePlayer({ id: 'chef', roleId: 'chef' }),
+      makePlayer({ id: 'spy', roleId: 'spy' }),
+      makePlayer({ id: 'imp', roleId: 'imp' }),
+      makePlayer({ id: 'empath', roleId: 'empath' }),
+      makePlayer({ id: 'slayer', roleId: 'slayer' }),
+      makePlayer({ id: 'saint', roleId: 'saint' }),
+    ]
+    const game = makeGameWithHistory(
+      [
+        {
+          type: 'night_started',
+          stateOverrides: { phase: 'night', round: 1 },
+        },
+      ],
+      makeState({ phase: 'night', round: 1, players }),
+    )
+
+    expect(
+      getEvilStartingInfoStatus(game).map(({ roleId, kind }) => ({
+        roleId,
+        kind,
+      })),
+    ).toEqual([
+      { roleId: 'poisoner', kind: 'minion' },
+      { roleId: 'spy', kind: 'minion' },
+      { roleId: 'imp', kind: 'demon' },
+    ])
+    expect(getNextStep(game)).toEqual({
+      type: 'starting_info',
+      playerId: 'poisoner',
+      roleId: 'poisoner',
+      kind: 'minion',
+    })
+  })
+
+  it('tracks briefings separately from character actions', () => {
+    const players = [
+      makePlayer({ id: 'poisoner', roleId: 'poisoner' }),
+      makePlayer({ id: 'imp', roleId: 'imp' }),
+      ...Array.from({ length: 5 }, (_, index) =>
+        makePlayer({ id: `good-${index}`, roleId: 'chef' }),
+      ),
+    ]
+    const game = makeGameWithHistory(
+      [
+        {
+          type: 'night_started',
+          stateOverrides: { phase: 'night', round: 1 },
+        },
+        { type: 'starting_info', data: { playerId: 'poisoner' } },
+      ],
+      makeState({ phase: 'night', round: 1, players }),
+    )
+
+    const statuses = getEvilStartingInfoStatus(game)
+    expect(
+      statuses.find((status) => status.playerId === 'poisoner')?.status,
+    ).toBe('done')
+    expect(statuses.find((status) => status.playerId === 'imp')?.status).toBe(
+      'pending',
+    )
+  })
+
+  it('omits evil starting information in a 5- or 6-player game', () => {
+    const players = [
+      makePlayer({ roleId: 'poisoner' }),
+      makePlayer({ roleId: 'imp' }),
+      ...Array.from({ length: 4 }, () => makePlayer({ roleId: 'chef' })),
+    ]
+    const game = makeGame(makeState({ phase: 'night', round: 1, players }))
+
+    expect(getEvilStartingInfoStatus(game)).toEqual([])
   })
 })

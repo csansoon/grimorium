@@ -53,6 +53,8 @@ export type Translations = {
     step2Subtitle: string
     needAtLeastRoles: string
     needAtLeastImp: string
+    needExactlyRoles: string
+    matchDistribution: string
     nextAssignRoles: string
     suggested: string
 
@@ -135,6 +137,9 @@ export type Translations = {
     selectSlayer: string
     selectTarget: string
     confirmSlayerShot: string
+    slayerRegistrationTitle: string
+    slayerRegistrationDescription: string
+    registerAsDemon: string
 
     // Game Over
     goodWins: string
@@ -178,6 +183,13 @@ export type Translations = {
     actionPending: string
     allActionsComplete: string
     proceedToDay: string
+    minionStartingInfo: string
+    minionStartingInfoDescription: string
+    demonStartingInfo: string
+    demonStartingInfoDescription: string
+    selectDemonBluffs: string
+    selectDemonBluffsDescription: string
+    theseAreYourBluffs: string
 
     // Night Steps
     nightSteps: string
@@ -210,6 +222,12 @@ export type Translations = {
     chooseFalseRole: string
     keepOriginalRole: string
     malfunctionWarning: string
+    registrationResultTitle: string
+    registrationResultDescription: string
+    virginRegistrationTitle: string
+    virginRegistrationDescription: string
+    registerAsTownsfolk: string
+    registerNormally: string
 
     // Setup Actions
     setupActions: string
@@ -332,6 +350,7 @@ export type Translations = {
     effectRemoved: string
     roleChanged: string
     setupAction: string
+    evilStartingInfoShown: string
   }
 
   // Scripts

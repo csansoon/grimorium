@@ -51,6 +51,20 @@ describe('Martyrdom effect', () => {
       expect(winCondition.check(state, game)).toBeNull()
     })
 
+    it('does not trigger when an already-dead player is executed again', () => {
+      const saint = addEffectTo(
+        makePlayer({ id: 'p1', roleId: 'saint' }),
+        'martyrdom',
+      )
+      const state = makeState({ phase: 'day', round: 2, players: [saint] })
+      const game = makeGameWithHistory(
+        [{ type: 'execution', data: { playerId: 'p1', died: false } }],
+        state,
+      )
+
+      expect(winCondition.check(state, game)).toBeNull()
+    })
+
     it('triggers on virgin_execution if the executed nominator has martyrdom', () => {
       // Edge case: if somehow a player with martyrdom nominates a virgin and dies
       const saintNominator = addEffectTo(

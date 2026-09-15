@@ -124,6 +124,20 @@ describe('ImpStarpassPending effect', () => {
       // The handler is checked against the minion, not the imp
       expect(handler.appliesTo(intent, minions[0], state)).toBe(false)
     })
+
+    it('defers to a healthy Scarlet Woman when 5 or more are alive', () => {
+      const { imp, minions, state } = makeScenario({ minionCount: 2 })
+      minions[1] = addEffectTo(minions[1], 'demon_successor')
+      state.players[2] = minions[1]
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'imp',
+        targetId: 'imp',
+        cause: 'imp_self_kill',
+      }
+
+      expect(handler.appliesTo(intent, imp, state)).toBe(false)
+    })
   })
 
   // ================================================================
@@ -262,13 +276,37 @@ describe('ImpStarpassPending effect', () => {
 
       const resumed = result.resume('minion0')
       if (resumed.action === 'allow') {
-        expect(resumed.stateChanges?.entries).toHaveLength(1)
-        expect(resumed.stateChanges!.entries[0].type).toBe('role_changed')
-        expect(resumed.stateChanges!.entries[0].data).toEqual({
+        const roleChange = resumed.stateChanges?.entries.find(
+          (entry) => entry.type === 'role_changed',
+        )
+        expect(roleChange?.data).toEqual({
           playerId: 'minion0',
           fromRole: 'poisoner',
           toRole: 'imp',
         })
+      }
+    })
+
+    it('marks the new Imp as already handled on the star-pass night', () => {
+      const { imp, state, game } = makeScenario()
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'imp',
+        targetId: 'imp',
+        cause: 'imp_self_kill',
+      }
+
+      const result = handler.handle(intent, imp, state, game)
+      if (result.action !== 'request_ui') throw new Error('Expected request_ui')
+      const resumed = result.resume('minion0')
+
+      if (resumed.action === 'allow') {
+        expect(resumed.stateChanges?.entries).toContainEqual(
+          expect.objectContaining({
+            type: 'night_skipped',
+            data: expect.objectContaining({ playerId: 'minion0' }),
+          }),
+        )
       }
     })
 
@@ -293,6 +331,31 @@ describe('ImpStarpassPending effect', () => {
         // The poisoned effect on the villager should be removed
         expect(resumed.stateChanges?.removeEffects?.['villager']).toContain(
           'poisoned',
+        )
+      }
+    })
+
+    it("removes the selected Minion's character-granted effects", () => {
+      const { imp, state, game } = makeScenario()
+      const spy = addEffectTo(
+        makePlayer({ id: 'spy', roleId: 'spy' }),
+        'misregister',
+      )
+      state.players.splice(1, 1, spy)
+      const intent: KillIntent = {
+        type: 'kill',
+        sourceId: 'imp',
+        targetId: 'imp',
+        cause: 'imp_self_kill',
+      }
+
+      const result = handler.handle(intent, imp, state, game)
+      if (result.action !== 'request_ui') throw new Error('Expected request_ui')
+      const resumed = result.resume('spy')
+
+      if (resumed.action === 'allow') {
+        expect(resumed.stateChanges?.removeEffects?.spy).toContain(
+          'misregister',
         )
       }
     })

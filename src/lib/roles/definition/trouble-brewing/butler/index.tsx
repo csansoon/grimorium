@@ -42,8 +42,11 @@ const definition: RoleDefinition = {
   id: 'butler',
   team: 'outsider',
   icon: 'conciergeBell',
-  nightOrder: 35, // Late — the Butler's choice doesn't interact with other night abilities
+  nightOrder: 80,
+  firstNightOrder: 80,
+  otherNightOrder: 80,
   chaos: 20,
+  shouldWake: (_game, player) => isAlive(player),
 
   nightSteps: [
     {
@@ -65,10 +68,8 @@ const definition: RoleDefinition = {
 
     const roleT = getRoleTranslations('butler', language)
 
-    // Can choose any alive player except themselves
-    const otherAlivePlayers = state.players.filter(
-      (p) => isAlive(p) && p.id !== player.id,
-    )
+    // "choose a player (not yourself)" includes dead players.
+    const otherPlayers = state.players.filter((p) => p.id !== player.id)
 
     const malfunctioning = isMalfunctioning(player)
 
@@ -147,12 +148,14 @@ const definition: RoleDefinition = {
       <NightActionLayout
         player={player}
         title={roleT.info}
-        description={interpolate(roleT.selectPlayerAsMaster, { player: player.name })}
-        audience="player_choice"
+        description={interpolate(roleT.selectPlayerAsMaster, {
+          player: player.name,
+        })}
+        audience='player_choice'
       >
         <div className='mb-6'>
           <PlayerPickerList
-            players={otherAlivePlayers}
+            players={otherPlayers}
             selected={selectedMaster ? [selectedMaster] : []}
             onSelect={setSelectedMaster}
             selectionCount={1}

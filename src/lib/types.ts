@@ -60,6 +60,7 @@ export type RichMessage = MessagePart[]
 export type EventType =
   | 'game_created'
   | 'night_started'
+  | 'starting_info'
   | 'role_revealed'
   | 'night_action'
   | 'night_skipped'
@@ -149,6 +150,44 @@ export function getAlivePlayers(state: GameState): PlayerState[] {
 
 export function getDeadPlayers(state: GameState): PlayerState[] {
   return state.players.filter((p) => !isAlive(p))
+}
+
+/**
+ * Remove effects created by an ability whose source has died or changed
+ * character. Character abilities cease immediately in both cases.
+ */
+export function removeEffectsFromInactiveSources(
+  previousState: GameState,
+  nextState: GameState,
+): GameState {
+  const inactiveSourceIds = new Set<string>()
+
+  for (const previousPlayer of previousState.players) {
+    const nextPlayer = nextState.players.find(
+      (player) => player.id === previousPlayer.id,
+    )
+    if (
+      nextPlayer &&
+      ((isAlive(previousPlayer) && !isAlive(nextPlayer)) ||
+        previousPlayer.roleId !== nextPlayer.roleId)
+    ) {
+      inactiveSourceIds.add(previousPlayer.id)
+    }
+  }
+
+  if (inactiveSourceIds.size === 0) return nextState
+
+  return {
+    ...nextState,
+    players: nextState.players.map((player) => ({
+      ...player,
+      effects: player.effects.filter(
+        (effect) =>
+          !effect.sourcePlayerId ||
+          !inactiveSourceIds.has(effect.sourcePlayerId),
+      ),
+    })),
+  }
 }
 
 /**

@@ -84,7 +84,9 @@ const definition: RoleDefinition = {
   id: 'ravenkeeper',
   team: 'townsfolk',
   icon: 'birdHouse',
-  nightOrder: 35,
+  nightOrder: 40,
+  firstNightOrder: null,
+  otherNightOrder: 40,
   chaos: 30,
 
   shouldWake: (game: Game, player: PlayerState) => {
@@ -128,7 +130,8 @@ const definition: RoleDefinition = {
 
     const roleT = getRoleTranslations('ravenkeeper', language)
 
-    const otherPlayers = state.players.filter((p) => p.id !== player.id)
+    // The Ravenkeeper may choose any player, including themself or someone dead.
+    const selectablePlayers = state.players
 
     // Check if selected target is ambiguous for "role" perception (only when NOT malfunctioning)
     const selectedTargetPlayer = selectedPlayer
@@ -314,7 +317,7 @@ const definition: RoleDefinition = {
         >
           <div className='mb-6'>
             <PlayerPickerList
-              players={otherPlayers}
+              players={selectablePlayers}
               selected={selectedPlayer ? [selectedPlayer] : []}
               onSelect={setSelectedPlayer}
               selectionCount={1}

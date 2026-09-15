@@ -16,8 +16,14 @@ describe('Imp', () => {
   // ================================================================
 
   describe('shouldWake', () => {
-    it('wakes on the first night', () => {
+    it('is alive and able to wake when its later-night slot is reached', () => {
       const player = makePlayer({ id: 'p1', roleId: 'imp' })
+      const players = [
+        player,
+        ...Array.from({ length: 6 }, (_, index) =>
+          makePlayer({ id: `other-${index}` }),
+        ),
+      ]
       const game = makeGameWithHistory(
         [
           {
@@ -26,9 +32,13 @@ describe('Imp', () => {
             stateOverrides: { round: 1 },
           },
         ],
-        makeState({ round: 1, players: [player] }),
+        makeState({ round: 1, players }),
       )
       expect(definition.shouldWake!(game, player)).toBe(true)
+    })
+
+    it('is excluded from the first-night action order', () => {
+      expect(definition.firstNightOrder).toBeNull()
     })
 
     it('wakes when alive on later rounds', () => {
@@ -70,62 +80,10 @@ describe('Imp', () => {
   // ================================================================
 
   describe('nightSteps', () => {
-    it('has first-night steps that are conditional on round 1', () => {
-      const player = makePlayer({ id: 'p1', roleId: 'imp' })
-      const firstNightState = makeState({ round: 1, players: [player] })
-      const laterNightState = makeState({ round: 2, players: [player] })
-      const game = makeGameWithHistory(
-        [
-          {
-            type: 'night_started',
-            data: { round: 1 },
-            stateOverrides: { round: 1 },
-          },
-        ],
-        firstNightState,
-      )
-      const laterGame = makeGameWithHistory(
-        [
-          {
-            type: 'night_started',
-            data: { round: 2 },
-            stateOverrides: { round: 2 },
-          },
-        ],
-        laterNightState,
-      )
-
-      const steps = definition.nightSteps!
-
-      // First night: show_minions, select_bluffs, show_bluffs should be active
-      const showMinions = steps.find((s) => s.id === 'show_minions')
-      const selectBluffs = steps.find((s) => s.id === 'select_bluffs')
-      const showBluffs = steps.find((s) => s.id === 'show_bluffs')
-      expect(showMinions?.condition!(game, player, firstNightState)).toBe(true)
-      expect(selectBluffs?.condition!(game, player, firstNightState)).toBe(true)
-      expect(showBluffs?.condition!(game, player, firstNightState)).toBe(true)
-
-      // First night: choose_victim should NOT be active
-      const chooseVictim = steps.find((s) => s.id === 'choose_victim')
-      expect(chooseVictim?.condition!(game, player, firstNightState)).toBe(
-        false,
-      )
-
-      // Later nights: first-night steps should NOT be active
-      expect(showMinions?.condition!(laterGame, player, laterNightState)).toBe(
-        false,
-      )
-      expect(selectBluffs?.condition!(laterGame, player, laterNightState)).toBe(
-        false,
-      )
-      expect(showBluffs?.condition!(laterGame, player, laterNightState)).toBe(
-        false,
-      )
-
-      // Later nights: choose_victim should be active
-      expect(chooseVictim?.condition!(laterGame, player, laterNightState)).toBe(
-        true,
-      )
+    it('contains only the later-night victim choice', () => {
+      expect(definition.nightSteps?.map((step) => step.id)).toEqual([
+        'choose_victim',
+      ])
     })
 
     it('does not declare select_new_imp in nightSteps (handled by imp_starpass_pending effect via pipeline)', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { countEvilPairs } from '.'
+import { countEvilPairs, getPossibleEvilPairRange } from '.'
 import definition from '.'
 import { EffectDefinition, EffectId } from '../../../../effects/types'
 import {
@@ -173,6 +173,30 @@ describe('Chef', () => {
   // ================================================================
 
   describe('perception deception', () => {
+    it('allows independent registration for each adjacency occurrence', () => {
+      const chef = makePlayer({ id: 'chef', roleId: 'chef' })
+      const spy = addEffectTo(
+        makePlayer({ id: 'spy', roleId: 'spy' }),
+        'misregister',
+        {
+          canRegisterAs: {
+            teams: ['townsfolk', 'outsider'],
+            alignments: ['good'],
+          },
+        },
+      )
+      const state = makeState({
+        players: [
+          makePlayer({ id: 'imp', roleId: 'imp' }),
+          spy,
+          makePlayer({ id: 'minion', roleId: 'poisoner' }),
+          chef,
+        ],
+      })
+
+      expect(getPossibleEvilPairRange(state, chef)).toEqual({ min: 0, max: 2 })
+    })
+
     it("good player with 'appears evil' modifier is counted as evil (false positive)", () => {
       testEffects['appears_evil'] = {
         id: 'appears_evil' as EffectId,

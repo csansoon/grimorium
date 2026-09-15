@@ -22,6 +22,11 @@ const martyrdomWinCondition: WinConditionCheck = {
       return null
     }
 
+    // A corpse may be executed again, but the Saint only loses when they die
+    // by execution. Older entries and Virgin executions omit this field and
+    // represent an actual death, so only an explicit false suppresses it.
+    if (lastEntry.data.died === false) return null
+
     // For regular execution, the executed player is in data.playerId
     // For virgin_execution, the nominator is executed (data.nominatorId)
     const executedId = (lastEntry.data.playerId ??

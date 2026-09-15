@@ -50,6 +50,8 @@ const en: Translations = {
     step2Subtitle: 'Step 2: Select roles in play',
     needAtLeastRoles: 'Need at least {count} roles',
     needAtLeastImp: 'Need at least 1 Imp',
+    needExactlyRoles: 'Choose exactly {count} characters',
+    matchDistribution: 'Match the team counts shown above',
     nextAssignRoles: 'Next: Assign Roles',
     suggested: 'Suggested',
 
@@ -69,10 +71,11 @@ const en: Translations = {
   },
 
   game: {
-    narratorGiveDevice: 'Give the device to {player} to see their role.',
+    narratorGiveDevice:
+      'Show the screen to {player} so they can see their role.',
     narratorWakePlayer: 'Wake {player} ({role}) for their night action.',
     narratorRoleChanged:
-      'Give the device to {player} — their role has changed.',
+      'Wake {player} and show them the screen — their role has changed.',
     readyShowToPlayer: 'Ready - Show to Player',
     yourRoleHasChanged: 'Your role has changed!',
 
@@ -131,6 +134,10 @@ const en: Translations = {
     selectSlayer: 'Select Slayer',
     selectTarget: 'Select Target',
     confirmSlayerShot: 'Confirm Shot',
+    slayerRegistrationTitle: 'Slayer Registration',
+    slayerRegistrationDescription:
+      'This player may register as the Demon. Decide how they register for this Slayer shot.',
+    registerAsDemon: 'Register as Demon',
 
     goodWins: 'Good Wins!',
     evilWins: 'Evil Wins!',
@@ -148,10 +155,11 @@ const en: Translations = {
     showToPlayer: 'Show to Player',
     oneOfThemIsThe: 'One of them is the...',
 
-    // Return device interstitial
-    returnDeviceToNarrator: 'Return the device to the Storyteller',
-    returnDeviceDescription: 'Please hand the device back before continuing.',
-    returnDeviceReady: 'Storyteller Ready',
+    // Private reveal interstitial
+    returnDeviceToNarrator: 'Hide the screen from the player',
+    returnDeviceDescription:
+      'Make sure only the Storyteller can see the screen before continuing.',
+    returnDeviceReady: 'Screen Is Private',
 
     // Role Revelation
     roleRevelation: 'Role Revelation',
@@ -172,6 +180,16 @@ const en: Translations = {
     actionPending: 'Pending',
     allActionsComplete: 'All night actions have been processed',
     proceedToDay: 'Proceed to Day',
+    minionStartingInfo: 'Minion Information',
+    minionStartingInfoDescription:
+      'These players are on your evil team. Remember who your Demon is.',
+    demonStartingInfo: 'Demon Information',
+    demonStartingInfoDescription:
+      'These are your Minions and three good characters that are not in play.',
+    selectDemonBluffs: 'Choose the Demon Bluffs',
+    selectDemonBluffsDescription:
+      'Before waking the Demon, select three out-of-play good characters.',
+    theseAreYourBluffs: 'These characters are not in play:',
 
     // Night Steps
     nightSteps: 'Night Steps',
@@ -198,13 +216,21 @@ const en: Translations = {
     // Malfunction Config
     stepConfigureMalfunction: 'Configure Malfunction',
     playerIsMalfunctioning:
-      'This player is poisoned or drunk, so their ability yields false information. As the Storyteller, you must select the false information they will receive.',
+      'This player is poisoned or drunk. Choose any information their ability could normally produce; it may be true or false.',
     chooseFalseNumber: 'What number should they see?',
     chooseFalseResult: 'What result should they see?',
     chooseFalseTarget: 'Which player should they be told is the role?',
     chooseFalseRole: 'What role should they see?',
     keepOriginalRole: 'Keep {role}',
     malfunctionWarning: 'Malfunctioning',
+    registrationResultTitle: 'Choose Registration Result',
+    registrationResultDescription:
+      'This character may register differently for each adjacent pair. Choose any legal total for this Chef reading.',
+    virginRegistrationTitle: 'Virgin Registration',
+    virginRegistrationDescription:
+      'Should {player} register as a Townsfolk for this nomination?',
+    registerAsTownsfolk: 'Register as Townsfolk',
+    registerNormally: 'Register as their actual character',
 
     // Setup Actions
     setupActions: 'Setup Actions',
@@ -254,9 +280,9 @@ const en: Translations = {
     alreadyNominated: 'Already nominated today',
     alreadyBeenNominated: 'Already been nominated today',
 
-    // Hand device interstitial
-    handDeviceTo: 'Hand the device to {player}',
-    tapWhenReady: 'Tap when ready to show',
+    // Private reveal interstitial
+    handDeviceTo: 'Wake {player} and show them the screen',
+    tapWhenReady: 'Tap when they are ready to look',
 
     // Audience indicators
     audienceNarrator: 'Storyteller',
@@ -330,6 +356,7 @@ const en: Translations = {
     effectRemoved: 'Storyteller removed {effect} from {player}',
     roleChanged: '{player} became the {role}',
     setupAction: 'Setup: {player} configured as {role}',
+    evilStartingInfoShown: '{player} received their evil starting information',
   },
 
   scripts: {
@@ -363,68 +390,103 @@ const en: Translations = {
     title: 'How To Play',
     part1Title: '1. What Is Blood on the Clocktower?',
     p1_nutshellTitle: 'The Game in a Nutshell',
-    p1_nutshell1: 'Blood on the Clocktower is a **social deduction game** for 5–20 players.',
-    p1_nutshell2: 'One player is the **Storyteller** (narrator) — everyone else is a **Townsfolk, Outsider, Minion, or Demon**.',
-    p1_nutshell3: 'The **Good team** (Townsfolk + Outsiders) tries to find and execute the **Demon**.',
-    p1_nutshell4: 'The **Evil team** (Demon + Minions) tries to kill enough players to win.',
-    p1_nutshell5: 'The game alternates between **Night** (abilities happen secretly) and **Day** (players discuss and vote).',
+    p1_nutshell1:
+      'Blood on the Clocktower is a **social deduction game** for 5–20 players.',
+    p1_nutshell2:
+      'One player is the **Storyteller** (narrator) — everyone else is a **Townsfolk, Outsider, Minion, or Demon**.',
+    p1_nutshell3:
+      'The **Good team** (Townsfolk + Outsiders) tries to find and execute the **Demon**.',
+    p1_nutshell4:
+      'The **Evil team** (Demon + Minions) tries to kill enough players to win.',
+    p1_nutshell5:
+      'The game alternates between **Night** (abilities happen secretly) and **Day** (players discuss and vote).',
     p1_teamsTitle: 'Teams & Alignments',
-    p1_teamTownsfolk: 'You are on the **Good team**. You do not know who anyone else is, but you have a useful ability. Talk to people, share and combine your information, and trust your instincts to find the Demon.',
+    p1_teamTownsfolk:
+      'You are on the **Good team**. You do not know who anyone else is, but you have a useful ability. Talk to people, share and combine your information, and trust your instincts to find the Demon.',
     p1_teamTownsfolkExample: 'For example, the **Washerwoman** is a Townsfolk:',
-    p1_teamOutsider: 'You are on the **Good team**, but your ability is a burden. You might have false information, or your mere presence might make things harder for the town. You must overcome your handicap to help good win.',
+    p1_teamOutsider:
+      'You are on the **Good team**, but your ability is a burden. You might have false information, or your mere presence might make things harder for the town. You must overcome your handicap to help good win.',
     p1_teamOutsiderExample: 'For example, the **Drunk** is an Outsider:',
-    p1_teamMinion: 'You are on the **Evil team**. You know who the Demon is, and your goal is to protect them at all costs. Use your disruptive abilities to cause chaos, spread misinformation, and cast suspicion away from your Demon.',
+    p1_teamMinion:
+      'You are on the **Evil team**. You know who the Demon is, and your goal is to protect them at all costs. Use your disruptive abilities to cause chaos, spread misinformation, and cast suspicion away from your Demon.',
     p1_teamMinionExample: 'For example, the **Poisoner** is a Minion:',
-    p1_teamDemon: 'You are the leader of the **Evil team**. You kill players in the night and know who your Minions are. To win, you must survive until the end by bluffing as a good character and throwing the town off your scent.',
+    p1_teamDemon:
+      'You are the leader of the **Evil team**. You kill players in the night and know who your Minions are. To win, you must survive until the end by bluffing as a good character and throwing the town off your scent.',
     p1_teamDemonExample: 'For example, the **Imp** is a Demon:',
     p1_roundTitle: 'How a Round Works',
-    p1_roundNight: 'Players "wake up" one at a time (the Storyteller handles this). Information roles learn things, the Demon kills someone, etc.',
-    p1_roundDay: 'The Storyteller announces who died overnight. Players discuss, accuse, and try to figure out who is evil.',
-    p1_roundNominate: 'Any player can nominate another for execution. If the vote passes, that player is executed (and may die).',
+    p1_roundNight:
+      'Players "wake up" one at a time (the Storyteller handles this). Information roles learn things, the Demon kills someone, etc.',
+    p1_roundDay:
+      'The Storyteller announces who died overnight. Players discuss, accuse, and try to figure out who is evil.',
+    p1_roundNominate:
+      'Any player can nominate another for execution. If the vote passes, that player is executed (and may die).',
     p1_roundWinGood: 'Good wins when the **Demon is executed**.',
-    p1_roundWinEvil: 'Evil wins when **only 2 players remain alive** (or through special abilities).',
+    p1_roundWinEvil:
+      'Evil wins when **only 2 players remain alive** (or through special abilities).',
     p1_roundWinConditions: 'Win Conditions',
     p1_roundNightLabel: 'Night',
     p1_roundDayLabel: 'Day',
     p1_roundNominateLabel: 'Nominations',
     p1_conceptsTitle: 'Key Concepts',
-    p1_conceptPoison: '**Poisoning** — A poisoned player\'s ability gives wrong information (or doesn\'t work). They don\'t know they\'re poisoned.',
-    p1_conceptDrunk: '**Drunkenness** — Like poisoning, but permanent. The Drunk thinks they\'re a different role entirely.',
-    p1_conceptDead: '**Dead players** — Dead players can still talk, debate, and vote **once** (then they lose their vote forever).',
-    p1_conceptStoryteller: '**The Storyteller\'s role** — The Storyteller knows everything and runs the game. Grimorium IS the Storyteller\'s tool.',
+    p1_conceptPoison:
+      "**Poisoning** — A poisoned player's ability gives wrong information (or doesn't work). They don't know they're poisoned.",
+    p1_conceptDrunk:
+      "**Drunkenness** — Like poisoning, but permanent. The Drunk thinks they're a different role entirely.",
+    p1_conceptDead:
+      '**Dead players** — Dead players can still talk, debate, and vote **once** (then they lose their vote forever).',
+    p1_conceptStoryteller:
+      "**The Storyteller's role** — The Storyteller knows everything and runs the game. Grimorium IS the Storyteller's tool.",
 
     part2Title: '2. How To Use Grimorium',
     p2_createTitle: 'Creating a Game',
-    p2_create1: '**Add Players** — Enter player names (the Storyteller is not a player).',
-    p2_create2: '**Choose a Script** — A curated set of characters for a specific game complexity.',
-    p2_create3: '**Select Roles** — Pick which roles are in the game, or let the app auto-generate a balanced set.',
+    p2_create1:
+      '**Add Players** — Enter player names (the Storyteller is not a player).',
+    p2_create2:
+      '**Choose a Script** — A curated set of characters for a specific game complexity.',
+    p2_create3:
+      '**Select Roles** — Pick which roles are in the game, or let the app auto-generate a balanced set.',
     p2_create4: '**Assign Roles** — Drag/shuffle who gets which role.',
-    p2_createTip: 'The app enforces the correct team composition automatically based on your player count.',
+    p2_createTip:
+      'The app enforces the correct team composition automatically based on your player count.',
     p2_setupTitle: 'Setup Actions',
-    p2_setup1: 'Some roles require the Storyteller to make a decision **before** the game begins.',
-    p2_setup2: 'For example, choosing which Townsfolk role the Drunk believes they are. The app guides you through each setup action automatically.',
+    p2_setup1:
+      'Some roles require the Storyteller to make a decision **before** the game begins.',
+    p2_setup2:
+      'For example, choosing which Townsfolk role the Drunk believes they are. The app guides you through each setup action automatically.',
     p2_revealTitle: 'Role Revelation',
-    p2_reveal1: 'The Storyteller shows each player their role privately using **themed role cards**.',
-    p2_reveal2: 'Each card shows: the role name, ability description, alignment, and win condition.',
-    p2_reveal3: '**The Storyteller controls the device at all times** — show the screen to each player, then dismiss.',
-    p2_revealWarning: 'Grimorium is a **Storyteller-only tool**. The device never gets passed around.',
+    p2_reveal1:
+      'The Storyteller shows each player their role privately using **themed role cards**.',
+    p2_reveal2:
+      'Each card shows: the role name, ability description, alignment, and win condition.',
+    p2_reveal3:
+      '**The Storyteller controls the device at all times** — show the screen to each player, then dismiss.',
+    p2_revealWarning:
+      'Grimorium is a **Storyteller-only tool**. The device never gets passed around.',
     p2_nightTitle: 'Night Phase',
-    p2_night1: 'The **Night Dashboard** shows every role that needs to act, in the correct wake order.',
+    p2_night1:
+      'The **Night Dashboard** shows every role that needs to act, in the correct wake order.',
     p2_night2: 'Tap a role to start its night action.',
-    p2_night3: 'For **information roles**: the app auto-calculates the correct information, accounting for poisoning and drunkenness.',
-    p2_night4: 'For **action roles**: select targets via an intuitive player list.',
-    p2_night5: 'The app handles all timing, status effects, and expiration automatically.',
-    p2_nightTip: 'If a role is **malfunctioning**, the app prompts you to provide false information.',
+    p2_night3:
+      'For **information roles**: the app auto-calculates the correct information, accounting for poisoning and drunkenness.',
+    p2_night4:
+      'For **action roles**: select targets via an intuitive player list.',
+    p2_night5:
+      'The app handles all timing, status effects, and expiration automatically.',
+    p2_nightTip:
+      'If a role is **malfunctioning**, the app prompts you to provide false information.',
     p2_dayTitle: 'Dawn & Day Phase',
     p2_day1: '**Dawn:** The app announces overnight deaths.',
     p2_day2: '**Day Phase:** Players discuss.',
-    p2_day3: 'You can open the **Grimoire** for a status overview of all players.',
-    p2_day4: 'You can trigger **Day Actions** (e.g., Slayer shot) or start **Nominations**.',
+    p2_day3:
+      'You can open the **Grimoire** for a status overview of all players.',
+    p2_day4:
+      'You can trigger **Day Actions** (e.g., Slayer shot) or start **Nominations**.',
     p2_voteTitle: 'Nominations & Voting',
     p2_vote1: 'Tap "Nominations" and select who nominates whom.',
     p2_vote2: 'Use the voting interface to track votes for and against.',
     p2_vote3: 'If the vote reaches majority, the player is **executed**.',
-    p2_vote4: 'Special interactions (like the Virgin) are handled automatically.',
+    p2_vote4:
+      'Special interactions (like the Virgin) are handled automatically.',
     p2_endTitle: 'End of Day & Win Detection',
     p2_end1: 'End the day to transition to the next night.',
     p2_end2: 'The app continuously checks win conditions.',
@@ -432,41 +494,59 @@ const en: Translations = {
     p2_end4: 'Only 2 players alive → **Evil wins**',
     p2_end5: 'When a win is detected, the game ends with a Game Over screen.',
     p2_grimTitle: 'The Grimoire',
-    p2_grim1: 'The Storyteller\'s reference panel — accessible at any time.',
-    p2_grim2: 'See every player\'s **true role**, alive/dead status, and active effects.',
-    p2_grim3: '**Manually add/remove effects** for edge cases the app can\'t predict.',
+    p2_grim1: "The Storyteller's reference panel — accessible at any time.",
+    p2_grim2:
+      "See every player's **true role**, alive/dead status, and active effects.",
+    p2_grim3:
+      "**Manually add/remove effects** for edge cases the app can't predict.",
     p2_historyTitle: 'History Log',
     p2_history1: 'Every action in the game is recorded.',
-    p2_history2: 'Includes night actions, deaths, votes, executions, and effect changes.',
+    p2_history2:
+      'Includes night actions, deaths, votes, executions, and effect changes.',
     p2_history3: 'Useful for catching mistakes or reviewing the game state.',
 
     part3Title: '3. Tips for Players',
     p3_tip1Title: 'Keep your secrets',
-    p3_tip1Desc: 'If you are good, be careful who you trust with your information. If you are evil, lie about who your character is and what they do!',
+    p3_tip1Desc:
+      'If you are good, be careful who you trust with your information. If you are evil, lie about who your character is and what they do!',
     p3_tip2Title: 'Talk to people privately',
-    p3_tip2Desc: 'Don\'t only have public conversations in the town square. Take players aside for 1-on-1 private chats to share information discreetly.',
+    p3_tip2Desc:
+      "Don't only have public conversations in the town square. Take players aside for 1-on-1 private chats to share information discreetly.",
     p3_tip3Title: 'Bluff!',
-    p3_tip3Desc: 'It is highly encouraged to bluff as a different role, even if you are on the good team. This makes the Demon\'s job much harder.',
+    p3_tip3Desc:
+      "It is highly encouraged to bluff as a different role, even if you are on the good team. This makes the Demon's job much harder.",
     p3_tip4Title: 'Death is not the end',
-    p3_tip4Desc: 'In Blood on the Clocktower, dead players continue to play! You still close your eyes at night, you still talk during the day, and you get **one final vote** to use when it counts most.',
+    p3_tip4Desc:
+      'In Blood on the Clocktower, dead players continue to play! You still close your eyes at night, you still talk during the day, and you get **one final vote** to use when it counts most.',
 
     part4Title: '4. Tips for Storytellers',
     p4_firstTitle: 'For First-Time Storytellers',
-    p4_first1: 'Start with **Trouble Brewing** — it\'s designed for learning.',
-    p4_first2: 'For your first game, try 5–8 players to keep things manageable.',
-    p4_first3: 'Use the auto-generate feature for role selection until you\'re comfortable picking roles yourself.',
-    p4_first4: 'Don\'t worry about memorizing role interactions — the app handles the complex mechanics.',
+    p4_first1: "Start with **Trouble Brewing** — it's designed for learning.",
+    p4_first2:
+      'For your first game, try 5–8 players to keep things manageable.',
+    p4_first3:
+      "Use the auto-generate feature for role selection until you're comfortable picking roles yourself.",
+    p4_first4:
+      "Don't worry about memorizing role interactions — the app handles the complex mechanics.",
     p4_duringTitle: 'During the Game',
-    p4_during1: '**Night:** Trust the wake order. The app knows when to skip roles that shouldn\'t wake.',
-    p4_during2: '**Day:** Let players talk. Your job is to facilitate, not control the discussion.',
-    p4_during3: '**Grimoire:** Check it whenever you need a reminder of who has what status.',
-    p4_during4: '**History:** If players argue about what happened, the history log is the source of truth.',
+    p4_during1:
+      "**Night:** Trust the wake order. The app knows when to skip roles that shouldn't wake.",
+    p4_during2:
+      '**Day:** Let players talk. Your job is to facilitate, not control the discussion.',
+    p4_during3:
+      '**Grimoire:** Check it whenever you need a reminder of who has what status.',
+    p4_during4:
+      '**History:** If players argue about what happened, the history log is the source of truth.',
     p4_pitfallsTitle: 'Common Pitfalls',
-    p4_pitfalls1: '❌ Don\'t show your screen to players unless it\'s their role reveal or you\'re deliberately showing them information.',
-    p4_pitfalls2: '❌ Don\'t forget that dead players get one final vote — the app tracks this, but remind players.',
-    p4_pitfalls3: '❌ Don\'t stress about misinformation from malfunctioning roles — the app will prompt you to provide false info.',
-    p4_pitfalls4: '✅ Use the "Skip" option when a role doesn\'t need to act (the app supports this).',
-  }
+    p4_pitfalls1:
+      "❌ Don't show your screen to players unless it's their role reveal or you're deliberately showing them information.",
+    p4_pitfalls2:
+      "❌ Don't forget that dead players get one final vote — the app tracks this, but remind players.",
+    p4_pitfalls3:
+      "❌ Don't stress about misinformation from malfunctioning roles — the app will prompt you to provide false info.",
+    p4_pitfalls4:
+      '✅ Use the "Skip" option when a role doesn\'t need to act (the app supports this).',
+  },
 }
 
 export default en
