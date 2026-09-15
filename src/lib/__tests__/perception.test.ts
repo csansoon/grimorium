@@ -376,6 +376,38 @@ describe('canRegisterAsTeam', () => {
     expect(canRegisterAsTeam(player, 'townsfolk')).toBe(true)
     expect(canRegisterAsTeam(player, 'minion')).toBe(false)
   })
+
+  it('returns false while the player with misregistration is poisoned', () => {
+    const player = addEffectTo(
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'spy' }), 'misregister', {
+        canRegisterAs: { teams: ['townsfolk'], alignments: ['good'] },
+        perceiveAs: { team: 'townsfolk', alignment: 'good' },
+      }),
+      'poisoned',
+    )
+
+    expect(canRegisterAsTeam(player, 'townsfolk')).toBe(false)
+    expect(canRegisterAsAlignment(player, 'good')).toBe(false)
+    expect(getAmbiguousPlayers([player], 'team')).toEqual([])
+  })
+
+  it("does not apply a poisoned player's misregistration override", () => {
+    const player = addEffectTo(
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'spy' }), 'misregister', {
+        canRegisterAs: { teams: ['townsfolk'], alignments: ['good'] },
+        perceiveAs: { team: 'townsfolk', alignment: 'good' },
+      }),
+      'poisoned',
+    )
+    const observer = makePlayer({ id: 'p2', roleId: 'chef' })
+    const state = makeState({ players: [player, observer] })
+
+    expect(perceive(player, observer, 'team', state)).toMatchObject({
+      roleId: 'spy',
+      team: 'minion',
+      alignment: 'evil',
+    })
+  })
 })
 
 // ============================================================================
@@ -546,16 +578,12 @@ describe('applyPerceptionOverrides', () => {
 
   it('does not modify effects without canRegisterAs', () => {
     const player = addEffectTo(
-      addEffectTo(
-        makePlayer({ id: 'p1', roleId: 'recluse' }),
-        'misregister',
-        {
-          canRegisterAs: {
-            teams: ['minion', 'demon'],
-            alignments: ['evil'],
-          },
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'recluse' }), 'misregister', {
+        canRegisterAs: {
+          teams: ['minion', 'demon'],
+          alignments: ['evil'],
         },
-      ),
+      }),
       'safe',
     )
     const state = makeState({ players: [player] })

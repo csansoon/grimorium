@@ -488,6 +488,32 @@ describe('nominate', () => {
     expect(resolveNomination(game, spy.id, virgin.id)?.type).toBe('needs_input')
   })
 
+  it('does not let a poisoned Spy register as Townsfolk to the Virgin', () => {
+    const spy = addEffectTo(
+      addEffectTo(makePlayer({ id: 'p1', roleId: 'spy' }), 'misregister', {
+        canRegisterAs: {
+          teams: ['townsfolk', 'outsider'],
+          alignments: ['good'],
+        },
+      }),
+      'poisoned',
+    )
+    const virgin = addEffectTo(
+      makePlayer({ id: 'p2', roleId: 'virgin' }),
+      'pure',
+    )
+    const game = makeGame(
+      makeState({ phase: 'day', round: 1, players: [spy, virgin] }),
+    )
+
+    const result = resolveNomination(game, spy.id, virgin.id)
+
+    expect(result?.type).toBe('resolved')
+    if (result?.type !== 'resolved') return
+    expect(result.stateChanges.addEffects?.[spy.id]).toBeUndefined()
+    expect(result.stateChanges.removeEffects?.[virgin.id]).toContain('pure')
+  })
+
   it('ends the day immediately after the Virgin executes a Townsfolk', () => {
     const townsfolk = makePlayer({ id: 'p1', roleId: 'chef' })
     const virgin = addEffectTo(

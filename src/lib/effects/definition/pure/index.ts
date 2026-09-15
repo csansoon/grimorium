@@ -6,6 +6,7 @@ import {
 } from '../../../pipeline/types'
 import { PlayerState } from '../../../types'
 import { getRole } from '../../../roles'
+import { isMalfunctioning } from '../..'
 import { registerEffectTranslations } from '../../../i18n'
 import { VirginRegistrationUI } from '../../../../components/items/VirginRegistrationUI'
 
@@ -134,7 +135,7 @@ const pureHandler: IntentHandler = {
       return triggerVirgin(nom, effectPlayer)
     }
 
-    if (canRegisterAsTownsfolk(nominator)) {
+    if (!isMalfunctioning(nominator) && canRegisterAsTownsfolk(nominator)) {
       return {
         action: 'request_ui',
         UIComponent: VirginRegistrationUI,
