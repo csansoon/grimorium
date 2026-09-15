@@ -244,8 +244,12 @@ export function InfoRoleNightAction({
   // Malfunction flow: can proceed from select_players when 2 players selected
   const canCompleteMalfunctionSelect = selectedPlayers.length === 2
 
-  // Malfunction flow: can proceed from configure_malfunction when role selected
-  const canCompleteMalfunctionConfig = selectedRoleId !== null
+  // Malfunction flow: the Storyteller must choose both the claimed role and
+  // which of the two players should carry that claim in the Grimoire.
+  const canCompleteMalfunctionConfig =
+    selectedRoleId !== null &&
+    selectedTargetPlayer !== null &&
+    selectedPlayers.includes(selectedTargetPlayer)
 
   // ================================================================
   // Handlers
@@ -280,6 +284,10 @@ export function InfoRoleNightAction({
     setSelectedRoleId((prev) => (prev === roleId ? null : roleId))
   }
 
+  const handleMalfunctionSelectTarget = (playerId: string) => {
+    setSelectedTargetPlayer((prev) => (prev === playerId ? null : playerId))
+  }
+
   const handleCompleteSelectPlayers = () => {
     if (malfunctioning) {
       if (!canCompleteMalfunctionSelect) return
@@ -291,10 +299,7 @@ export function InfoRoleNightAction({
   }
 
   const handleCompleteMalfunctionConfig = () => {
-    if (!selectedRoleId) return
-    // Auto-assign a legal target for history; malfunction information may be
-    // true or false at the Storyteller's discretion.
-    if (!selectedTargetPlayer) setSelectedTargetPlayer(selectedPlayers[0])
+    if (!canCompleteMalfunctionConfig) return
     setMalfunctionConfigDone(true)
     setPhase('step_list')
   }
@@ -624,6 +629,18 @@ export function InfoRoleNightAction({
             onSelect={handleMalfunctionSelectRole}
             selectionCount={1}
             colorMode='team'
+          />
+        </StepSection>
+
+        <StepSection step={2} label={t.game.chooseFalseTarget}>
+          <PlayerPickerList
+            players={allPlayers.filter((candidate) =>
+              selectedPlayers.includes(candidate.id),
+            )}
+            selected={selectedTargetPlayer ? [selectedTargetPlayer] : []}
+            onSelect={handleMalfunctionSelectTarget}
+            selectionCount={1}
+            variant='blue'
           />
         </StepSection>
       </NarratorSetupLayout>
